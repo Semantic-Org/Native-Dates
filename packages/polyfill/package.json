@@ -1,0 +1,34 @@
+{
+  "name": "@native-dates/polyfill",
+  "version": "0.1.0",
+  "title": "Native Dates Polyfill",
+  "description": "Loads temporal-polyfill onto globalThis only when the runtime lacks native Temporal",
+  "author": "Jack Lukic",
+  "license": "ISC",
+  "type": "module",
+  "sideEffects": [
+    "./index.js",
+    "./sync.js"
+  ],
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    },
+    "./sync": {
+      "types": "./index.d.ts",
+      "import": "./sync.js"
+    }
+  },
+  "peerDependencies": {
+    "temporal-polyfill": ">=0.3.0"
+  },
+  "files": [
+    "index.js",
+    "sync.js",
+    "index.d.ts",
+    "LICENSE"
+  ]
+}

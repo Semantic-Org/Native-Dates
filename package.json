@@ -1,0 +1,28 @@
+{
+  "name": "native-dates",
+  "private": true,
+  "description": "Temporal, spoken plainly. Monorepo for @native-dates packages",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "node --test packages/*/test/**/*.test.js",
+    "size": "node tools/size.js",
+    "format": "npx dprint fmt",
+    "setup": "npx simple-git-hooks"
+  },
+  "devDependencies": {
+    "dprint": "^0.57.1",
+    "esbuild": "^0.28.2",
+    "simple-git-hooks": "^2.14.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "bash tools/hooks/pre-commit",
+    "commit-msg": "bash tools/hooks/commit-msg \"$1\""
+  }
+}
