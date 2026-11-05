@@ -1,5 +1,4 @@
 import { isPlainObject } from '../helpers/types.js';
-import { use } from '../helpers/use.js';
 import { canonicalZone, configure, setZoneExtension } from '../helpers/zones.js';
 
 // timezone abbreviations are ambiguous by nature (IST is Kolkata, Jerusalem, or Dublin depending on
@@ -118,15 +117,10 @@ const resolveZone = (id, zoneAliases) => {
   );
 };
 
-export default function zones(input) {
-  if (!input?.DateTime) {
-    const aliases = input?.zoneAliases ?? input?.aliases ?? input;
-    return () => {
-      use(zones);
-      if (isPlainObject(aliases)) {
-        configure({ zoneAliases: aliases });
-      }
-    };
-  }
+export default function zones(options) {
   setZoneExtension(resolveZone);
+  const aliases = options?.zoneAliases ?? options?.aliases ?? options;
+  if (isPlainObject(aliases)) {
+    configure({ zoneAliases: aliases });
+  }
 }

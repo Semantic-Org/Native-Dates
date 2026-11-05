@@ -93,11 +93,8 @@ const setters = [
   'setUTCMilliseconds',
 ];
 
-export default function legacyDate(classes) {
-  if (!classes?.DateTime) {
-    return legacyDate;
-  }
-  const proto = classes.DateTime.prototype;
+export default function legacyDate(_options, { DateTime }) {
+  const proto = DateTime.prototype;
   Object.assign(proto, reads);
   // a DateTime never changes in place, so every setter a Date has refuses and names the way
   for (const name of setters) {

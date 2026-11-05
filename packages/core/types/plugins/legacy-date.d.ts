@@ -1,6 +1,6 @@
 import type { Locale, Plugin } from '../inputs.js';
 
-declare const legacyDate: Plugin & (() => Plugin);
+declare const legacyDate: Plugin;
 export default legacyDate;
 
 declare module '../date-time.js' {

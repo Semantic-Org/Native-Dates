@@ -434,37 +434,33 @@ export const isTimeRange = (value) => value instanceof TimeRange;
 const stepArguments = (step, [second, third]) =>
   isNumber(step) || isDigits(step) ? [second, third] : [undefined, second];
 
-export default function ranges(classes) {
-  if (!classes?.DateTime) {
-    return ranges;
-  }
-
-  classes.DateTime.prototype.to = function to(end, name) {
+export default function ranges() {
+  DateTime.prototype.to = function to(end, name) {
     return new DateTimeRange(this, name === undefined ? end : duration(end, name));
   };
-  classes.DateTime.prototype.range = function range(name, firstDay) {
+  DateTime.prototype.range = function range(name, firstDay) {
     const start = this.startOf(name, firstDay);
     return new DateTimeRange(start, start.plus(stepOf(unit(name))));
   };
 
-  classes.CalendarDate.prototype.to = function to(end, name) {
+  CalendarDate.prototype.to = function to(end, name) {
     return new DateRange(this, name === undefined ? end : duration(end, name));
   };
-  classes.CalendarDate.prototype.range = function range(name, firstDay) {
+  CalendarDate.prototype.range = function range(name, firstDay) {
     return new DateRange(this.startOf(name, firstDay), this.endOf(name, firstDay));
   };
   // a day is a range of time, so it walks and splits like one: today().split('hour') is the day's hours
   // in the zone, 23 or 25 of them on a transition day, which only the zone knows
-  classes.CalendarDate.prototype.points = function points(step, ...rest) {
+  CalendarDate.prototype.points = function points(step, ...rest) {
     const [name, zone] = stepArguments(step, rest);
     return this.at('00:00', zone).range('day').points(step, name);
   };
-  classes.CalendarDate.prototype.split = function split(step, ...rest) {
+  CalendarDate.prototype.split = function split(step, ...rest) {
     const [name, zone] = stepArguments(step, rest);
     return this.at('00:00', zone).range('day').split(step, name);
   };
 
-  classes.Time.prototype.to = function to(end, name) {
+  Time.prototype.to = function to(end, name) {
     return new TimeRange(this, name === undefined ? end : duration(end, name));
   };
 }

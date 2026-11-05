@@ -286,7 +286,7 @@ Three lenses on every abstraction before it ships, plus one sizing rule:
 
 1. **What is the degenerate case?** An API that silently misbehaves on the naive call (a non-computed field routed through an override verb) needs a simpler shape, not documentation.
 2. **How many lines does it ship?** Prefer the structural solve (`?? identity`, an inverted enumeration) over a mechanism. A doc line beats a runtime guard.
-3. **Is this complexity where simplicity exists?** If the estimate exceeds the conceptual delta, the design has helper inflation, export symmetry, or pattern-completion baked in. Structure must earn its keep — size from the constraint, not from the pattern.
+3. **Is this complexity where simplicity exists?** If the estimate exceeds the conceptual delta, the design has helper inflation, export symmetry, or pattern-completion baked in. Structure must earn its keep — size from the constraint, not from the pattern. Never reach for `WeakMap`/`WeakSet`, `Proxy`, or workful getters when a plain property on the target (`plugin.installed = true`) or an explicit method solves the problem directly.
 
 And: **everything arbitrary is a setting.** A constant is either mechanical (spec-defined, derivable) or arbitrary (a judgment call two apps would make differently). Arbitrary values must be reachable from outside — a class static, an option, an `fn.config` — or every disagreeing app vendors the function. See the `design-util-function` workflow for the full treatment.
 
@@ -335,6 +335,7 @@ export const thing = (options) => new Thing(options);
 | Load-time registration side effects | value-dependency catalog list, `sideEffects: false` |
 | Out-param accumulator | pure `<noun>From(input)` builder |
 | Mechanism name (`trackedCell`, `ComputedIndex`) | intent name (`computed`, `RecomputeEngine`) |
+| `WeakMap`/`WeakSet` for owned state, `Proxy`, or workful getter | plain property on the instance/function or explicit method |
 | Comment explaining a clunky guard | utils vocabulary that says it directly |
 
 ---

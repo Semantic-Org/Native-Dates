@@ -1,5 +1,4 @@
 import { setLooseExtension } from '../helpers/errors.js';
-import { use } from '../helpers/use.js';
 import { configure, dayFirst as readsDayFirst, zoneId } from '../helpers/zones.js';
 
 // a loose string that names an instant: Z, GMT, UTC or an offset at its end, with or without Date's own
@@ -44,14 +43,9 @@ export const looseZoned = (text, zone, dayFirst) => {
   return read.toPlainDateTime().toZonedDateTime(zoneId(zone));
 };
 
-export default function loose(input) {
-  if (!input?.DateTime) {
-    return () => {
-      use(loose);
-      if (input?.dayFirst !== undefined) {
-        configure({ dayFirst: input.dayFirst });
-      }
-    };
-  }
+export default function loose(options) {
   setLooseExtension(looseZoned);
+  if (options?.dayFirst !== undefined) {
+    configure({ dayFirst: options.dayFirst });
+  }
 }

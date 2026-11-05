@@ -9,13 +9,19 @@ import type { Time } from './time.js';
  */
 export type TemporalValue = any;
 
-/** A plugin passed to `use()` or `configure({ plugins })` */
-export type Plugin = (classes: {
+/** The four core noun constructors handed to a plugin */
+export interface CoreClasses {
   DateTime: typeof DateTime;
   CalendarDate: typeof CalendarDate;
   Time: typeof Time;
   Duration: typeof Duration;
-}) => unknown;
+}
+
+/** A plugin passed to `use()` or `configure({ plugins })` */
+export type Plugin<Options = undefined> = {
+  (options: Options | undefined, classes: CoreClasses): unknown;
+  installed?: boolean;
+};
 
 /** A unit name, singular or plural, or an abbreviation like `h`, `min`, `d`, `mo` */
 export type Unit =

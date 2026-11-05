@@ -10,7 +10,7 @@ export interface LooseOptions {
   dayFirst?: boolean;
 }
 
-declare const loose: Plugin & ((options?: LooseOptions) => Plugin);
+declare const loose: Plugin<LooseOptions>;
 export default loose;
 
 declare module '../inputs.js' {

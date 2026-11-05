@@ -8,7 +8,7 @@ export interface ZonesOptions {
   zoneAliases?: Record<string, Zone>;
 }
 
-declare const zones: Plugin & ((options?: ZonesOptions | Record<string, Zone>) => Plugin);
+declare const zones: Plugin<ZonesOptions | Record<string, Zone>>;
 export default zones;
 
 declare module '../helpers/zones.js' {

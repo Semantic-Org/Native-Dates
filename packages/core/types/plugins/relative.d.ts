@@ -3,7 +3,7 @@ import type { CalendarDateInput, DateTimeInput, Locale, Plugin } from '../inputs
 export function relativeSeconds(seconds: number, locale?: Locale): string;
 export function relativeDays(days: number, locale?: Locale): string;
 
-declare const relative: Plugin & (() => Plugin);
+declare const relative: Plugin;
 export default relative;
 
 declare module '../date-time.js' {

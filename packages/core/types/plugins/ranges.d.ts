@@ -88,7 +88,7 @@ export function isDateRange(value: unknown): value is DateRange;
 export function isDateTimeRange(value: unknown): value is DateTimeRange;
 export function isTimeRange(value: unknown): value is TimeRange;
 
-declare const ranges: Plugin & (() => Plugin);
+declare const ranges: Plugin;
 export default ranges;
 
 declare module '../date-time.js' {

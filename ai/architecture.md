@@ -27,7 +27,7 @@ Core holds what nearly every caller needs:
 - Duration phrases (`'1h 30m'`, `'2 weeks and 3 days'`) and fractional unit spilling (`1.5 days` -> `1d 12h`)
 - Standard IANA zones, fixed offsets, `UTC`, `configure({ zone, locale, weekStart, plugins })`, `compare`, `earliest`, `latest`, `kindOf`, and `use()`
 
-Opt-in plugins live in `packages/core/src/plugins/` and install via `use(ranges, tokens)` or `configure({ plugins: [ranges, tokens] })`:
+Opt-in plugins live in `packages/core/src/plugins/`. Each plugin is a plain function `(options, classes)` marked once via `plugin.installed = true` (matching `nav-router`), installed via `use(ranges, tokens)`, `use(zones, { hq: 'Berlin' })`, or `configure({ plugins: [ranges, tokens] })`:
 
 | Subpath | Adds | Mechanism |
 |---|---|---|

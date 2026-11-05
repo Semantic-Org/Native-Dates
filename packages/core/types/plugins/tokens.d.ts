@@ -11,5 +11,5 @@ export function formatTokens(
   locale?: Locale,
 ): string;
 
-declare const tokens: Plugin & (() => Plugin);
+declare const tokens: Plugin;
 export default tokens;

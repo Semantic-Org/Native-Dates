@@ -143,11 +143,8 @@ export const formatTokens = (subject, kind, pattern, locale) => {
   });
 };
 
-export default function tokens(classes) {
-  if (!classes?.DateTime) {
-    return tokens;
-  }
-  for (const [Kind, kind] of [[classes.DateTime, 'datetime'], [classes.CalendarDate, 'date'], [classes.Time, 'time']]) {
+export default function tokens(_options, { DateTime, CalendarDate, Time }) {
+  for (const [Kind, kind] of [[DateTime, 'datetime'], [CalendarDate, 'date'], [Time, 'time']]) {
     const base = Kind.prototype.format;
     Kind.prototype.format = function format(spec, locale) {
       return isString(spec) && !intlOptions(kind, spec)
