@@ -1,9 +1,12 @@
+import { CalendarDate } from '../calendar-date.js';
+import { DateTime } from '../date-time.js';
 import { refuse } from '../helpers/errors.js';
 import { intlOptions } from '../helpers/format.js';
 import { plainDateTimeFormat, zonedDateTimeFormat } from '../helpers/intl.js';
 import { isDevelopment, isString } from '../helpers/types.js';
 import { pad } from '../helpers/units.js';
 import { locale as pickLocale, weekStart } from '../helpers/zones.js';
+import { Time } from '../time.js';
 
 // longest spelling first so MMMM never reads as four Ms
 const tokenPattern =
@@ -143,13 +146,11 @@ export const formatTokens = (subject, kind, pattern, locale) => {
   });
 };
 
-export default function tokens(_options, { DateTime, CalendarDate, Time }) {
-  for (const [Kind, kind] of [[DateTime, 'datetime'], [CalendarDate, 'date'], [Time, 'time']]) {
-    const base = Kind.prototype.format;
-    Kind.prototype.format = function format(spec, locale) {
-      return isString(spec) && !intlOptions(kind, spec)
-        ? formatTokens(this, kind, spec, locale)
-        : base.call(this, spec, locale);
-    };
-  }
+for (const [Kind, kind] of [[DateTime, 'datetime'], [CalendarDate, 'date'], [Time, 'time']]) {
+  const base = Kind.prototype.format;
+  Kind.prototype.format = function format(spec, locale) {
+    return isString(spec) && !intlOptions(kind, spec)
+      ? formatTokens(this, kind, spec, locale)
+      : base.call(this, spec, locale);
+  };
 }

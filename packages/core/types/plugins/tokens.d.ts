@@ -1,4 +1,4 @@
-import type { Locale, Plugin, Weekday } from '../inputs.js';
+import type { Locale, Weekday } from '../inputs.js';
 
 /** The weekday names in the locale, starting on the configured first day or on `firstDay` */
 export function weekdayNames(style?: 'short' | 'long', firstDay?: Weekday, locale?: Locale): string[];
@@ -10,6 +10,3 @@ export function formatTokens(
   pattern: string,
   locale?: Locale,
 ): string;
-
-declare const tokens: Plugin;
-export default tokens;

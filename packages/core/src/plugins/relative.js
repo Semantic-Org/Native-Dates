@@ -51,13 +51,11 @@ export const relativeDays = (days, locale) => {
   return relativeTimeFormat(pickLocale(locale)).format(value, name);
 };
 
-export default function relative() {
-  DateTime.prototype.formatRelative = function formatRelative(to, locale) {
-    const reference = to === undefined ? now(this.zone) : new DateTime(to, this.zone);
-    return relativeSeconds((this.epoch - reference.epoch) / 1000, locale);
-  };
-  CalendarDate.prototype.formatRelative = function formatRelative(to, locale) {
-    const reference = to === undefined ? today() : new CalendarDate(to);
-    return relativeDays(reference.until(this, 'day'), locale);
-  };
-}
+DateTime.prototype.formatRelative = function formatRelative(to, locale) {
+  const reference = to === undefined ? now(this.zone) : new DateTime(to, this.zone);
+  return relativeSeconds((this.epoch - reference.epoch) / 1000, locale);
+};
+CalendarDate.prototype.formatRelative = function formatRelative(to, locale) {
+  const reference = to === undefined ? today() : new CalendarDate(to);
+  return relativeDays(reference.until(this, 'day'), locale);
+};

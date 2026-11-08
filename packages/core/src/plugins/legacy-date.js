@@ -1,3 +1,4 @@
+import { DateTime } from '../date-time.js';
 import { refuse } from '../helpers/errors.js';
 import { isDevelopment } from '../helpers/types.js';
 
@@ -93,17 +94,15 @@ const setters = [
   'setUTCMilliseconds',
 ];
 
-export default function legacyDate(_options, { DateTime }) {
-  const proto = DateTime.prototype;
-  Object.assign(proto, reads);
-  // a DateTime never changes in place, so every setter a Date has refuses and names the way
-  for (const name of setters) {
-    proto[name] = function refuseSetter() {
-      return refuse('immutable', name, {
-        explanation: isDevelopment
-          ? "a DateTime does not change in place. set('hour', 9) or plus(1, 'day') gives a new value"
-          : 0,
-      });
-    };
-  }
+const proto = DateTime.prototype;
+Object.assign(proto, reads);
+// a DateTime never changes in place, so every setter a Date has refuses and names the way
+for (const name of setters) {
+  proto[name] = function refuseSetter() {
+    return refuse('immutable', name, {
+      explanation: isDevelopment
+        ? "a DateTime does not change in place. set('hour', 9) or plus(1, 'day') gives a new value"
+        : 0,
+    });
+  };
 }

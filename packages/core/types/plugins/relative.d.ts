@@ -1,10 +1,7 @@
-import type { CalendarDateInput, DateTimeInput, Locale, Plugin } from '../inputs.js';
+import type { CalendarDateInput, DateTimeInput, Locale } from '../inputs.js';
 
 export function relativeSeconds(seconds: number, locale?: Locale): string;
 export function relativeDays(days: number, locale?: Locale): string;
-
-declare const relative: Plugin;
-export default relative;
 
 declare module '../date-time.js' {
   interface DateTime {

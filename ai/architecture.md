@@ -25,9 +25,9 @@ Core holds what nearly every caller needs:
 - Plain-English arithmetic (`plus`/`minus`, with zero-cost `add`/`subtract`/`remove` prototype aliases), rounding, weekday stepping (`next`/`previous`), comparisons, and `until`/`since`
 - `Intl` preset formatting (`short`, `medium`, `long`, `full`, `date`, `time`, `month`, `text`) and `Intl` options bags
 - Duration phrases (`'1h 30m'`, `'2 weeks and 3 days'`) and fractional unit spilling (`1.5 days` -> `1d 12h`)
-- Standard IANA zones, fixed offsets, `UTC`, `configure({ zone, locale, weekStart, plugins })`, `compare`, `earliest`, `latest`, `kindOf`, and `use()`
+- Standard IANA zones, fixed offsets, `UTC`, `configure({ zone, locale, weekStart })`, `compare`, `earliest`, `latest`, and `kindOf`
 
-Opt-in plugins live in `packages/core/src/plugins/`. Each plugin is a plain function `(options, classes)` marked once via `plugin.installed = true` (matching `nav-router`), installed via `use(ranges, tokens)`, `use(zones, { hq: 'Berlin' })`, or `configure({ plugins: [ranges, tokens] })`:
+Opt-in plugins live in `packages/core/src/plugins/` (`"sideEffects": ["./src/plugins/*.js"]` in `package.json`). Importing a plugin subpath attaches its prototype methods and extensions once at module load, with zero setup calls needed and `configure({...})` as the single home for app-wide defaults:
 
 | Subpath | Adds | Mechanism |
 |---|---|---|

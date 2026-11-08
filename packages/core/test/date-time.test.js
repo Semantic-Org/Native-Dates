@@ -11,17 +11,14 @@ import {
   now,
   startOfToday,
   today,
-  use,
 } from '@native-dates/core';
-import legacyDate from '@native-dates/core/plugins/legacy-date';
-import loose from '@native-dates/core/plugins/loose';
-import ranges from '@native-dates/core/plugins/ranges';
-import relative from '@native-dates/core/plugins/relative';
-import tokens from '@native-dates/core/plugins/tokens';
+import '@native-dates/core/plugins/legacy-date';
+import '@native-dates/core/plugins/loose';
+import '@native-dates/core/plugins/ranges';
+import '@native-dates/core/plugins/relative';
+import '@native-dates/core/plugins/tokens';
 
 import { expect } from './helpers/expect.js';
-
-use(ranges, tokens, relative, loose, legacyDate);
 
 beforeEach(() => {
   configure({ zone: 'UTC', locale: 'en-US', weekStart: 'monday' });

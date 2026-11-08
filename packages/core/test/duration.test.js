@@ -11,14 +11,11 @@ import {
   minutes,
   months,
   seconds,
-  use,
   weeks,
 } from '@native-dates/core';
-import loose from '@native-dates/core/plugins/loose';
+import '@native-dates/core/plugins/loose';
 
 import { expect } from './helpers/expect.js';
-
-use(loose);
 
 beforeEach(() => {
   configure({ zone: 'UTC', locale: 'en-US' });

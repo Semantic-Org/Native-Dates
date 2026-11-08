@@ -6,7 +6,9 @@
   "author": "Jack Lukic",
   "license": "ISC",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./src/plugins/*.js"
+  ],
   "engines": {
     "node": ">=22"
   },

@@ -1,15 +1,7 @@
-import type { Plugin, Zone } from '../inputs.js';
+import type { Zone } from '../inputs.js';
 
 /** Base abbreviation table, editable at app boot (`timezones.IST = 'Asia/Jerusalem'`) */
 export const timezones: Record<string, string>;
-
-export interface ZonesOptions {
-  aliases?: Record<string, Zone>;
-  zoneAliases?: Record<string, Zone>;
-}
-
-declare const zones: Plugin<ZonesOptions | Record<string, Zone>>;
-export default zones;
 
 declare module '../helpers/zones.js' {
   interface Settings {

@@ -64,7 +64,7 @@ export const requireLoose = (at = 'loose') => {
   if (!looseParser) {
     refuse('missingPlugin', at, {
       explanation: isDevelopment
-        ? 'load @native-dates/core/plugins/loose and pass it to use() for { loose: true } and dayFirst'
+        ? "import '@native-dates/core/plugins/loose' for { loose: true } and dayFirst"
         : 0,
     });
   }

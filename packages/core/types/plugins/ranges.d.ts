@@ -8,7 +8,6 @@ import type {
   DurationInput,
   FormatSpec,
   Locale,
-  Plugin,
   ReadOptions,
   TimeInput,
   Unit,
@@ -87,9 +86,6 @@ export function timeRange(interval: string, options?: Zone | ReadOptions): TimeR
 export function isDateRange(value: unknown): value is DateRange;
 export function isDateTimeRange(value: unknown): value is DateTimeRange;
 export function isTimeRange(value: unknown): value is TimeRange;
-
-declare const ranges: Plugin;
-export default ranges;
 
 declare module '../date-time.js' {
   interface DateTime {

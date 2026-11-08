@@ -1,7 +1,6 @@
 import { guard, refuse, requireLoose } from './errors.js';
 import { isDevelopment, isPlainObject, isString } from './types.js';
 import { weekdayNumber } from './units.js';
-import { use } from './use.js';
 
 // process-wide defaults, zoneAliases being the names a zone answers to when plugins/zones is loaded
 const settings = { zone: undefined, locale: undefined, weekStart: 1, dayFirst: false, zoneAliases: {} };
@@ -47,7 +46,7 @@ export const zoneId = (id) => {
       explanation: isDevelopment
         ? zoneExtension
           ? "a zone is an IANA name like America/New_York, a city like Berlin or los angeles, an abbreviation like PT or CET, a fixed offset like +05:30, or UTC. name your own once: configure({ zoneAliases: { hq: 'Europe/Berlin' } })"
-          : 'a zone is an IANA name like America/New_York, a fixed offset like +05:30, or UTC. load @native-dates/core/plugins/zones and pass it to use() for cities like Berlin, abbreviations like PT, and zoneAliases'
+          : "a zone is an IANA name like America/New_York, a fixed offset like +05:30, or UTC. import '@native-dates/core/plugins/zones' for cities like Berlin, abbreviations like PT, and zoneAliases"
         : 0,
     });
   }
@@ -55,15 +54,12 @@ export const zoneId = (id) => {
   return found;
 };
 
-export const configure = ({ plugins, zone, locale, weekStart, dayFirst, zoneAliases } = {}) => {
-  if (plugins !== undefined) {
-    use(plugins);
-  }
+export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases } = {}) => {
   if (zoneAliases !== undefined) {
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
         explanation: isDevelopment
-          ? 'load @native-dates/core/plugins/zones and pass it to use() for zoneAliases'
+          ? "import '@native-dates/core/plugins/zones' for zoneAliases"
           : 0,
       });
     }

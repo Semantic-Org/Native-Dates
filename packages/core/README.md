@@ -3,11 +3,9 @@
 Temporal, spoken plainly. Zero dependencies, frozen values with `text`-first console previews, and opt-in subpath plugins so every app ships only what it uses.
 
 ```js
-import { configure, today, use } from '@native-dates/core';
-import ranges from '@native-dates/core/plugins/ranges';
-import tokens from '@native-dates/core/plugins/tokens';
-
-use(ranges, tokens);
+import { today } from '@native-dates/core';
+import '@native-dates/core/plugins/ranges';
+import '@native-dates/core/plugins/tokens';
 
 const call = today().plus(2, 'days').at('9:30am', 'America/Los_Angeles');
 call.in('Europe/Berlin').format('dddd h:mm a');

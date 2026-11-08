@@ -1,5 +1,4 @@
-import { isPlainObject } from '../helpers/types.js';
-import { canonicalZone, configure, setZoneExtension } from '../helpers/zones.js';
+import { canonicalZone, setZoneExtension } from '../helpers/zones.js';
 
 // timezone abbreviations are ambiguous by nature (IST is Kolkata, Jerusalem, or Dublin depending on
 // who you ask), so the base picks are editable once at app boot (timezones.IST = 'Asia/Jerusalem').
@@ -117,10 +116,4 @@ const resolveZone = (id, zoneAliases) => {
   );
 };
 
-export default function zones(options) {
-  setZoneExtension(resolveZone);
-  const aliases = options?.zoneAliases ?? options?.aliases ?? options;
-  if (isPlainObject(aliases)) {
-    configure({ zoneAliases: aliases });
-  }
-}
+setZoneExtension(resolveZone);

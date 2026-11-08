@@ -1,48 +1,37 @@
 import { describe, it } from 'node:test';
 
-import { configure, date, datetime, time, use } from '@native-dates/core';
-import legacyDate from '@native-dates/core/plugins/legacy-date';
-import loose from '@native-dates/core/plugins/loose';
-import * as rangesNamespace from '@native-dates/core/plugins/ranges';
-import relative from '@native-dates/core/plugins/relative';
-import tokens from '@native-dates/core/plugins/tokens';
-import zones from '@native-dates/core/plugins/zones';
+import { configure, date, datetime, time } from '@native-dates/core';
+import '@native-dates/core/plugins/legacy-date';
+import '@native-dates/core/plugins/loose';
+import { timeRange } from '@native-dates/core/plugins/ranges';
+import '@native-dates/core/plugins/relative';
+import '@native-dates/core/plugins/tokens';
+import '@native-dates/core/plugins/zones';
 
 import { expect } from './helpers/expect.js';
 
 describe('plugin installation dx', () => {
-  it('installs bare plugins, namespace imports, arrays, and (plugin, options) calls', () => {
-    expect(() => use('not-a-plugin')).toThrow(/notAPlugin/);
-
-    // array + namespace import
-    use([rangesNamespace, relative]);
-    expect(relative.installed).toBe(true);
+  it('attaches prototype methods and extensions on subpath import with zero config', () => {
     expect(time('9am').to('5pm').toString()).toBe('09:00:00/17:00:00');
+    expect(timeRange('10pm', '6am').contains('00:30')).toBe(true);
     expect(date('2026-09-06').formatRelative('2026-09-07')).toBe('yesterday');
-
-    // (plugin, options) matching nav-router's Router.extend(plugin, options)
-    use(zones, { hq: 'Berlin' });
-    use(loose, { dayFirst: true });
-    use(legacyDate);
-    expect(zones.installed).toBe(true);
-    expect(loose.installed).toBe(true);
-    expect(datetime('2026-09-06T12:00Z', 'hq').zone).toBe('Europe/Berlin');
-    expect(date('07.09.2026', { loose: true }).toString()).toBe('2026-09-07');
+    expect(datetime('2026-09-06T12:00Z', 'Berlin').zone).toBe('Europe/Berlin');
+    expect(date('TBD', { loose: true })).toBe(null);
     expect(datetime('2026-09-06T14:30Z').getFullYear()).toBe(2026);
   });
 
-  it('installs plugins inside configure({ plugins }) before reading zoneAliases or zone', () => {
+  it('configures zoneAliases, dayFirst, zone and locale in one configure() call', () => {
     configure({
-      plugins: [tokens, zones],
-      zoneAliases: { office: 'Tokyo' },
-      zone: 'office',
+      zoneAliases: { hq: 'Berlin', noc: 'PT' },
+      zone: 'hq',
       locale: 'en-US',
-      dayFirst: false,
+      dayFirst: true,
     });
-    // repeat install is idempotent and does not double-wrap format()
-    use(tokens, tokens);
 
-    expect(datetime('2026-09-06T00:00Z').format('YYYY-MM-DD HH:mm')).toBe('2026-09-06 09:00');
+    const cutoverDay = date('08.03.2026', { loose: true });
+    expect(String(cutoverDay)).toBe('2026-03-08');
+    expect(cutoverDay.split('hour', 'noc')).toHaveLength(23);
+    expect(datetime('2026-09-06T00:00Z').format('YYYY-MM-DD HH:mm')).toBe('2026-09-06 02:00');
     expect(datetime('2026-09-06T00:00Z').format('date')).toBe('Sep 6, 2026');
   });
 });

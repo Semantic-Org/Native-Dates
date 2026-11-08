@@ -65,7 +65,7 @@ export const intlOptions = (kind, spec) => {
 export const unknownFormat = (spec) =>
   refuse('unknownFormat', String(spec), {
     explanation: isDevelopment
-      ? "a format is a preset like 'medium' or an Intl options object. load @native-dates/core/plugins/tokens and pass it to use() for patterns like 'YYYY-MM-DD'"
+      ? "a format is a preset like 'medium' or an Intl options object. import '@native-dates/core/plugins/tokens' for patterns like 'YYYY-MM-DD'"
       : 0,
   });
 

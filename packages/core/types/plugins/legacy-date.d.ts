@@ -1,7 +1,4 @@
-import type { Locale, Plugin } from '../inputs.js';
-
-declare const legacyDate: Plugin;
-export default legacyDate;
+import type { Locale } from '../inputs.js';
 
 declare module '../date-time.js' {
   interface DateTime {

@@ -26,6 +26,5 @@ export {
   IS_TIME_RANGE,
 } from './helpers/identity.js';
 export { weekdayNumber as weekday } from './helpers/units.js';
-export { use } from './helpers/use.js';
 export { configure } from './helpers/zones.js';
 export { isTime } from './time.js';

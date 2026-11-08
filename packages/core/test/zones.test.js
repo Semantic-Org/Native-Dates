@@ -1,12 +1,10 @@
 import { beforeEach, describe, it } from 'node:test';
 
-import { configure, date, datetime, IS_DATE_TIME, now, today, use, weekday } from '@native-dates/core';
-import tokens, { monthNames, weekdayNames } from '@native-dates/core/plugins/tokens';
-import zones from '@native-dates/core/plugins/zones';
+import { configure, date, datetime, IS_DATE_TIME, now, today, weekday } from '@native-dates/core';
+import { monthNames, weekdayNames } from '@native-dates/core/plugins/tokens';
+import '@native-dates/core/plugins/zones';
 
 import { expect } from './helpers/expect.js';
-
-use(tokens, zones);
 
 beforeEach(() => {
   configure({ zone: 'UTC', locale: 'en-US', weekStart: 'monday' });

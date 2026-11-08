@@ -1,17 +1,10 @@
 import type { CalendarDate } from '../calendar-date.js';
 import type { DateTime } from '../date-time.js';
 import type { Duration } from '../duration.js';
-import type { Plugin, ReadOptions, TemporalValue, Zone } from '../inputs.js';
+import type { ReadOptions, TemporalValue, Zone } from '../inputs.js';
 import type { Time } from '../time.js';
 
 export function looseZoned(text: string, zone?: Zone, dayFirst?: boolean): TemporalValue | undefined;
-
-export interface LooseOptions {
-  dayFirst?: boolean;
-}
-
-declare const loose: Plugin<LooseOptions>;
-export default loose;
 
 declare module '../inputs.js' {
   interface ReadOptions {

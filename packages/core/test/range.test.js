@@ -1,8 +1,8 @@
 import { beforeEach, describe, it } from 'node:test';
 
-import { configure, date, datetime, days, hours, minutes, months, time, use } from '@native-dates/core';
-import loose from '@native-dates/core/plugins/loose';
-import ranges, {
+import { configure, date, datetime, days, hours, minutes, months, time } from '@native-dates/core';
+import '@native-dates/core/plugins/loose';
+import {
   DateRange,
   dateRange,
   DateTimeRange,
@@ -12,12 +12,10 @@ import ranges, {
   TimeRange,
   timeRange,
 } from '@native-dates/core/plugins/ranges';
-import tokens from '@native-dates/core/plugins/tokens';
-import zones from '@native-dates/core/plugins/zones';
+import '@native-dates/core/plugins/tokens';
+import '@native-dates/core/plugins/zones';
 
 import { expect } from './helpers/expect.js';
-
-use(ranges, tokens, loose, zones);
 
 beforeEach(() => {
   configure({ zone: 'UTC', locale: 'en-US', weekStart: 'monday' });

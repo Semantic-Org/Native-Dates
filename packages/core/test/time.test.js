@@ -1,13 +1,11 @@
 import { beforeEach, describe, it } from 'node:test';
 
-import { configure, datetime, days, hours, minutes, time, use } from '@native-dates/core';
-import loose from '@native-dates/core/plugins/loose';
-import tokens from '@native-dates/core/plugins/tokens';
-import zones from '@native-dates/core/plugins/zones';
+import { configure, datetime, days, hours, minutes, time } from '@native-dates/core';
+import '@native-dates/core/plugins/loose';
+import '@native-dates/core/plugins/tokens';
+import '@native-dates/core/plugins/zones';
 
 import { expect } from './helpers/expect.js';
-
-use(tokens, loose, zones);
 
 beforeEach(() => {
   configure({ zone: 'UTC', locale: 'en-US' });

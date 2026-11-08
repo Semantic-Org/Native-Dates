@@ -55,8 +55,8 @@ for (const file of pluginFiles) {
     stdin: {
       contents: [
         `import * as core from './src/index.js';`,
-        `import * as plugin from './src/plugins/${file}';`,
-        `console.log(core, plugin);`,
+        `import './src/plugins/${file}';`,
+        `console.log(core);`,
       ].join('\n'),
       resolveDir: coreDir,
     },
@@ -72,8 +72,8 @@ const everything = await measure({
   stdin: {
     contents: [
       `import * as core from './src/index.js';`,
-      ...pluginFiles.map((file, i) => `import * as p${i} from './src/plugins/${file}';`),
-      `console.log(core, ${pluginFiles.map((_, i) => `p${i}`).join(', ')});`,
+      ...pluginFiles.map((file) => `import './src/plugins/${file}';`),
+      `console.log(core);`,
     ].join('\n'),
     resolveDir: coreDir,
   },

@@ -10,19 +10,16 @@ import {
   months,
   today,
   tomorrow,
-  use,
   years,
   yesterday,
 } from '@native-dates/core';
-import loose from '@native-dates/core/plugins/loose';
-import ranges from '@native-dates/core/plugins/ranges';
-import relative from '@native-dates/core/plugins/relative';
-import tokens from '@native-dates/core/plugins/tokens';
-import zones from '@native-dates/core/plugins/zones';
+import '@native-dates/core/plugins/loose';
+import '@native-dates/core/plugins/ranges';
+import '@native-dates/core/plugins/relative';
+import '@native-dates/core/plugins/tokens';
+import '@native-dates/core/plugins/zones';
 
 import { expect } from './helpers/expect.js';
-
-use(ranges, tokens, relative, loose, zones);
 
 beforeEach(() => {
   configure({ zone: 'UTC', locale: 'en-US', weekStart: 'monday' });

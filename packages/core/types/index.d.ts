@@ -25,7 +25,6 @@ export {
   IS_TIME_RANGE,
 } from './helpers/identity.js';
 export { weekday } from './helpers/units.js';
-export { use } from './helpers/use.js';
 export { configure, type Settings } from './helpers/zones.js';
 export type {
   CalendarDateInput,
@@ -36,7 +35,6 @@ export type {
   DurationInput,
   FormatSpec,
   Locale,
-  Plugin,
   ReadOptions,
   TemporalValue,
   TimeInput,
