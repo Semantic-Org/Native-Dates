@@ -28,7 +28,8 @@
   ],
   "workspaces": [
     ".",
-    "packages/*"
+    "packages/*",
+    "docs"
   ],
   "scripts": {
     "test": "node --test test/*.test.js",

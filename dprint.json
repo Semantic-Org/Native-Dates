@@ -35,6 +35,7 @@
   "toml": {},
   "excludes": [
     "dist/",
+    "docs/",
     "types/",
     "**/node_modules",
     "**/*.html",
