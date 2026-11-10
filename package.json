@@ -1,25 +1,45 @@
 {
   "name": "native-dates",
-  "private": true,
-  "description": "Temporal, spoken plainly. Monorepo for @native-dates packages",
+  "version": "0.1.0",
+  "title": "Native Dates",
+  "description": "Temporal, spoken plainly. Datetimes, dates, times, durations and ranges on the browser's Temporal and Intl APIs",
+  "author": "Jack Lukic",
   "license": "ISC",
   "type": "module",
+  "sideEffects": false,
   "engines": {
     "node": ">=22"
   },
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "types": "types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./helpers/*": "./src/helpers/*.js"
+  },
+  "files": [
+    "src",
+    "types",
+    "README.md",
+    "LICENSE"
+  ],
   "workspaces": [
+    ".",
     "packages/*"
   ],
   "scripts": {
-    "test": "node --test packages/*/test/**/*.test.js",
+    "test": "node --test test/*.test.js",
     "size": "node tools/size.js",
     "format": "npx dprint fmt",
     "setup": "npx simple-git-hooks"
   },
   "devDependencies": {
-    "dprint": "^0.57.1",
-    "esbuild": "^0.28.2",
-    "simple-git-hooks": "^2.14.0"
+    "dprint": "^0.50.0",
+    "esbuild": "^0.25.0",
+    "simple-git-hooks": "^2.11.1"
   },
   "simple-git-hooks": {
     "pre-commit": "bash tools/hooks/pre-commit",

@@ -7,8 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { brotliCompressSync, constants } from 'node:zlib';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const coreDir = resolve(root, 'packages/core');
-const pluginsDir = resolve(coreDir, 'src/plugins');
+const pluginsDir = resolve(root, 'packages/plugins/src');
 
 async function measure(options) {
   const result = await build({
@@ -31,21 +30,21 @@ const kb = (bytes, sign = '') => `${sign}${(bytes / 1000).toFixed(2)} kB`;
 
 const minimal = await measure({
   stdin: {
-    contents: `import { now } from './src/index.js'; console.log(now());`,
-    resolveDir: coreDir,
+    contents: `import { now } from 'native-dates'; console.log(now());`,
+    resolveDir: root,
   },
 });
 
 const coreBarrel = await measure({
   stdin: {
-    contents: `import * as core from './src/index.js'; console.log(core);`,
-    resolveDir: coreDir,
+    contents: `import * as core from 'native-dates'; console.log(core);`,
+    resolveDir: root,
   },
 });
 
 const rows = [
   ['import { now }', kb(minimal.min), kb(minimal.br)],
-  ['@native-dates/core (full)', kb(coreBarrel.min), kb(coreBarrel.br)],
+  ['native-dates (full)', kb(coreBarrel.min), kb(coreBarrel.br)],
 ];
 
 const pluginFiles = readdirSync(pluginsDir).filter((file) => file.endsWith('.js')).sort();
@@ -54,11 +53,11 @@ for (const file of pluginFiles) {
   const withPlugin = await measure({
     stdin: {
       contents: [
-        `import * as core from './src/index.js';`,
-        `import './src/plugins/${file}';`,
+        `import * as core from 'native-dates';`,
+        `import '@native-dates/plugins/${name}';`,
         `console.log(core);`,
       ].join('\n'),
-      resolveDir: coreDir,
+      resolveDir: root,
     },
   });
   rows.push([
@@ -71,11 +70,11 @@ for (const file of pluginFiles) {
 const everything = await measure({
   stdin: {
     contents: [
-      `import * as core from './src/index.js';`,
-      ...pluginFiles.map((file) => `import './src/plugins/${file}';`),
+      `import * as core from 'native-dates';`,
+      ...pluginFiles.map((file) => `import '@native-dates/plugins/${file.replace(/\.js$/, '')}';`),
       `console.log(core);`,
     ].join('\n'),
-    resolveDir: coreDir,
+    resolveDir: root,
   },
 });
 rows.push(['core + all plugins', kb(everything.min), kb(everything.br)]);

@@ -5,7 +5,7 @@ Read the files in [`ai/`](ai/) before authoring or editing code in this reposito
 1. **[`ai/legibility-lessons.md`](ai/legibility-lessons.md)** — Direct from the maintainer. Callsite legibility, plain industry terms over metaphors, function signatures, and naming. Carry this with the weight of a live user turn.
 2. **[`ai/simplification-lessons.md`](ai/simplification-lessons.md)** — Mental-model simplicity over clever mechanisms, synthetic adapters, or cross-module monkey-patching.
 3. **[`ai/coding-standards.md`](ai/coding-standards.md)** — Class anatomy, structural branding (`Symbol.for`), folder homogeneity, error shape, and comment voice.
-4. **[`ai/architecture.md`](ai/architecture.md)** — How `@native-dates/core` and its opt-in plugins divide Temporal, the invariants each noun upholds, and how bundle sizes are measured.
+4. **[`ai/architecture.md`](ai/architecture.md)** — How `native-dates` (`src/`) and `@native-dates/plugins` (`packages/plugins/`) divide Temporal, the invariants each noun upholds, and how bundle sizes are measured.
 
 ## House Rules
 
@@ -15,6 +15,6 @@ Read the files in [`ai/`](ai/) before authoring or editing code in this reposito
 
 ## Commands
 
-- `npm test` — Run the full `node:test` suite across workspaces
-- `npm run size` — Measure minified and Brotli-11 sizes for `@native-dates/core` and every plugin
+- `npm test` — Run the full `node:test` suite
+- `npm run size` — Measure minified and Brotli-11 sizes for `native-dates` and every plugin in `@native-dates/plugins`
 - `npm run format` — Format code with `dprint`

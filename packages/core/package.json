@@ -1,36 +1,24 @@
 {
   "name": "@native-dates/core",
   "version": "0.1.0",
-  "title": "Native Dates",
-  "description": "Temporal, spoken plainly. Datetimes, dates, times, durations and ranges on the browser's Temporal and Intl APIs",
+  "description": "Native Dates under its scoped name, a thin re-export of native-dates",
   "author": "Jack Lukic",
   "license": "ISC",
   "type": "module",
-  "sideEffects": [
-    "./src/plugins/*.js"
-  ],
-  "engines": {
-    "node": ">=22"
-  },
-  "main": "src/index.js",
-  "module": "src/index.js",
-  "types": "types/index.d.ts",
+  "sideEffects": false,
+  "types": "./index.d.ts",
   "exports": {
     ".": {
-      "types": "./types/index.d.ts",
-      "import": "./src/index.js"
-    },
-    "./plugins/*": {
-      "types": "./types/plugins/*.d.ts",
-      "import": "./src/plugins/*.js"
+      "types": "./index.d.ts",
+      "import": "./index.js"
     }
   },
-  "scripts": {
-    "test": "node --test test/*.test.js"
+  "dependencies": {
+    "native-dates": "0.1.0"
   },
   "files": [
-    "src",
-    "types",
+    "index.js",
+    "index.d.ts",
     "README.md",
     "LICENSE"
   ]

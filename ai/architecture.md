@@ -2,7 +2,7 @@
 
 ## What This Repo Ships
 
-`@native-dates/core` wraps the browser's `Temporal` and `Intl` APIs in plain-English nouns and verbs with zero runtime dependencies. Like `nav-router` and `day.js`, the core stays lean and opt-in subpath plugins (`@native-dates/core/plugins/*`) add specialized capabilities without making every app ship them.
+`native-dates` (`src/`, also re-exported as `@native-dates/core`) wraps the browser's `Temporal` and `Intl` APIs in plain-English nouns and verbs with zero runtime dependencies. Like `nav-router`, the core stays lean at the repo root and opt-in plugins in `@native-dates/plugins/*` (`packages/plugins/src/`) add specialized capabilities when imported.
 
 ## The Four Core Nouns
 
@@ -27,16 +27,16 @@ Core holds what nearly every caller needs:
 - Duration phrases (`'1h 30m'`, `'2 weeks and 3 days'`) and fractional unit spilling (`1.5 days` -> `1d 12h`)
 - Standard IANA zones, fixed offsets, `UTC`, `configure({ zone, locale, weekStart })`, `compare`, `earliest`, `latest`, and `kindOf`
 
-Opt-in plugins live in `packages/core/src/plugins/` (`"sideEffects": ["./src/plugins/*.js"]` in `package.json`). Importing a plugin subpath attaches its prototype methods and extensions once at module load, with zero setup calls needed and `configure({...})` as the single home for app-wide defaults:
+Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"sideEffects": ["./src/*.js"]`). Importing a plugin subpath attaches its prototype methods and extensions once at module load, with zero setup calls needed and `configure({...})` as the single home for app-wide defaults:
 
 | Subpath | Adds | Mechanism |
 |---|---|---|
-| `plugins/ranges` | `DateRange`, `DateTimeRange`, `TimeRange`, `.to()`, `.range()`, `.points()`, `.split()` | Exports range classes/factories and attaches `.to()` / `.range()` onto point prototypes |
-| `plugins/tokens` | `YYYY-MM-DD HH:mm` token patterns, `monthNames()`, `weekdayNames()` | Wraps `.format()` on `DateTime`, `CalendarDate`, and `Time`; calls through for presets and `Intl` bags |
-| `plugins/relative` | `.formatRelative(to, locale)` on `DateTime` and `CalendarDate` | Attaches prototype methods backed by `Intl.RelativeTimeFormat` |
-| `plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), abbreviations (`'PT'`, `'CET'`), `configure({ zoneAliases })` | Registers fallback zone resolver and `zoneAliases` config handler in `helpers/zones.js` |
-| `plugins/loose` | `{ loose: true, dayFirst }` `Date.parse` fallback and `null` on unreadable input | Supplies the loose parser and `loosely` wrapper in `helpers/errors.js` across factories and ranges |
-| `plugins/legacy-date` | `Date.prototype` read methods (`getFullYear`, `getUTC*`, `toISOString`, `toLocale*`) and `set*` refusals on `DateTime` | Attaches prototype methods onto `DateTime` (`.toJSDate()` stays in core) |
+| `@native-dates/plugins/ranges` | `DateRange`, `DateTimeRange`, `TimeRange`, `.to()`, `.range()`, `.points()`, `.split()` | Exports range classes/factories and attaches `.to()` / `.range()` onto point prototypes |
+| `@native-dates/plugins/tokens` | `YYYY-MM-DD HH:mm` token patterns, `monthNames()`, `weekdayNames()` | Wraps `.format()` on `DateTime`, `CalendarDate`, and `Time`; calls through for presets and `Intl` bags |
+| `@native-dates/plugins/relative` | `.formatRelative(to, locale)` on `DateTime` and `CalendarDate` | Attaches prototype methods backed by `Intl.RelativeTimeFormat` |
+| `@native-dates/plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), abbreviations (`'PT'`, `'CET'`), `configure({ zoneAliases })` | Registers fallback zone resolver in `helpers/zones.js` |
+| `@native-dates/plugins/loose` | `{ loose: true, dayFirst }` `Date.parse` fallback and `null` on unreadable input | Supplies the loose parser and `loosely` wrapper in `helpers/errors.js` across factories and ranges |
+| `@native-dates/plugins/legacy-date` | `Date.prototype` read methods (`getFullYear`, `getUTC*`, `toISOString`, `toLocale*`) and `set*` refusals on `DateTime` | Attaches prototype methods onto `DateTime` (`.toJSDate()` stays in core) |
 
 ## Measuring Size
 
