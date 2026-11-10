@@ -1,6 +1,6 @@
 {
   "name": "@native-dates/core",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Native Dates under its scoped name, a thin re-export of native-dates",
   "author": "Jack Lukic",
   "license": "ISC",
@@ -14,7 +14,7 @@
     }
   },
   "dependencies": {
-    "native-dates": "0.0.1"
+    "native-dates": "0.1.0"
   },
   "files": [
     "index.js",
