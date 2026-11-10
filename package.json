@@ -1,6 +1,6 @@
 {
   "name": "native-dates",
-  "version": "0.1.0",
+  "version": "0.0.6",
   "title": "Native Dates",
   "description": "Temporal, spoken plainly. Datetimes, dates, times, durations and ranges on the browser's Temporal and Intl APIs",
   "author": "Jack Lukic",
