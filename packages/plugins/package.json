@@ -1,6 +1,6 @@
 {
   "name": "@native-dates/plugins",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "The plugins of Native Dates, each installed by importing it",
   "author": "Jack Lukic",
   "license": "ISC",
@@ -15,7 +15,7 @@
     }
   },
   "peerDependencies": {
-    "native-dates": "^0.1.0"
+    "native-dates": "^0.0.1"
   },
   "files": [
     "src",

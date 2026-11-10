@@ -1,6 +1,6 @@
 {
   "name": "@native-dates/polyfill",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "title": "Native Dates Polyfill",
   "description": "Loads temporal-polyfill onto globalThis only when the runtime lacks native Temporal",
   "author": "Jack Lukic",
@@ -29,6 +29,7 @@
     "index.js",
     "sync.js",
     "index.d.ts",
+    "README.md",
     "LICENSE"
   ]
 }
