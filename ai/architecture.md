@@ -31,6 +31,7 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"
 
 | Subpath | Adds | Mechanism |
 |---|---|---|
+| `@native-dates/plugins/year-month` | `YearMonth` over `Temporal.PlainYearMonth`, `yearMonth('2026-11')`, `.yearMonth`, `date(2026, 11)` as a year-month | Exports the class and factory, attaches the `.yearMonth` getter, and registers the reader core hands `date(2026, 11)` to in `helpers/errors.js` |
 | `@native-dates/plugins/ranges` | `DateRange`, `DateTimeRange`, `TimeRange`, `.to()`, `.range()`, `.points()`, `.split()` | Exports range classes/factories and attaches `.to()` / `.range()` onto point prototypes |
 | `@native-dates/plugins/tokens` | `YYYY-MM-DD HH:mm` token patterns, `monthNames()`, `weekdayNames()` | Wraps `.format()` on `DateTime`, `CalendarDate`, and `Time`; calls through for presets and `Intl` bags |
 | `@native-dates/plugins/relative` | `.formatRelative(to, locale)` on `DateTime` and `CalendarDate` | Attaches prototype methods backed by `Intl.RelativeTimeFormat` |
