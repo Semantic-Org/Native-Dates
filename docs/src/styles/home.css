@@ -202,9 +202,6 @@
 /* on Temporal and before it the calls are longer: they are set a size down, whichever is showing,
    so a row is as tall in one mode as in another */
 .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { font-size: var(--fs-xs); line-height: var(--lh-xs); white-space: pre; }
-/* where nothing held it, a row says so */
-.prim-none { color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); white-space: nowrap; }
-.prim-none > span { margin-inline-end: 6px; font-size: var(--fs-lg); line-height: 1; vertical-align: -2px; }
 .prim-built { flex: none; display: flex; align-items: center; gap: 10px; }
 .prim-type { color: var(--text-3); font-size: var(--fs-2xs); line-height: var(--lh-2xs); }
 /* the label beside a call is the Temporal type under it, or what held it before. a call on
@@ -356,7 +353,6 @@
   .prim-built { flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 3px; }
   .prim-code { order: 1; flex: none; width: 100%; }
   .prim-code code, .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .prim-none { white-space: normal; }
 }
 @media (max-width: 900px) {
   .topnav, .version, .version-menu { display: none; }

@@ -4,8 +4,7 @@
 // and `plugin` names the plugin a row needs, while it needs one. Temporal has no type for a span, so
 // that row's Temporal side is the two values it is made of, a line each.
 // `legacy` is how the same thing was kept before Temporal, in whatever would hold it, and `stored`
-// is what that was. the build checks it holds the same thing too. a row with no `legacy` is one
-// nothing held: its words are home.prims.<id>.legacy
+// is what that was. the build checks it holds the same thing too
 
 export const PRIMITIVES = [
   {
@@ -29,6 +28,8 @@ export const PRIMITIVES = [
     built: 'Temporal.ZonedDateTime',
     ours: "datetime('2026-11-16T09:30', 'America/Los_Angeles')",
     temporal: "Temporal.ZonedDateTime.from('2026-11-16T09:30[America/Los_Angeles]')",
+    legacy: "{ at: new Date('2026-11-16T17:30Z'), zone: 'America/Los_Angeles' }",
+    stored: 'Date + string',
   },
   {
     id: 'duration',
