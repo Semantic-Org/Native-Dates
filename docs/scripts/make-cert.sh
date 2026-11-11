@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# a local-dev cert for https://local.native-dates.dev, signed by the dev CA this machine already trusts
+# a local-dev cert for https://local.nativedates.dev, signed by the dev CA this machine already trusts
 # (next/docs/cert), so there is nothing new to trust. run from docs/ via `npm run cert`.
 # the CA's key is read where it lives and never copied here.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-HOST=local.native-dates.dev
+HOST=local.nativedates.dev
 CA_DIR="${DEV_CA_DIR:-../../next/docs/cert}"
 mkdir -p cert
 
