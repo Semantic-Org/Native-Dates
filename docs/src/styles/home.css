@@ -345,8 +345,9 @@
   .say-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-height: 0; max-width: none; margin-bottom: 20px; padding-block: 10px 0; }
   .say-text { margin-top: 0; }
 }
-/* a row no longer fits on one line: what it is and its type share a line, the call takes the next */
-@media (max-width: 1140px) {
+/* a row no longer fits on one line (the span's legacy spelling is the first to run out of room): what
+   it is and its type share a line, the call takes the next */
+@media (max-width: 1240px) {
   .prim { flex-wrap: wrap; align-items: flex-start; gap: 6px 16px; }
   .prim-what { flex: 1; width: auto; }
   /* the label and a plugin's tag stack at the row's far corner, so both stay beside what it is */
