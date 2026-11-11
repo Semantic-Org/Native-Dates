@@ -294,6 +294,7 @@
   padding-block: 16px; padding-inline: 20px max(20px, calc(100% - 20px - 68ch));
   border-top: 1px solid var(--line); color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-sm);
 }
+.ask-why strong { margin-inline-end: 4px; color: var(--text); font-weight: 600; }
 /* the verdict, stamped: a boxed word in ink, set a little askew. the ink is worn and ragged by the
    filter the component carries (#stamp-ink), and a second line runs inside the box as on a real stamp */
 .stamp-ink { position: absolute; }

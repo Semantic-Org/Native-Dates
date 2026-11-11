@@ -47,7 +47,7 @@ const cases = CASES.map((c) => ({ ...c, dateOut: preview(c.date.run(), library),
             <span class="stamp is-right">{t(locale, 'home.consoles.stamp.right')}</span>
           </div>
         </div>
-        <p class="ask-why" set:html={t(locale, `home.consoles.${c.id}.why`)} />
+        <p class="ask-why"><strong>{t(locale, 'home.consoles.why')}</strong> <Fragment set:html={t(locale, `home.consoles.${c.id}.why`)} /></p>
       </div>
     ))}
   </div>
