@@ -1,75 +1,73 @@
-// the favicon is a watch that tells the reader's time: the mark's own tile, ring, quarter marks and
-// hands (public/favicon.svg, a 24 unit box, drawn there at ten past ten) drawn to a canvas with the
-// hands where they are now. its one motion is a watch's own, the seconds: a bead on the ring that
-// stands at the current second and ticks round once a minute. a second hand would be the plainer
-// way to say it, but at a tab's 16 pixels a hand that thin comes out as one faint pixel at some
-// angles and none at others, where a bead is a solid pixel at every one. the face is drawn again as
-// each second begins, which a background tab may slow, and a tick it misses is fine since the next
-// one lands on the right second anyway. without motion there is no bead and the face is drawn once
-// a minute
+// the favicon is a watch that tells the reader's time: the ring and hands of public/favicon.svg (a
+// 24 unit box, drawn there at ten past ten) drawn to a canvas with the hands where they are now, and
+// a second hand that ticks. a tab gives an icon 16 pixels, so the watch has no tile behind it and no
+// margin around it: it is drawn on nothing, out to the edge of the box, and every pixel goes to the
+// face. that is what makes a second hand wide enough to show at every angle. the quarter marks of
+// the page's mark are left off, since at this size they are noise
+//
+// with no tile the icon sits on the browser's own tab, so its colors follow the browser's scheme
+// and not the page's theme. the face is drawn again as each second begins, which a background tab
+// may slow, and a tick it misses is fine since the next one lands on the right second anyway.
+// without motion there is no second hand and the face is drawn once a minute
 
 import { handAngles } from './mark-clock.js';
 
 const SIZE = 64;
 const UNIT = SIZE / 24;
+// the accent and the text color of each theme (styles/tokens.css), as favicon.svg has them
+const COLORS = {
+  dark: { face: '#b296ff', hand: '#fff' },
+  light: { face: '#7447c8', hand: '#0d111b' },
+};
 
-// the face at a time. the seconds bead is left off when no angle is given for it
-function face(canvas, { hour, minute }, second = null) {
+// the face at a time. the second hand is left off when no angle is given for it
+function face(canvas, colors, { hour, minute }, second = null) {
   const ctx = canvas.getContext('2d');
   ctx.setTransform(UNIT, 0, 0, UNIT, 0, 0);
   ctx.clearRect(0, 0, 24, 24);
   ctx.lineCap = 'round';
 
-  ctx.fillStyle = '#000';
-  ctx.beginPath();
-  ctx.roundRect(0, 0, 24, 24, 6);
-  ctx.fill();
-
-  // a stroke from the center outward, turned clockwise from twelve
-  const stroke = (degrees, from, to, width, color) => {
+  // a hand: a stroke from the center outward, turned clockwise from twelve
+  const hand = (degrees, length, width, color) => {
     const turn = (degrees - 90) * Math.PI / 180;
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
     ctx.beginPath();
-    ctx.moveTo(12 + Math.cos(turn) * from, 12 + Math.sin(turn) * from);
-    ctx.lineTo(12 + Math.cos(turn) * to, 12 + Math.sin(turn) * to);
+    ctx.moveTo(12, 12);
+    ctx.lineTo(12 + Math.cos(turn) * length, 12 + Math.sin(turn) * length);
     ctx.stroke();
   };
-  ctx.strokeStyle = '#b296ff';
-  ctx.lineWidth = 1.6;
+  ctx.strokeStyle = colors.face;
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(12, 12, 7.5, 0, Math.PI * 2);
+  ctx.arc(12, 12, 10.5, 0, Math.PI * 2);
   ctx.stroke();
-  [0, 90, 180, 270].forEach((quarter) => stroke(quarter, 5, 5.9, 1.1, 'rgba(178, 150, 255, 0.7)'));
-  stroke(minute, 0, 4.4, 1.3, '#fff');
-  stroke(hour, 0, 2.9, 2.1, '#fff');
-  // the seconds bead: white on the ring, with the ring cut back around it so it reads as set into it
-  if (second !== null) {
-    const turn = (second - 90) * Math.PI / 180;
-    [[2.4, '#000'], [1.6, '#fff']].forEach(([radius, color]) => {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(12 + Math.cos(turn) * 7.5, 12 + Math.sin(turn) * 7.5, radius, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
+  hand(minute, 6.8, 1.8, colors.hand);
+  hand(hour, 4.4, 2.6, colors.hand);
+  // the second hand lies over the other two and reaches the ring, in the ring's color
+  if (second !== null) { hand(second, 8.7, 1.5, colors.face); }
   return canvas.toDataURL('image/png');
 }
 
 export function clockFavicon() {
   const link = document.querySelector('link[rel="icon"]');
   const canvas = document.createElement('canvas');
-  if (!link || !canvas.getContext('2d')?.roundRect) { return; }
+  if (!link || !canvas.getContext('2d')) { return; }
   canvas.width = canvas.height = SIZE;
   link.type = 'image/png';
 
+  const dark = matchMedia('(prefers-color-scheme: dark)');
   const ticking = !matchMedia('(prefers-reduced-motion: reduce)').matches;
   const every = ticking ? 1000 : 60_000;
-  const draw = () => {
+  const paint = () => {
     const now = new Date();
-    link.href = face(canvas, handAngles(now), ticking ? now.getSeconds() * 6 : null);
+    link.href = face(canvas, dark.matches ? COLORS.dark : COLORS.light, handAngles(now), ticking ? now.getSeconds() * 6 : null);
+  };
+  const draw = () => {
+    paint();
     // again as the next second, or minute, begins
     setTimeout(draw, every - (Date.now() % every));
   };
   draw();
+  dark.addEventListener('change', paint);
 }
