@@ -267,7 +267,8 @@
 .ask-answers { min-width: 0; }
 .ask-panel, .ask-answers > .ask-panel[hidden] { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; }
 .ask-consoles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.console { min-width: 0; padding: 20px; background: var(--code-bg); }
+/* a console keeps a band clear under its answer, where the stamp lands */
+.console { position: relative; min-width: 0; padding: 20px 20px 72px; background: var(--code-bg); }
 .console + .console { border-inline-start: 1px solid var(--line); }
 .console-head { margin-bottom: 14px; color: var(--text-3); font: 400 var(--fs-xs)/var(--lh-xs) var(--font-mono); }
 .console-head b { margin-inline-end: 8px; color: var(--text); font-weight: 400; }
@@ -293,10 +294,34 @@
   padding-block: 16px; padding-inline: 20px max(20px, calc(100% - 20px - 68ch));
   border-top: 1px solid var(--line); color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-sm);
 }
-/* asking: both answers are held back together, then return together, and the reason follows them */
+/* the verdict, stamped: a boxed word in ink, set a little askew. the ink is worn and ragged by the
+   filter the component carries (#stamp-ink), and a second line runs inside the box as on a real stamp */
+.stamp-ink { position: absolute; }
+.stamp {
+  position: absolute; inset-inline-end: 22px; bottom: 16px; rotate: -8deg;
+  padding: 7px 14px 6px; border: 3px solid currentColor; border-radius: 8px;
+  outline: 1px solid currentColor; outline-offset: -7px;
+  color: var(--danger); opacity: 0.9; filter: url(#stamp-ink);
+  font: 800 var(--fs-xl)/1 var(--font-sans); letter-spacing: 3px; text-transform: uppercase; white-space: nowrap;
+  pointer-events: none; user-select: none;
+}
+.stamp.is-right { color: var(--tip); rotate: 5deg; }
+/* asking: both answers are held back together, then return together. a stamp comes down on each, the
+   wrong one first, and the reason follows the stamps */
 .console-out, .ask-why { transition: opacity 0.3s var(--ease), translate 0.3s var(--ease); }
-.ask-why { transition-delay: 0.3s; }
+.is-stamped .ask-why { transition-delay: 1s; }
 .is-asking .console-out, .is-asking .ask-why { opacity: 0; translate: 0 4px; transition: none; }
+.is-asking .stamp { opacity: 0; }
+.is-stamped .stamp { animation: stamp-down 0.4s both 0.35s; }
+.is-stamped .stamp.is-right { animation-delay: 0.62s; }
+/* down hard from above the page, pressed a touch past flat, then let up: the fall speeds up into
+   the paper and the release eases off */
+@keyframes stamp-down {
+  0% { opacity: 0; scale: 2.6; animation-timing-function: cubic-bezier(0.7, 0, 0.95, 0.5); }
+  52% { opacity: 1; scale: 0.92; animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+  76% { opacity: 1; scale: 1.03; }
+  100% { opacity: 0.9; scale: 1; }
+}
 
 /* ---------- a year of one standup, read on another city's clock ---------- */
 
@@ -430,7 +455,7 @@
   .ask-list { border-inline-end: 0; border-bottom: 1px solid var(--line); }
   .ask-tab { padding: 14px 16px; font-size: var(--fs-sm); line-height: var(--lh-sm); }
   .ask-consoles { grid-template-columns: minmax(0, 1fr); }
-  .console { padding: 16px; }
+  .console { padding: 16px 16px 76px; }
   .console + .console { border-inline-start: 0; border-top: 1px solid var(--line); }
   .ask-why { padding-block: 14px; padding-inline: 16px max(16px, calc(100% - 16px - 68ch)); }
   .bytes-plugins { grid-template-columns: minmax(0, 1fr); }
@@ -472,6 +497,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .console-out, .ask-why, .bytes-added, .year-time, .year-gap span { transition: none; }
+  .stamp { animation: none; }
   .say-grid:not([hidden]) .say-cell { animation: none; }
 }
 
