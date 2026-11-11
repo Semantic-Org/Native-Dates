@@ -1,0 +1,17 @@
+---
+// the question ribbon's heading, with two marks drawn on it by hand: "wrong" is scribbled out, and
+// "right" is underlined twice. the words are the heading's own
+// string, where each verdict is an <em>; the marks are added here, so a translation carries none of
+// them. they draw themselves once as the heading comes into view (scripts/home/verdict.js), and
+// stand already drawn where motion is unwelcome or scripts don't run
+import { t } from '../../lib/i18n.js';
+
+const locale = Astro.currentLocale;
+// each mark stretches to its word, whatever the word is, so it is drawn in a box of its own
+const SCRIBBLE = '<svg class="doodle doodle-scribble" viewBox="0 0 120 44" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M4 25 C 22 17, 70 13, 116 16 C 84 20, 40 24, 8 31 C 40 27, 82 23, 114 27"/></svg>';
+const UNDERLINE = '<svg class="doodle doodle-underline" viewBox="0 0 100 16" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 6 C 24 2, 62 1, 98 5"/><path pathLength="1" d="M16 13 C 40 9, 68 9, 90 12"/></svg>';
+const marked = t(locale, 'home.consoles.title')
+  .replace(/(<em class="is-wrong">[^<]*)(<\/em>)/, `$1${SCRIBBLE}$2`)
+  .replace(/(<em class="is-right">[^<]*)(<\/em>)/, `$1${UNDERLINE}$2`);
+---
+<h2 class="verdict" data-verdict set:html={marked} />
