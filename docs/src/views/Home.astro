@@ -8,6 +8,7 @@ import Bytes from '../components/home/Bytes.astro';
 import Consoles from '../components/home/Consoles.astro';
 import Primitives from '../components/home/Primitives.astro';
 import Say from '../components/home/Say.astro';
+import Verdict from '../components/home/Verdict.astro';
 import Xray from '../components/home/Xray.astro';
 import YearStrip from '../components/home/YearStrip.astro';
 import Playground from '../components/Playground.astro';
@@ -91,7 +92,7 @@ const INSTALL = 'npm i native-dates';
     <section class="ribbon">
       <div class="container">
         <div class="ribbon-head">
-          <h2 class="versus" set:html={t(locale, 'home.consoles.title')} />
+          <Verdict />
           <p set:html={t(locale, 'home.consoles.lede')} />
         </div>
         <Consoles />
@@ -160,6 +161,7 @@ const INSTALL = 'npm i native-dates';
     import { mountBytes } from '../scripts/home/bytes.js';
     import { mountConsoles, mountQuestions } from '../scripts/home/consoles-live.js';
     import { mountPrimitives } from '../scripts/home/primitives.js';
+    import { mountVerdict } from '../scripts/home/verdict.js';
     import { mountSay } from '../scripts/home/say.js';
     import { mountYear } from '../scripts/home/year.js';
     import { mountXray } from '../scripts/xray.js';
@@ -170,6 +172,7 @@ const INSTALL = 'npm i native-dates';
     document.querySelectorAll('[data-bytes]').forEach(mountBytes);
     document.querySelectorAll('[data-consoles]').forEach(mountQuestions);
     document.querySelectorAll('[data-primitives]').forEach(mountPrimitives);
+    document.querySelectorAll('[data-verdict]').forEach(mountVerdict);
 
     // the parts that compute dates run on the reader's own Temporal, read again for their day, zone
     // and locale. a browser that doesn't ship Temporal yet loads it first, as an app there would.
