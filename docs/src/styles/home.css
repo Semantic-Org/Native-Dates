@@ -106,20 +106,7 @@
 
 /* ---------- closer & footer ---------- */
 
-/* the page ends on a band of the accent, deepened until white reads on it. the band is the same in
-   both themes, so everything on it takes its colors from here and not from the theme */
-.closer {
-  --text: oklch(1 0 0 / 0.96); --text-2: oklch(1 0 0 / 0.82); --text-3: oklch(1 0 0 / 0.68); --text-4: oklch(1 0 0 / 0.62);
-  --line: oklch(1 0 0 / 0.14); --line-2: oklch(1 0 0 / 0.22); --line-3: oklch(1 0 0 / 0.34);
-  --surface-2: oklch(0.2 0.1 295 / 0.6); --surface-3: oklch(1 0 0 / 0.12); --code-bg: oklch(0.22 0.11 295);
-  --bevel-soft: linear-gradient(140deg, oklch(1 0 0 / 0.06), oklch(0 0 0 / 0.1));
-  --c-blue: #a9d4ff; --c-violet: #dcc1ff; --c-string: #c2e0ff; --c-green: #8ff0b8;
-  --accent: oklch(0.9 0.07 295);
-  padding: 96px 0; background: oklch(0.34 0.16 295); color: var(--text);
-}
-:root[data-theme='light'] .closer { background: oklch(0.44 0.2 295); }
-.closer .btn.primary { background: #fff; color: oklch(0.26 0.13 295); }
-.closer .btn.primary:hover { background: oklch(0.94 0.035 295); }
+.closer { border-top: 1px solid var(--line); padding: 96px 0; }
 .closer-inner { display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
 .closer h2 { font-size: var(--heading); line-height: var(--heading-lh); letter-spacing: var(--heading-track); font-weight: 620; }
 .closer-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
