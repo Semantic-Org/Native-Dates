@@ -13,7 +13,7 @@ const locale = Astro.currentLocale;
 const TURN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg>';
 const sentences = SENTENCES.map((sentence) => ({ ...sentence, values: read(sentence, [], library) }));
 ---
-<figure class="say" data-say aria-labelledby="say-caption">
+<figure class="say" data-say>
   <div class="say-head">
     <div class="say-tabs" role="tablist" aria-label={t(locale, 'home.say.tabs')}>
       {sentences.map((s, i) => (
@@ -51,5 +51,4 @@ const sentences = SENTENCES.map((sentence) => ({ ...sentence, values: read(sente
     </div>
   ))}
   </div>
-  <figcaption id="say-caption" class="say-caption">{t(locale, 'home.say.caption')}</figcaption>
 </figure>
