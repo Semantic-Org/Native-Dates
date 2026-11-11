@@ -28,6 +28,7 @@ const day = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0
 const HOLDS = {
   date: (legacy, ours) => day(legacy) === String(ours),
   time: (legacy, ours) => legacy === ours.hour * 60 + ours.minute,
+  datetime: (legacy, ours) => legacy.at.getTime() === ours.epoch && legacy.zone === ours.zone,
   duration: (legacy, ours) => legacy === ours.toMilliseconds(),
   now: (legacy) => legacy instanceof Date,
   range: (legacy, ours) => legacy.map(day).join() === [ours.start, ours.end].map(String).join(),
@@ -39,7 +40,7 @@ for (const row of PRIMITIVES) {
   const theirs = printed(new Function(`return (${lines.length > 1 ? `[${lines.join(', ')}]` : row.temporal});`)());
   const same = row.id === 'now' ? momentOf(printed(ours)) === momentOf(theirs) : printed(ours) === theirs;
   if (!same) { throw new Error(`the homepage sets ${row.ours} beside ${row.temporal}, and they differ: ${printed(ours)} and ${theirs}`); }
-  if (row.legacy && !HOLDS[row.id](new Function(`return (${row.legacy.replace(/\s*\/\/.*$/, '')});`)(), ours)) {
+  if (!HOLDS[row.id](new Function(`return (${row.legacy.replace(/\s*\/\/.*$/, '')});`)(), ours)) {
     throw new Error(`the homepage sets ${row.ours} beside ${row.legacy}, and they don't hold the same thing`);
   }
 }
@@ -58,9 +59,7 @@ const MODES = [['ours', 'native-dates'], ['temporal', 'Temporal'], ['legacy', t(
         <span class="prim-code swap">
           <code data-prim="ours" set:html={highlight(row.ours)} />
           <code data-prim="temporal" hidden set:html={highlight(row.temporal)} />
-          {row.legacy
-            ? <code data-prim="legacy" hidden set:html={highlight(row.legacy)} />
-            : <span class="prim-none" data-prim="legacy" hidden><span aria-hidden="true">😩</span> {t(locale, `home.prims.${row.id}.legacy`)}</span>}
+          <code data-prim="legacy" hidden set:html={highlight(row.legacy)} />
         </span>
         <span class="prim-built">
           <span class="swap">
