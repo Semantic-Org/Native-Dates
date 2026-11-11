@@ -1,8 +1,9 @@
 ---
-// the kinds of value the library hands back, shown as two sums made of this very moment: its date
-// and its time in its zone make the moment, and from now until the new year is a length of time.
-// each names the Temporal type it wraps, and the build stops if a value isn't that type. the page
-// ships the build's reading; the browser reads again and keeps time (scripts/home/nouns.js)
+// the kinds of value the library hands back, each announced by name, then what it is for, then one
+// call and what it gives right now, then the Temporal type under it. they are laid out as two sums,
+// because they make each other: a date and a time in a zone is a datetime, and from one moment
+// until another is a duration. the build stops if a value isn't the Temporal type the page names.
+// the page ships the build's reading; the browser reads again and keeps time (scripts/home/nouns.js)
 import * as library from 'native-dates';
 
 import { t } from '../../lib/i18n.js';
@@ -12,78 +13,64 @@ import { highlight } from '../../scripts/site.js';
 const locale = Astro.currentLocale;
 const terms = read(library);
 for (const [kind, noun] of Object.entries(NOUNS)) {
-  const type = `Temporal.${terms[kind].toTemporal()[Symbol.toStringTag].replace('Temporal.', '')}`;
+  const type = terms[kind].toTemporal()[Symbol.toStringTag];
   if (type !== noun.wraps) { throw new Error(`the homepage says ${noun.name} wraps ${noun.wraps}, and it wraps ${type}`); }
 }
 const text = texts(library);
-const wraps = (kind) => t(locale, 'home.nouns.wraps', { type: `<code>${NOUNS[kind].wraps}</code>` });
+// the four kinds, where each stands in the sums
+const KINDS = [
+  { kind: 'date', col: 1, row: 1 },
+  { kind: 'time', col: 3, row: 1 },
+  { kind: 'datetime', col: 7, row: 1, result: true },
+  { kind: 'duration', col: 7, row: 6, result: true },
+];
 ---
 <figure class="nouns" data-nouns aria-label={t(locale, 'home.nouns.sums')}>
-  {/* a date and a time, in a zone, make a moment */}
-  <div class="noun" style="--col: 1; --row: 1">
-    <div class="noun-head">
-      <code class="noun-code" set:html={highlight(NOUNS.date.code)} />
-      <p class="noun-value" data-term="date">{text.date}</p>
+  {KINDS.map(({ kind, col, row, result }) => (
+    <div class:list={['noun', { 'is-result': result }]} style={`--col: ${col}; --row: ${row}`}>
+      <h3 class="noun-title">{NOUNS[kind].name}</h3>
+      <div class="noun-why">
+        <p class="noun-what">{t(locale, `home.nouns.${kind}.what`)}</p>
+        <p class="noun-uses">{t(locale, `home.nouns.${kind}.uses`)}</p>
+      </div>
+      <div class="noun-use">
+        <code class="noun-code" set:html={highlight(NOUNS[kind].code)} />
+        <p class="noun-value" data-term={kind}>{text[kind]}</p>
+      </div>
+      <p class="noun-wraps" set:html={t(locale, 'home.nouns.wraps', { type: `<code>${NOUNS[kind].wraps}</code>` })} />
     </div>
-    <p class="noun-name"><b>{NOUNS.date.name}</b> <span set:html={wraps('date')} /></p>
-    <p class="noun-what">{t(locale, 'home.nouns.date.what')}</p>
-    <p class="noun-uses">{t(locale, 'home.nouns.date.uses')}</p>
-  </div>
-  <span class="noun-op" style="--col: 2; --row: 1" aria-hidden="true">+</span>
-  <div class="noun" style="--col: 3; --row: 1">
-    <div class="noun-head">
-      <code class="noun-code" set:html={highlight(NOUNS.time.code)} />
-      <p class="noun-value" data-term="time">{text.time}</p>
-    </div>
-    <p class="noun-name"><b>{NOUNS.time.name}</b> <span set:html={wraps('time')} /></p>
-    <p class="noun-what">{t(locale, 'home.nouns.time.what')}</p>
-    <p class="noun-uses">{t(locale, 'home.nouns.time.uses')}</p>
-  </div>
-  <span class="noun-op" style="--col: 4; --row: 1" aria-hidden="true">+</span>
-  <div class="noun is-zone" style="--col: 5; --row: 1">
-    <div class="noun-head">
+  ))}
+
+  {/* the quiet terms: a zone, and the two moments a duration lies between */}
+  <div class="noun is-quiet" style="--col: 5; --row: 1">
+    <p class="noun-title">{t(locale, 'home.nouns.zone')}</p>
+    <div class="noun-why"><p class="noun-what">{t(locale, 'home.nouns.zone.what')}</p></div>
+    <div class="noun-use">
       <code class="noun-code" set:html={highlight('now().zone')} />
       <p class="noun-value" data-term="zone">{text.zone}</p>
     </div>
-    <p class="noun-what">{t(locale, 'home.nouns.zone.what')}</p>
   </div>
-  <span class="noun-op is-equals" style="--col: 6; --row: 1" aria-hidden="true">=<code set:html={highlight('date.at(time, zone)')} /></span>
-  <div class="noun is-result" style="--col: 7; --row: 1">
-    <div class="noun-head">
-      <code class="noun-code" set:html={highlight(NOUNS.datetime.code)} />
-      <p class="noun-value" data-term="datetime">{text.datetime}</p>
-    </div>
-    <p class="noun-name"><b>{NOUNS.datetime.name}</b> <span set:html={wraps('datetime')} /></p>
-    <p class="noun-what">{t(locale, 'home.nouns.datetime.what')}</p>
-    <p class="noun-uses">{t(locale, 'home.nouns.datetime.uses')}</p>
-  </div>
-
-  <span class="noun-rule" aria-hidden="true"></span>
-
-  {/* from one moment until another is a length of time */}
-  <div class="noun is-ref" style="--col: 1; --row: 3">
-    <div class="noun-head">
+  <div class="noun is-quiet" style="--col: 1; --row: 6">
+    <p class="noun-title">{t(locale, 'home.nouns.from')}</p>
+    <div class="noun-why"><p class="noun-what">{t(locale, 'home.nouns.from.what')}</p></div>
+    <div class="noun-use">
       <code class="noun-code" set:html={highlight('now()')} />
       <p class="noun-value" data-term="datetime">{text.datetime}</p>
     </div>
-    <p class="noun-name"><b>{NOUNS.datetime.name}</b></p>
   </div>
-  <span class="noun-op" style="--col: 2; --row: 3" aria-hidden="true">&rarr;</span>
-  <div class="noun is-ref is-wide" style="--col: 3; --row: 3">
-    <div class="noun-head">
+  <div class="noun is-quiet is-wide" style="--col: 3; --row: 6">
+    <p class="noun-title">{t(locale, 'home.nouns.to')}</p>
+    <div class="noun-why"><p class="noun-what">{t(locale, 'home.nouns.to.what')}</p></div>
+    <div class="noun-use">
       <code class="noun-code" data-term="newYearCode">{text.newYearCode}</code>
       <p class="noun-value" data-term="newYear">{text.newYear}</p>
     </div>
-    <p class="noun-name"><b>{NOUNS.datetime.name}</b></p>
   </div>
-  <span class="noun-op is-equals" style="--col: 6; --row: 3" aria-hidden="true">=<code set:html={highlight('now.until(newYear)')} /></span>
-  <div class="noun is-result" style="--col: 7; --row: 3">
-    <div class="noun-head">
-      <code class="noun-code" set:html={highlight(NOUNS.duration.code)} />
-      <p class="noun-value" data-term="duration">{text.duration}</p>
-    </div>
-    <p class="noun-name"><b>{NOUNS.duration.name}</b> <span set:html={wraps('duration')} /></p>
-    <p class="noun-what">{t(locale, 'home.nouns.duration.what')}</p>
-    <p class="noun-uses">{t(locale, 'home.nouns.duration.uses')}</p>
-  </div>
+
+  <span class="noun-op" style="--col: 2; --row: 1" aria-hidden="true">+</span>
+  <span class="noun-op" style="--col: 4; --row: 1" aria-hidden="true">+</span>
+  <span class="noun-op is-equals" style="--col: 6; --row: 1" aria-hidden="true">=<code set:html={highlight('date.at(time, zone)')} /></span>
+  <span class="noun-rule" aria-hidden="true"></span>
+  <span class="noun-op" style="--col: 2; --row: 6" aria-hidden="true">&rarr;</span>
+  <span class="noun-op is-equals" style="--col: 6; --row: 6" aria-hidden="true">=<code set:html={highlight('a.until(b)')} /></span>
 </figure>
