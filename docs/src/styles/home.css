@@ -199,18 +199,24 @@
   padding: 0; margin: 0; border-radius: 0; background: none; box-shadow: none; white-space: nowrap;
 }
 .prim-code code { color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); }
-/* on Temporal the calls are longer: they are set a size down, whichever is showing, so a row is
-   as tall in one mode as in the other */
-.prim-code [data-prim='temporal'] { font-size: var(--fs-xs); line-height: var(--lh-xs); white-space: pre; }
+/* on Temporal and before it the calls are longer: they are set a size down, whichever is showing,
+   so a row is as tall in one mode as in another */
+.prim-code :is([data-prim='temporal'], [data-prim='legacy']) { font-size: var(--fs-xs); line-height: var(--lh-xs); white-space: pre; }
+/* where nothing held it, a row says so */
+.prim-none { color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); white-space: nowrap; }
+.prim-none > span { margin-inline-end: 6px; font-size: var(--fs-lg); line-height: 1; vertical-align: -2px; }
 .prim-built { flex: none; display: flex; align-items: center; gap: 10px; }
 .prim-type { color: var(--text-3); font-size: var(--fs-2xs); line-height: var(--lh-2xs); }
-/* a call on Temporal names its own type, so the label steps aside and the call takes its room */
-.prims[data-mode='temporal'] .prim-type { display: none; }
+/* the label beside a call is the Temporal type under it, or what held it before. a call on
+   Temporal names its own type, so there the label is spare: it keeps its place, unseen */
+.prim-built .swap { justify-items: end; }
 .prim-plugin {
   padding: 1px 8px; border: 1px solid var(--line-2); border-radius: 999px;
   color: var(--text-2); font: 500 var(--fs-3xs)/var(--lh-3xs) var(--font-sans); text-decoration: none; white-space: nowrap;
 }
 .prim-plugin:hover { color: var(--accent-strong); border-color: var(--accent-line); }
+/* the plugin is what the native-dates call needs: beside the other spellings its tag keeps its place, unseen */
+.prims:not([data-mode='ours']) .prim-plugin { visibility: hidden; }
 
 /* ---------- two consoles: Date and native-dates, asked the same questions ---------- */
 
@@ -343,13 +349,14 @@
   .say-text { margin-top: 0; }
 }
 /* a row no longer fits on one line: what it is and its type share a line, the call takes the next */
-@media (max-width: 1080px) {
-  .prim { flex-wrap: wrap; gap: 6px 16px; }
+@media (max-width: 1140px) {
+  .prim { flex-wrap: wrap; align-items: flex-start; gap: 6px 16px; }
   .prim-what { flex: 1; width: auto; }
+  /* the label and a plugin's tag stack at the row's far corner, so both stay beside what it is */
+  .prim-built { flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 3px; }
   .prim-code { order: 1; flex: none; width: 100%; }
-  .prim-code code, .prim-code [data-prim='temporal'] { white-space: pre-wrap; overflow-wrap: anywhere; }
-  /* here the label isn't in the call's way, so on Temporal it keeps its place, unseen, and the list stays one height */
-  .prims[data-mode='temporal'] .prim-type { display: inline; visibility: hidden; }
+  .prim-code code, .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .prim-none { white-space: normal; }
 }
 @media (max-width: 900px) {
   .topnav, .version, .version-menu { display: none; }
@@ -390,7 +397,7 @@
   .topbar-inner { gap: 12px; }
   .prim { padding: 14px 16px; }
   .prim-code code { font-size: var(--fs-sm); line-height: var(--lh-sm); }
-  .prim-code [data-prim='temporal'] { font-size: var(--fs-2xs); line-height: var(--lh-2xs); }
+  .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { font-size: var(--fs-2xs); line-height: var(--lh-2xs); }
   .topbar .search-trigger { width: 34px; padding: 0; justify-content: center; }
   .topbar .search-trigger .keys { display: none; }
   .topbar .search-trigger .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
