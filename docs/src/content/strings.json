@@ -146,7 +146,7 @@
   "home.consoles.month.ask": "What is one month after January 31?",
   "home.consoles.month.why": "<code>Date</code> counts to February 31 and spills into March. Temporal stops at the last day February has.",
   "home.consoles.month.miss": "three days late",
-  "home.consoles.clocks.ask": "It is 9 AM on Saturday in New York. What time is it one day later?",
+  "home.consoles.clocks.ask": "What time is one day after 9 AM on March 7 in New York?",
   "home.consoles.clocks.why": "The clocks spring forward that night, so the day is 23 hours long. Outside its own zone, <code>Date</code> can only add 24 hours. Temporal adds a day and keeps the clock at nine.",
   "home.consoles.clocks.miss": "an hour late",
   "home.consoles.start.ask": "The due date is 30 days after the start. What is the start now?",
