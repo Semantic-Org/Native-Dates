@@ -1,12 +1,11 @@
 import { ui } from './strings.js';
-import { FALLBACK, FRAMEWORKS, fwById } from '../lib/frameworks.js';
-import { logoFor } from './framework-logos.js';
 import { mountSearch } from './search.js';
-import { animateFavicon } from './favicon.js';
-import { wireMarkPulse } from './mark-pulse.js';
+import { clockFavicon } from './favicon.js';
+import { wireMarkClock } from './mark-clock.js';
 import { wireVersionMenus } from './version-menu.js';
 
-// prototype-only helpers: a tiny js highlighter (astro will use shiki), copy buttons, code tabs, theme.
+// what every page does in the browser: a tiny js highlighter for code written in the page's own
+// markup (markdown goes through shiki at build), copy buttons, the theme, and the dropdown.
 
 const KEYWORDS = new Set([
   'import',
@@ -173,59 +172,13 @@ export function wireCopy(root = document) {
   });
 }
 
-// tabs: [role=tablist] with buttons aria-controls → panels. data-sync="framework" keeps every group in step
-// a tablist that runs its own tabs (variant tabs, the playground's files) opts out with data-own-tabs
-export function wireTabs(root = document) {
-  const select = (group, value) => {
-    group.querySelectorAll('[role=tab]').forEach((tab) => {
-      const on = tab.dataset.value === value;
-      tab.setAttribute('aria-selected', on);
-      tab.tabIndex = on ? 0 : -1;
-      const panel = document.getElementById(tab.getAttribute('aria-controls'));
-      if (panel) { panel.hidden = !on; }
-    });
-  };
-  root.querySelectorAll('[role=tablist]:not([data-variant-tabs], [data-own-tabs])').forEach((group) => {
-    group.addEventListener('click', (e) => {
-      const tab = e.target.closest('[role=tab]');
-      if (!tab) { return; }
-      const sync = group.dataset.sync;
-      if (sync) {
-        document.querySelectorAll(`[role=tablist][data-sync="${sync}"]`).forEach((g) => select(g, tab.dataset.value));
-        try {
-          localStorage.setItem(`nr:${sync}`, tab.dataset.value);
-        }
-        catch {}
-      }
-      else { select(group, tab.dataset.value); }
-    });
-    group.addEventListener('keydown', (e) => {
-      if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) { return; }
-      const tabs = [...group.querySelectorAll('[role=tab]')];
-      const i = tabs.indexOf(document.activeElement);
-      const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
-      next.focus();
-      next.click();
-    });
-    let saved = null;
-    try {
-      saved = group.dataset.sync && localStorage.getItem(`nr:${group.dataset.sync}`);
-    }
-    catch {}
-    const initial = (saved && group.querySelector(`[data-value="${saved}"]`))
-      ? saved
-      : group.querySelector('[role=tab]')?.dataset.value;
-    select(group, initial);
-  });
-}
-
 // the theme follows the system until the reader picks one; a pick is remembered. the base layout
 // sets it before first paint, so here it only answers the toggle and later system changes
 export function wireTheme() {
   const root = document.documentElement;
   const saved = () => {
     try {
-      return localStorage.getItem('nr:theme');
+      return localStorage.getItem('nd:theme');
     }
     catch {
       return null;
@@ -239,7 +192,7 @@ export function wireTheme() {
     btn.addEventListener('click', () => {
       root.dataset.theme = root.dataset.theme === 'light' ? 'dark' : 'light';
       try {
-        localStorage.setItem('nr:theme', root.dataset.theme);
+        localStorage.setItem('nd:theme', root.dataset.theme);
       }
       catch {}
       label();
@@ -268,6 +221,7 @@ const CHECK =
 
 // the button is named by its own text, a hidden "label: " before the visible value, so what is heard
 // is what is seen. size 'lg' is the chunky form (the docs sidebar): icon, label and hint in the button as in the menu
+let uid = 0;
 export function createDropdown(host, { options, value, label, onChange, size = 'md' }) {
   const id = `dd-${++uid}`;
   host.classList.add('dropdown');
@@ -402,162 +356,21 @@ export function createDropdown(host, { options, value, label, onChange, size = '
   };
 }
 
-/* ---------- frameworks ----------
-   two separate things: the reader's framework (one, site-wide, many options) and a block's code
-   variants (few). a block shows the variant tagged with the reader's framework, else the first
-   variant reached through FALLBACK, else its first. its tabs list only its own variants and switch
-   that block alone; the picker is the one control that changes the framework everywhere */
-
-export { FRAMEWORKS };
-
-export function getFramework() {
-  try {
-    return fwById(localStorage.getItem('nr:framework')).id;
-  }
-  catch {
-    return 'core';
-  }
-}
-export function setFramework(id) {
-  try {
-    localStorage.setItem('nr:framework', id);
-  }
-  catch {}
-  // the sidebar's framework slots follow this attribute in css
-  document.documentElement.dataset.framework = fwById(id).id;
-  document.dispatchEvent(new CustomEvent('nr:framework', { detail: fwById(id).id }));
-}
-
-function variantFor(pres, fw) {
-  const tagged = (id) => pres.find((p) => p.dataset.for.split(/\s+/).includes(id));
-  for (const id of [fw, ...(FALLBACK[fw] ?? []), 'core']) {
-    const hit = tagged(id);
-    if (hit) { return hit; }
-  }
-  return pres[0];
-}
-
-let uid = 0;
-export function wireVariants(root = document) {
-  root.querySelectorAll('[data-variants]').forEach((block) => {
-    const pres = [...block.querySelectorAll('pre[data-for]')];
-    const tablist = block.querySelector('[data-variant-tabs]');
-    const note = block.querySelector('[data-variant-note]');
-    tablist.innerHTML = pres.map((pre) => {
-      pre.id ||= `variant-${++uid}`;
-      return `<button class="code-tab" role="tab" aria-controls="${pre.id}">${pre.dataset.label}</button>`;
-    }).join('');
-    const tabs = [...tablist.children];
-
-    const show = (pre) => {
-      pres.forEach((p, i) => {
-        const on = p === pre;
-        p.hidden = !on;
-        tabs[i].setAttribute('aria-selected', on);
-        tabs[i].tabIndex = on ? 0 : -1;
-      });
-    };
-    // the variant the reader's framework resolves to, with a note when it is shared or borrowed
-    const resolve = (fw) => {
-      const pre = variantFor(pres, fw);
-      show(pre);
-      const primary = pre.dataset.for.split(/\s+/)[0];
-      const f = fwById(fw);
-      note.title = fw === primary || !f.pkg ? '' : ui('framework.sameCode', { framework: f.label, pkg: f.pkg });
-      note.innerHTML = fw === primary || !f.pkg ? '' : `${f.label}: <code>${f.pkg}</code>`;
-    };
-
-    tablist.addEventListener('click', (e) => {
-      const i = tabs.indexOf(e.target.closest('[role=tab]'));
-      if (i < 0) { return; }
-      show(pres[i]);
-      note.innerHTML = '';
-    });
-    tablist.addEventListener('keydown', (e) => {
-      if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) { return; }
-      const i = tabs.indexOf(document.activeElement);
-      const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
-      next.focus();
-      next.click();
-    });
-    document.addEventListener('nr:framework', (e) => resolve(e.detail));
-    resolve(getFramework());
-  });
-}
-
-// the picker, and every install command built from the framework's package
-export function wireFramework(root = document) {
-  root.querySelectorAll('[data-install-cmds]').forEach((swap) => {
-    swap.innerHTML = FRAMEWORKS.map((f) =>
-      `<code data-shell data-fw="${f.id}" hidden>npm i nav-router${f.pkg ? ` ${f.pkg}` : ''}</code>`
-    ).join('');
-  });
-  const pickers = [...root.querySelectorAll('[data-framework-picker]')].map((host) =>
-    createDropdown(host, {
-      label: ui('framework.picker'),
-      size: host.dataset.frameworkPicker || 'md',
-      options: FRAMEWORKS.map((f) => ({
-        value: f.id,
-        label: f.label,
-        hint: f.pkg ?? 'nav-router',
-        icon: host.dataset.frameworkPicker === 'lg' ? logoFor(f.id) : null,
-      })),
-      value: getFramework(),
-      onChange: setFramework,
-    })
-  );
-  const apply = (fw) => {
-    pickers.forEach((dd) => {
-      dd.value = fw;
-    });
-    root.querySelectorAll('[data-install-cmds] code').forEach((c) => {
-      c.hidden = c.dataset.fw !== fw;
-    });
-  };
-  document.addEventListener('nr:framework', (e) => apply(e.detail));
-  apply(getFramework());
-}
-
-// on a framework's own page (guides/solid/…), picking another framework goes to that framework's
-// version of the page when one is written, else says so in place, with the way back
-export function wireFrameworkPage(root = document) {
-  const notice = root.querySelector('[data-fw-notice]');
-  if (!notice) { return; }
-  const { pageFramework, pageLabel } = notice.dataset;
-  const equivalents = JSON.parse(notice.querySelector('[data-fw-equivalents]').textContent);
-  const text = notice.querySelector('[data-fw-notice-text]');
-  const back = notice.querySelector('[data-fw-back]');
-  back.textContent = ui('framework.backTo', { page: pageLabel });
-  back.addEventListener('click', () => setFramework(pageFramework));
-  document.addEventListener('nr:framework', ({ detail: fw }) => {
-    if (fw !== pageFramework && equivalents[fw]) {
-      location.assign(equivalents[fw]);
-      return;
-    }
-    notice.hidden = fw === pageFramework;
-    text.textContent = ui('framework.pageFor', { page: pageLabel, framework: fwById(fw).label });
-  });
-}
-
 export function init() {
-  animateFavicon();
-  wireMarkPulse();
+  clockFavicon();
+  wireMarkClock();
   mountSearch();
-  wireFramework();
-  wireFrameworkPage();
   wireVersionMenus();
   // the language select in the menu drawer goes to the page in the language picked
   document.querySelectorAll('[data-language-select]').forEach((select) =>
     select.addEventListener('change', () => {
-      try { sessionStorage.setItem('nr:language-picked', select.selectedOptions[0].dataset.code); } catch {}
+      try { sessionStorage.setItem('nd:language-picked', select.selectedOptions[0].dataset.code); } catch {}
       location.assign(select.value);
     })
   );
-  wireVariants();
   highlightAll();
   highlightInline();
   highlightShell();
   wireCopy();
-  wireTabs();
   wireTheme();
 }

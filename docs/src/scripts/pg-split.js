@@ -5,7 +5,7 @@
 
 import { ui } from './strings.js';
 
-const KEY = 'nr:pg-split';
+const KEY = 'nd:pg-split';
 const STACKED = matchMedia('(max-width: 900px)');
 const SIDE = { min: 280, fallback: 7 / 12 }; // each side keeps at least this many px
 const STACK = { min: 160, max: 800, fallback: 340 };

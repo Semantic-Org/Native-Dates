@@ -1,6 +1,5 @@
-// carries a fence's meta onto its <pre>: for="core vue" and label="routes.js" mark a framework
-// variant, `signature` marks a signature block. the remark pass has already grouped the fences
-// (see remark-docs.js); this only labels the highlighted output.
+// carries a fence's meta onto its <pre>: `signature` marks a signature block, and a single line
+// sits tighter. the title is the remark pass's (see remark-docs.js).
 
 export function parseMeta(raw = '') {
   const meta = {};
@@ -14,11 +13,9 @@ export function parseMeta(raw = '') {
 
 export function transformerFenceMeta() {
   return {
-    name: 'nav-router:fence-meta',
+    name: 'native-dates:fence-meta',
     pre(node) {
       const meta = parseMeta(this.options.meta?.__raw);
-      if (meta.for) { node.properties['data-for'] = meta.for; }
-      if (meta.label) { node.properties['data-label'] = meta.label; }
       if (meta.signature) { this.addClassToHast(node, 'signature'); }
       // a single line sits tighter: the padding that lets a long block breathe swamps one line
       if (!this.source.trim().includes('\n')) { this.addClassToHast(node, 'is-line'); }

@@ -81,10 +81,10 @@ function engine() {
 /* ---------- view ---------- */
 
 const SUGGESTED = [
-  { section: 'Guides', title: 'Routes and params', url: '/guides/routes-and-params/' },
-  { section: 'API', title: 'navigate()', url: '/api/router/#navigate', symbol: true },
-  { section: 'API', title: 'Router settings', url: '/api/router/#settings' },
-  { section: 'Plugins', title: 'head', url: '/plugins/head/', symbol: true },
+  { section: 'Guides', title: 'Time zones', url: '/guides/time-zones/' },
+  { section: 'API', title: 'today()', url: '/api/today/', symbol: true },
+  { section: 'API', title: 'DateTime', url: '/api/date-time/', symbol: true },
+  { section: 'Plugins', title: 'ranges', url: '/plugins/ranges/', symbol: true },
 ];
 
 const ICONS = {
@@ -143,7 +143,7 @@ export function mountSearch() {
     }
     else if (!results.length) {
       html = `<div class="search-empty"><p class="search-empty-title">${esc(ui('search.none', { query: q }))}</p><p>${
-        ui('search.hint', { function: '<code>navigate</code>', setting: '<code>holdCommit</code>' })
+        ui('search.hint', { function: '<code>today</code>', word: '<code>zone</code>' })
       }</p></div>`;
     }
     else {

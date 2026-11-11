@@ -1,7 +1,7 @@
 {
-  "name": "nav-router",
-  "short_name": "nav-router",
-  "description": "Your browser’s native router made powerful.",
+  "name": "native-dates",
+  "short_name": "native-dates",
+  "description": "Temporal, spoken plainly.",
   "start_url": "/",
   "display": "browser",
   "background_color": "#000000",

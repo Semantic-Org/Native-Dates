@@ -38,12 +38,17 @@
 .pg-nav:hover:not(:disabled) { color: var(--text); background: var(--surface-3); }
 .pg-nav:disabled { opacity: 0.35; cursor: default; }
 .pg-nav svg { width: 16px; height: 16px; }
-.pg-url {
-  flex: 1; min-width: 0; margin-inline-start: 4px; height: 28px; display: flex; align-items: center; padding: 0 10px;
-  border: 1px solid var(--line); border-radius: 999px; background: var(--bg);
-  font: 400 var(--fs-xs)/1 var(--font-mono); color: var(--text); white-space: nowrap; overflow: hidden;
+/* the zone the example runs in: a native select, as wide as its longest zone name */
+.pg-zone {
+  display: flex; align-items: center; gap: 8px; margin-inline-start: 4px; min-width: 0;
+  font: 400 var(--fs-xs)/1 var(--font-sans); color: var(--text-3);
 }
-.pg-host { color: var(--text-3); }
+.pg-zone select {
+  min-width: 0; height: 28px; padding: 0 8px;
+  border: 1px solid var(--line); border-radius: var(--r-2); background: var(--bg); color: var(--text);
+  font: 400 var(--fs-xs)/1 var(--font-mono); cursor: pointer;
+}
+.pg-zone select:hover { border-color: var(--line-3); }
 .pg-frame { flex: 1; width: 100%; min-height: 0; border: 0; background: #0a0d14; }
 .pg-status { flex: none; margin: 0; padding: 8px 12px; border-top: 1px solid var(--line); color: var(--text-3); font: 400 var(--fs-2xs)/var(--lh-2xs) var(--font-mono); }
 .pg-status.is-error { color: var(--danger); }

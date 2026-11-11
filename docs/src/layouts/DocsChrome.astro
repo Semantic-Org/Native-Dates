@@ -4,10 +4,8 @@
 import { getCollection } from 'astro:content';
 
 import '../styles/docs.css';
-import { FRAMEWORKS, frameworkOf, fwById, swapFramework } from '../lib/frameworks.js';
 import { languageSelect, localePath, t, titlesIn } from '../lib/i18n.js';
 import { navFor } from '../lib/nav.js';
-import { logoFor } from '../scripts/framework-logos.js';
 import DocsTopbar from '../components/DocsTopbar.astro';
 import Base from './Base.astro';
 
@@ -21,21 +19,8 @@ const ids = [
 const nav = navFor(ids, currentId, { code: locale, titles: await titlesIn(locale) });
 const sectionKey = currentId.split('/')[0];
 const section = nav.find((s) => s.key === sectionKey);
-
-// a framework's page (guides/solid/…) and the same page for every other framework, where written,
-// so switching the picker on it can follow the reader to theirs
-const pageFramework = frameworkOf(currentId);
-const written = new Set(ids);
-const equivalents = pageFramework
-  ? Object.fromEntries(FRAMEWORKS.map((f) => [f.id, written.has(swapFramework(currentId, f.id)) ? localePath(`/${swapFramework(currentId, f.id)}/`, locale) : null]))
-  : null;
-// a framework's slots show only while it's the reader's pick; data-framework is set before paint
-const fwCss = FRAMEWORKS.map((f) =>
-  `:root[data-framework="${f.id}"] [data-fw-slot]:not([data-fw-slot~="${f.id}"]) { display: none; }`
-).join('\n') + `\n:root:not([data-framework]) [data-fw-slot]:not([data-fw-slot~="${FRAMEWORKS[0].id}"]) { display: none; }`;
 ---
-<Base title={title} description={description} pageFramework={pageFramework} writtenIn={writtenIn} translatedIn={translatedIn} bodyAttrs={{ 'data-section': sectionKey }}>
-  <Fragment set:html={`<style>${fwCss}</style>`} />
+<Base title={title} description={description} writtenIn={writtenIn} translatedIn={translatedIn} bodyAttrs={{ 'data-section': sectionKey }}>
   <DocsTopbar nav={nav} sectionKey={sectionKey} />
 
   <div class:list={['docs-shell', { 'is-wide': wide }]}>
@@ -45,19 +30,9 @@ const fwCss = FRAMEWORKS.map((f) =>
           {nav.map((s) => <a href={s.href} aria-current={s.key === sectionKey ? 'page' : undefined}>{s.label}</a>)}
         </nav>
         <Fragment set:html={languageSelect(Astro.url.pathname, locale)} />
-        {/* live examples run the core version, so the framework choice doesn't apply there yet */}
-        {sectionKey !== 'examples' && (
-          <div class="framework-panel">
-            <p class="framework-label" id="framework-label">{t(locale, 'framework.label')}</p>
-            <div class="framework-select" data-framework-picker="lg"></div>
-          </div>
-        )}
         {section.groups.map((g) => (
-          <div class:list={['nav-group', { 'is-framework': g.framework }]} data-fw-slot={g.framework}>
-            <h2 class="nav-group-label">
-              {g.framework && <span class="nav-group-logo" set:html={logoFor(g.framework)} />}
-              {g.label}
-            </h2>
+          <div class="nav-group">
+            <h2 class="nav-group-label">{g.label}</h2>
             <ul>
               {g.items.map((it) => (
                 <li>
@@ -89,14 +64,6 @@ const fwCss = FRAMEWORKS.map((f) =>
             </ul>
           </div>
         </nav>
-      )}
-      {pageFramework && (
-        <div class="doc fw-notice" role="status" hidden data-fw-notice data-page-framework={pageFramework} data-page-label={fwById(pageFramework).label}>
-          <script is:inline type="application/json" data-fw-equivalents set:html={JSON.stringify(equivalents)}></script>
-          <span set:html={logoFor(pageFramework)} />
-          <p data-fw-notice-text></p>
-          <button class="btn ghost" type="button" data-fw-back></button>
-        </div>
       )}
       <slot />
       {/* the on-this-page rail rides beside the doc, not at the window's edge */}

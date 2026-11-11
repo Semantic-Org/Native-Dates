@@ -1,4 +1,4 @@
-/* nav-router — shared design tokens. dark first; light is a full redefinition, not an inversion. */
+/* native-dates — shared design tokens. dark first; light is a full redefinition, not an inversion. */
 
 /* fonts are self-hosted (fontsource, imported in Base.astro), no third-party request */
 
@@ -26,16 +26,16 @@
   --line-3: oklch(0.96 0.01 279.32 / 0.26);
 
   /* one action color */
-  --accent: oklch(0.74 0.15 249.95);
+  --accent: oklch(0.74 0.15 295);
   /* a card's surface: light from the upper left on a cool dark, in the accent's hue */
-  --sheen: linear-gradient(140deg, oklch(0.17 0.025 250), oklch(0 0 0) 55%, oklch(0.13 0.02 250));
-  --sheen-hover: linear-gradient(140deg, oklch(0.21 0.03 250), oklch(0.05 0.008 250) 55%, oklch(0.16 0.025 250));
+  --sheen: linear-gradient(140deg, oklch(0.17 0.025 295), oklch(0 0 0) 55%, oklch(0.13 0.02 295));
+  --sheen-hover: linear-gradient(140deg, oklch(0.21 0.03 295), oklch(0.05 0.008 295) 55%, oklch(0.16 0.025 295));
   /* a small raised mark (a step number, a logo tile), lit from the same corner; laid over its fill */
   --bevel: linear-gradient(140deg, oklch(1 0 0 / 0.1), oklch(0 0 0 / 0.2));
   --bevel-soft: linear-gradient(140deg, oklch(1 0 0 / 0.06), oklch(0 0 0 / 0.1));  /* inline code */
-  --accent-strong: oklch(0.80 0.13 249.95);
-  --accent-wash: oklch(0.74 0.15 249.95 / 0.12);
-  --accent-line: oklch(0.74 0.15 249.95 / 0.35);
+  --accent-strong: oklch(0.80 0.13 295);
+  --accent-wash: oklch(0.74 0.15 295 / 0.12);
+  --accent-line: oklch(0.74 0.15 295 / 0.35);
 
   /* phase colors, shared by syntax and the trace */
   --c-blue: #79c0ff;
@@ -137,14 +137,14 @@
   --line: oklch(0.3 0.03 279 / 0.09);
   --line-2: oklch(0.3 0.03 279 / 0.15);
   --line-3: oklch(0.3 0.03 279 / 0.26);
-  --accent: oklch(0.52 0.17 254);
-  --sheen: linear-gradient(140deg, oklch(1 0 0), oklch(0.985 0.004 254) 55%, oklch(0.955 0.012 254));
-  --sheen-hover: linear-gradient(140deg, oklch(1 0 0), oklch(0.975 0.006 254) 55%, oklch(0.94 0.016 254));
+  --accent: oklch(0.52 0.19 295);
+  --sheen: linear-gradient(140deg, oklch(1 0 0), oklch(0.985 0.004 295) 55%, oklch(0.955 0.012 295));
+  --sheen-hover: linear-gradient(140deg, oklch(1 0 0), oklch(0.975 0.006 295) 55%, oklch(0.94 0.016 295));
   --bevel: linear-gradient(140deg, oklch(1 0 0 / 0.9), oklch(0 0 0 / 0.05));
   --bevel-soft: linear-gradient(140deg, oklch(1 0 0 / 0.7), oklch(0 0 0 / 0.03));
-  --accent-strong: oklch(0.45 0.18 254);
-  --accent-wash: oklch(0.52 0.17 254 / 0.08);
-  --accent-line: oklch(0.52 0.17 254 / 0.3);
+  --accent-strong: oklch(0.45 0.2 295);
+  --accent-wash: oklch(0.52 0.19 295 / 0.08);
+  --accent-line: oklch(0.52 0.19 295 / 0.3);
   --c-blue: #0550ae;
   --c-cyan: #1b7c9c;
   --c-violet: #8250df;
@@ -201,7 +201,7 @@ abbr[title] { text-decoration: underline dotted var(--line-3); text-underline-of
   white-space: nowrap;
 }
 /* an option or setting name: tied to the accent, as the trace's guides are */
-:where(p, li, dd, td, figcaption) code.setting { color: var(--accent-strong); background: var(--accent-wash); box-shadow: inset 0 0 0 1px oklch(0.74 0.15 249.95 / 0.18); }
+:where(p, li, dd, td, figcaption) code.setting { color: var(--accent-strong); background: var(--accent-wash); box-shadow: inset 0 0 0 1px oklch(0.74 0.15 295 / 0.18); }
 :root[data-theme='light'] :where(p, li, dd, td, figcaption) code.setting { box-shadow: inset 0 0 0 1px var(--accent-line); }
 /* a chip joined with the punctuation that touches it: kept on one line, the touching side unpadded */
 .code-join { white-space: nowrap; }
@@ -221,7 +221,7 @@ code, kbd, pre { font-family: var(--font-mono); font-variant-ligatures: none; fo
   border-radius: var(--r-1);
 }
 
-::selection { background: oklch(0.74 0.15 249.95 / 0.35); color: var(--text); }
+::selection { background: oklch(0.74 0.15 295 / 0.35); color: var(--text); }
 
 .visually-hidden {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
@@ -242,16 +242,9 @@ code, kbd, pre { font-family: var(--font-mono); font-variant-ligatures: none; fo
   text-decoration: none; color: var(--text); white-space: nowrap;
   font-weight: 650; font-size: 17px; line-height: 24px;
 }
-/* stand-in mark: two route nodes joined by a path */
+/* the mark: a clock face whose hands turn about its center (scripts/mark-clock.js) */
 .wordmark svg { width: 22px; height: 22px; flex: none; }
-/* the mark's pulse (scripts/mark-pulse.js): a bright length running along its line, and the ring lit */
-.wordmark svg { overflow: visible; }
-.mark-pulse {
-  fill: none; stroke: oklch(0.95 0.03 250); stroke-width: 2; stroke-linecap: round;
-  stroke-dasharray: 16 200; opacity: 0; filter: drop-shadow(0 0 2px var(--accent));
-}
-.mark-glow { fill: var(--accent); opacity: 0; }
-:root[data-theme='light'] .mark-pulse { stroke: oklch(0.42 0.17 254); }
+.mark-hand { transform-origin: 12px 12px; }
 
 .btn {
   --h: 40px;
@@ -641,3 +634,14 @@ pre.astro-code .line.highlighted {
 :root:lang(ar) { --font-mono: 'Fragment Mono', ui-sans-serif, system-ui, sans-serif; }
 :root:lang(ar) :is(pre, code, kbd) { --font-mono: 'Fragment Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
 :root:lang(ar) * { letter-spacing: 0 !important; }
+
+/* a preset: a set of plugins picked at once, on the plugins landing and the homepage's size bar */
+.preset {
+  display: inline-flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px;
+  border: 1px solid var(--line-2); border-radius: var(--r-2); background: var(--surface-1);
+  color: var(--text-3); font: 400 var(--fs-xs)/1 var(--font-mono); cursor: pointer;
+}
+.preset code { color: var(--text); font-size: var(--fs-sm); }
+.preset:hover { border-color: var(--line-3); }
+.preset[aria-pressed='true'] { border-color: var(--accent-line); background: var(--accent-wash); }
+.preset[aria-pressed='true'] code { color: var(--accent-strong); }

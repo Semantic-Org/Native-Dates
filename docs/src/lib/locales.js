@@ -14,14 +14,14 @@ export const DEFAULT_LOCALE = 'en';
 // is its url prefix and its folder
 export const LOCALES = [
   { code: 'en', name: 'English', dir: 'ltr', enabled: true },
-  { code: 'zh-CN', name: '简体中文', dir: 'ltr', enabled: true },
-  { code: 'ja', name: '日本語', dir: 'ltr', enabled: true },
-  { code: 'pt-BR', name: 'Português (Brasil)', dir: 'ltr', enabled: true },
-  { code: 'es', name: 'Español', dir: 'ltr', enabled: true },
-  { code: 'ko', name: '한국어', dir: 'ltr', enabled: true },
-  { code: 'ru', name: 'Русский', dir: 'ltr', enabled: true },
-  { code: 'fr', name: 'Français', dir: 'ltr', enabled: true },
-  { code: 'ar', name: 'العربية', dir: 'rtl', enabled: true },
+  { code: 'zh-CN', name: '简体中文', dir: 'ltr', enabled: false },
+  { code: 'ja', name: '日本語', dir: 'ltr', enabled: false },
+  { code: 'pt-BR', name: 'Português (Brasil)', dir: 'ltr', enabled: false },
+  { code: 'es', name: 'Español', dir: 'ltr', enabled: false },
+  { code: 'ko', name: '한국어', dir: 'ltr', enabled: false },
+  { code: 'ru', name: 'Русский', dir: 'ltr', enabled: false },
+  { code: 'fr', name: 'Français', dir: 'ltr', enabled: false },
+  { code: 'ar', name: 'العربية', dir: 'rtl', enabled: false },
 ].map((l) => ({ ...l, path: l.code.toLowerCase() }));
 
 export const ENABLED = LOCALES.filter((l) => l.enabled);

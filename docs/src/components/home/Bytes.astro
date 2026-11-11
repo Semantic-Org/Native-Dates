@@ -1,0 +1,54 @@
+---
+// what an app ships: core as one bar, and each plugin as the length it adds when it is switched
+// on. every length is measured (lib/sizes.js). a set of plugins shares code, so the total is that
+// set's own measurement, looked up by which plugins are on, never the sum of the parts
+import { getCollection } from 'astro:content';
+
+import { localePath, t } from '../../lib/i18n.js';
+import { PLUGINS, PRESETS } from '../../lib/plugins.js';
+import { formatSize, sizeWith } from '../../lib/sizes.js';
+
+const locale = Astro.currentLocale;
+const subsets = await Promise.all(Array.from({ length: 2 ** PLUGINS.length }, (_, mask) =>
+  sizeWith(PLUGINS.filter((_, i) => mask & (1 << i)).map((p) => p.name))));
+const core = subsets[0];
+const full = subsets.at(-1);
+const written = new Set((await getCollection('docs')).map((e) => e.id));
+const plugins = PLUGINS.map((p, i) => ({
+  ...p,
+  adds: subsets[1 << i] - core,
+  href: localePath(written.has(`plugins/${p.name}`) ? `/plugins/${p.name}/` : '/plugins/', locale),
+}));
+---
+<div class="container">
+  <div class="ribbon-head">
+    <h2 set:html={t(locale, 'home.bytes.title', { size: formatSize(core).replace(' ', '&nbsp;') })} />
+    <p>{t(locale, 'home.bytes.lede')}</p>
+  </div>
+  <div class="bytes" data-bytes data-sizes={JSON.stringify(subsets)} style={`--full: ${full}`}>
+    <div class="bytes-total">
+      <span class="bytes-number"><bdi data-bytes-total>{formatSize(core)}</bdi></span>
+      <span class="bytes-unit"><abbr title={t(locale, 'page.minBr')}>min+br</abbr></span>
+      <div class="bytes-presets" role="group" aria-label={t(locale, 'plugins.presets.label')}>
+        {PRESETS.map((preset) => <button class="preset" type="button" aria-pressed="false" data-preset={preset.plugins.join(',')}><code>{preset.name}</code></button>)}
+      </div>
+    </div>
+    <div class="bytes-bar" aria-hidden="true">
+      <span class="bytes-core" style={`--bytes: ${core}`}><span>native-dates</span></span>
+      <span class="bytes-added" data-bytes-added style="--bytes: 0"></span>
+    </div>
+    <ul class="bytes-plugins" role="list">
+      {plugins.map((p) => (
+        <li>
+          <label class="bytes-plugin">
+            <input type="checkbox" value={p.name} data-bytes-pick />
+            <code>{p.name}</code>
+            <span class="bytes-what">{t(locale, `home.plugin.${p.name}`)}</span>
+            <bdi class="bytes-adds">+{formatSize(p.adds)}</bdi>
+          </label>
+        </li>
+      ))}
+    </ul>
+    <a class="text-link" href={localePath('/plugins/', locale)}>{t(locale, 'home.bytes.link')}</a>
+  </div>
+</div>

@@ -1,0 +1,77 @@
+---
+// one standup, every day of a year: 9:30 in Los Angeles, read on a Berlin clock. the two cities
+// change their clocks on different weekends, so the Berlin time moves and moves back, and the
+// strip shows when. every day is worked out by the library at build, for the year the build runs
+// in; the browser only moves the playhead (scripts/home/year.js)
+import { date, today } from 'native-dates';
+
+import { plural, t } from '../../lib/i18n.js';
+
+const locale = Astro.currentLocale;
+const FROM = 'America/Los_Angeles';
+const TO = 'Europe/Berlin';
+const year = today().year;
+
+const days = [];
+for (let day = date(year, 1, 1); day.year === year; day = day.plus(1, 'day')) {
+  const there = day.at('9:30am', FROM);
+  const here = there.in(TO);
+  days.push({
+    month: day.month,
+    label: day.format({ weekday: 'short', month: 'short', day: 'numeric' }, locale),
+    berlin: here.format('time', locale),
+    // the hours between the two clocks, from the offsets in effect that day
+    gap: (here.toTemporal().offsetNanoseconds - there.toTemporal().offsetNanoseconds) / 3_600_000_000_000,
+  });
+}
+const usual = days.map((d) => d.gap).sort((a, b) => days.filter((d) => d.gap === b).length - days.filter((d) => d.gap === a).length)[0];
+// a run of days with the same gap, and the days the gap changes on
+const runs = days.reduce((all, d, i) => {
+  if (all.at(-1)?.gap === d.gap) { all.at(-1).length++; }
+  else { all.push({ start: i, length: 1, gap: d.gap, shifted: d.gap !== usual }); }
+  return all;
+}, []);
+const changes = runs.slice(1).map((run) => ({ at: run.start, label: days[run.start].label }));
+const shiftedDays = days.filter((d) => d.gap !== usual).length;
+const shifted = days.find((d) => d.gap !== usual);
+const months = days.reduce((all, d, i) => (all.at(-1)?.month === d.month ? all : [...all, { month: d.month, at: i, label: date(year, d.month, 1).format({ month: 'short' }, locale) }]), []);
+const total = days.length;
+const first = days[0];
+const data = JSON.stringify(days.map((d) => [d.label, d.berlin, d.gap])).replace(/</g, '\\u003c');
+---
+<div class="ribbon-head">
+  <h2>{t(locale, 'home.year.title')}</h2>
+  <p set:html={t(locale, 'home.year.lede', { changes: plural(locale, 'home.year.changes', changes.length, { count: changes.length }) })} />
+</div>
+<figure class="year" data-year aria-labelledby="year-caption">
+  <div class="year-clocks">
+    <div class="year-clock">
+      <span class="year-city">Los Angeles</span>
+      <span class="year-time">{date(year, 1, 1).at('9:30am', FROM).format('time', locale)}</span>
+    </div>
+    <div class="year-gap" aria-live="off"><span data-year-gap>{t(locale, 'home.year.gap', { hours: first.gap })}</span></div>
+    <div class="year-clock is-there">
+      <span class="year-city">Berlin</span>
+      <span class="year-time" data-year-berlin>{first.berlin}</span>
+    </div>
+  </div>
+  <div class="year-strip" data-year-strip style={`--days: ${total}`} tabindex="0" role="slider" aria-label={t(locale, 'home.year.slider')} aria-valuemin="1" aria-valuemax={total} aria-valuenow="1" aria-valuetext={`${first.label}: ${first.berlin}`}>
+    <div class="year-runs">
+      {runs.map((run) => <span class:list={['year-run', { 'is-shifted': run.shifted }]} style={`--start: ${run.start}; --length: ${run.length}`}></span>)}
+    </div>
+    {changes.map((change) => <span class="year-change" style={`--at: ${change.at}`}><span>{change.label}</span></span>)}
+    <span class="year-head" data-year-head style="--at: 0"></span>
+    <span class="year-day" data-year-day style="--at: 0">{first.label}</span>
+    <div class="year-months" aria-hidden="true">
+      {months.map((m) => <span style={`--at: ${m.at}`}>{m.label}</span>)}
+    </div>
+  </div>
+  <figcaption id="year-caption" class="year-caption" set:html={t(locale, 'home.year.caption', {
+    days: plural(locale, 'home.year.days', shiftedDays, { count: shiftedDays }),
+    year,
+    near: shifted.gap,
+    far: usual,
+    time: shifted.berlin,
+  })} />
+  <script is:inline type="application/json" data-year-days set:html={data}></script>
+</figure>

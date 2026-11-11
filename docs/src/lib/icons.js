@@ -10,6 +10,7 @@ export const ICON = {
   menu:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
 };
-// stand-in mark: two route nodes joined by a path
+// the mark: a clock face. its hands are drawn at four o'clock and turned to the reader's own time
+// (scripts/mark-clock.js)
 export const MARK =
-  '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 19V12a5 5 0 0 1 5-5h9" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/><circle cx="5" cy="19" r="2.6" fill="var(--text)"/><circle cx="19" cy="7" r="2.6" stroke="var(--text)" stroke-width="1.8"/></svg>';
+  '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.1" stroke="var(--text)" stroke-width="1.8"/><path class="mark-hand" data-hand="hour" d="M12 12V7.6" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" style="rotate: 120deg"/><path class="mark-hand" data-hand="minute" d="M12 12V5.6" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/></svg>';

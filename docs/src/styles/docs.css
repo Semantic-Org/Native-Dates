@@ -374,6 +374,11 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
 
 /* ---------- plugins landing ---------- */
 
+/* presets: a set of plugins picked at once, each with the measured size of core with that set */
+.preset-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 28px; }
+.preset-label { margin-inline-end: 4px; color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
+.preset-row + .plugins-intro { margin-top: 16px; }
+
 .plugins-intro {
   display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 16px; align-items: stretch;
   margin-top: 28px;

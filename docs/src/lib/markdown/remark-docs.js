@@ -7,7 +7,6 @@
 //   :kind[method]               the kind pill beside a symbol heading
 //
 //   ```js title="app.js"                       one block with a file name
-//   ```js for="core vue" label="routes.js"     consecutive fences become one block of variants
 //   ```js signature                            a signature, no chrome
 //   ```params / ```returns                     yaml, rendered as parameter rows
 //
@@ -81,32 +80,10 @@ function codeBlock(node) {
   return el('div', { className: ['code'] }, [...head, node]);
 }
 
-// consecutive variant fences share one block: tabs, the fallback note, a copy button, and a .swap
-// so the block keeps the size of its largest variant
-function variantsBlock(nodes) {
-  return el('div', { className: ['code'], dataVariants: '' }, [
-    el('div', { className: ['code-head'] }, [
-      el('div', { role: 'tablist', ariaLabel: 'Code version', dataVariantTabs: '' }),
-      el('span', { className: ['code-note'], dataVariantNote: '' }),
-      copyButton(),
-    ]),
-    el('div', { className: ['swap'] }, nodes),
-  ]);
-}
-
-const isVariant = (n) => n?.type === 'code' && /\bfor="/.test(n.meta ?? '');
-
 function transformChildren(parent) {
   if (!parent.children) { return; }
   const out = [];
-  for (let i = 0; i < parent.children.length; i++) {
-    const node = parent.children[i];
-    if (isVariant(node)) {
-      const group = [node];
-      while (isVariant(parent.children[i + 1])) { group.push(parent.children[++i]); }
-      out.push(variantsBlock(group));
-      continue;
-    }
+  for (const node of parent.children) {
     if (node.type === 'code') {
       if (node.lang === 'params') { out.push(paramsBlock(node.value)); }
       else if (node.lang === 'returns') { out.push(returnsBlock(node.value)); }

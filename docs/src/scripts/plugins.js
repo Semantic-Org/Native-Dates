@@ -1,5 +1,5 @@
-// the plugins landing: pick plugins to build a ready setup with its size, filter as you type (and from
-// a category tag), cards or rows. picks ride the url as ?use=, the filter as ?q=, so either can be
+// the plugins landing: pick plugins, or a preset of them, to build a ready setup with its size, filter
+// as you type (and from a category tag), cards or rows. picks ride the url as ?use=, the filter as ?q=, so either can be
 // shared; the view is remembered
 
 import { sampleFor } from '../lib/plugins.js';
@@ -64,7 +64,7 @@ export function mountPlugins() {
       b.tabIndex = on ? 0 : -1;
     });
     try {
-      localStorage.setItem('nr:plugin-view', view);
+      localStorage.setItem('nd:plugin-view', view);
     }
     catch {}
   };
@@ -85,7 +85,9 @@ export function mountPlugins() {
   const sample = document.querySelector('[data-plugin-sample] pre');
   const clear = document.querySelector('[data-clear-picks]');
   const stats = document.querySelector('.plugins-stats');
-  const coreBytes = Number(stats.dataset.coreBytes);
+  // the measured size of every set of plugins, by which are in it (bit n is plugin n)
+  const sizes = JSON.parse(stats.dataset.sizes);
+  const presets = [...document.querySelectorAll('[data-preset]')];
   const pickedCount = stats.querySelector('[data-picked-count]');
   const pickedSize = stats.querySelector('[data-picked-size]');
   const totalSize = stats.querySelector('[data-total-size]');
@@ -94,19 +96,31 @@ export function mountPlugins() {
   const render = () => {
     const chosen = picks.filter((p) => p.checked);
     const names = chosen.map((p) => p.value);
-    const bytes = chosen.reduce((sum, p) => sum + Number(p.closest('.plugin').dataset.bytes), 0);
+    const total = sizes[picks.reduce((mask, p, i) => (p.checked ? mask | (1 << i) : mask), 0)];
     const code = sampleFor(names, ui('plugins.sample.empty'));
     sample.dataset.raw = code;
     sample.innerHTML = highlight(code);
     pickedCount.textContent = names.length;
-    pickedSize.textContent = formatSizeBytes(bytes);
-    totalSize.textContent = formatSizeBytes(coreBytes + bytes);
+    pickedSize.textContent = formatSizeBytes(total - sizes[0]);
+    totalSize.textContent = formatSizeBytes(total);
+    presets.forEach((button) => {
+      const set = button.dataset.preset.split(',');
+      button.setAttribute('aria-pressed', set.length === names.length && set.every((n) => names.includes(n)));
+    });
     clear.hidden = !names.length;
     setParam('use', names.join(','));
   };
   list.addEventListener('change', (e) => {
     if (e.target.matches('.plugin-pick')) { render(); }
   });
+  // a preset is its plugins, picked at once; picking it again clears them
+  presets.forEach((button) => button.addEventListener('click', () => {
+    const set = button.getAttribute('aria-pressed') === 'true' ? [] : button.dataset.preset.split(',');
+    picks.forEach((p) => {
+      p.checked = set.includes(p.value);
+    });
+    render();
+  }));
   clear.addEventListener('click', () => {
     picks.forEach((p) => {
       p.checked = false;

@@ -1,13 +1,14 @@
 ---
-// the plugins landing: every plugin as a card or a row, filterable, with its size measured at build
+// the plugins landing: every plugin as a card or a row, filterable, with its size measured at build,
+// and presets that pick a set at once
 import { getCollection } from 'astro:content';
 
 import LocaleNotice from '../components/LocaleNotice.astro';
 import DocsChrome from '../layouts/DocsChrome.astro';
-import { englishIn, draftStrings, languagesWith, localePath, t } from '../lib/i18n.js';
+import { englishIn, draftStrings, languagesWith, localePath, plural, t } from '../lib/i18n.js';
 import { inline } from '../lib/markdown/inline.js';
-import { PLUGINS, sampleFor } from '../lib/plugins.js';
-import { formatSize, sizeOf } from '../lib/sizes.js';
+import { PLUGINS, PRESETS, sampleFor } from '../lib/plugins.js';
+import { formatSize, shippedPlugins, sizeOf, sizeWith } from '../lib/sizes.js';
 
 // the page is its words (plugins.… in content/strings.json): a language that has them has the page
 const locale = Astro.currentLocale;
@@ -15,6 +16,10 @@ const writtenIn = languagesWith('plugins.');
 const translated = writtenIn.includes(locale);
 const translatedIn = languagesWith('plugins.', { reviewed: true });
 const english = translated ? {} : englishIn(locale);
+// the list is written out because the browser reads it too; the package's folder is the truth
+const listed = PLUGINS.map((p) => p.name).sort().join(', ');
+const shipped = shippedPlugins().join(', ');
+if (listed !== shipped) { throw new Error(`lib/plugins.js lists ${listed}, and the package ships ${shipped}`); }
 const written = new Set((await getCollection('docs')).map((e) => e.id));
 const plugins = await Promise.all(PLUGINS.map(async (p) => {
   const bytes = await sizeOf(p.name);
@@ -32,17 +37,19 @@ const plugins = await Promise.all(PLUGINS.map(async (p) => {
     text: `${p.name} ${category} ${description}`.toLowerCase().replace(/`/g, ''),
   };
 }));
-const coreBytes = await sizeOf('core');
+// plugins share helpers, so the size of a pick is the size of that set, measured: one build per
+// subset, keyed by which plugins are in it (bit n is plugin n)
+const subsets = await Promise.all(Array.from({ length: 2 ** PLUGINS.length }, (_, mask) =>
+  sizeWith(PLUGINS.filter((_, i) => mask & (1 << i)).map((p) => p.name))));
+const coreBytes = subsets[0];
+const presets = PRESETS.map((preset) => ({
+  ...preset,
+  size: formatSize(subsets[PLUGINS.reduce((mask, p, i) => (preset.plugins.includes(p.name) ? mask | (1 << i) : mask), 0)]),
+  description: t(locale, `plugins.preset.${preset.name}.description`).replace(/`/g, ''),
+}));
 // the sample starts empty; the page fills it from the reader's picks (and ?use= in the url)
 const EXAMPLE = sampleFor([], t(locale, 'plugins.sample.empty'));
 const lede = t(locale, 'plugins.lede');
-// a counted noun takes the form the language's rules pick, and plugins.count.other where it has none
-const counted = (key, count, vars) => {
-  const form = `${key}.${new Intl.PluralRules(locale).select(count)}`;
-  const text = t(locale, form, vars);
-  return text === form ? t(locale, `${key}.other`, vars) : text;
-};
-
 const ICONS = {
   filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
   cards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
@@ -59,6 +66,15 @@ const ICONS = {
     <h1>{t(locale, 'nav.plugins')}</h1>
     <p class="doc-lede">{lede}</p>
 
+    <div class="preset-row" role="group" aria-label={t(locale, 'plugins.presets.label')} data-pagefind-ignore>
+      <span class="preset-label">{t(locale, 'plugins.presets.label')}</span>
+      {presets.map((p) => (
+        <button class="preset" type="button" aria-pressed="false" data-preset={p.plugins.join(',')} title={p.description}>
+          <code>{p.name}</code><bdi>{p.size}</bdi>
+        </button>
+      ))}
+    </div>
+
     <div class="plugins-intro" data-pagefind-ignore>
       <div class="code" data-plugin-sample>
         <div class="code-head">
@@ -68,7 +84,7 @@ const ICONS = {
         </div>
 <pre data-hl set:text={EXAMPLE} />
       </div>
-      <dl class="plugins-stats" data-core-bytes={coreBytes ?? 0} aria-live="polite">
+      <dl class="plugins-stats" data-sizes={JSON.stringify(subsets)} aria-live="polite">
         <div><dt>{t(locale, 'plugins.stats.selected')}</dt><dd set:html={t(locale, 'plugins.stats.picked', { count: '<span data-picked-count>0</span>', total: plugins.length })} /></div>
         <div><dt>{t(locale, 'plugins.stats.pluginSize')}</dt><dd><bdi><span data-picked-size>0.0 kB</span> <abbr title={t(locale, 'page.minBr')}>{t(locale, 'plugins.minBr')}</abbr></bdi></dd></div>
         <div><dt>{t(locale, 'plugins.stats.totalSize')}</dt><dd><bdi><span data-total-size>{formatSize(coreBytes) ?? '–'}</span> <abbr title={t(locale, 'page.minBr')}>{t(locale, 'plugins.minBr')}</abbr></bdi></dd></div>
@@ -81,7 +97,7 @@ const ICONS = {
         <span class="visually-hidden">{t(locale, 'plugins.filter.label')}</span>
         <input type="search" placeholder={t(locale, 'plugins.filter.placeholder')} autocomplete="off" spellcheck="false" data-plugin-filter aria-controls="plugin-list">
         <span class="swap plugin-count" aria-live="polite">
-          <span data-count-all>{counted('plugins.count', plugins.length, { count: plugins.length })}</span>
+          <span data-count-all>{plural(locale, 'plugins.count', plugins.length, { count: plugins.length })}</span>
           <span data-count-some hidden>{t(locale, 'plugins.count.shown', { shown: plugins.length, total: plugins.length })}</span>
         </span>
       </label>
@@ -93,7 +109,7 @@ const ICONS = {
 
     <ul class="plugin-list" id="plugin-list" data-view="cards" role="list">
       {plugins.map((p) => (
-        <li class="plugin" data-text={p.text} data-name={p.name} data-bytes={p.bytes ?? 0}>
+        <li class="plugin" data-text={p.text} data-name={p.name}>
           <input class="plugin-pick" type="checkbox" id={`pick-${p.name}`} value={p.name} />
           {/* the whole card toggles the pick; the name (to its page) and the tag sit above it */}
           <label class="plugin-hit" for={`pick-${p.name}`}><span class="visually-hidden">{t(locale, 'plugins.add', { name: p.name })}</span></label>
@@ -106,7 +122,7 @@ const ICONS = {
     </ul>
     <script is:inline>
       // the reader's last view, set before paint so the list never jumps from cards to rows
-      try { const v = localStorage.getItem('nr:plugin-view'); if (v) document.getElementById('plugin-list').dataset.view = v; } catch {}
+      try { const v = localStorage.getItem('nd:plugin-view'); if (v) document.getElementById('plugin-list').dataset.view = v; } catch {}
     </script>
 
     <div class="plugin-empty" hidden data-plugin-empty>

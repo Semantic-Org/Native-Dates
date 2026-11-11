@@ -1,11 +1,10 @@
 // a live example: the playground engine builds and serves the files, its editor edits them, and the
-// preview runs the app in a browser bar that follows the app's own navigations.
-// one per [data-playground]; the files come in a json script beside it
+// preview runs the app in the zone picked in its bar.
+// one per [data-playground]; the files and the import map come in a json script beside it
 
 import { PlaygroundPreview, PlaygroundProject } from '@semantic-ui/playground';
 import { createEditor } from '@semantic-ui/playground/editor';
 
-import { IMPORT_MAP } from './playground-imports.js';
 import { ui } from './strings.js';
 
 // the editor in the site's code colors: the same tokens the code blocks and shiki use, so a live
@@ -76,27 +75,27 @@ const EDITOR_THEME = `
 `;
 
 export function mountPlayground(root) {
-  const { files: FILES, tabs: TABS } = JSON.parse(root.querySelector('[data-pg-files]').textContent);
+  const { files: FILES, tabs: TABS, importMap } = JSON.parse(root.querySelector('[data-pg-files]').textContent);
   const $ = (s) => root.querySelector(s);
   const status = $('[data-pg-status]');
-  const pathEl = $('[data-pg-path]');
-  const back = $('[data-pg-back]');
-  const forward = $('[data-pg-forward]');
   const say = (text, error = false) => {
     status.textContent = text;
     status.classList.toggle('is-error', error);
   };
+  // the examples run on the browser's own Temporal, as an app does
+  if (!globalThis.Temporal) {
+    say(ui('playground.noTemporal'), true);
+    return;
+  }
 
   // the frame is made here, not parsed with the page: the browser restores a parsed frame's last
-  // url on reload and back/forward, which would be a dead session's deep path
+  // url on reload and back/forward, which would be a dead session's path
   const frame = document.createElement('iframe');
   frame.className = 'pg-frame';
   frame.title = ui('playground.preview');
   $('[data-pg-frame]').replaceWith(frame);
 
-  // the app owns its urls, so any path without a file serves index.html: reloads and deep links land
-  // in the app, and its router takes it from there
-  const project = new PlaygroundProject({ files: FILES, importMap: IMPORT_MAP, fallback: 'index.html' });
+  const project = new PlaygroundProject({ files: FILES, importMap, fallback: 'index.html' });
   root.project = project;
 
   let started = 0;
@@ -107,21 +106,13 @@ export function mountPlayground(root) {
   project.on('buildError', (error) => say(ui('playground.buildError', { message: error.message }), true));
   project.on('buildDone', () => say(ui('playground.built', { ms: Math.round(performance.now() - started) })));
 
-  // the preview follows the app through the playground's bridge: where it is, whether it can go
-  // back or forward, what it throws. it reloads in place after every build, on the same route
+  // the preview reloads in place after every build. the zone picked in the bar rides its url, where
+  // the example's hidden first import reads it (lib/examples.js)
   const preview = new PlaygroundPreview({ project, frame, path: '/' });
-  preview.on('navigate', ({ path, canGoBack, canGoForward }) => {
-    // the router's base is the session path, so it shows up encoded inside query values too (a
-    // guard's returnTo); the bar shows the app's own urls
-    const base = encodeURIComponent(new URL(project.previewUrl, location.origin).pathname.replace(/\/$/, ''));
-    pathEl.textContent = path.split(base).join('');
-    back.disabled = !canGoBack;
-    forward.disabled = !canGoForward;
-  });
   preview.on('error', ({ message }) => say(ui('playground.runtimeError', { message }), true));
-  back.addEventListener('click', () => preview.back());
-  forward.addEventListener('click', () => preview.forward());
   $('[data-pg-reload]').addEventListener('click', () => preview.reload());
+  const zones = $('[data-pg-zone]');
+  zones.addEventListener('change', () => preview.navigate(zones.value ? `/?zone=${encodeURIComponent(zones.value)}` : '/'));
 
   // the static copy of the first file stands in only until the editor is here
   root.querySelector('[data-pg-static]')?.remove();

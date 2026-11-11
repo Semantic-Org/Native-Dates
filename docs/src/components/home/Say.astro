@@ -1,0 +1,53 @@
+---
+// the hero's instrument: a sentence set three ways, column by column. what you say, the call that
+// says it, and what the value is by then. a phrase with other options turns through them, and
+// everything after it follows. the page ships with the build's own answers; the browser reads the
+// sentences again for the reader's day, zone and locale (scripts/home/say.js)
+import * as library from 'native-dates';
+
+import { t } from '../../lib/i18n.js';
+import { read, SENTENCES } from '../../scripts/home/sentences.js';
+import { highlight } from '../../scripts/site.js';
+
+const locale = Astro.currentLocale;
+const TURN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg>';
+const sentences = SENTENCES.map((sentence) => ({ ...sentence, values: read(sentence, [], library) }));
+---
+<figure class="say" data-say aria-labelledby="say-caption">
+  <div class="say-head">
+    <div class="say-tabs" role="tablist" aria-label={t(locale, 'home.say.tabs')}>
+      {sentences.map((s, i) => (
+        <button class="say-tab" type="button" role="tab" id={`say-tab-${s.id}`} aria-controls={`say-${s.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>{t(locale, `home.say.tab.${s.id}`)}</button>
+      ))}
+    </div>
+    <span class="say-where" data-say-where hidden></span>
+  </div>
+  {sentences.map((s, i) => (
+    <div class="say-grid" id={`say-${s.id}`} role="tabpanel" aria-labelledby={`say-tab-${s.id}`} data-sentence={s.id} hidden={i > 0}>
+      <span class="say-label" style="--row: 1">{t(locale, 'home.say.say')}</span>
+      <span class="say-label" style="--row: 2">{t(locale, 'home.say.write')}</span>
+      <span class="say-label" style="--row: 3">{t(locale, 'home.say.get')}</span>
+      {s.steps.map((options, step) => (
+        <>
+          {options.length > 1
+            ? (
+              <button class="say-cell say-words say-turn" type="button" style={`--col: ${step}; --row: 1`} data-step={step} data-turn>
+                <Fragment set:html={TURN} />
+                <span class="visually-hidden">{t(locale, 'home.say.turn')} </span>
+                <span class="swap">{options.map((o, k) => <span data-option={k} hidden={k > 0}>{t(locale, `home.say.${o.say}`)}</span>)}</span>
+              </button>
+            )
+            : <span class="say-cell say-words" style={`--col: ${step}; --row: 1`}>{t(locale, `home.say.${options[0].say}`)}</span>}
+          <code class="say-cell say-code" style={`--col: ${step}; --row: 2`} data-step={step}>
+            <span class="swap">{options.map((o, k) => <span data-option={k} hidden={k > 0} set:html={highlight(o.code)} />)}</span>
+          </code>
+          <span class="say-cell say-value" style={`--col: ${step}; --row: 3`} data-step={step} data-value>
+            <span class="say-noun" data-noun>{s.values[step].noun}</span>
+            <span class="say-text" data-text>{s.values[step].text}</span>
+          </span>
+        </>
+      ))}
+    </div>
+  ))}
+  <figcaption id="say-caption" class="say-caption">{t(locale, 'home.say.caption')}</figcaption>
+</figure>

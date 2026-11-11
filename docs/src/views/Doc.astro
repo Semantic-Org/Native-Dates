@@ -9,6 +9,7 @@ import { inline } from '../lib/markdown/inline.js';
 import { navFor, pagerFor } from '../lib/nav.js';
 import { markdownFor } from '../lib/page-markdown.js';
 import { formatSize, sizeOf } from '../lib/sizes.js';
+import { REPO_URL } from '../lib/versions.js';
 
 // entry is the english page, which gives the page its place in the docs. page is it in the reader's
 // language: the translation if there is one (stale when the english has moved past it), else english
@@ -51,7 +52,7 @@ const ICON = {
   chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
 };
 ---
-<DocsChrome title={`${title} · nav-router`} description={lede} currentId={entry.id} toc={toc} extraIds={['plugins']} writtenIn={writtenIn} translatedIn={translatedIn}>
+<DocsChrome title={`${title} · native-dates`} description={lede} currentId={entry.id} toc={toc} extraIds={['plugins']} writtenIn={writtenIn} translatedIn={translatedIn}>
   <main class="doc" id="content" data-pagefind-body {...english}>
     <span hidden data-pagefind-meta={`title:${title}`}></span>
     <span hidden data-pagefind-meta={`section:${section.label}`}></span>
@@ -85,7 +86,7 @@ const ICON = {
     <Content />
 
     <div class="doc-foot" data-pagefind-ignore>
-      <a href={`https://github.com/Semantic-Org/Nav-Router/edit/main/docs/src/content/${page.filePath.replace('src/content/', '')}`}>{t(locale, 'page.edit')}</a>
+      <a href={`${REPO_URL}/edit/main/docs/src/content/${page.filePath.replace('src/content/', '')}`}>{t(locale, 'page.edit')}</a>
       <span>{t(locale, 'page.updated', { date: updatedLabel })}</span>
     </div>
     <nav class="pager" aria-label={t(locale, 'page.pages')} data-pagefind-ignore>

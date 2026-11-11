@@ -1,5 +1,5 @@
-// the x-ray: one app shown in nav-router, and switched over, the same app on the Navigation API
-// alone. the panel grows to the native code's height under one scan, so the difference in code is
+// the x-ray: one app's dates in native-dates, and switched over, the same dates on Temporal alone.
+// the panel grows to the native code's height under one scan, so the difference in code is
 // something the reader sees as well as counts.
 
 import { plural } from './strings.js';
@@ -13,7 +13,7 @@ export function mountXray(root) {
   const count = root.querySelector('[data-xr-count]');
   const note = root.querySelector('[data-xr-note]');
   const still = matchMedia('(prefers-reduced-motion: reduce)');
-  let mode = 'router';
+  let mode = 'library';
 
   const label = (m) => plural('home.xray.lines', lines(panes[m]), { count: lines(panes[m]) });
   count.textContent = label(mode);
@@ -44,7 +44,7 @@ export function mountXray(root) {
 
   // the facts beside the code each point at one highlighted line: pointing at either lights the
   // pair and quiets the other highlights
-  const marks = [...panes.router.querySelectorAll('.line-hl')];
+  const marks = [...panes.library.querySelectorAll('.line-hl')];
   root.closest('.ribbon-split')?.querySelectorAll('[data-line]').forEach((fact) => {
     const mark = marks[Number(fact.dataset.line)];
     if (!mark) { return; }
@@ -58,7 +58,7 @@ export function mountXray(root) {
     const light = (on) => {
       fact.classList.toggle('is-lit', on);
       mark.classList.toggle('is-lit', on);
-      panes.router.classList.toggle('has-lit', on);
+      panes.library.classList.toggle('has-lit', on);
     };
     for (const el of [fact, mark]) {
       el.addEventListener('pointerenter', () => light(true));

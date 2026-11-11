@@ -1,53 +1,36 @@
-// min+br sizes, measured at build from the nav-router package, so the site's numbers
-// are the package's: esbuild minifies, brotli at quality 11 compresses, as browsers receive it.
+// min+br sizes, measured at build from the package above these docs with the package's own recipe
+// (tools/size.js, which `npm run size` prints), so the site's numbers are the package's.
 
-import { build } from 'esbuild';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { brotliCompressSync, constants } from 'node:zlib';
 
-// from the working directory, not this file: the build bundles this module elsewhere. the repo
-// root above these docs in the monorepo (docs/), else the sibling checkout (nav-router-docs/site/)
-export const PACKAGE_DIR = [resolve('..'), resolve('../../nav-router')]
-  .find((dir) => existsSync(resolve(dir, 'src/index.js'))) ?? resolve('..');
-const ROOT = PACKAGE_DIR;
+import { entryWith, measure, pluginNames } from '../../../tools/size.js';
+
+// from the working directory, not this file: the build bundles this module elsewhere
+export const PACKAGE_DIR = resolve('..');
 const cache = new Map();
 
-async function measure(options) {
-  const result = await build({
-    bundle: true,
-    minify: true,
-    format: 'esm',
-    write: false,
-    logLevel: 'silent',
-    ...options,
-  });
-  return brotliCompressSync(result.outputFiles[0].contents, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } })
-    .length;
+// all of core with a set of plugins, as an app that imports them ships it. plugins share helpers
+// with core and with each other, so a set is measured whole, never summed from its parts
+export function sizeWith(plugins = []) {
+  if (!existsSync(resolve(PACKAGE_DIR, 'src/index.js'))) {
+    throw new Error(`native-dates source not found at ${PACKAGE_DIR}. Build the docs from docs/ in the repo.`);
+  }
+  const key = [...plugins].sort().join(',');
+  if (!cache.has(key)) {
+    cache.set(key, measure(entryWith(key ? key.split(',') : []), PACKAGE_DIR).then((size) => size.br));
+  }
+  return cache.get(key);
 }
 
-// 'core' is the router with everything it imports; a plugin is its own file, with the utils and
-// the router it patches external, because the core already carries them
-function measureFromSource(name) {
-  return name === 'core'
-    ? measure({
-      stdin: { contents: "import { router } from './src/index.js'; console.log(router);", resolveDir: ROOT },
-    })
-    : measure({
-      entryPoints: [resolve(ROOT, 'packages/plugins/src', `${name}.js`)],
-      external: ['@semantic-ui/utils', 'nav-router'],
-    });
-}
-
+// 'core' is everything native-dates exports. a plugin is what it adds to that
 // a size that can't be measured fails the build: a stale or missing number is worse than none
-export function sizeOf(name) {
-  if (!existsSync(resolve(ROOT, 'src/index.js'))) {
-    throw new Error(`nav-router source not found at ${ROOT}. Check out nav-router beside these docs, or run them from docs/ in that repo.`);
-  }
-  if (!cache.has(name)) {
-    cache.set(name, measureFromSource(name));
-  }
-  return cache.get(name);
+export async function sizeOf(name) {
+  const core = await sizeWith();
+  return name === 'core' ? core : await sizeWith([name]) - core;
 }
+
+// the plugins the package ships, read from its folder
+export const shippedPlugins = () => pluginNames(PACKAGE_DIR);
 
 export const formatSize = (bytes) => (bytes == null ? null : `${(bytes / 1000).toFixed(1)} kB`);

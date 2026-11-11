@@ -1,0 +1,38 @@
+---
+// two consoles, one question at a time: what Date answers, and what native-dates answers on
+// Temporal. each row is the question and why Date misses, then the two exchanges side by side.
+// the page ships the build's answers; the browser asks again itself (scripts/home/consoles.js)
+import * as library from 'native-dates';
+
+import { t } from '../../lib/i18n.js';
+import { CASES, preview } from '../../scripts/home/consoles.js';
+
+const locale = Astro.currentLocale;
+const cases = CASES.map((c) => ({ ...c, dateOut: preview(c.date.run(), library), nativeOut: preview(c.native.run(library), library) }));
+---
+<div class="consoles" data-consoles>
+  <div class="console-heads" aria-hidden="true">
+    <span></span>
+    <span class="console-head"><b>Date</b> {t(locale, 'home.consoles.date.since')}</span>
+    <span class="console-head is-native"><b>native-dates</b> {t(locale, 'home.consoles.native.on')}</span>
+  </div>
+  {cases.map((c, i) => (
+    <div class="console-row" data-case={c.id}>
+      <div class="console-ask">
+        <span class="console-number" aria-hidden="true">{i + 1}</span>
+        <h3>{t(locale, `home.consoles.${c.id}.ask`)}</h3>
+        <p set:html={t(locale, `home.consoles.${c.id}.why`)} />
+      </div>
+      <div class="console is-date" data-name="Date">
+        <span class="visually-hidden">Date</span>
+        {c.date.lines.map((line) => <pre class="console-in" data-hl set:text={line} />)}
+        <p class="console-out"><code data-date-out>{c.dateOut}</code> <span class="console-miss">{t(locale, `home.consoles.${c.id}.miss`)}</span></p>
+      </div>
+      <div class="console is-native" data-name="native-dates">
+        <span class="visually-hidden">native-dates</span>
+        {c.native.lines.map((line) => <pre class="console-in" data-hl set:text={line} />)}
+        <p class="console-out"><code data-native-out>{c.nativeOut}</code></p>
+      </div>
+    </div>
+  ))}
+</div>

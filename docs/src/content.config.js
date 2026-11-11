@@ -9,7 +9,7 @@ const page = {
     // a symbol page: its title is set as code with a kind pill
     kind: z.enum(['class', 'function', 'plugin']).optional(),
     import: z.string().optional(),
-    // 'core' or a plugin file name: measured from the nav-router source at build
+    // 'core' or a plugin file name: measured from the package's source at build
     size: z.string().optional(),
     updated: z.coerce.date(),
 };

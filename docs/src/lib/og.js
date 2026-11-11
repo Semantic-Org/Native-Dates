@@ -29,10 +29,10 @@ const FONTS = [
   },
 ];
 
-const C = { bg: '#000000', text: '#ececec', text2: '#b4b4b4', text3: '#7c7c7c', line: '#1a1a22', accent: '#5aa9ff' };
+const C = { bg: '#000000', text: '#ececec', text2: '#b4b4b4', text3: '#7c7c7c', line: '#1a1a22', accent: '#b296ff' };
 const MARK = `data:image/svg+xml;utf8,${
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M5 19V12a5 5 0 0 1 5-5h9" stroke="#5aa9ff" stroke-width="2" stroke-linecap="round"/><circle cx="5" cy="19" r="2.6" fill="#ececec"/><circle cx="19" cy="7" r="2.6" stroke="#ececec" stroke-width="1.8"/></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.1" stroke="#ececec" stroke-width="1.8"/><path d="M12 5.6V12l3.8 2.2" stroke="#b296ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   )
 }`;
 
@@ -82,7 +82,7 @@ export async function renderCard({ title, lede, section, symbol = false }) {
     }, [
       h('div', { display: 'flex', alignItems: 'center', gap: 16 }, [
         { type: 'img', props: { src: MARK, width: 44, height: 44 } },
-        h('div', { fontSize: 36, fontWeight: 700, letterSpacing: -0.5 }, 'nav-router'),
+        h('div', { fontSize: 36, fontWeight: 700, letterSpacing: -0.5 }, 'native-dates'),
       ]),
       h('div', { display: 'flex', flexGrow: 1 }),
       h(

@@ -23,9 +23,9 @@ export async function GET({ site }) {
     return lines.length ? `## ${section.label}\n\n${lines.join('\n')}` : '';
   }).filter(Boolean);
 
-  const body = `# nav-router
+  const body = `# native-dates
 
-> A thin router on the browser's Navigation API. Routes, guards, typed params, layered data and views, for any codebase; plugins add the rest.
+> A thin date library on the browser's Temporal and Intl APIs. Four nouns (DateTime, CalendarDate, Time, Duration) with plain-English verbs, frozen values and zero dependencies; plugins add the rest.
 
 Every page below is also served as markdown at its path plus \`.md\`. The full docs in one file: ${url('/llms-full.txt')}
 

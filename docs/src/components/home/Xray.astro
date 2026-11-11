@@ -1,0 +1,41 @@
+---
+// the same dates twice: in native-dates, and switched over, on Temporal alone. the two programs are
+// text (scripts/home/programs.js); this runs both and stops the build if they don't agree, so the
+// page can't show code that isn't equivalent
+import * as library from 'native-dates';
+
+import { t } from '../../lib/i18n.js';
+import { ON_TEMPORAL, run, WITH_LIBRARY } from '../../scripts/home/programs.js';
+
+const locale = Astro.currentLocale;
+// both read the clock, so a minute can turn between the two runs: a second try settles that
+const agree = () => JSON.stringify(run(WITH_LIBRARY, library)) === JSON.stringify(run(ON_TEMPORAL));
+if (!agree() && !agree()) {
+  throw new Error(`the x-ray's two programs disagree: ${JSON.stringify(run(WITH_LIBRARY, library))} with native-dates, ${JSON.stringify(run(ON_TEMPORAL))} on Temporal`);
+}
+const FACTS = ['words', 'zones', 'calendar', 'durations'];
+---
+<div class="container ribbon-split">
+  <div class="ribbon-copy">
+    <h2>{t(locale, 'home.xray.title')}</h2>
+    <p>{t(locale, 'home.xray.lede')}</p>
+    <ul class="facts">
+      {FACTS.map((fact, i) => <li data-line={i} set:html={t(locale, `home.xray.fact.${fact}`)} />)}
+    </ul>
+  </div>
+  <div class="code ribbon-media xr" data-xray>
+    <div class="code-head">
+      <div class="xr-switch" role="radiogroup" aria-label={t(locale, 'home.xray.label')}>
+        <button type="button" role="radio" aria-checked="true" data-xr="library">native-dates</button>
+        <button type="button" role="radio" aria-checked="false" data-xr="native">Temporal</button>
+      </div>
+      <span class="xr-count" aria-live="polite" data-xr-count></span>
+      <button class="copy" type="button" data-copy></button>
+    </div>
+    <div class="xr-body">
+      <pre data-xr-pane="library" data-hl set:text={WITH_LIBRARY} />
+      <pre data-xr-pane="native" data-hl hidden set:text={ON_TEMPORAL} />
+    </div>
+    <p class="xr-note" data-xr-note hidden>{t(locale, 'home.xray.note')}</p>
+  </div>
+</div>

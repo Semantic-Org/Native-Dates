@@ -12,8 +12,8 @@ export async function getStaticPaths() {
     {
       params: { slug: 'index' },
       props: {
-        title: 'Your browser’s native router made powerful',
-        lede: 'Routes, guards, data and views on the Navigation API, for any framework.',
+        title: 'Temporal, spoken plainly',
+        lede: 'Dates, times, zones and durations on the calendar your browser already ships.',
       },
     },
     {
@@ -21,7 +21,7 @@ export async function getStaticPaths() {
       props: {
         title: 'Plugins',
         section: 'Plugins',
-        lede: 'Each plugin wraps one moment in the router, so you ship only the ones you install.',
+        lede: 'Each plugin adds one more thing when you import it, so you ship only the ones you use.',
       },
     },
     ...entries.map((e) => ({

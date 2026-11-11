@@ -1,5 +1,5 @@
 {
-  "name": "nav-router-docs",
+  "name": "native-dates-docs",
   "private": true,
   "type": "module",
   "scripts": {
@@ -7,7 +7,6 @@
     "build": "npm run sandbox && astro sync --force && astro build && pagefind --site dist",
     "preview": "astro preview",
     "clean": "rm -rf dist .astro node_modules/.astro",
-    "cert": "bash scripts/make-cert.sh",
     "sandbox": "node scripts/sync-sandbox.mjs"
   },
   "dependencies": {
@@ -16,7 +15,6 @@
     "@fontsource/fragment-mono": "^5.3.0",
     "@fontsource/schibsted-grotesk": "^5.3.0",
     "@semantic-ui/playground": "^0.18.0",
-    "@semantic-ui/utils": "^0.18.0",
     "@shikijs/transformers": "4.6.0",
     "astro": "7.4.6",
     "esbuild": "0.28.2",
@@ -24,6 +22,7 @@
     "remark-directive": "4.0.0",
     "satori": "^0.63.2",
     "shiki": "4.6.0",
+    "temporal-polyfill": "^1.0.5",
     "unist-util-visit": "5.2.0",
     "yaml": "2.9.1"
   }

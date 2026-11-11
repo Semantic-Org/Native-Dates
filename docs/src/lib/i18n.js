@@ -51,12 +51,20 @@ export function t(code, key, vars = {}) {
   return text(code, key).replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? '');
 }
 
+// words that change with a count, at build: key.one, key.other and whichever other forms the
+// language tells apart, picked by its own rules; a form it hasn't written reads as key.other
+export function plural(code, key, count, vars = {}) {
+  const form = `${key}.${new Intl.PluralRules(code).select(count)}`;
+  const written = t(code, form, vars);
+  return written === form ? t(code, `${key}.other`, vars) : written;
+}
+
 // the keys the site's scripts ask for (ui('…') and plural('…') in src/scripts and in a component's own script), found by reading
 // them, so a page hands its scripts those words and no others. a plural is a family, key.one,
 // key.other and the rest, and a language may have forms english doesn't. the homepage's (home.…)
 // go to the homepage alone
 const SCRIPTS = Object.values(import.meta.glob(
-  ['../scripts/*.js', '../components/*.astro', '../views/*.astro', '../layouts/*.astro'],
+  ['../scripts/**/*.js', '../components/**/*.astro', '../views/*.astro', '../layouts/*.astro'],
   { eager: true, query: '?raw', import: 'default' },
 ));
 const keysIn = (call) => [...new Set(
