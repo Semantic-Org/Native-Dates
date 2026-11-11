@@ -30,14 +30,14 @@ function face({ hour, minute }) {
     ctx.lineTo(12 + Math.cos(turn) * to, 12 + Math.sin(turn) * to);
     ctx.stroke();
   };
-  ctx.strokeStyle = '#fff';
+  ctx.strokeStyle = '#b296ff';
   ctx.lineWidth = 1.6;
   ctx.beginPath();
   ctx.arc(12, 12, 7.5, 0, Math.PI * 2);
   ctx.stroke();
-  [0, 90, 180, 270].forEach((quarter) => stroke(quarter, 5, 5.9, 1.1, 'rgba(255, 255, 255, 0.6)'));
+  [0, 90, 180, 270].forEach((quarter) => stroke(quarter, 5, 5.9, 1.1, 'rgba(178, 150, 255, 0.7)'));
   stroke(minute, 0, 4.4, 1.3, '#fff');
-  stroke(hour, 0, 2.9, 2.1, '#b296ff');
+  stroke(hour, 0, 2.9, 2.1, '#fff');
   return canvas.toDataURL('image/png');
 }
 
