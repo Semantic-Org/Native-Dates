@@ -34,7 +34,6 @@
   --bevel: linear-gradient(140deg, oklch(1 0 0 / 0.1), oklch(0 0 0 / 0.2));
   --bevel-soft: linear-gradient(140deg, oklch(1 0 0 / 0.06), oklch(0 0 0 / 0.1));  /* inline code */
   --accent-strong: oklch(0.80 0.13 295);
-  --on-accent: oklch(0.16 0.05 295);  /* text set on the accent as a fill */
   --accent-wash: oklch(0.74 0.15 295 / 0.12);
   --accent-line: oklch(0.74 0.15 295 / 0.35);
 
@@ -144,7 +143,6 @@
   --bevel: linear-gradient(140deg, oklch(1 0 0 / 0.9), oklch(0 0 0 / 0.05));
   --bevel-soft: linear-gradient(140deg, oklch(1 0 0 / 0.7), oklch(0 0 0 / 0.03));
   --accent-strong: oklch(0.45 0.2 295);
-  --on-accent: #fff;
   --accent-wash: oklch(0.52 0.19 295 / 0.08);
   --accent-line: oklch(0.52 0.19 295 / 0.3);
   --c-blue: #0550ae;
@@ -261,9 +259,9 @@ code, kbd, pre { font-family: var(--font-mono); font-variant-ligatures: none; fo
   transition: background 0.15s, border-color 0.15s;
 }
 .btn:hover { background: var(--surface-3); border-color: var(--line-3); }
-/* the one action on a page is the one thing filled with the accent */
-.btn.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
-.btn.primary:hover { background: var(--accent-strong); border-color: transparent; }
+.btn.primary { background: var(--text); color: var(--bg); border-color: transparent; }
+.btn.primary:hover { background: #fff; }
+:root[data-theme='light'] .btn.primary:hover { background: #000; }
 .btn.ghost { background: transparent; }
 .btn svg { width: 16px; height: 16px; }
 
