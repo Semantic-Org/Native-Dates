@@ -91,7 +91,7 @@ const INSTALL = 'npm i native-dates';
     <section class="ribbon">
       <div class="container">
         <div class="ribbon-head">
-          <h2>{t(locale, 'home.consoles.title')}</h2>
+          <h2 class="versus" set:html={t(locale, 'home.consoles.title')} />
           <p set:html={t(locale, 'home.consoles.lede')} />
         </div>
         <Consoles />
