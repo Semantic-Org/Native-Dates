@@ -8,3 +8,4 @@ export const IS_RANGE = Symbol.for('native-dates/Range');
 export const IS_DATE_RANGE = Symbol.for('native-dates/DateRange');
 export const IS_DATE_TIME_RANGE = Symbol.for('native-dates/DateTimeRange');
 export const IS_TIME_RANGE = Symbol.for('native-dates/TimeRange');
+export const IS_YEAR_MONTH = Symbol.for('native-dates/YearMonth');

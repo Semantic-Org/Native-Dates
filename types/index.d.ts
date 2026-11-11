@@ -516,6 +516,8 @@ export const IS_RANGE: unique symbol;
 export const IS_DATE_RANGE: unique symbol;
 export const IS_DATE_TIME_RANGE: unique symbol;
 export const IS_TIME_RANGE: unique symbol;
+/** A `YearMonth` from `@native-dates/plugins/year-month` */
+export const IS_YEAR_MONTH: unique symbol;
 
 /** The ISO number of a weekday from its name, `weekday('sunday')` is 7, a number passing through */
 export function weekday(day: Weekday): number;

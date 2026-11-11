@@ -2,6 +2,7 @@
 
 Opt-in plugins for `native-dates`, each installed by importing its subpath:
 
+- `@native-dates/plugins/year-month` — `YearMonth`, `yearMonth('2026-11')`, `.yearMonth`, and `date(2026, 11)` as a year-month
 - `@native-dates/plugins/ranges` — `DateRange`, `DateTimeRange`, `TimeRange`, `.to()`, `.range()`, `.points()`, `.split()`
 - `@native-dates/plugins/tokens` — `YYYY-MM-DD HH:mm` token formatting, `monthNames()`, `weekdayNames()`
 - `@native-dates/plugins/relative` — `.formatRelative()` via `Intl.RelativeTimeFormat`
