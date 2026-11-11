@@ -1,12 +1,12 @@
 ---
-// the homepage: the pitch, then one made thing per argument. a sentence that is also code, the four
-// kinds of value as two sums, Date and Temporal asked the same questions, a year of one standup across two cities, the same dates on
+// the homepage: the pitch, then one made thing per argument. a sentence that is also code, the
+// primitives Temporal ships and the call for each, Date and Temporal asked the same questions, a year of one standup across two cities, the same dates on
 // Temporal alone, a running app, and what it all weighs
 import { getCollection } from 'astro:content';
 
 import Bytes from '../components/home/Bytes.astro';
 import Consoles from '../components/home/Consoles.astro';
-import Nouns from '../components/home/Nouns.astro';
+import Primitives from '../components/home/Primitives.astro';
 import Say from '../components/home/Say.astro';
 import Xray from '../components/home/Xray.astro';
 import YearStrip from '../components/home/YearStrip.astro';
@@ -81,10 +81,10 @@ const INSTALL = 'npm i native-dates';
     <section class="ribbon">
       <div class="container">
         <div class="ribbon-head">
-          <h2>{t(locale, 'home.nouns.title')}</h2>
-          <p set:html={t(locale, 'home.nouns.lede')} />
+          <h2>{t(locale, 'home.prims.title')}</h2>
+          <p>{t(locale, 'home.prims.lede')}</p>
         </div>
-        <Nouns />
+        <Primitives />
       </div>
     </section>
 
@@ -159,7 +159,7 @@ const INSTALL = 'npm i native-dates';
     import { init } from '../scripts/site.js';
     import { mountBytes } from '../scripts/home/bytes.js';
     import { mountConsoles, revealConsoles } from '../scripts/home/consoles-live.js';
-    import { mountNouns } from '../scripts/home/nouns.js';
+    import { mountPrimitives } from '../scripts/home/primitives.js';
     import { mountSay } from '../scripts/home/say.js';
     import { mountYear } from '../scripts/home/year.js';
     import { mountXray } from '../scripts/xray.js';
@@ -169,6 +169,7 @@ const INSTALL = 'npm i native-dates';
     document.querySelectorAll('[data-year]').forEach(mountYear);
     document.querySelectorAll('[data-bytes]').forEach(mountBytes);
     document.querySelectorAll('[data-consoles]').forEach(revealConsoles);
+    document.querySelectorAll('[data-primitives]').forEach(mountPrimitives);
 
     // the parts that compute dates run on the reader's own Temporal, read again for their day, zone
     // and locale. a browser that doesn't ship Temporal yet loads it first, as an app there would.
@@ -181,7 +182,6 @@ const INSTALL = 'npm i native-dates';
       const library = await import('native-dates');
       document.querySelectorAll('[data-say]').forEach((root) => mountSay(root, library));
       document.querySelectorAll('[data-consoles]').forEach((root) => mountConsoles(root, library));
-      document.querySelectorAll('[data-nouns]').forEach((root) => mountNouns(root, library));
       // the closer tells the time, and tells it again as each minute turns
       const clock = document.querySelector('[data-now]');
       const tell = () => {

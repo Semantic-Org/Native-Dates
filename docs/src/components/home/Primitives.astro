@@ -1,0 +1,55 @@
+---
+// what Temporal ships, one line each: the primitive, a few words on what it is, and the shortest
+// call that hands you one. a switch shows the same value made on Temporal alone. the build runs
+// every pair and stops if the two don't make the same thing, so the page can't show a wrapper
+// beside something it isn't
+import '@native-dates/plugins/ranges';
+import * as library from 'native-dates';
+
+import { localePath, t } from '../../lib/i18n.js';
+import { PRIMITIVES } from '../../scripts/home/primitives.js';
+import { highlight } from '../../scripts/site.js';
+
+const locale = Astro.currentLocale;
+const { date, datetime, duration, now, time } = library;
+// a value as Temporal would print it: a range is its two ends, and the current moment is only
+// what it is and where, since the two calls can't land on the same instant
+const printed = (value) => {
+  const temporal = (v) => (v.toTemporal ? v.toTemporal() : v);
+  if (Array.isArray(value)) { return value.map(String).join(' to '); }
+  if (value.start) { return [value.start, value.end].map((end) => String(temporal(end))).join(' to '); }
+  return String(temporal(value));
+};
+const momentOf = (text) => text.replace(/^.*\[(.+)\]$/, 'now in $1');
+for (const row of PRIMITIVES) {
+  const ours = printed(new Function('date', 'datetime', 'duration', 'now', 'time', `return (${row.ours});`)(date, datetime, duration, now, time));
+  // more than one line is more than one value
+  const lines = row.temporal.split('\n');
+  const theirs = printed(new Function(`return (${lines.length > 1 ? `[${lines.join(', ')}]` : row.temporal});`)());
+  const same = row.id === 'now' ? momentOf(ours) === momentOf(theirs) : ours === theirs;
+  if (!same) { throw new Error(`the homepage sets ${row.ours} beside ${row.temporal}, and they differ: ${ours} and ${theirs}`); }
+}
+---
+<div class="prims" data-primitives data-mode="ours">
+  <div class="prims-head">
+    <div class="xr-switch" role="radiogroup" aria-label={t(locale, 'home.prims.switch')}>
+      <button type="button" role="radio" aria-checked="true" data-prims="ours">native-dates</button>
+      <button type="button" role="radio" aria-checked="false" data-prims="temporal">Temporal</button>
+    </div>
+  </div>
+  <ul class="prims-list" role="list">
+    {PRIMITIVES.map((row) => (
+      <li class="prim">
+        <span class="prim-what">{t(locale, `home.prims.${row.id}`)}</span>
+        <span class="prim-code swap">
+          <code data-prim="ours" set:html={highlight(row.ours)} />
+          <code data-prim="temporal" hidden set:html={highlight(row.temporal)} />
+        </span>
+        <span class="prim-built">
+          <code class="prim-type" data-no-hl>{row.built}</code>
+          {row.plugin && <a class="prim-plugin" href={localePath(`/plugins/${row.plugin}/`, locale)}>{t(locale, 'home.prims.plugin', { name: row.plugin })}</a>}
+        </span>
+      </li>
+    ))}
+  </ul>
+</div>
