@@ -1,6 +1,7 @@
 import { rehypeHeadingIds, unified } from '@astrojs/markdown-remark';
 import { transformerMetaHighlight } from '@shikijs/transformers';
 import { defineConfig } from 'astro/config';
+import { existsSync, readFileSync } from 'node:fs';
 import remarkDirective from 'remark-directive';
 import { createCssVariablesTheme } from 'shiki';
 
@@ -28,6 +29,12 @@ theme.tokenColors.push(
   },
 );
 
+// the dev host is a stand-in until the domain is chosen: change it here and in scripts/make-cert.sh
+const HOST = 'local.nativedates.dev';
+const CERT = { key: `./cert/${HOST}-key.pem`, cert: `./cert/${HOST}.pem` };
+const hasCert = existsSync(CERT.key) && existsSync(CERT.cert);
+if (!hasCert) { console.warn('[site] no cert in cert/: dev runs over http on :4321. Run `npm run cert`.'); }
+
 export default defineConfig({
   // where the site is served: share cards and canonical links are absolute, so a staging build sets
   // SITE_URL. the default is a stand-in until the domain is chosen (lib/versions.js has the same one)
@@ -35,9 +42,21 @@ export default defineConfig({
   trailingSlash: 'always',
   // the languages (lib/locales.js); english at the root, the rest under their path
   i18n: astroI18n,
+  // the dev origin: https://local.nativedates.dev on :443, every interface, one site up at a time (the
+  // house pattern). without the cert (npm run cert, see cert/README.md), plain http on :4321
+  server: { host: true, port: hasCert ? 443 : 4321 },
   devToolbar: { enabled: false },
-  // the sizes are measured from the package above these docs (lib/sizes.js)
-  vite: { server: { fs: { allow: ['..'] } } },
+  vite: {
+    server: {
+      allowedHosts: [HOST],
+      // the sizes are measured from the package above these docs (lib/sizes.js)
+      fs: { allow: ['..'] },
+      ...(hasCert && {
+        https: { key: readFileSync(CERT.key), cert: readFileSync(CERT.cert) },
+        hmr: { host: HOST, protocol: 'wss' },
+      }),
+    },
+  },
   markdown: {
     processor: unified({
       remarkPlugins: [remarkDirective, remarkDocs],

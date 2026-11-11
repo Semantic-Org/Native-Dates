@@ -7,7 +7,8 @@
     "build": "npm run sandbox && astro sync --force && astro build && pagefind --site dist",
     "preview": "astro preview",
     "clean": "rm -rf dist .astro node_modules/.astro",
-    "sandbox": "node scripts/sync-sandbox.mjs"
+    "sandbox": "node scripts/sync-sandbox.mjs",
+    "cert": "bash scripts/make-cert.sh"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.3.5",
