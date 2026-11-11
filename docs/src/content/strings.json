@@ -127,6 +127,8 @@
   "home.prims.title": "Built on the primitives Temporal ships",
   "home.prims.lede": "JavaScript now has a real type for a calendar day, a time of day, a moment in a time zone and a length of time. Native Dates hands you each one in a call short enough to remember.",
   "home.prims.switch": "Show each call in",
+  "home.prims.legacy": "Legacy JS",
+  "home.prims.datetime.legacy": "A Date can’t hold a time zone",
   "home.prims.date": "A calendar day",
   "home.prims.time": "A time of day",
   "home.prims.datetime": "A moment in a time zone",
