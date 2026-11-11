@@ -218,23 +218,42 @@
 /* the plugin is what the native-dates call needs: beside the other spellings its tag keeps its place, unseen */
 .prims:not([data-mode='ours']) .prim-plugin { visibility: hidden; }
 
-/* ---------- two consoles: Date and native-dates, asked the same questions ---------- */
+/* ---------- one question at a time, asked of Date and of native-dates ----------
+   the questions down one side, and beside them the two consoles' answers to the one picked, with
+   the reason under both. every question's answers share one cell, so the frame keeps the size of
+   the longest whichever is showing */
 
-.consoles { border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); overflow: hidden; }
-.console-heads, .console-row { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 5fr) minmax(0, 5fr); }
-.console-heads { background: var(--surface-2); border-bottom: 1px solid var(--line); }
-.console-head { padding: 11px 20px; border-inline-start: 1px solid var(--line); color: var(--text-3); font: 400 var(--fs-xs)/var(--lh-xs) var(--font-mono); }
-.console-head b { margin-inline-end: 8px; color: var(--text); font-weight: 400; }
-.console-row + .console-row { border-top: 1px solid var(--line); }
-.console-ask { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 14px; align-content: start; padding: 24px; }
+.ask {
+  display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 10fr);
+  border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); overflow: hidden;
+}
+.ask-list { display: grid; grid-auto-rows: 1fr; border-inline-end: 1px solid var(--line); }
+.ask-tab {
+  position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; column-gap: 14px;
+  padding: 18px 20px; border: 0; background: none; cursor: pointer; text-align: start;
+  color: var(--text-2); font: 550 var(--fs-md)/var(--lh-md) var(--font-sans);
+  /* a question is a sentence: it wraps, where a button's label otherwise never does */
+  text-wrap: pretty;
+}
+.ask-tab + .ask-tab { border-top: 1px solid var(--line); }
+.ask-tab:hover { color: var(--text); background: var(--surface-2); }
+.ask-tab:focus-visible { outline-offset: -2px; }
+/* the question being asked: lit, with the accent down its leading edge */
+.ask-tab[aria-selected='true'] { color: var(--text); background: var(--surface-2); }
+.ask-tab[aria-selected='true']::before { content: ''; position: absolute; inset-block: 0; inset-inline-start: 0; width: 2px; background: var(--accent); }
+.ask-tab[aria-selected='true'] .console-number { background: var(--accent-wash); box-shadow: inset 0 0 0 1px var(--accent-line); color: var(--accent-strong); }
 .console-number {
   display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
   background: var(--bevel), var(--surface-3); box-shadow: inset 0 0 0 1px var(--line-2);
   color: var(--text); font: 400 var(--fs-2xs)/1 var(--font-mono);
 }
-.console-ask h3 { align-self: center; font-size: var(--fs-md); line-height: var(--lh-md); font-weight: 600; }
-.console-ask p { grid-column: 2; margin-top: 8px; color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-sm); }
-.console { min-width: 0; padding: 24px 20px; border-inline-start: 1px solid var(--line); background: var(--code-bg); }
+.ask-answers { min-width: 0; }
+.ask-panel, .ask-answers > .ask-panel[hidden] { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; }
+.ask-consoles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.console { min-width: 0; padding: 20px; background: var(--code-bg); }
+.console + .console { border-inline-start: 1px solid var(--line); }
+.console-head { margin-bottom: 14px; color: var(--text-3); font: 400 var(--fs-xs)/var(--lh-xs) var(--font-mono); }
+.console-head b { margin-inline-end: 8px; color: var(--text); font-weight: 400; }
 .console-in, .console-out {
   position: relative; margin: 0; padding-inline-start: 20px;
   font: 400 var(--code-sm-fs)/var(--code-sm-lh) var(--font-mono); font-variant-ligatures: none; font-feature-settings: 'liga' 0, 'calt' 0;
@@ -252,11 +271,15 @@
   background: color-mix(in oklab, var(--danger) 14%, transparent); color: var(--danger);
   font: 500 var(--fs-3xs)/var(--lh-3xs) var(--font-sans); white-space: nowrap;
 }
-/* a row steps in as it is reached: the question, then Date's answer, then Temporal's */
-.console-row > * { transition: opacity 0.5s var(--ease), translate 0.5s var(--ease); }
-.console-row > .is-date { transition-delay: 0.25s; }
-.console-row > .is-native { transition-delay: 0.7s; }
-.console-row.is-waiting > * { opacity: 0; translate: 0 10px; }
+/* the reason reads as prose, so its lines stop at a reading measure while its rule runs the full width */
+.ask-why {
+  padding-block: 16px; padding-inline: 20px max(20px, calc(100% - 20px - 68ch));
+  border-top: 1px solid var(--line); color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-sm);
+}
+/* asking: both answers are held back together, then return together, and the reason follows them */
+.console-out, .ask-why { transition: opacity 0.3s var(--ease), translate 0.3s var(--ease); }
+.ask-why { transition-delay: 0.3s; }
+.is-asking .console-out, .is-asking .ask-why { opacity: 0; translate: 0 4px; transition: none; }
 
 /* ---------- a year of one standup, read on another city's clock ---------- */
 
@@ -385,12 +408,14 @@
     font-variant-ligatures: none; font-feature-settings: 'liga' 0, 'calt' 0;
   }
   .ribbon-copy { position: static; }
-  /* a question, then each console under its own name */
-  .console-heads { display: none; }
-  .console-row { grid-template-columns: minmax(0, 1fr); }
-  .console { padding: 16px 20px; border-inline-start: 0; border-top: 1px solid var(--line); }
-  .console::before { content: attr(data-name); display: block; margin-bottom: 8px; color: var(--text-3); font: 400 var(--fs-2xs)/var(--lh-2xs) var(--font-mono); }
-  .console-ask { padding: 20px; }
+  /* the questions sit above their answers, and the two consoles stack */
+  .ask { grid-template-columns: minmax(0, 1fr); }
+  .ask-list { border-inline-end: 0; border-bottom: 1px solid var(--line); }
+  .ask-tab { padding: 14px 16px; font-size: var(--fs-sm); line-height: var(--lh-sm); }
+  .ask-consoles { grid-template-columns: minmax(0, 1fr); }
+  .console { padding: 16px; }
+  .console + .console { border-inline-start: 0; border-top: 1px solid var(--line); }
+  .ask-why { padding-block: 14px; padding-inline: 16px max(16px, calc(100% - 16px - 68ch)); }
   .bytes-plugins { grid-template-columns: minmax(0, 1fr); }
   .bytes-presets { margin-inline-start: 0; flex-basis: 100%; }
 }
@@ -429,7 +454,7 @@
   .footer-cols { gap: 40px; flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .console-row > *, .bytes-added, .year-time, .year-gap span { transition: none; }
+  .console-out, .ask-why, .bytes-added, .year-time, .year-gap span { transition: none; }
   .say-grid:not([hidden]) .say-cell { animation: none; }
 }
 

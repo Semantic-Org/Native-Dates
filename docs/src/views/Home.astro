@@ -158,7 +158,7 @@ const INSTALL = 'npm i native-dates';
   <script>
     import { init } from '../scripts/site.js';
     import { mountBytes } from '../scripts/home/bytes.js';
-    import { mountConsoles, revealConsoles } from '../scripts/home/consoles-live.js';
+    import { mountConsoles, mountQuestions } from '../scripts/home/consoles-live.js';
     import { mountPrimitives } from '../scripts/home/primitives.js';
     import { mountSay } from '../scripts/home/say.js';
     import { mountYear } from '../scripts/home/year.js';
@@ -168,7 +168,7 @@ const INSTALL = 'npm i native-dates';
     document.querySelectorAll('[data-xray]').forEach(mountXray);
     document.querySelectorAll('[data-year]').forEach(mountYear);
     document.querySelectorAll('[data-bytes]').forEach(mountBytes);
-    document.querySelectorAll('[data-consoles]').forEach(revealConsoles);
+    document.querySelectorAll('[data-consoles]').forEach(mountQuestions);
     document.querySelectorAll('[data-primitives]').forEach(mountPrimitives);
 
     // the parts that compute dates run on the reader's own Temporal, read again for their day, zone
