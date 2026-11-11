@@ -142,6 +142,7 @@
   "home.consoles.native.on": "on Temporal",
   "home.consoles.stamp.wrong": "Wrong",
   "home.consoles.stamp.right": "Right",
+  "home.consoles.why": "Why?",
   "home.consoles.day.ask": "What day is <code>2026-09-01</code> in New York?",
   "home.consoles.day.why": "<code>Date</code> reads a bare date as midnight in UTC, which is still the evening before in New York. A calendar date has no clock to shift, so it is September 1 everywhere.",
   "home.consoles.day.miss": "a day early",
