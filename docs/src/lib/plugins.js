@@ -7,6 +7,7 @@
 // only works with the plugin imported
 
 export const PLUGINS = [
+  { name: 'year-month', category: 'dates', uses: ['date'], line: 'const period = date(2026, 11);' },
   { name: 'ranges', category: 'spans', uses: ['today'], line: "const sprint = today().to(2, 'weeks');" },
   { name: 'tokens', category: 'formatting', uses: ['today'], line: "today().format('YYYY-MM-DD');" },
   { name: 'relative', category: 'formatting', uses: ['now'], line: "now().minus(3, 'hours').formatRelative();" },
