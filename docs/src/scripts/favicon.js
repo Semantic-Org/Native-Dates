@@ -1,16 +1,19 @@
 // the favicon is a watch that tells the reader's time: the mark's own tile, ring, quarter marks and
 // hands (public/favicon.svg, a 24 unit box, drawn there at ten past ten) drawn to a canvas with the
-// hands where they are now. its one motion is a watch's own: a thin second hand that ticks. the face
-// is drawn again as each second begins, which a background tab may slow, and a tick it misses is
-// fine since the next one lands on the right second anyway. without motion there is no second hand
-// and the face is drawn once a minute
+// hands where they are now. its one motion is a watch's own, the seconds: a bead on the ring that
+// stands at the current second and ticks round once a minute. a second hand would be the plainer
+// way to say it, but at a tab's 16 pixels a hand that thin comes out as one faint pixel at some
+// angles and none at others, where a bead is a solid pixel at every one. the face is drawn again as
+// each second begins, which a background tab may slow, and a tick it misses is fine since the next
+// one lands on the right second anyway. without motion there is no bead and the face is drawn once
+// a minute
 
 import { handAngles } from './mark-clock.js';
 
 const SIZE = 64;
 const UNIT = SIZE / 24;
 
-// the face at a time. the second hand is left off when no angle is given for it
+// the face at a time. the seconds bead is left off when no angle is given for it
 function face(canvas, { hour, minute }, second = null) {
   const ctx = canvas.getContext('2d');
   ctx.setTransform(UNIT, 0, 0, UNIT, 0, 0);
@@ -40,8 +43,16 @@ function face(canvas, { hour, minute }, second = null) {
   [0, 90, 180, 270].forEach((quarter) => stroke(quarter, 5, 5.9, 1.1, 'rgba(178, 150, 255, 0.7)'));
   stroke(minute, 0, 4.4, 1.3, '#fff');
   stroke(hour, 0, 2.9, 2.1, '#fff');
-  // the second hand lies over the other two, as on a watch: longer, thinner and in the ring's color
-  if (second !== null) { stroke(second, 0, 5.6, 0.9, '#b296ff'); }
+  // the seconds bead: white on the ring, with the ring cut back around it so it reads as set into it
+  if (second !== null) {
+    const turn = (second - 90) * Math.PI / 180;
+    [[2.4, '#000'], [1.6, '#fff']].forEach(([radius, color]) => {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(12 + Math.cos(turn) * 7.5, 12 + Math.sin(turn) * 7.5, radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
   return canvas.toDataURL('image/png');
 }
 
