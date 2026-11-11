@@ -82,6 +82,14 @@ describe('monthDay', () => {
     expect(() => monthDay('10-17', { loose: true, zone: 'Mars/Olympus' })).toThrow(/unknownZone/);
   });
 
+  it('reads a loose whole date the way date() does, so the app decides its order and dayMonth overrides', () => {
+    configure({ dayFirst: true });
+    expect(monthDay('07.09.2026', { loose: true }).toString()).toBe('09-07');
+    expect(monthDay('07.09.2026', { loose: true }).equals(date('07.09.2026', { loose: true }).monthDay)).toBe(true);
+    configure({ dayFirst: false });
+    expect(dayMonth('07.09.2026', { loose: true }).toString()).toBe('09-07');
+  });
+
   it('leads with its text and prints its parts', () => {
     const birthday = monthDay('10-17');
     expect(Object.keys(birthday)).toEqual(['text', 'month', 'day']);
