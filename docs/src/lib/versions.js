@@ -1,6 +1,6 @@
 // the docs' versions: the current one (the package's own) and the majors whose docs were frozen at
-// vN.native-dates.example when the next major shipped. src/data/versions.json lists those archives, newest
-// first, as { "version": "1", "url": "https://v1.native-dates.example" }; the release step adds one.
+// vN.nativedates.dev when the next major shipped. src/data/versions.json lists those archives, newest
+// first, as { "version": "1", "url": "https://v1.nativedates.dev" }; the release step adds one.
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -9,11 +9,10 @@ import VERSIONS from '../data/versions.json' with { type: 'json' };
 import { DEFAULT_LOCALE, t } from './i18n.js';
 import { PACKAGE_DIR } from './sizes.js';
 
-// stand-ins until the repo is public and the domain is chosen
 export const REPO_URL = 'https://github.com/Semantic-Org/Native-Dates';
 export const CHANGELOG_URL = `${REPO_URL}/releases`;
-export const LATEST_ORIGIN = 'https://native-dates.example';
-export const UNRELEASED_ORIGIN = 'https://staging.native-dates.example';
+export const LATEST_ORIGIN = 'https://nativedates.dev';
+export const UNRELEASED_ORIGIN = 'https://staging.nativedates.dev';
 
 export function versions() {
   const { version } = JSON.parse(readFileSync(resolve(PACKAGE_DIR, 'package.json'), 'utf8'));

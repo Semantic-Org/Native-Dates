@@ -29,16 +29,15 @@ theme.tokenColors.push(
   },
 );
 
-// the dev host is a stand-in until the domain is chosen: change it here and in scripts/make-cert.sh
 const HOST = 'local.nativedates.dev';
 const CERT = { key: `./cert/${HOST}-key.pem`, cert: `./cert/${HOST}.pem` };
 const hasCert = existsSync(CERT.key) && existsSync(CERT.cert);
 if (!hasCert) { console.warn('[site] no cert in cert/: dev runs over http on :4321. Run `npm run cert`.'); }
 
 export default defineConfig({
-  // where the site is served: share cards and canonical links are absolute, so a staging build sets
-  // SITE_URL. the default is a stand-in until the domain is chosen (lib/versions.js has the same one)
-  site: process.env.SITE_URL ?? 'https://native-dates.example',
+  // where the site is served: share cards and canonical links are absolute, so a staging build
+  // sets SITE_URL=https://staging.nativedates.dev (the staging environment's own variable on vercel)
+  site: process.env.SITE_URL ?? 'https://nativedates.dev',
   trailingSlash: 'always',
   // the languages (lib/locales.js); english at the root, the rest under their path
   i18n: astroI18n,
