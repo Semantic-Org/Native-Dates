@@ -106,7 +106,13 @@ const INSTALL = 'npm i native-dates';
     </section>
 
     <section class="ribbon">
-      <Xray />
+      <div class="container">
+        <div class="ribbon-head">
+          <h2>{t(locale, 'home.xray.title')}</h2>
+          <p>{t(locale, 'home.xray.lede')}</p>
+        </div>
+        <Xray />
+      </div>
     </section>
 
     <section class="ribbon ribbon-try">

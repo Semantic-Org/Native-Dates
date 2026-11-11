@@ -51,6 +51,12 @@
   margin-top: 0; max-width: 58ch;
   font-size: var(--fs-lg); line-height: var(--lh-lg); color: var(--text-2);
 }
+.lede a, .ribbon-head p a {
+  color: var(--text); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 4px;
+}
+.lede a:hover, .ribbon-head p a:hover {
+  color: var(--accent); text-decoration-color: var(--accent);
+}
 
 
 .install { margin-top: 0; display: inline-flex; flex-direction: column; gap: 0; }
@@ -75,22 +81,7 @@
 .ribbon { padding: var(--section-y) 0; border-top: 1px solid var(--line); }
 .ribbon h2 { font-size: var(--heading); line-height: var(--heading-lh); letter-spacing: var(--heading-track); font-weight: 620; }
 .ribbon-head { max-width: 640px; margin-bottom: 48px; }
-.ribbon-head p, .ribbon-copy > p { margin-top: 16px; font-size: var(--fs-lg); line-height: var(--lh-lg); color: var(--text-2); }
-
-.ribbon-split { display: grid; grid-template-columns: 5fr 7fr; gap: 72px; align-items: start; }
-.ribbon-split.reverse { grid-template-columns: 5fr 7fr; }
-.ribbon-split > * { min-width: 0; }
-.ribbon-copy { position: sticky; top: 100px; }
-
-
-.ribbon-copy .code { margin-top: 28px; }
-
-.facts { list-style: none; margin: 28px 0 0; padding: 0; border-top: 1px solid var(--line); }
-.facts li { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); line-height: var(--lh-sm); color: var(--text-2); }
-/* each fact leads with its name on a line of its own, then the sentence */
-.facts strong { display: block; margin-bottom: 2px; color: var(--text); font-weight: 600; }
-/* a fact's own line of code, shown where the code block is out of reach below (scripts/xray.js) */
-.facts .fact-line { display: none; }
+.ribbon-head p { margin-top: 16px; font-size: var(--fs-lg); line-height: var(--lh-lg); color: var(--text-2); }
 
 .text-link {
   display: inline-flex; margin-top: 24px;
@@ -181,7 +172,6 @@
 .say-value { min-height: calc(1px + 12px + var(--lh-3xs) + 2px + 2 * var(--lh-sm)); padding-block: 12px 0; padding-inline: 8px; margin-inline: -8px; border-top: 1px solid var(--line-2); border-radius: 0 0 var(--r-2) var(--r-2); max-width: max(116px, 100%); }
 .say-noun { display: block; color: var(--c-green); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); }
 .say-text { display: block; margin-top: 2px; color: var(--text); font-size: var(--fs-sm); line-height: var(--lh-sm); text-wrap: balance; }
-.say-caption { padding: 14px 24px; border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
 
 /* ---------- the primitives Temporal ships, and the call for each ----------
    a plain list: what it is, the call, and the Temporal type underneath. the switch turns every
@@ -441,16 +431,6 @@
   }
   .home-menu a:hover { color: var(--text); background: var(--surface-2); }
   .topbar .search-trigger { min-width: 0; }
-  .ribbon-split, .ribbon-split.reverse { grid-template-columns: 1fr; }
-  .facts .fact-line {
-    display: block; margin-top: 10px; padding: 8px 12px;
-    border: 0; border-inline-start: 2px solid var(--accent); border-radius: 0 var(--r-2) var(--r-2) 0;
-    background: var(--accent-wash); box-shadow: none; color: var(--text);
-    font: 400 var(--code-sm-fs)/20px var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere;
-    /* the font shorthand turns ligatures back on, and => must stay two characters */
-    font-variant-ligatures: none; font-feature-settings: 'liga' 0, 'calt' 0;
-  }
-  .ribbon-copy { position: static; }
   /* the questions sit above their answers, and the two consoles stack */
   .ask { grid-template-columns: minmax(0, 1fr); }
   .ask-list { border-inline-end: 0; border-bottom: 1px solid var(--line); }
@@ -485,7 +465,6 @@
   .say-where { display: none; }
   .say-tab { padding: 0 9px; font-size: var(--fs-xs); }
   .say-grid { padding: 20px 16px 4px; }
-  .say-caption { padding: 12px 16px; }
   .year { padding: 20px 16px 16px; }
   .year-clocks { gap: 8px; }
   .year-time { font-size: var(--fs-2xl); line-height: var(--lh-2xl); letter-spacing: -1px; }
@@ -509,10 +488,17 @@
 @media (max-width: 900px) { .ribbon-try .pg { height: auto; } }
 
 
-/* ---------- x-ray: the same dates in native-dates, and on Temporal alone ----------
-   native turns the panel to film: a cool tint and faint scan lines behind highlighted code */
+/* ---------- x-ray: the same dates in native-dates, on Temporal alone, and on Date ----------
+   four samples, a panel each under its heading, two across while a panel that wide holds the
+   longest line of native-dates. switched off native-dates, a panel turns to film: a cool tint and
+   faint scan lines behind its code */
+.xrays { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 600px), 1fr)); gap: 32px 16px; align-items: start; }
+.xrays > * { min-width: 0; }
+.xrays h3 { margin: 0 0 12px; color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); font-weight: 600; }
 .xr { --film: oklch(0.13 0.025 240); --film-line: oklch(1 0 0 / 0.025); transition: background-color 0.4s var(--ease); }
 :root[data-theme='light'] .xr { --film: oklch(0.95 0.02 240); --film-line: oklch(0 0 0 / 0.03); }
+/* half the width a code block has elsewhere, so the code is set a size down */
+.xr pre { font-size: var(--code-sm-fs); line-height: var(--code-sm-lh); }
 .xr-switch { display: flex; gap: 2px; }
 .xr-switch button {
   height: 30px; padding: 0 12px; border: 0; border-radius: var(--r-2); background: none; cursor: pointer;
@@ -530,14 +516,6 @@
     repeating-linear-gradient(to bottom, var(--film-line) 0 1px, transparent 1px 3px);
 }
 .xr.is-native .code-head { background: transparent; }
-/* a fact pointed at: its line stays lit, the other highlights step back */
-.xr pre.has-lit .line-hl:not(.is-lit) { background: transparent; border-inline-start-color: transparent; }
-.xr pre .line-hl { transition: background-color 0.2s var(--ease), border-color 0.2s var(--ease); }
-.facts li[data-line] { cursor: default; transition: opacity 0.2s var(--ease); }
-/* pointing at a fact quiets the others, as the code quiets its other highlighted lines */
-.facts:has(li.is-lit) li:not(.is-lit) { opacity: 0.4; }
-.xr-note { margin: 0; padding: 12px 20px; border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
-.xr-note[hidden] { display: none; }
 /* the scan: one pass down the panel as it turns */
 .xr-body::after {
   content: ''; position: absolute; inset-inline-start: 0; inset-inline-end: 0; top: 0; height: 96px; pointer-events: none; opacity: 0;
@@ -550,5 +528,12 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .xr, .xr.is-scanning .xr-body::after { transition: none; animation: none; }
+}
+@media (max-width: 600px) {
+  /* the three names fill a phone's panel head, so the count gives way */
+  .xr-count { display: none; }
+  .xr .code-head .copy { margin-inline-start: auto; }
+  /* a single line is read whole, not scrolled to */
+  .xr pre.is-line { white-space: pre-wrap; overflow-wrap: anywhere; }
 }
 

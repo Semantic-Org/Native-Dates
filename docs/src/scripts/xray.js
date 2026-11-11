@@ -1,6 +1,6 @@
-// the x-ray: one app's dates in native-dates, and switched over, the same dates on Temporal alone.
-// the panel grows to the native code's height under one scan, so the difference in code is
-// something the reader sees as well as counts.
+// an x-ray: one operation in native-dates, and switched over, the same value made on Temporal
+// alone, or on Date as it was done before either. the panel grows to that code's height under one
+// scan, so the difference in code is something the reader sees as well as counts.
 
 import { plural } from './strings.js';
 
@@ -11,9 +11,8 @@ export function mountXray(root) {
   const panes = Object.fromEntries([...root.querySelectorAll('[data-xr-pane]')].map((p) => [p.dataset.xrPane, p]));
   const buttons = [...root.querySelectorAll('[data-xr]')];
   const count = root.querySelector('[data-xr-count]');
-  const note = root.querySelector('[data-xr-note]');
   const still = matchMedia('(prefers-reduced-motion: reduce)');
-  let mode = 'library';
+  let mode = 'ours';
 
   const label = (m) => plural('home.xray.lines', lines(panes[m]), { count: lines(panes[m]) });
   count.textContent = label(mode);
@@ -23,9 +22,13 @@ export function mountXray(root) {
     const from = body.offsetHeight;
     mode = next;
     Object.entries(panes).forEach(([m, pane]) => { pane.hidden = m !== mode; });
-    buttons.forEach((b) => b.setAttribute('aria-checked', b.dataset.xr === mode));
-    root.classList.toggle('is-native', mode === 'native');
-    note.hidden = mode !== 'native';
+    buttons.forEach((b) => {
+      const on = b.dataset.xr === mode;
+      b.setAttribute('aria-checked', on);
+      b.tabIndex = on ? 0 : -1;
+    });
+    // anything but ours is code written against the platform
+    root.classList.toggle('is-native', mode !== 'ours');
     count.textContent = label(mode);
     if (still.matches) { return; }
     // the panel grows or shrinks to the code it now shows, under one pass of the scan
@@ -42,34 +45,12 @@ export function mountXray(root) {
   });
   buttons.forEach((b) => b.addEventListener('click', () => set(b.dataset.xr)));
 
-  // the facts beside the code each point at one highlighted line: pointing at either lights the
-  // pair and quiets the other highlights
-  const marks = [...panes.library.querySelectorAll('.line-hl')];
-  root.closest('.ribbon-split')?.querySelectorAll('[data-line]').forEach((fact) => {
-    const mark = marks[Number(fact.dataset.line)];
-    if (!mark) { return; }
-    // where the code sits below the facts and nothing can be pointed at, a fact carries its own
-    // line: the highlighted code, out of its indent, right under the claim it backs
-    const line = document.createElement('code');
-    line.className = 'fact-line';
-    line.setAttribute('aria-hidden', 'true');
-    line.innerHTML = mark.innerHTML.replace(/^\s+/, '').replace(/\n\s*/g, '\n').trimEnd();
-    fact.append(line);
-    const light = (on) => {
-      fact.classList.toggle('is-lit', on);
-      mark.classList.toggle('is-lit', on);
-      panes.library.classList.toggle('has-lit', on);
-    };
-    for (const el of [fact, mark]) {
-      el.addEventListener('pointerenter', () => light(true));
-      el.addEventListener('pointerleave', () => light(false));
-    }
-  });
   root.querySelector('.xr-switch').addEventListener('keydown', (e) => {
-    if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) { return; }
+    const by = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (!by) { return; }
     e.preventDefault();
-    const other = buttons.find((b) => b.dataset.xr !== mode);
-    other.focus();
-    set(other.dataset.xr);
+    const next = buttons[(buttons.findIndex((b) => b.dataset.xr === mode) + by + buttons.length) % buttons.length];
+    next.focus();
+    set(next.dataset.xr);
   });
 }
