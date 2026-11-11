@@ -251,7 +251,6 @@
   position: absolute; top: 64px; inset-inline-start: calc(var(--at) / (var(--days) - 1) * 100%); translate: calc(var(--at) / (var(--days) - 1) * -100%);
   color: var(--text); font: 500 var(--fs-2xs)/var(--lh-2xs) var(--font-sans); white-space: nowrap;
 }
-[dir='rtl'] .year-day { translate: calc(var(--at) / (var(--days) - 1) * 100%); }
 .year-months { position: absolute; inset-inline: 0; top: 92px; height: 16px; }
 .year-months span { position: absolute; inset-inline-start: calc(var(--at) / var(--days) * 100%); padding-inline-start: 4px; border-inline-start: 1px solid var(--line-2); color: var(--text-4); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); }
 .year-caption { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
@@ -286,6 +285,13 @@
 
 /* ---------- responsive ---------- */
 
+/* a laptop: the sentence steps down a size so its four columns still sit side by side */
+@media (max-width: 1400px) {
+  .say-grid { column-gap: 20px; padding-inline: 24px; }
+  .say-words, .say-code { font-size: var(--fs-md); line-height: var(--lh-md); }
+  .say-label { line-height: 24px; }
+  .say-label[style*='--row: 2'] { line-height: 48px; }
+}
 /* below this the headline column gets too narrow to hold two lines: stack the install block under the lede */
 @media (max-width: 1180px) {
   .hero-copy { grid-template-columns: 1fr; }

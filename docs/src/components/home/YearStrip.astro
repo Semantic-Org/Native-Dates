@@ -31,7 +31,8 @@ const runs = days.reduce((all, d, i) => {
   else { all.push({ start: i, length: 1, gap: d.gap, shifted: d.gap !== usual }); }
   return all;
 }, []);
-const changes = runs.slice(1).map((run) => ({ at: run.start, label: days[run.start].label }));
+// a change is named by its month and day; the playhead's own day keeps its weekday
+const changes = runs.slice(1).map((run) => ({ at: run.start, label: date(year, 1, 1).plus(run.start, 'days').format({ month: 'short', day: 'numeric' }, locale) }));
 const shiftedDays = days.filter((d) => d.gap !== usual).length;
 const shifted = days.find((d) => d.gap !== usual);
 const months = days.reduce((all, d, i) => (all.at(-1)?.month === d.month ? all : [...all, { month: d.month, at: i, label: date(year, d.month, 1).format({ month: 'short' }, locale) }]), []);

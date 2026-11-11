@@ -45,7 +45,7 @@ export const languagesWith = (prefix, { reviewed = false } = {}) =>
 // reads left to right even where the frame reads right to left
 export const englishIn = (code) => ({ lang: DEFAULT_LOCALE, dir: localeOf(code).dir === 'rtl' ? 'ltr' : undefined });
 
-// text that isn't a key comes back as it is, so a name (a framework's) can pass through
+// text that isn't a key comes back as it is, so a name can pass through
 const text = (code, key) => stringsOf(code)[key] ?? english[key] ?? key;
 export function t(code, key, vars = {}) {
   return text(code, key).replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? '');

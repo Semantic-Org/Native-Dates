@@ -301,48 +301,6 @@ kbd {
 .swap > * { grid-area: 1 / 1; min-width: 0; }
 .swap > [hidden] { display: block; visibility: hidden; }
 
-/* ---------- dropdown ---------- */
-
-.dropdown { position: relative; display: inline-block; }
-.dd-button {
-  display: inline-flex; align-items: center; gap: 8px; text-align: start;
-  height: 30px; padding-block: 0; padding-inline: 12px 10px;
-  border: 1px solid var(--line-2); border-radius: 999px;
-  background: var(--surface-1); color: var(--text);
-  font: 500 var(--fs-xs)/1 var(--font-sans); cursor: pointer;
-}
-.dd-button:hover { border-color: var(--line-3); background: var(--surface-2); }
-.dd-button[aria-expanded='true'] { border-color: var(--line-3); background: var(--surface-2); }
-.dd-chevron { width: 14px; height: 14px; color: var(--text-3); transition: rotate 0.15s var(--ease); }
-.dd-button[aria-expanded='true'] .dd-chevron { rotate: 180deg; }
-
-.dd-menu {
-  position: absolute; z-index: 30; top: calc(100% + 6px); inset-inline-start: 0;
-  min-width: 100%; max-height: 320px; overflow-y: auto;
-  margin: 0; padding: 4px; list-style: none;
-  border: 1px solid var(--line-2); border-radius: var(--r-3);
-  background: var(--surface-2);
-  box-shadow: 0 12px 32px -8px oklch(0 0 0 / 0.6), 0 0 0 1px oklch(0 0 0 / 0.4);
-  outline: none;
-  transform-origin: top left;
-  animation: dd-in 0.12s var(--ease);
-}
-:root[data-theme='light'] .dd-menu { box-shadow: 0 12px 32px -12px oklch(0.3 0.03 265 / 0.25); }
-@keyframes dd-in { from { opacity: 0; scale: 0.98; translate: 0 -4px; } }
-.dd-menu [role=option] {
-  display: grid; grid-template-columns: 16px auto 1fr; align-items: center; gap: 8px;
-  height: 32px; padding-block: 0; padding-inline: 8px 10px;
-  border-radius: var(--r-2);
-  color: var(--text-2); font-size: var(--fs-xs); line-height: var(--lh-xs);
-  white-space: nowrap; cursor: pointer;
-}
-.dd-menu [role=option].is-active { background: var(--surface-3); color: var(--text); }
-.dd-menu [role=option][aria-selected='true'] { color: var(--text); }
-.dd-check { width: 14px; height: 14px; color: var(--accent); visibility: hidden; }
-[aria-selected='true'] > .dd-check { visibility: visible; }
-.dd-hint { justify-self: end; padding-inline-start: 24px; color: var(--text-4); font: 400 var(--fs-3xs)/1 var(--font-mono); }
-.dd-menu [role=option].is-active .dd-hint { color: var(--text-3); }
-
 /* ---------- search (⌘K) ---------- */
 
 dialog.search {
@@ -410,33 +368,6 @@ dialog.search::backdrop { background: oklch(0 0 0 / 0.6); backdrop-filter: blur(
   .search-foot span:not(.search-by) { display: none; }
 }
 
-/* the large dropdown: a mark tile, the name and a hint, in the button and in each option */
-.dd-icon { display: inline-grid; place-items: center; flex: none; }
-.dd-icon svg { width: 100%; height: 100%; }
-.dropdown.dd-lg { display: block; }
-.dd-lg .dd-button {
-  width: 100%; height: 52px; padding-block: 0; padding-inline: 8px 12px; gap: 10px;
-  border-radius: var(--r-3); background: var(--surface-1);
-}
-.dd-lg .dd-current { flex: 1; min-width: 0; }
-.dd-lg .dd-face { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.dd-lg .dd-icon {
-  width: 34px; height: 34px; padding: 8px;
-  border: 1px solid var(--line-2); border-radius: var(--r-2); background: var(--bevel), var(--surface-2); color: var(--text);
-}
-.dd-text { display: flex; flex-direction: column; min-width: 0; }
-.dd-name { color: var(--text); font: 600 var(--fs-sm)/var(--lh-sm) var(--font-sans); }
-.dd-sub { color: var(--text-3); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dd-lg .dd-chevron { width: 16px; height: 16px; }
-.dd-lg .dd-button[aria-expanded='true'] .dd-chevron { rotate: none; }
-.dd-lg .dd-menu { inset-inline-end: 0; max-height: min(420px, 60vh); padding: 4px; }
-.dd-lg .dd-menu [role=option] {
-  grid-template-columns: auto minmax(0, 1fr) 14px; gap: 8px;
-  height: 48px; padding-block: 0; padding-inline: 6px 8px;
-}
-.dd-lg .dd-menu .dd-icon { width: 30px; height: 30px; padding: 7px; }
-.dd-lg [role=option][aria-selected='true'] .dd-icon { border-color: var(--accent-line); color: var(--accent-strong); }
-
 /* the theme toggle shows what a click switches to */
 [data-theme-toggle] .i-moon { display: none; }
 :root[data-theme='light'] [data-theme-toggle] .i-sun { display: none; }
@@ -485,17 +416,6 @@ dialog.search::backdrop { background: oklch(0 0 0 / 0.6); backdrop-filter: blur(
 .copy:hover { color: var(--text); background: var(--surface-3); }
 .copy svg { width: 15px; height: 15px; }
 .copy[data-copied] { color: var(--c-green); }
-
-/* which framework a shared code variant stands for */
-.code-note {
-  margin-inline-start: auto; padding: 0 8px; min-width: 0;
-  color: var(--text-3); font-size: var(--fs-2xs); line-height: var(--lh-2xs);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.code-note:empty { display: none; }
-.code-note code { color: var(--text-2); font-size: var(--fs-2xs); }
-.code-head .code-note + .copy { margin-inline-start: auto; }
-@media (max-width: 600px) { .code-note { display: none; } }
 
 /* shiki (build-time highlighting) writes these variables; they map onto the same syntax colors as
    the inline highlighter, so code in blocks and code in prose read alike, in both themes */
@@ -614,11 +534,10 @@ pre.astro-code .line.highlighted {
 /* ---------- right-to-left ----------
    layout runs on logical properties, so a page in a right-to-left language mirrors on its own. code,
    and the graphics that read as code or as time, keep reading left to right inside it */
-:where(pre, code, kbd, .keys, .code, .pg, .instrument, .pj, .cohort, .xr) { direction: ltr; }
+:where(pre, code, kbd, .keys, .code, .pg, .say-code, .console, .year-strip, .xr) { direction: ltr; }
 :where(code, kbd) { unicode-bidi: isolate; }
-:dir(rtl) .dd-menu { transform-origin: top right; }
 /* inside those graphics, a sentence and a mock app's own interface still read as the page does */
-:dir(rtl) :is(.trace-caption, .xr-note, .xr-count, .pg-status, .app-tabs, .app-page) { direction: rtl; }
+:dir(rtl) :is(.xr-note, .xr-count, .pg-status) { direction: rtl; }
 /* the slots graphic keeps its regions in place, so its wires stay clear of them; what's in a region
    reads as the page does */
 :dir(rtl) .pj-r { direction: rtl; }

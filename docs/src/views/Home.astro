@@ -147,7 +147,8 @@ const INSTALL = 'npm i native-dates';
   <script>
     import { init } from '../scripts/site.js';
     import { mountBytes } from '../scripts/home/bytes.js';
-    import { revealConsoles } from '../scripts/home/consoles-live.js';
+    import { mountConsoles, revealConsoles } from '../scripts/home/consoles-live.js';
+    import { mountSay } from '../scripts/home/say.js';
     import { mountYear } from '../scripts/home/year.js';
     import { mountXray } from '../scripts/xray.js';
 
@@ -165,11 +166,7 @@ const INSTALL = 'npm i native-dates';
         const { Temporal } = await import('temporal-polyfill');
         globalThis.Temporal = Temporal;
       }
-      const [library, { mountSay }, { mountConsoles }] = await Promise.all([
-        import('native-dates'),
-        import('../scripts/home/say.js'),
-        import('../scripts/home/consoles-live.js'),
-      ]);
+      const library = await import('native-dates');
       document.querySelectorAll('[data-say]').forEach((root) => mountSay(root, library));
       document.querySelectorAll('[data-consoles]').forEach((root) => mountConsoles(root, library));
       // the closer tells the time, and tells it again as each minute turns

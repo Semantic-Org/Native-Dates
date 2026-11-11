@@ -20,7 +20,7 @@ const cases = CASES.map((c) => ({ ...c, dateOut: preview(c.date.run(), library),
     <div class="console-row" data-case={c.id}>
       <div class="console-ask">
         <span class="console-number" aria-hidden="true">{i + 1}</span>
-        <h3>{t(locale, `home.consoles.${c.id}.ask`)}</h3>
+        <h3 set:html={t(locale, `home.consoles.${c.id}.ask`)} />
         <p set:html={t(locale, `home.consoles.${c.id}.why`)} />
       </div>
       <div class="console is-date" data-name="Date">
