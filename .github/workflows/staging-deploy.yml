@@ -1,0 +1,64 @@
+name: Staging Deploy
+
+# Deploys the docs site to the staging environment (staging.nativedates.dev) on every push to main
+# that touches the site or the packages it documents. Builds here and ships prebuilt, so Vercel runs
+# no build. Vercel's own Git deploys are off (docs/vercel.json); this and release-deploy.yml are the
+# only ways into an environment. Same flow as Semantic-Org/Nav-Router.
+# Requires: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_NATIVEDATES_PROJECT_ID
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'src/**'
+      - 'packages/**'
+      - 'tools/size.js'
+      - 'package-lock.json'
+      - '.node-version'
+      - '.github/workflows/staging-deploy.yml'
+
+concurrency:
+  # a newer main push supersedes an in-flight staging build
+  group: staging-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    name: Deploy docs to staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_NATIVEDATES_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+      # the build runs the library to fill the pages, so it needs a Node that ships Temporal
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.node-version'
+          cache: 'npm'
+
+      # astro's incremental cache, shared with the release deploy
+      - uses: actions/cache@v6
+        with:
+          path: docs/node_modules/.astro
+          key: docs-astro-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            docs-astro-${{ runner.os }}-
+
+      # from the repo root: the project's Root Directory is docs/, which vercel applies relative to
+      # the working directory. --environment names the custom environment for all three steps, and
+      # pull brings its SITE_URL, so the build knows it is served from the staging domain.
+      # `vercel build` runs the project's install and `npm run build`, which syncs the sandbox
+      # first, so the output matches a remote build
+      - name: Build and deploy docs to staging
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npx vercel pull --yes --environment=staging --token="$VERCEL_TOKEN"
+          npx vercel build --environment=staging --token="$VERCEL_TOKEN"
+          npx vercel deploy --prebuilt --environment=staging --token="$VERCEL_TOKEN"
