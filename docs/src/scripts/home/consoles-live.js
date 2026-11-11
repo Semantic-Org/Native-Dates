@@ -1,5 +1,5 @@
 // the question ribbon in the browser. picking a question asks it: both consoles hold their answers
-// for a beat, return them together, and the reason follows. the first question is asked as the
+// for a beat, return them together, each is stamped, and the reason follows. the first question is asked as the
 // ribbon comes into view. every answer is also asked again here, of the reader's own Date and of the
 // library on their own Temporal, so what is printed is what this browser says
 
@@ -19,15 +19,16 @@ export function mountQuestions(root) {
   const still = matchMedia('(prefers-reduced-motion: reduce)');
   let waiting;
 
-  // both answers are held back, then let go at once; the reason waits on them (styles/home.css)
+  // both answers are held back, then let go at once; the stamps come down on them, and the reason
+  // waits on the stamps (styles/home.css)
   const ask = (panel) => {
     if (still.matches) { return; }
     clearTimeout(waiting);
-    root.querySelectorAll('.is-asking').forEach((other) => other.classList.remove('is-asking'));
+    root.querySelectorAll('.is-asking, .is-stamped').forEach((other) => other.classList.remove('is-asking', 'is-stamped'));
     panel.classList.add('is-asking');
     // read a layout value so the held-back state is painted before it is let go
     void panel.offsetWidth;
-    waiting = setTimeout(() => panel.classList.remove('is-asking'), 520);
+    waiting = setTimeout(() => panel.classList.replace('is-asking', 'is-stamped'), 520);
   };
   const pick = (tab) => {
     tabs.forEach((other) => {
