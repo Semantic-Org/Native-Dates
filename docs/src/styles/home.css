@@ -218,6 +218,18 @@
 /* the plugin is what the native-dates call needs: beside the other spellings its tag keeps its place, unseen */
 .prims:not([data-mode='ours']) .prim-plugin { visibility: hidden; }
 
+/* the ribbon's heading is two sentences of one shape, set as two rows of a table so the shape shows:
+   who, the words they share, and the verdict, each in its own column. the shared words step back,
+   and the verdicts take the colors the consoles answer in. each sentence is a span of the heading's
+   one string: who in <b>, the shared words in <i>, the verdict in <em> */
+.versus { display: grid; grid-template-columns: repeat(3, max-content); column-gap: 0.28em; }
+.versus > span { display: contents; }
+.versus b { font-weight: inherit; }
+.versus i { color: var(--text-3); font-style: normal; }
+.versus em { font-style: normal; }
+.versus .is-wrong { color: var(--danger); }
+.versus .is-right { color: var(--tip); }
+
 /* ---------- one question at a time, asked of Date and of native-dates ----------
    the questions down one side, and beside them the two consoles' answers to the one picked, with
    the reason under both. every question's answers share one cell, so the frame keeps the size of
@@ -421,6 +433,9 @@
 }
 @media (max-width: 600px) {
   .topbar-inner { gap: 12px; }
+  /* too narrow for three columns of heading: the two sentences run as lines again */
+  .versus { display: block; }
+  .versus > span { display: block; }
   .prim { padding: 14px 16px; }
   .prim-code code { font-size: var(--fs-sm); line-height: var(--lh-sm); }
   .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { font-size: var(--fs-2xs); line-height: var(--lh-2xs); }
