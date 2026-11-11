@@ -144,7 +144,11 @@
   display: grid; grid-template-columns: max-content repeat(4, max-content); justify-content: start;
   column-gap: 28px; padding: 40px 32px 32px; overflow-x: auto;
 }
-.say-grid[hidden] { display: none; }
+/* the sentences share one cell, so the figure keeps the tallest one's height whichever is shown
+   (a call that wraps on a phone, a value that wraps anywhere). the others keep their box, unseen */
+.say-panels { display: grid; }
+.say-panels > .say-grid { grid-area: 1 / 1; min-width: 0; }
+.say-grid[hidden] { display: grid; visibility: hidden; }
 .say-label {
   grid-column: 1; grid-row: var(--row); align-self: start; padding-inline-end: 12px;
   color: var(--text-4); font-size: var(--fs-xs); line-height: 28px;
@@ -154,7 +158,7 @@
 .say-cell { grid-column: calc(var(--col) + 2); grid-row: var(--row); min-width: 116px; }
 /* a sentence writes itself as it is shown: each thought steps in after the one before, its words,
    then its call, then what it is */
-.say-cell { animation: say-in 0.5s var(--ease) both; animation-delay: calc(0.25s + var(--col) * 0.3s + var(--row) * 0.08s); }
+.say-grid:not([hidden]) .say-cell { animation: say-in 0.5s var(--ease) both; animation-delay: calc(0.25s + var(--col) * 0.3s + var(--row) * 0.08s); }
 @keyframes say-in {
   from { opacity: 0; translate: 0 8px; }
 }
@@ -172,7 +176,9 @@
   font-size: var(--fs-lg); line-height: var(--lh-lg);
 }
 .say-code:has([data-option='1']) { cursor: pointer; }
-.say-value { min-height: 72px; padding-block: 12px 0; padding-inline: 8px; margin-inline: -8px; border-top: 1px solid var(--line-2); border-radius: 0 0 var(--r-2) var(--r-2); max-width: max(116px, 100%); }
+/* a value keeps room for two lines under its noun, so a long one (a date written out in full)
+   wraps without the figure growing: the rule, the padding, the noun, the gap, two lines of text */
+.say-value { min-height: calc(1px + 12px + var(--lh-3xs) + 2px + 2 * var(--lh-sm)); padding-block: 12px 0; padding-inline: 8px; margin-inline: -8px; border-top: 1px solid var(--line-2); border-radius: 0 0 var(--r-2) var(--r-2); max-width: max(116px, 100%); }
 .say-noun { display: block; color: var(--c-green); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); }
 .say-text { display: block; margin-top: 2px; color: var(--text); font-size: var(--fs-sm); line-height: var(--lh-sm); text-wrap: balance; }
 .say-caption { padding: 14px 24px; border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
@@ -375,7 +381,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .console-row > *, .bytes-added, .year-time, .year-gap span { transition: none; }
-  .say-cell { animation: none; }
+  .say-grid:not([hidden]) .say-cell { animation: none; }
 }
 
 /* ---------- try it: a live app ---------- */
