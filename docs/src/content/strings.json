@@ -135,7 +135,7 @@
   "home.prims.now": "Right now",
   "home.prims.range": "A span between two days",
   "home.prims.plugin": "{name} plugin",
-  "home.consoles.title": "<code>Date</code> gets these wrong. Temporal gets them right.",
+  "home.consoles.title": "Date gets these wrong. Temporal gets them right.",
   "home.consoles.lede": "Four questions every app asks. <code>Date</code> has answered them the same way since 1995. Ask one, and see what each says.",
   "home.consoles.pick": "Questions to ask",
   "home.consoles.date.since": "since 1995",
