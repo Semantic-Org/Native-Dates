@@ -510,6 +510,8 @@ export const IS_DATE_TIME: unique symbol;
 export const IS_CALENDAR_DATE: unique symbol;
 export const IS_TIME: unique symbol;
 export const IS_DURATION: unique symbol;
+/** A `MonthDay` from `@native-dates/plugins/month-day` */
+export const IS_MONTH_DAY: unique symbol;
 /** Every range kind */
 export const IS_RANGE: unique symbol;
 export const IS_DATE_RANGE: unique symbol;

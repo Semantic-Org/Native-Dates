@@ -32,6 +32,7 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"
 | Subpath | Adds | Mechanism |
 |---|---|---|
 | `@native-dates/plugins/ranges` | `DateRange`, `DateTimeRange`, `TimeRange`, `.to()`, `.range()`, `.points()`, `.split()` | Exports range classes/factories and attaches `.to()` / `.range()` onto point prototypes |
+| `@native-dates/plugins/month-day` | `MonthDay` over `Temporal.PlainMonthDay`, `monthDay('10/17')`, `dayMonth('17/10')`, `.monthDay`, `.next()` / `.previous()` to a month-day | Exports the class and its two factories, attaches the `.monthDay` getter and wraps `.next()` / `.previous()` on `CalendarDate` and `DateTime`, calling through for weekdays |
 | `@native-dates/plugins/tokens` | `YYYY-MM-DD HH:mm` token patterns, `monthNames()`, `weekdayNames()` | Wraps `.format()` on `DateTime`, `CalendarDate`, and `Time`; calls through for presets and `Intl` bags |
 | `@native-dates/plugins/relative` | `.formatRelative(to, locale)` on `DateTime` and `CalendarDate` | Attaches prototype methods backed by `Intl.RelativeTimeFormat` |
 | `@native-dates/plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), abbreviations (`'PT'`, `'CET'`), `configure({ zoneAliases })` | Registers fallback zone resolver in `helpers/zones.js` |
