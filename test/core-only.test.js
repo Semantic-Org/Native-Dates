@@ -98,9 +98,18 @@ describe('unextended core', () => {
     expect(() => duration('2h', { loose: true })).toThrow(/missingPlugin/);
     expect(() => configure({ dayFirst: true })).toThrow(/missingPlugin/);
     expect(() => configure({ zoneAliases: { hq: 'Europe/Berlin' } })).toThrow(/missingPlugin/);
+    expect(() => date(2026, 11)).toThrow(/missingPlugin/);
     expect(() => datetime('2026-09-06T14:30Z', 'Berlin')).toThrow(/unknownZone/);
     expect(() => datetime('2026-09-06T14:30Z', 'PT')).toThrow(/unknownZone/);
     expect(() => datetime('2026-09-06T14:30Z').format('YYYY-MM-DD')).toThrow(/unknownFormat/);
+  });
+
+  it('refuses a date whose day is missing, so an absent field never becomes the 1st', () => {
+    expect(() => date(2026, 11, undefined)).toThrow(/unreadableDate/);
+    expect(() => new CalendarDate(2026, 11)).toThrow(/unreadableDate/);
+    expect(() => date('2026-11')).toThrow(/unreadableDate/);
+    expect(() => date({ year: 2026, month: 11 })).toThrow(/unreadableDate/);
+    expect(date(2026, 11, 1).toString()).toBe('2026-11-01');
   });
 
   it('carries no framework value protocol on any class', () => {

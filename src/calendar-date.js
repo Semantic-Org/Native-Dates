@@ -1,6 +1,6 @@
 import { DateTime } from './date-time.js';
 import { anchored } from './duration.js';
-import { guard, loosely, parseLoose, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLoose, readYearMonth, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
 import { IS_CALENDAR_DATE } from './helpers/identity.js';
@@ -84,12 +84,20 @@ export class CalendarDate {
       });
     }
     if (isNumber(input) && isNumber(month)) {
+      // a missing day is refused so an absent field never silently becomes the 1st
+      if (day === undefined) {
+        return refuse('unreadableDate', `${input}-${month}`, {
+          explanation: isDevelopment
+            ? 'a date needs its day: date(2026, 11, 16). a year and a month alone are a yearMonth, which date(2026, 11) reads with plugins/year-month'
+            : 0,
+        });
+      }
       return guard(
         () => {
           if (!wholeNumbers([input, month, day])) {
             throw new RangeError('a date reads whole numbers');
           }
-          return Temporal.PlainDate.from({ year: input, month, day: day ?? 1 }, { overflow: 'reject' });
+          return Temporal.PlainDate.from({ year: input, month, day }, { overflow: 'reject' });
         },
         'unreadableDate',
         `${input}-${month}-${day}`,
@@ -158,7 +166,11 @@ export class CalendarDate {
       () => Temporal.PlainDate.from(trimmed),
       'unreadableDate',
       text,
-      isDevelopment ? "write ISO 8601: '2026-09-06'. plugins/loose adds { loose: true } for what Date reads" : 0,
+      isDevelopment
+        ? /^[+-]?\d{4,6}-\d{2}$/.test(trimmed)
+          ? "that is a year and a month with no day. yearMonth('2026-11') reads it with plugins/year-month"
+          : "write ISO 8601: '2026-09-06'. plugins/loose adds { loose: true } for what Date reads"
+        : 0,
     );
   }
 
@@ -378,7 +390,14 @@ CalendarDate.prototype.add = CalendarDate.prototype.plus;
 CalendarDate.prototype.subtract = CalendarDate.prototype.minus;
 CalendarDate.prototype.remove = CalendarDate.prototype.minus;
 
-export const date = (input, monthOrOptions, day) => {
+// date(2026, 11) names a year and a month and no day, which is a yearMonth with plugins/year-month.
+// a day that arrives undefined is still a third argument, so a missing field is refused as a date
+// and never becomes a month
+export const date = (...parts) => {
+  const [input, monthOrOptions, day] = parts;
+  if (parts.length === 2 && parts.every((part) => isNumber(part) || isDigits(part))) {
+    return readYearMonth(input, monthOrOptions);
+  }
   const build = () =>
     input instanceof CalendarDate && monthOrOptions === undefined
       ? input

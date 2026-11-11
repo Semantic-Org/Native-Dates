@@ -254,7 +254,7 @@ export function isDateTime(value: unknown): value is DateTime;
  */
 export class CalendarDate {
   constructor(input: CalendarDateInput, options?: ReadOptions);
-  constructor(year: number, month: number, day?: number);
+  constructor(year: number, month: number, day: number);
 
   /** The day in the configured locale's common form, `'Sep 6, 2026'`, what `format()` prints */
   readonly text: string;
@@ -325,10 +325,11 @@ export class CalendarDate {
 
 /**
  * Reads `'2026-09-06'`, three numbers, a fields object, a datetime (its date in its zone), a Date (its
- * date in the zone), or a Temporal value. A wall-clock string keeps its day
+ * date in the zone), or a Temporal value. A wall-clock string keeps its day. A missing day refuses:
+ * two numbers are a year and a month, which `@native-dates/plugins/year-month` reads as a `YearMonth`
  */
 export function date(input: CalendarDateInput, options?: ReadOptions): CalendarDate;
-export function date(year: number, month: number, day?: number): CalendarDate;
+export function date(year: number, month: number, day: number): CalendarDate;
 export function date(input: CalendarDateInput, zone: Zone): CalendarDate;
 
 export function today(zone?: Zone): CalendarDate;
