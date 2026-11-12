@@ -1,4 +1,4 @@
-import { intlOptions, unknownFormat } from 'native-dates/helpers/format';
+import { intlOptions } from 'native-dates/helpers/format';
 import { cached, plainDateTimeFormat } from 'native-dates/helpers/intl';
 import { isPlainObject, isString } from 'native-dates/helpers/types';
 import { locale as pickLocale } from 'native-dates/helpers/zones';
@@ -43,7 +43,11 @@ export const partOptions = (spec, names, presets) => {
   if (isString(spec) && Object.hasOwn(presets, spec)) {
     return presets[spec];
   }
-  const bag = isPlainObject(spec) ? spec : intlOptions('datetime', spec) ?? unknownFormat(spec);
+  const bag = isPlainObject(spec) ? spec : intlOptions('datetime', spec);
+  // a string that is no preset is left for the caller to put to formatPattern
+  if (!bag) {
+    return undefined;
+  }
   if (bag.dateStyle) {
     return presets[bag.dateStyle];
   }

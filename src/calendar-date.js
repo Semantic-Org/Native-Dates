@@ -2,7 +2,7 @@ import { DateTime } from './date-time.js';
 import { anchored } from './duration.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
-import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
+import { formatIntl, formatPattern, intlOptions } from './helpers/format.js';
 import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
@@ -352,7 +352,7 @@ export class CalendarDate {
 
   format(spec, locale) {
     const options = intlOptions('date', spec);
-    return options ? formatIntl('date', this.#plain, options, locale) : unknownFormat(spec);
+    return options ? formatIntl('date', this.#plain, options, locale) : formatPattern(spec, this, 'date', locale);
   }
 
   toString() {
