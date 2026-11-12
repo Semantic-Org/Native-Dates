@@ -1,7 +1,7 @@
 import { CalendarDate } from './calendar-date.js';
 import { DateTime } from './date-time.js';
 import { anchored } from './duration.js';
-import { guard, loosely, parseLoose, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
@@ -301,6 +301,10 @@ export class Time {
 
   on(day, zone) {
     return new CalendarDate(day).at(this, zone);
+  }
+
+  as(kind) {
+    return readAs(kind, { time: () => this });
   }
 
   /*******************************
