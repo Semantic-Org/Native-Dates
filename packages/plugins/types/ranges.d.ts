@@ -25,6 +25,8 @@ declare abstract class BaseRange<Point, Input> {
   isEmpty(): boolean;
   /** The whole length, anchored at the start. A date range counts its last day */
   readonly duration: Duration;
+  /** The call spelling of `.duration` */
+  as(kind: 'duration'): Duration;
 
   contains(value: Input | this): boolean;
   overlaps(other: this | string): boolean;
