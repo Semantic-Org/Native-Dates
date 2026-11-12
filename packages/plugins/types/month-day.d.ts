@@ -1,4 +1,4 @@
-import type { CalendarDate, CalendarDateInput, Locale, ReadOptions, TemporalValue, Zone } from 'native-dates';
+import type { CalendarDate, CalendarDateInput, FormatSpec, Locale, ReadOptions, TemporalValue, Zone } from 'native-dates';
 
 /** A month and a day, singular, as Temporal's `with()` spells them */
 export interface MonthDayFields {
@@ -22,8 +22,8 @@ export interface MonthDayOptions extends ReadOptions {
   dayFirst?: boolean;
 }
 
-/** A preset (`'short'`, `'medium'`, `'long'`) or an `Intl.DateTimeFormat` options bag of month and day */
-export type MonthDayFormat = 'short' | 'medium' | 'long' | Intl.DateTimeFormatOptions | (string & {});
+/** Any preset or `Intl.DateTimeFormat` options bag a date formats with, read for its month and day */
+export type MonthDayFormat = FormatSpec;
 
 /**
  * A month and a day with no year: a birthday, an anniversary, a holiday. Feb 29 falls on Feb 28 in a
@@ -47,6 +47,11 @@ export class MonthDay {
   after(day: CalendarDateInput): CalendarDate;
   /** The occurrence strictly before a day. What `date.previous(monthDay)` asks */
   before(day: CalendarDateInput): CalendarDate;
+  /** The occurrence coming up, counted from today or from a day: `birthday.next()` */
+  next(day?: CalendarDateInput): CalendarDate;
+  /** The most recent occurrence, counted from today or from a day */
+  previous(day?: CalendarDateInput): CalendarDate;
+  as(kind: 'monthDay'): MonthDay;
 
   /**
    * The same month and day. A date reads as the month and day it is, so two birthdays are equal or not
@@ -65,9 +70,9 @@ export class MonthDay {
   isYesterday(zone?: Zone): boolean;
 
   /**
-   * A format that asks for more than a month and a day refuses: a year, a weekday, a clock or a zone.
-   * A locale whose calendar keeps other months (Hebrew, Persian, Islamic) prints the Gregorian ones,
-   * and such a calendar asked for by name refuses, since the day moves there each year
+   * Prints the month and the day and nothing else, so any preset name or options bag that formats a
+   * date formats this too. A locale whose calendar keeps other months (Hebrew, Persian, Islamic)
+   * prints the Gregorian ones
    */
   format(spec?: MonthDayFormat, locale?: Locale): string;
   /** ISO 8601, `'10-17'` */
@@ -104,6 +109,7 @@ declare module 'native-dates' {
   interface DateTime {
     /** The month and day in this zone, the year dropped */
     readonly monthDay: MonthDay;
+    as(kind: 'monthDay'): MonthDay;
     /** The next occurrence of a month-day strictly after this one, at the same time of day */
     next(monthDay: MonthDay): DateTime;
     previous(monthDay: MonthDay): DateTime;
@@ -112,6 +118,7 @@ declare module 'native-dates' {
   interface CalendarDate {
     /** The month and day, the year dropped */
     readonly monthDay: MonthDay;
+    as(kind: 'monthDay'): MonthDay;
     /** The next occurrence of a month-day strictly after this date */
     next(monthDay: MonthDay): CalendarDate;
     previous(monthDay: MonthDay): CalendarDate;

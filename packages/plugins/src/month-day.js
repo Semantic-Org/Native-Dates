@@ -1,11 +1,11 @@
 import { CalendarDate, DateTime, IS_MONTH_DAY, today } from 'native-dates';
-import { guard, loosely, refuse, refuseType, requireLoose, unreadable } from 'native-dates/helpers/errors';
+import { guard, loosely, readAs, refuse, refuseType, requireLoose, unreadable } from 'native-dates/helpers/errors';
 import { epochOf } from 'native-dates/helpers/format';
 import { isDevelopment, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
 import { inspect, isCount, isDigits, isPlainDate, singularKeys, zoneOptions } from 'native-dates/helpers/units';
 import { zoneId } from 'native-dates/helpers/zones';
 
-import { partFormatter } from './helpers/format.js';
+import { partFormatter, partOptions } from './helpers/format.js';
 import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
 
 /*
@@ -24,9 +24,6 @@ const twoParts = /^(\d{1,2})[-/.](\d{1,2})$/;
 // a month by its English name and a day, in either order: 'Oct 17', '17th October', 'Oct. 17,'
 const nameAndDay = /^(?:([a-z]{3,9})\.?,?\s+(\d{1,2})(?:st|nd|rd|th)?|(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]{3,9})\.?),?$/i;
 
-// what a month-day has to print. anything else would be read off the leap year it prints through
-const printable = ['month', 'day', 'literal'];
-
 // a leap year to stand on, so Feb 29 has a day in it. Temporal keeps 1972 for the same reason
 const leapYear = 1972;
 
@@ -43,6 +40,7 @@ export class MonthDay {
     short: Object.freeze({ month: 'numeric', day: 'numeric' }),
     medium: Object.freeze({ month: 'short', day: 'numeric' }),
     long: Object.freeze({ month: 'long', day: 'numeric' }),
+    full: Object.freeze({ month: 'long', day: 'numeric' }),
   };
 
   #plain;
@@ -212,6 +210,19 @@ export class MonthDay {
       : this.in(from.year - 1);
   }
 
+  // the same two counted from today when no day is given: birthday.next() is the one coming up
+  next(day = today()) {
+    return this.after(day);
+  }
+
+  previous(day = today()) {
+    return this.before(day);
+  }
+
+  as(kind) {
+    return readAs(kind, { monthDay: () => this });
+  }
+
   /*******************************
             Comparison
   *******************************/
@@ -255,30 +266,8 @@ export class MonthDay {
   *******************************/
 
   format(spec = 'medium', locale) {
-    const options = isPlainObject(spec)
-      ? spec
-      : Object.hasOwn(MonthDay.presets, spec)
-      ? MonthDay.presets[spec]
-      : refuse('unknownFormat', String(spec), {
-        explanation: isDevelopment
-          ? "a month-day formats as 'short', 'medium' or 'long', or with an Intl options object"
-          : 0,
-      });
-    const format = partFormatter(options, locale) ?? refuse('unknownFormat', `calendar ${options.calendar}`, {
-      explanation: isDevelopment
-        ? 'an ISO month and day fall on other days of that calendar each year. place it in a year to print there: monthDay.in(2027).format(spec)'
-        : 0,
-    });
-    const parts = format.formatToParts(epochOf('date', { year: leapYear, month: this.month, day: this.day }));
-    const missing = parts.find((part) => !printable.includes(part.type));
-    if (missing) {
-      refuse('noField', `${missing.type} in ${JSON.stringify(options)}`, {
-        explanation: isDevelopment
-          ? 'a month-day has a month and a day to print. place it in a year for the rest: monthDay.in(2027).format(spec)'
-          : 0,
-      });
-    }
-    return parts.map((part) => part.value).join('');
+    const options = partOptions(spec, ['month', 'day'], MonthDay.presets);
+    return partFormatter(options, locale).format(epochOf('date', { year: leapYear, month: this.month, day: this.day }));
   }
 
   toString() {
@@ -329,7 +318,8 @@ export const dayMonth = (input, monthOrOptions) =>
 
 export const isMonthDay = (value) => value instanceof MonthDay;
 
-// a date and a datetime hand over their month-day, the way a datetime hands over its date
+// a date and a datetime hand over their month-day, the way a datetime hands over its date, by the
+// property or by as('monthDay')
 for (const Kind of [CalendarDate, DateTime]) {
   Object.defineProperty(Kind.prototype, 'monthDay', {
     configurable: true,
@@ -337,4 +327,8 @@ for (const Kind of [CalendarDate, DateTime]) {
       return new MonthDay(this);
     },
   });
+  const as = Kind.prototype.as;
+  Kind.prototype.as = function(kind, zone) {
+    return kind === 'monthDay' ? this.monthDay : as.call(this, kind, zone);
+  };
 }
