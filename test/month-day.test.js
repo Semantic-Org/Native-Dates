@@ -283,6 +283,8 @@ describe('monthDay', () => {
     expect(birthday.format('long', 'th-TH')).toBe(date('2027-10-17').format(options, 'th-TH'));
     expect(birthday.format({ ...options, calendar: 'buddhist' })).toBe('October 17');
     expect(birthday.format({ ...options, calendar: 'japanese' })).toBe('October 17');
+    // Intl has no month names for the ISO calendar, whose months are the Gregorian ones
+    expect(birthday.format({ ...options, calendar: 'iso8601' })).toBe('October 17');
   });
 
   it('takes a preset an app adds', () => {
