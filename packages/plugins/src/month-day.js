@@ -1,8 +1,16 @@
 import { CalendarDate, DateTime, IS_MONTH_DAY, today } from 'native-dates';
 import { guard, loosely, refuse, refuseType, unreadable } from 'native-dates/helpers/errors';
 import { epochOf, formatter } from 'native-dates/helpers/format';
-import { isDevelopment, isNumber, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
-import { inspect, isDigits, isPlainDate, singularKeys, wholeNumbers, zoneOptions } from 'native-dates/helpers/units';
+import { isDevelopment, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
+import {
+  inspect,
+  isCount,
+  isDigits,
+  isPlainDate,
+  singularKeys,
+  wholeNumbers,
+  zoneOptions,
+} from 'native-dates/helpers/units';
 import { zoneId } from 'native-dates/helpers/zones';
 
 /*
@@ -10,17 +18,18 @@ import { zoneId } from 'native-dates/helpers/zones';
   and Feb 29 falls on Feb 28 in a year without one, the way Temporal places it
 */
 
-// '10-17', '10/17' or '10.17', and ISO's own '--10-17', which is month first whoever reads it
-const twoParts = /^(--)?(\d{1,2})[-/.](\d{1,2})$/;
+// '10-17', '10/17' or '10.17'. a dash is ISO's own form, with its '--' or without, and is month first
+// whoever reads it, so what toJSON() writes reads back under either word
+const twoParts = /^(--)?(\d{1,2})([-/.])(\d{1,2})$/;
 
-// the parts of a formatted date that only a year can answer
-const yearParts = ['year', 'relatedYear', 'yearName', 'era', 'weekday'];
+// text that opens on a year, a month and a day is a date: '1990-10-17'
+const wholeDate = /^[+-]?\d{4,6}-?\d{2}-?\d{2}/;
 
-// a leap year to print from, so Feb 29 has a day to stand on. Temporal keeps 1972 for the same reason
+// what a month-day has to print. anything else would be read off the leap year it prints through
+const printable = ['month', 'day', 'literal'];
+
+// a leap year to stand on, so Feb 29 has a day in it. Temporal keeps 1972 for the same reason
 const leapYear = 1972;
-
-// a number, or one written as text, the way a form carries it
-const isCount = (value) => isNumber(value) || isDigits(value);
 
 export class MonthDay {
   // brand month day
@@ -92,17 +101,25 @@ export class MonthDay {
       });
     }
     if (isString(input)) {
-      const parts = twoParts.exec(input.trim());
+      const text = input.trim();
+      const parts = twoParts.exec(text);
       if (parts) {
-        const [, iso, first, second] = parts;
-        const [month, day] = settings.dayFirst && !iso ? [second, first] : [first, second];
+        const [, prefix, first, separator, second] = parts;
+        const [month, day] = settings.dayFirst && !prefix && separator !== '-' ? [second, first] : [first, second];
         return MonthDay.#fromFields(
           { month: Number(month), day: Number(day) },
           input,
           isDevelopment
-            ? `that reads as month ${month}, day ${day}. monthDay reads the month first, dayMonth the day first`
+            ? `that reads as month ${month}, day ${day}. monthDay reads the month first and dayMonth the day first, and a dash is ISO's, month first for both`
             : 0,
         );
+      }
+      if (!wholeDate.test(text)) {
+        return (settings.loose && MonthDay.#fromLoose(text, settings)) || refuse('unreadableMonthDay', input, {
+          explanation: isDevelopment
+            ? "a month-day is '10-17' or '10/17', or a date like '1990-10-17' with its year dropped. plugins/loose adds { loose: true } for what Date reads"
+            : 0,
+        });
       }
     }
     if (isPlainObject(input)) {
@@ -111,7 +128,11 @@ export class MonthDay {
         return MonthDay.#fromFields(fields, JSON.stringify(input));
       }
     }
-    return MonthDay.#fromDate(input, settings);
+    // anything else is whatever a date reads, a date's own refusals included
+    const day = input instanceof CalendarDate
+      ? input
+      : new CalendarDate(input, settings.loose ? settings : { zone: settings.zone });
+    return day.toTemporal().withCalendar('iso8601');
   }
 
   static #fromFields(fields, at = JSON.stringify(fields), explanation) {
@@ -128,25 +149,17 @@ export class MonthDay {
     );
   }
 
-  // anything a date reads carries its year along. text that reads as neither is refused as a
-  // month-day, where a value with a year in it was a date and keeps the date's own refusal
-  static #fromDate(input, { zone, loose, dayFirst }) {
-    try {
-      const day = input instanceof CalendarDate
-        ? input
-        : new CalendarDate(input, loose ? { zone, loose, dayFirst } : { zone });
-      return day.toTemporal().withCalendar('iso8601');
+  // Date reads loose text and fills in what it leaves out: the 1st for a missing day, the month after
+  // for a day past its end, and 2001 for a missing year, which has no Feb 29. so the day it read must
+  // be one the text names, and a leap day is read again beside a leap year
+  static #fromLoose(text, { zone, dayFirst }) {
+    const read = (candidate) => loosely(() => new CalendarDate(candidate, { zone, loose: true, dayFirst }));
+    const day = read(text);
+    if (day && new RegExp(`(?<!\\d)0?${day.day}(?!\\d)`).test(text)) {
+      return day.toTemporal();
     }
-    catch (error) {
-      if (!isString(input) || error.code !== 'unreadableDate') {
-        throw error;
-      }
-      return refuse('unreadableMonthDay', input, {
-        explanation: isDevelopment
-          ? "a month-day is '10-17' or '10/17', or a date like '1990-10-17' with its year dropped. plugins/loose adds { loose: true } for what Date reads"
-          : 0,
-      });
-    }
+    const leapDay = read(`${text} ${leapYear}`);
+    return leapDay?.month === 2 && leapDay.day === 29 ? leapDay.toTemporal() : undefined;
   }
 
   /*******************************
@@ -206,13 +219,22 @@ export class MonthDay {
           ? "a month-day formats as 'short', 'medium' or 'long', or with an Intl options object"
           : 0,
       });
-    const parts = formatter('date', options, locale)
+    // an ISO month and day fall on a different day of another calendar each year, so the Gregorian
+    // one is the only calendar they print in, whatever the locale's own
+    if (options.calendar !== undefined && options.calendar !== 'gregory') {
+      refuse('unknownFormat', `calendar ${options.calendar}`, {
+        explanation: isDevelopment
+          ? 'a month-day prints in the Gregorian calendar. place it in a year to print another: monthDay.in(2027).format(spec)'
+          : 0,
+      });
+    }
+    const parts = formatter('date', { ...options, calendar: 'gregory' }, locale)
       .formatToParts(epochOf('date', { year: leapYear, month: this.month, day: this.day }));
-    const missing = parts.find((part) => yearParts.includes(part.type));
+    const missing = parts.find((part) => !printable.includes(part.type));
     if (missing) {
       refuse('noField', `${missing.type} in ${JSON.stringify(options)}`, {
         explanation: isDevelopment
-          ? 'a month-day has no year to print. place it in one first: monthDay.in(2027).format(spec)'
+          ? 'a month-day has a month and a day to print. place it in a year for the rest: monthDay.in(2027).format(spec)'
           : 0,
       });
     }
@@ -267,43 +289,47 @@ export const dayMonth = (input, monthOrOptions) =>
 
 export const isMonthDay = (value) => value instanceof MonthDay;
 
-// the occurrence strictly after a day, or strictly before it. the day itself never counts, the way
-// next('monday') on a monday is a week away
-const occurrenceAfter = (day, target) => {
-  const thisYear = target.in(day.year);
-  return thisYear.isAfter(day) ? thisYear : target.in(day.year + 1);
-};
-const occurrenceBefore = (day, target) => {
-  const thisYear = target.in(day.year);
-  return thisYear.isBefore(day) ? thisYear : target.in(day.year - 1);
-};
-
-const dayOf = (point) => (point instanceof DateTime ? point.date : point);
-
+// a date and a datetime hand over their month-day, the way a datetime hands over its date
 for (const Kind of [CalendarDate, DateTime]) {
-  // a date and a datetime hand over their month-day, the way a datetime hands over its date
   Object.defineProperty(Kind.prototype, 'monthDay', {
     configurable: true,
     get() {
       return new MonthDay(this);
     },
   });
-
-  // next() and previous() step to a weekday, which comes around each week. a month-day comes around
-  // each year, so the same two verbs step to it. the step is whole days, so a datetime keeps its clock
-  const toWeekday = { next: Kind.prototype.next, previous: Kind.prototype.previous };
-  Kind.prototype.next = function next(target) {
-    if (!(target instanceof MonthDay)) {
-      return toWeekday.next.call(this, target);
-    }
-    const day = dayOf(this);
-    return this.plus({ days: day.until(occurrenceAfter(day, target), 'days') });
-  };
-  Kind.prototype.previous = function previous(target) {
-    if (!(target instanceof MonthDay)) {
-      return toWeekday.previous.call(this, target);
-    }
-    const day = dayOf(this);
-    return this.plus({ days: day.until(occurrenceBefore(day, target), 'days') });
-  };
 }
+
+// the occurrence strictly after a day, or strictly before it. the day itself never counts, the way
+// next('monday') on a monday is a week away. the year is the day's ISO year, the calendar a month-day is in
+const isoYear = (day) => day.toTemporal().withCalendar('iso8601').year;
+const occurrenceAfter = (day, target) => {
+  const thisYear = target.in(isoYear(day));
+  return thisYear.isAfter(day) ? thisYear : target.in(isoYear(day) + 1);
+};
+const occurrenceBefore = (day, target) => {
+  const thisYear = target.in(isoYear(day));
+  return thisYear.isBefore(day) ? thisYear : target.in(isoYear(day) - 1);
+};
+
+// next() and previous() step to a weekday, which comes around each week. a month-day comes around
+// each year, so the same two verbs step to it
+const dateSteps = { next: CalendarDate.prototype.next, previous: CalendarDate.prototype.previous };
+CalendarDate.prototype.next = function next(target) {
+  return target instanceof MonthDay ? occurrenceAfter(this, target) : dateSteps.next.call(this, target);
+};
+CalendarDate.prototype.previous = function previous(target) {
+  return target instanceof MonthDay ? occurrenceBefore(this, target) : dateSteps.previous.call(this, target);
+};
+
+// a datetime lands on the occurrence at its own time of day, in its own zone
+const datetimeSteps = { next: DateTime.prototype.next, previous: DateTime.prototype.previous };
+DateTime.prototype.next = function next(target) {
+  return target instanceof MonthDay
+    ? occurrenceAfter(this.date, target).at(this.time, this.zone)
+    : datetimeSteps.next.call(this, target);
+};
+DateTime.prototype.previous = function previous(target) {
+  return target instanceof MonthDay
+    ? occurrenceBefore(this.date, target).at(this.time, this.zone)
+    : datetimeSteps.previous.call(this, target);
+};

@@ -42,27 +42,43 @@ describe('monthDay', () => {
     configure({ dayFirst: false });
   });
 
-  it('reads ISO text and a whole date in their one order, whichever word reads them', () => {
+  it('reads a dash as ISO and a whole date in their one order, whichever word reads them', () => {
     expect(dayMonth('--10-17').toString()).toBe('10-17');
+    expect(dayMonth('10-17').toString()).toBe('10-17');
     expect(dayMonth('1990-10-17').toString()).toBe('10-17');
     expect(dayMonth(date('1990-10-17')).toString()).toBe('10-17');
+    expect(() => dayMonth('17-10')).toThrow(/unreadableMonthDay/);
+  });
+
+  it('reads back what it serializes under either word', () => {
+    const written = JSON.parse(JSON.stringify(monthDay('05-06')));
+    expect(written).toBe('05-06');
+    expect(monthDay(written).toString()).toBe('05-06');
+    expect(dayMonth(written).toString()).toBe('05-06');
+    expect(dayMonth(monthDay('10-17').toJSON()).toString()).toBe('10-17');
   });
 
   it('refuses a month or a day that does not exist, and says how it read the text', () => {
     expect(() => monthDay('17/10')).toThrow(/unreadableMonthDay/);
-    expect(() => monthDay('17/10')).toThrow(/reads as month 17, day 10. monthDay reads the month first, dayMonth/);
+    expect(() => monthDay('17/10')).toThrow(/reads as month 17, day 10. monthDay reads the month first and dayMonth/);
     expect(() => dayMonth('10/17')).toThrow(/reads as month 17, day 10/);
     expect(() => monthDay(2, 30)).toThrow(/unreadableMonthDay/);
     expect(() => monthDay(10.5, 17)).toThrow(/unreadableMonthDay/);
     expect(() => monthDay('garbage')).toThrow(/unreadableMonthDay/);
+    expect(() => monthDay('Oct 17')).toThrow(/unreadableMonthDay/);
   });
 
-  it('refuses a missing value, half of one, a date that never was, and a bad zone', () => {
+  it('refuses a missing value, half of one, and a bad zone', () => {
     expect(() => monthDay()).toThrow(/notAMonthDay/);
     expect(() => monthDay(null)).toThrow(/notAMonthDay/);
     expect(() => monthDay(10)).toThrow(/notAMonthDay/);
-    expect(() => monthDay({ year: 2027, month: 2, day: 29 })).toThrow(/unreadableDate/);
     expect(() => monthDay('10-17', 'Mars/Olympus')).toThrow(/unknownZone/);
+  });
+
+  it('refuses a date that never was as a date, written as text or as fields', () => {
+    expect(() => monthDay('2027-02-29')).toThrow(/unreadableDate/);
+    expect(() => monthDay({ year: 2027, month: 2, day: 29 })).toThrow(/unreadableDate/);
+    expect(() => monthDay('2026-09-06T23:30:00Z')).toThrow(/notADate/);
   });
 
   it('reads only the ISO calendar, converting a date and refusing a month-day from another', () => {
@@ -80,6 +96,23 @@ describe('monthDay', () => {
     expect(monthDay('17/10', { loose: true })).toBeNull();
     expect(monthDay(undefined, { loose: true })).toBeNull();
     expect(() => monthDay('10-17', { loose: true, zone: 'Mars/Olympus' })).toThrow(/unknownZone/);
+  });
+
+  it('reads a leap day from loose text, though the year Date invents has none', () => {
+    expect(monthDay('Feb 29', { loose: true }).toString()).toBe('02-29');
+    expect(monthDay('February 29', { loose: true }).toString()).toBe('02-29');
+    expect(dayMonth('29 Feb', { loose: true }).toString()).toBe('02-29');
+    expect(monthDay('Feb 29, 2028', { loose: true }).toString()).toBe('02-29');
+    expect(monthDay('Feb 29, 2027', { loose: true })).toBeNull();
+  });
+
+  it('gives null for loose text whose day Date made up or rolled into the next month', () => {
+    expect(monthDay('Feb 30', { loose: true })).toBeNull();
+    expect(monthDay('Apr 31', { loose: true })).toBeNull();
+    expect(monthDay('5', { loose: true })).toBeNull();
+    expect(monthDay('2026', { loose: true })).toBeNull();
+    expect(monthDay('2026-11', { loose: true })).toBeNull();
+    expect(monthDay('Jan 31', { loose: true }).toString()).toBe('01-31');
   });
 
   it('reads a loose whole date the way date() does, so the app decides its order and dayMonth overrides', () => {
@@ -168,6 +201,12 @@ describe('monthDay', () => {
     );
   });
 
+  it('steps from a date in another calendar by its ISO year', () => {
+    const hebrew = date(Temporal.PlainDate.from('2026-11-16[u-ca=hebrew]'));
+    expect(hebrew.next(monthDay('12-25')).toString()).toBe('2026-12-25');
+    expect(hebrew.previous(monthDay('12-25')).toString()).toBe('2025-12-25');
+  });
+
   it('leaves next and previous stepping to a weekday as they did', () => {
     expect(date('2026-09-06').next('monday').toString()).toBe('2026-09-07');
     expect(date('2026-09-06').previous(5).toString()).toBe('2026-09-04');
@@ -190,6 +229,22 @@ describe('monthDay', () => {
     expect(() => monthDay('10-17').format({ weekday: 'long', month: 'long', day: 'numeric' })).toThrow(/noField/);
     expect(() => monthDay('10-17').format('full')).toThrow(/unknownFormat/);
     expect(monthDay('10-17').in(2027).format('full')).toBe('Sunday, October 17, 2027');
+  });
+
+  it('refuses a clock or a zone, which it has no more than a year', () => {
+    expect(() => monthDay('10-17').format({ timeStyle: 'short' })).toThrow(/noField/);
+    expect(() => monthDay('10-17').format({ month: 'long', day: 'numeric', hour: 'numeric' })).toThrow(/noField/);
+    expect(() => monthDay('10-17').format({ month: 'long', timeZoneName: 'short' })).toThrow(/noField/);
+  });
+
+  it('prints in the Gregorian calendar whatever the locale keeps, since its day in another moves each year', () => {
+    const birthday = monthDay('10-17');
+    expect(birthday.format('long', 'en-u-ca-hebrew')).toBe('October 17');
+    expect(birthday.format('long', 'fa-IR')).toBe(
+      date('2027-10-17').format({ month: 'long', day: 'numeric', calendar: 'gregory' }, 'fa-IR'),
+    );
+    expect(() => birthday.format({ month: 'long', day: 'numeric', calendar: 'hebrew' })).toThrow(/unknownFormat/);
+    expect(birthday.in(2027).format({ month: 'long', day: 'numeric', calendar: 'hebrew' })).toBe('16 Tishri');
   });
 
   it('takes a preset an app adds', () => {
