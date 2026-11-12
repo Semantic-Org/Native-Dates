@@ -1,6 +1,7 @@
 import type {
   CalendarDate,
   CalendarDateInput,
+  FormatSpec,
   Duration,
   DurationInput,
   Locale,
@@ -23,7 +24,7 @@ export interface YearMonthFields {
 export type YearMonthInput = YearMonth | YearMonthFields | CalendarDateInput;
 
 /** A preset (`'short'`, `'medium'`, `'long'`) or an `Intl.DateTimeFormat` options bag of year and month */
-export type YearMonthFormat = 'short' | 'medium' | 'long' | Intl.DateTimeFormatOptions | (string & {});
+export type YearMonthFormat = FormatSpec;
 
 /**
  * A year and a month with no day: a billing period, a card's expiry, what a month picker holds. It
@@ -35,6 +36,8 @@ export class YearMonth {
 
   /** The presets `format()` reads by name, open to more: `'short'` `11/26`, `'medium'` `Nov 2026`, `'long'` `November 2026` */
   static presets: Record<string, Intl.DateTimeFormatOptions>;
+  /** The century a two-digit year is read in by `monthYear()` (default: 2000) */
+  static century: number;
 
   /** The value in the configured locale's common form, `'Nov 2026'`, what `format()` prints */
   readonly text: string;
@@ -80,10 +83,11 @@ export class YearMonth {
   until(other: YearMonthInput, unit: Unit): number;
   since(other: YearMonthInput): Duration;
   since(other: YearMonthInput, unit: Unit): number;
+  as(kind: 'yearMonth'): YearMonth;
 
   /**
-   * Prints in the Gregorian calendar, whatever the locale's own. A format that asks for more than a
-   * year and a month refuses: a day, a weekday, a clock, a zone or another calendar
+   * Prints the year and the month and nothing else, in the Gregorian calendar whatever the locale's
+   * own, so any preset name or options bag that formats a date formats this too
    */
   format(spec?: YearMonthFormat, locale?: Locale): string;
   /** ISO 8601, `'2026-11'` */
@@ -102,24 +106,32 @@ export function yearMonth(input: unknown, options: ReadOptions & { loose: true; 
 export function yearMonth(input: YearMonthInput, options?: Zone | ReadOptions): YearMonth;
 export function yearMonth(year: number | string, month: number | string): YearMonth;
 
+/**
+ * The same value read month first, the order a card prints it: `monthYear('11/26')` is
+ * `yearMonth('2026-11')`. A two-digit year reads in `YearMonth.century`. ISO's `'2026-11'` is year
+ * first under both
+ */
+export function monthYear(input: unknown, options: ReadOptions & { loose: true; }): YearMonth | null;
+export function monthYear(input: YearMonthInput, options?: Zone | ReadOptions): YearMonth;
+export function monthYear(month: number | string, year: number | string): YearMonth;
+
 export function isYearMonth(value: unknown): value is YearMonth;
 
 declare module 'native-dates' {
   interface DateTime {
     /** The year and month in this zone, the day dropped */
     readonly yearMonth: YearMonth;
+    as(kind: 'yearMonth'): YearMonth;
   }
 
   interface CalendarDate {
     /** The year and month, the day dropped */
     readonly yearMonth: YearMonth;
+    as(kind: 'yearMonth'): YearMonth;
   }
 
-  /**
-   * Two numbers name a year and a month and no day, so they read as a year-month. Only numbers are
-   * that door: digits written as text read as `date()` reads text, and refuse for want of a day
-   */
-  export function date(year: number, month: number): YearMonth;
   export function kindOf(value: YearMonth): 'yearMonth';
   export function compare(a: YearMonth, b: YearMonthInput): -1 | 0 | 1;
+  export function earliest(...months: YearMonth[] | [YearMonth[]]): YearMonth;
+  export function latest(...months: YearMonth[] | [YearMonth[]]): YearMonth;
 }

@@ -114,6 +114,15 @@ export const weekdayNumber = (input) => {
 
 export const isZonedDateTime = (value) => value instanceof Temporal.ZonedDateTime;
 export const isInstant = (value) => value instanceof Temporal.Instant;
+
+// a string with a clock and a Z, an offset or a bracketed zone names a moment, not a wall clock
+export const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;
+export const hasOffset = /(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$/;
+export const hasZoneName = /\[[^\]]+\]$/;
+export const namesInstant = (text) => {
+  const trimmed = text.trim();
+  return hasTime.test(trimmed) && (hasOffset.test(trimmed) || hasZoneName.test(trimmed));
+};
 export const isPlainDate = (value) => value instanceof Temporal.PlainDate;
 export const isPlainDateTime = (value) => value instanceof Temporal.PlainDateTime;
 export const isPlainTime = (value) => value instanceof Temporal.PlainTime;
@@ -143,10 +152,12 @@ export const singularKeys = (fields) => {
 
 export const quarterStart = (month) => Math.floor((month - 1) / 3) * 3 + 1;
 
-// text that opens on a year, a month and a day is a date, whatever follows: '1990-10-17'
-export const opensOnDate = (value) => isString(value) && /^\s*[+-]?\d{4,6}-?\d{2}-?\d{2}/.test(value);
-
 // one whole unit as duration fields
+// an end is the last millisecond of its unit, the precision of Date and of now(). a unit finer than a
+// millisecond ends on its last nanosecond, so the end never falls before the start
+export const endPrecision = (name) =>
+  name === 'microsecond' || name === 'nanosecond' ? { nanoseconds: 1 } : { milliseconds: 1 };
+
 export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(name)]: 1 });
 
 // the second argument of a factory is a zone, or an options bag { zone, loose }

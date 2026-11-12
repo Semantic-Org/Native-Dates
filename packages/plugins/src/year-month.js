@@ -1,13 +1,12 @@
 import { CalendarDate, DateTime, IS_YEAR_MONTH, today } from 'native-dates';
-import { guard, loosely, refuse, refuseType, setYearMonthExtension, unreadable } from 'native-dates/helpers/errors';
+import { guard, loosely, readAs, refuse, refuseType, unreadable } from 'native-dates/helpers/errors';
 import { fieldsFrom, temporalDurationOf } from 'native-dates/helpers/fields';
-import { epochOf, formatter } from 'native-dates/helpers/format';
+import { epochOf } from 'native-dates/helpers/format';
 import { isDevelopment, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
 import {
   inspect,
   isCount,
   isDigits,
-  opensOnDate,
   plural,
   singularKeys,
   unit,
@@ -17,6 +16,9 @@ import {
 } from 'native-dates/helpers/units';
 import { zoneId } from 'native-dates/helpers/zones';
 
+import { partFormatter, partOptions } from './helpers/format.js';
+import { opensOnDate } from './helpers/parts.js';
+
 /*
   a year and a month with no day: a billing period, a card's expiry, what a month picker holds. it
   counts in months and years, and hands over any one of its days as a date
@@ -25,8 +27,8 @@ import { zoneId } from 'native-dates/helpers/zones';
 // '2026-11', what <input type="month"> writes
 const noDay = /^[+-]?\d{4,6}-\d{2}$/;
 
-// what a year-month has to print. anything else would be read off the 1st it prints through
-const printable = ['year', 'month', 'era', 'literal'];
+// a month and a year in the order a card prints them, '11/26' or '11/2026'
+const monthFirst = /^(\d{1,2})[-/.](\d{2}|\d{4})$/;
 
 // the units below a month, which a year-month has no room for
 const smaller = units.slice(2);
@@ -44,7 +46,11 @@ export class YearMonth {
     short: Object.freeze({ year: '2-digit', month: 'numeric' }),
     medium: Object.freeze({ year: 'numeric', month: 'short' }),
     long: Object.freeze({ year: 'numeric', month: 'long' }),
+    full: Object.freeze({ year: 'numeric', month: 'long' }),
   };
+
+  // the century a two-digit year is read in: monthYear('11/26') is November 2026
+  static century = 2000;
 
   #plain;
 
@@ -275,40 +281,17 @@ export class YearMonth {
     return rival.until(this, name);
   }
 
+  as(kind) {
+    return readAs(kind, { yearMonth: () => this });
+  }
+
   /*******************************
               Output
   *******************************/
 
   format(spec = 'medium', locale) {
-    const options = isPlainObject(spec)
-      ? spec
-      : Object.hasOwn(YearMonth.presets, spec)
-      ? YearMonth.presets[spec]
-      : refuse('unknownFormat', String(spec), {
-        explanation: isDevelopment
-          ? "a year-month formats as 'short', 'medium' or 'long', or with an Intl options object"
-          : 0,
-      });
-    // an ISO month straddles two months of another calendar, so the Gregorian one is the only
-    // calendar it prints in, whatever the locale's own
-    if (options.calendar !== undefined && options.calendar !== 'gregory') {
-      refuse('unknownFormat', `calendar ${options.calendar}`, {
-        explanation: isDevelopment
-          ? 'a year-month prints in the Gregorian calendar. pick a day to print another: yearMonth.on(15).format(spec)'
-          : 0,
-      });
-    }
-    const parts = formatter('date', { ...options, calendar: 'gregory' }, locale)
-      .formatToParts(epochOf('date', { year: this.year, month: this.month, day: 1 }));
-    const missing = parts.find((part) => !printable.includes(part.type));
-    if (missing) {
-      refuse('noField', `${missing.type} in ${JSON.stringify(options)}`, {
-        explanation: isDevelopment
-          ? 'a year-month has a year and a month to print. pick a day for the rest: yearMonth.on(15).format(spec)'
-          : 0,
-      });
-    }
-    return parts.map((part) => part.value).join('');
+    const options = partOptions(spec, ['year', 'month'], YearMonth.presets);
+    return partFormatter(options, locale).format(epochOf('date', { year: this.year, month: this.month, day: 1 }));
   }
 
   toString() {
@@ -354,9 +337,22 @@ export const yearMonth = (input, monthOrOptions) => {
   return isPlainObject(monthOrOptions) && monthOrOptions.loose ? loosely(build, unread) : build();
 };
 
+// the same value read month first, the order a card prints it: monthYear('11/26') is
+// yearMonth('2026-11'). ISO's '2026-11' is year first under both words
+export const monthYear = (input, yearOrOptions) => {
+  const century = (year) => (Number(year) < 100 ? YearMonth.century + Number(year) : year);
+  if (isCount(input) && isCount(yearOrOptions)) {
+    return yearMonth(century(yearOrOptions), input);
+  }
+  const parts = isString(input) && monthFirst.exec(input.trim());
+  const build = () => (parts ? new YearMonth(century(parts[2]), parts[1]) : new YearMonth(input, yearOrOptions));
+  return isPlainObject(yearOrOptions) && yearOrOptions.loose ? loosely(build, unread) : build();
+};
+
 export const isYearMonth = (value) => value instanceof YearMonth;
 
-// a date and a datetime hand over their year-month, the way a datetime hands over its date
+// a date and a datetime hand over their year-month, the way a datetime hands over its date, by the
+// property or by as('yearMonth')
 for (const Kind of [CalendarDate, DateTime]) {
   Object.defineProperty(Kind.prototype, 'yearMonth', {
     configurable: true,
@@ -364,7 +360,8 @@ for (const Kind of [CalendarDate, DateTime]) {
       return new YearMonth(this);
     },
   });
+  const as = Kind.prototype.as;
+  Kind.prototype.as = function(kind, zone) {
+    return kind === 'yearMonth' ? this.yearMonth : as.call(this, kind, zone);
+  };
 }
-
-// date(2026, 11) names a year and a month and no day, so core hands its two numbers here
-setYearMonthExtension((year, month) => new YearMonth(year, month));

@@ -1,11 +1,15 @@
 import { CalendarDate, today } from './calendar-date.js';
 import { anchored } from './duration.js';
-import { guard, loosely, parseLoose, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
-import { IS_DATE_TIME } from './helpers/identity.js';
+import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
+  endPrecision,
+  hasOffset,
+  hasTime,
+  hasZoneName,
   inspect,
   isDigits,
   isInstant,
@@ -29,9 +33,6 @@ import { Time } from './time.js';
   the string fixes the instant only, it never becomes the zone: the offset a database prints is a
   view, and arithmetic across a DST boundary needs the real zone
 */
-
-const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;
-const hasOffset = /(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$/;
 
 export class DateTime {
   // brand datetime
@@ -131,7 +132,7 @@ export class DateTime {
     try {
       return guard(
         () => {
-          if (/\[[^\]]+\]$/.test(trimmed)) {
+          if (hasZoneName.test(trimmed)) {
             const zoned = Temporal.ZonedDateTime.from(trimmed);
             return zone === undefined ? zoned : zoned.withTimeZone(zoneId(zone));
           }
@@ -208,6 +209,9 @@ export class DateTime {
   get time() {
     return new Time(this.#zoned.toPlainTime());
   }
+  as(kind) {
+    return readAs(kind, { datetime: () => this, date: () => this.date, time: () => this.time });
+  }
 
   /*******************************
             Arithmetic
@@ -265,7 +269,8 @@ export class DateTime {
 
   // the last millisecond, the precision of Date and of now(). for a query bound prefer range(unit)
   endOf(name, firstDay) {
-    return this.startOf(name, firstDay).plus(stepOf(unit(name))).minus({ milliseconds: 1 });
+    const target = unit(name);
+    return this.startOf(target, firstDay).plus(stepOf(target)).minus(endPrecision(target));
   }
 
   round(increment, name) {
@@ -291,13 +296,20 @@ export class DateTime {
     );
   }
 
-  next(weekday) {
-    const delta = (weekdayNumber(weekday) - this.weekday + 7) % 7 || 7;
+  // steps to a weekday, or to a month-day's occurrence, at this time of day in this zone
+  next(target) {
+    if (target?.[IS_MONTH_DAY]) {
+      return target.after(this.date).at(this.time, this.zone);
+    }
+    const delta = (weekdayNumber(target) - this.weekday + 7) % 7 || 7;
     return this.plus({ days: delta });
   }
 
-  previous(weekday) {
-    const delta = (this.weekday - weekdayNumber(weekday) + 7) % 7 || 7;
+  previous(target) {
+    if (target?.[IS_MONTH_DAY]) {
+      return target.before(this.date).at(this.time, this.zone);
+    }
+    const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
   }
 

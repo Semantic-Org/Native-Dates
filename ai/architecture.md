@@ -31,8 +31,9 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"
 
 | Subpath | Adds | Mechanism |
 |---|---|---|
-| `@native-dates/plugins/year-month` | `YearMonth` over `Temporal.PlainYearMonth`, `yearMonth('2026-11')`, `.yearMonth`, `date(2026, 11)` as a year-month | Exports the class and factory, attaches the `.yearMonth` getter, and registers the reader core hands `date(2026, 11)` to in `helpers/errors.js` |
+| `@native-dates/plugins/year-month` | `YearMonth` over `Temporal.PlainYearMonth`, `yearMonth('2026-11')`, `monthYear('11/26')`, `.yearMonth` | Exports the class and factory, attaches the `.yearMonth` getter and `as('yearMonth')` onto `CalendarDate` and `DateTime` |
 | `@native-dates/plugins/ranges` | `DateRange`, `DateTimeRange`, `TimeRange`, `.to()`, `.range()`, `.points()`, `.split()` | Exports range classes/factories and attaches `.to()` / `.range()` onto point prototypes |
+| `@native-dates/plugins/month-day` | `MonthDay` over `Temporal.PlainMonthDay`, `monthDay('10/17')`, `dayMonth('17/10')`, `.monthDay`, `.next()` / `.previous()` to a month-day | Exports the class and its two factories and attaches the `.monthDay` getter. Core's `.next()` / `.previous()` know the brand and ask a month-day for its own occurrence, so nothing is wrapped |
 | `@native-dates/plugins/tokens` | `YYYY-MM-DD HH:mm` token patterns, `monthNames()`, `weekdayNames()` | Wraps `.format()` on `DateTime`, `CalendarDate`, and `Time`; calls through for presets and `Intl` bags |
 | `@native-dates/plugins/relative` | `.formatRelative(to, locale)` on `DateTime` and `CalendarDate` | Attaches prototype methods backed by `Intl.RelativeTimeFormat` |
 | `@native-dates/plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), abbreviations (`'PT'`, `'CET'`), `configure({ zoneAliases })` | Registers fallback zone resolver in `helpers/zones.js` |

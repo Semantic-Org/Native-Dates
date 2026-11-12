@@ -1,16 +1,19 @@
 import { DateTime } from './date-time.js';
 import { anchored } from './duration.js';
-import { guard, loosely, parseLoose, readYearMonth, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
-import { IS_CALENDAR_DATE } from './helpers/identity.js';
+import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
   inspect,
+  isCount,
   isDigits,
+  isInstant,
   isPlainDate,
   isPlainDateTime,
   isZonedDateTime,
+  namesInstant,
   plural,
   quarterStart,
   singularKeys,
@@ -29,9 +32,6 @@ import { Time } from './time.js';
   moment, so it never shifts when read from another zone
 */
 
-const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;
-const hasOffset = /(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$/;
-
 export class CalendarDate {
   // brand calendar date
   get [IS_CALENDAR_DATE]() {
@@ -45,7 +45,7 @@ export class CalendarDate {
 
   // date(2026, 9, 6), date(input, zone), or date(input, { zone, loose })
   constructor(input, monthOrOptions, day) {
-    if (isDigits(input) && (isNumber(monthOrOptions) || isDigits(monthOrOptions))) {
+    if (isDigits(input) && isCount(monthOrOptions)) {
       [input, monthOrOptions, day] = [Number(input), Number(monthOrOptions), day === undefined ? day : Number(day)];
     }
     const settings = isPlainObject(monthOrOptions)
@@ -88,7 +88,7 @@ export class CalendarDate {
       if (day === undefined) {
         return refuse('unreadableDate', `${input}-${month}`, {
           explanation: isDevelopment
-            ? 'a date needs its day: date(2026, 11, 16). a year and a month alone are a yearMonth, which date(2026, 11) reads with plugins/year-month'
+            ? 'a date needs its day: date(2026, 11, 16). a year and a month alone are yearMonth(2026, 11) with plugins/year-month'
             : 0,
         });
       }
@@ -106,8 +106,12 @@ export class CalendarDate {
     if (input instanceof CalendarDate) {
       return input.toTemporal();
     }
-    if (input instanceof DateTime) {
-      return input.toTemporal().toPlainDate();
+    // a moment falls on a different day and clock in each zone, so it is read in the zone asked for
+    if (
+      input instanceof DateTime || isDate(input) || isZonedDateTime(input) || isInstant(input)
+      || (isString(input) && namesInstant(input))
+    ) {
+      return new DateTime(input, settings).toTemporal().toPlainDate();
     }
     if (isNumber(input)) {
       return refuseType('notADate', String(input), {
@@ -115,9 +119,6 @@ export class CalendarDate {
           ? 'a number alone is ambiguous. epoch milliseconds are a datetime, datetime(n).date, and a year needs its month and day, date(2026, 9, 6)'
           : 0,
       });
-    }
-    if (isDate(input)) {
-      return new DateTime(input, settings).toTemporal().toPlainDate();
     }
     if (isString(input)) {
       try {
@@ -134,7 +135,7 @@ export class CalendarDate {
         return zoned.toPlainDate();
       }
     }
-    if (isZonedDateTime(input) || isPlainDateTime(input)) {
+    if (isPlainDateTime(input)) {
       return input.toPlainDate();
     }
     if (isPlainObject(input)) {
@@ -151,19 +152,10 @@ export class CalendarDate {
     });
   }
 
-  // a wall-clock string keeps its day and drops the clock. a string carrying Z or an offset is an
-  // instant, and which day it falls on depends on the zone, so it is refused with the two ways to choose
+  // a wall-clock string keeps its day and drops the clock
   static #parse(text) {
-    const trimmed = text.trim();
-    if (hasTime.test(trimmed) && hasOffset.test(trimmed)) {
-      refuseType('notADate', text, {
-        explanation: isDevelopment
-          ? 'that string is an instant. datetime(text, zone).date chooses its day in a zone, and so does { loose: true, zone } with plugins/loose'
-          : 0,
-      });
-    }
     return guard(
-      () => Temporal.PlainDate.from(trimmed),
+      () => Temporal.PlainDate.from(text.trim()),
       'unreadableDate',
       text,
       isDevelopment
@@ -265,13 +257,21 @@ export class CalendarDate {
     return this.startOf(name, firstDay).plus(stepOf(unit(name))).minus({ days: 1 });
   }
 
-  next(weekday) {
-    const delta = (weekdayNumber(weekday) - this.weekday + 7) % 7 || 7;
+  // steps to a weekday, which comes around each week. a month-day, from plugins/month-day, comes
+  // around each year and finds its own occurrence. either way this day itself never counts
+  next(target) {
+    if (target?.[IS_MONTH_DAY]) {
+      return target.after(this);
+    }
+    const delta = (weekdayNumber(target) - this.weekday + 7) % 7 || 7;
     return this.plus({ days: delta });
   }
 
-  previous(weekday) {
-    const delta = (this.weekday - weekdayNumber(weekday) + 7) % 7 || 7;
+  previous(target) {
+    if (target?.[IS_MONTH_DAY]) {
+      return target.before(this);
+    }
+    const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
   }
 
@@ -341,6 +341,11 @@ export class CalendarDate {
     return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }));
   }
 
+  // a date read as a datetime is its midnight in the zone
+  as(kind, zone) {
+    return readAs(kind, { date: () => this, datetime: () => this.at(undefined, zone) });
+  }
+
   /*******************************
               Output
   *******************************/
@@ -388,15 +393,7 @@ CalendarDate.prototype.add = CalendarDate.prototype.plus;
 CalendarDate.prototype.subtract = CalendarDate.prototype.minus;
 CalendarDate.prototype.remove = CalendarDate.prototype.minus;
 
-// date(2026, 11) names a year and a month and no day, which is a yearMonth with plugins/year-month.
-// only two numbers written as numbers are that door: text is data, and reads as what date() says it
-// is. a day that arrives undefined is still a third argument, so a missing field is refused as a
-// date and never becomes a month
-export const date = (...parts) => {
-  const [input, monthOrOptions, day] = parts;
-  if (parts.length === 2 && isNumber(input) && isNumber(monthOrOptions)) {
-    return readYearMonth(input, monthOrOptions);
-  }
+export const date = (input, monthOrOptions, day) => {
   const build = () =>
     input instanceof CalendarDate && monthOrOptions === undefined
       ? input

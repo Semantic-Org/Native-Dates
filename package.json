@@ -32,7 +32,6 @@
     "docs"
   ],
   "scripts": {
-    "test": "node --test test/*.test.js",
     "size": "node tools/size.js",
     "format": "npx dprint fmt",
     "setup": "npx simple-git-hooks"

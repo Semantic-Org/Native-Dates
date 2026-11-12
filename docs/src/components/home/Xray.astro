@@ -1,41 +1,63 @@
 ---
-// the same dates twice: in native-dates, and switched over, on Temporal alone. the two programs are
-// text (scripts/home/programs.js); this runs both and stops the build if they don't agree, so the
-// page can't show code that isn't equivalent
+// four common operations, each under what its writer wants as an x-ray: the code in native-dates,
+// and switched over, the same value made on Temporal alone, or on Date. the samples are text
+// (scripts/home/samples.js); this runs them every way and stops the build if a sample's values
+// differ, so the page can't show code that isn't equivalent
 import * as library from 'native-dates';
 
 import { t } from '../../lib/i18n.js';
-import { ON_TEMPORAL, run, WITH_LIBRARY } from '../../scripts/home/programs.js';
+import { SAMPLES } from '../../scripts/home/samples.js';
 
 const locale = Astro.currentLocale;
-// both read the clock, so a minute can turn between the two runs: a second try settles that
-const agree = () => JSON.stringify(run(WITH_LIBRARY, library)) === JSON.stringify(run(ON_TEMPORAL));
-if (!agree() && !agree()) {
-  throw new Error(`the x-ray's two programs disagree: ${JSON.stringify(run(WITH_LIBRARY, library))} with native-dates, ${JSON.stringify(run(ON_TEMPORAL))} on Temporal`);
-}
-const FACTS = ['words', 'zones', 'calendar', 'durations'];
+const { kindOf, now, today } = library;
+const WAYS = [['ours', 'native-dates'], ['temporal', 'Temporal'], ['legacy', 'Date']];
+
+// every sample's value by its name, from the samples written one way. each runs alone, in a block
+// of its own so it can declare any name, with the values the earlier ones made in scope, and the
+// library's calls where the code is ours
+const SCOPE = { ours: { now, today }, temporal: {}, legacy: {} };
+const made = (way) => SAMPLES.reduce((values, sample) => {
+  const scope = { ...SCOPE[way], ...values };
+  const value = new Function(...Object.keys(scope), `{ ${sample[way]}\nreturn ${sample.id}; }`)(...Object.values(scope));
+  return { ...values, [sample.id]: value };
+}, {});
+// a value as Temporal prints it, so ours reads the same as the Temporal value under it
+const printed = (value) => String(value.toTemporal ? value.toTemporal() : value);
+// whether a Date holds what ours does: a moment by its epoch, a calendar day by its own date
+const day = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const holds = (date, ours) => (kindOf(ours) === 'datetime' ? date.getTime() === ours.epoch : day(date) === String(ours));
+const SAME = {
+  temporal: (theirs, ours) => printed(theirs) === printed(ours),
+  legacy: (theirs, ours) => (typeof ours === 'string' ? theirs === ours : holds(theirs, ours)),
+};
+const difference = () => {
+  const ours = made('ours');
+  for (const way of ['temporal', 'legacy']) {
+    const theirs = made(way);
+    const sample = SAMPLES.find(({ id }) => !SAME[way](theirs[id], ours[id]));
+    if (sample) { return `the x-ray's \`${sample.id}\` differs: ${printed(ours[sample.id])} in native-dates, ${String(theirs[sample.id])} in its ${way} code`; }
+  }
+};
+// every way reads the clock, so a minute can turn between runs: a second try settles that
+const differs = difference() && difference();
+if (differs) { throw new Error(differs); }
 ---
-<div class="container ribbon-split">
-  <div class="ribbon-copy">
-    <h2>{t(locale, 'home.xray.title')}</h2>
-    <p>{t(locale, 'home.xray.lede')}</p>
-    <ul class="facts">
-      {FACTS.map((fact, i) => <li data-line={i} set:html={t(locale, `home.xray.fact.${fact}`)} />)}
-    </ul>
-  </div>
-  <div class="code ribbon-media xr" data-xray>
-    <div class="code-head">
-      <div class="xr-switch" role="radiogroup" aria-label={t(locale, 'home.xray.label')}>
-        <button type="button" role="radio" aria-checked="true" data-xr="library">native-dates</button>
-        <button type="button" role="radio" aria-checked="false" data-xr="native">Temporal</button>
+<div class="xrays">
+  {SAMPLES.map((sample) => (
+    <div>
+      <h3>{t(locale, `home.xray.${sample.id}`)}</h3>
+      <div class="code xr" data-xray>
+        <div class="code-head">
+          <div class="xr-switch" role="radiogroup" aria-label={t(locale, 'home.xray.label')}>
+            {WAYS.map(([way, name], i) => <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-xr={way}>{name}</button>)}
+          </div>
+          <span class="xr-count" aria-live="polite" data-xr-count></span>
+          <button class="copy" type="button" data-copy></button>
+        </div>
+        <div class="xr-body">
+          {WAYS.map(([way], i) => <pre class:list={{ 'is-line': !sample[way].includes('\n') }} data-xr-pane={way} data-hl hidden={i > 0} set:text={sample[way]} />)}
+        </div>
       </div>
-      <span class="xr-count" aria-live="polite" data-xr-count></span>
-      <button class="copy" type="button" data-copy></button>
     </div>
-    <div class="xr-body">
-      <pre data-xr-pane="library" data-hl set:text={WITH_LIBRARY} />
-      <pre data-xr-pane="native" data-hl hidden set:text={ON_TEMPORAL} />
-    </div>
-    <p class="xr-note" data-xr-note hidden>{t(locale, 'home.xray.note')}</p>
-  </div>
+  ))}
 </div>
