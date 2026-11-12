@@ -167,9 +167,7 @@ export class CalendarDate {
       'unreadableDate',
       text,
       isDevelopment
-        ? /^[+-]?\d{4,6}-\d{2}$/.test(trimmed)
-          ? "that is a year and a month with no day. yearMonth('2026-11') reads it with plugins/year-month"
-          : "write ISO 8601: '2026-09-06'. plugins/loose adds { loose: true } for what Date reads"
+        ? "write ISO 8601: '2026-09-06'. a year and a month alone is yearMonth('2026-11') with plugins/year-month. plugins/loose adds { loose: true } for what Date reads"
         : 0,
     );
   }
@@ -391,11 +389,12 @@ CalendarDate.prototype.subtract = CalendarDate.prototype.minus;
 CalendarDate.prototype.remove = CalendarDate.prototype.minus;
 
 // date(2026, 11) names a year and a month and no day, which is a yearMonth with plugins/year-month.
-// a day that arrives undefined is still a third argument, so a missing field is refused as a date
-// and never becomes a month
+// only two numbers written as numbers are that door: text is data, and reads as what date() says it
+// is. a day that arrives undefined is still a third argument, so a missing field is refused as a
+// date and never becomes a month
 export const date = (...parts) => {
   const [input, monthOrOptions, day] = parts;
-  if (parts.length === 2 && parts.every((part) => isNumber(part) || isDigits(part))) {
+  if (parts.length === 2 && isNumber(input) && isNumber(monthOrOptions)) {
     return readYearMonth(input, monthOrOptions);
   }
   const build = () =>

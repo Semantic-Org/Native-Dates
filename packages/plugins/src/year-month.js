@@ -2,8 +2,19 @@ import { CalendarDate, DateTime, IS_YEAR_MONTH, today } from 'native-dates';
 import { guard, loosely, refuse, refuseType, setYearMonthExtension, unreadable } from 'native-dates/helpers/errors';
 import { fieldsFrom, temporalDurationOf } from 'native-dates/helpers/fields';
 import { epochOf, formatter } from 'native-dates/helpers/format';
-import { isDevelopment, isNumber, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
-import { inspect, isDigits, singularKeys, unit, wholeNumbers, withParts } from 'native-dates/helpers/units';
+import { isDevelopment, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
+import {
+  inspect,
+  isCount,
+  isDigits,
+  opensOnDate,
+  plural,
+  singularKeys,
+  unit,
+  units,
+  wholeNumbers,
+  withParts,
+} from 'native-dates/helpers/units';
 import { zoneId } from 'native-dates/helpers/zones';
 
 /*
@@ -14,11 +25,11 @@ import { zoneId } from 'native-dates/helpers/zones';
 // '2026-11', what <input type="month"> writes
 const noDay = /^[+-]?\d{4,6}-\d{2}$/;
 
-// the parts of a formatted date that only a day can answer
-const dayParts = ['day', 'weekday'];
+// what a year-month has to print. anything else would be read off the 1st it prints through
+const printable = ['year', 'month', 'era', 'literal'];
 
-// a number, or one written as text, the way a form carries it
-const isCount = (value) => isNumber(value) || isDigits(value);
+// the units below a month, which a year-month has no room for
+const smaller = units.slice(2);
 
 export class YearMonth {
   // brand year month
@@ -85,13 +96,23 @@ export class YearMonth {
         explanation: isDevelopment ? 'a year-month is read in the ISO calendar' : 0,
       });
     }
-    if (isString(input) && noDay.test(input.trim())) {
-      return guard(
-        () => Temporal.PlainYearMonth.from(input.trim()),
-        'unreadableYearMonth',
-        input,
-        isDevelopment ? "months run 01 through 12: '2026-11'" : 0,
-      );
+    if (isString(input)) {
+      if (noDay.test(input.trim())) {
+        return guard(
+          () => Temporal.PlainYearMonth.from(input.trim()),
+          'unreadableYearMonth',
+          input,
+          isDevelopment ? "months run 01 through 12: '2026-11'" : 0,
+        );
+      }
+      // text that opens on a whole date is a date, and so is whatever Date reads when loose
+      if (!opensOnDate(input) && !settings.loose) {
+        return refuse('unreadableYearMonth', input, {
+          explanation: isDevelopment
+            ? "a year-month is '2026-11', or a date like '2026-11-16' with its day dropped. plugins/loose adds { loose: true } for what Date reads"
+            : 0,
+        });
+      }
     }
     if (isPlainObject(input)) {
       const fields = singularKeys(input);
@@ -99,7 +120,11 @@ export class YearMonth {
         return YearMonth.#fromFields(fields, JSON.stringify(input));
       }
     }
-    return YearMonth.#fromDate(input, settings);
+    // anything else is whatever a date reads, a date's own refusals included
+    const day = input instanceof CalendarDate
+      ? input
+      : new CalendarDate(input, settings.loose ? settings : { zone: settings.zone });
+    return day.toTemporal().withCalendar('iso8601').toPlainYearMonth();
   }
 
   static #fromFields(fields, at = JSON.stringify(fields)) {
@@ -113,27 +138,6 @@ export class YearMonth {
       'unreadableYearMonth',
       at,
     );
-  }
-
-  // anything a date reads carries its day along. text that reads as neither is refused as a
-  // year-month, where a value with a day in it was a date and keeps the date's own refusal
-  static #fromDate(input, { zone, loose, dayFirst }) {
-    try {
-      const day = input instanceof CalendarDate
-        ? input
-        : new CalendarDate(input, loose ? { zone, loose, dayFirst } : { zone });
-      return day.toTemporal().withCalendar('iso8601').toPlainYearMonth();
-    }
-    catch (error) {
-      if (!isString(input) || error.code !== 'unreadableDate') {
-        throw error;
-      }
-      return refuse('unreadableYearMonth', input, {
-        explanation: isDevelopment
-          ? "a year-month is '2026-11', or a date like '2026-11-16' with its day dropped. plugins/loose adds { loose: true } for what Date reads"
-          : 0,
-      });
-    }
   }
 
   /*******************************
@@ -182,9 +186,8 @@ export class YearMonth {
 
   static #monthFields(amount, name) {
     const fields = fieldsFrom(amount, name);
-    YearMonth.#refuseSmaller(
-      Object.keys(fields).find((field) => field !== 'years' && field !== 'months' && fields[field]),
-    );
+    const found = smaller.find((part) => fields[plural(part)]);
+    YearMonth.#refuseSmaller(found && plural(found));
     return temporalDurationOf(fields);
   }
 
@@ -202,7 +205,7 @@ export class YearMonth {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    YearMonth.#refuseSmaller(Object.keys(changes).find((part) => part !== 'year' && part !== 'month'));
+    YearMonth.#refuseSmaller(smaller.find((part) => part in changes));
     return new YearMonth(
       guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
     );
@@ -286,13 +289,22 @@ export class YearMonth {
           ? "a year-month formats as 'short', 'medium' or 'long', or with an Intl options object"
           : 0,
       });
-    const parts = formatter('date', options, locale)
+    // an ISO month straddles two months of another calendar, so the Gregorian one is the only
+    // calendar it prints in, whatever the locale's own
+    if (options.calendar !== undefined && options.calendar !== 'gregory') {
+      refuse('unknownFormat', `calendar ${options.calendar}`, {
+        explanation: isDevelopment
+          ? 'a year-month prints in the Gregorian calendar. pick a day to print another: yearMonth.on(15).format(spec)'
+          : 0,
+      });
+    }
+    const parts = formatter('date', { ...options, calendar: 'gregory' }, locale)
       .formatToParts(epochOf('date', { year: this.year, month: this.month, day: 1 }));
-    const missing = parts.find((part) => dayParts.includes(part.type));
+    const missing = parts.find((part) => !printable.includes(part.type));
     if (missing) {
       refuse('noField', `${missing.type} in ${JSON.stringify(options)}`, {
         explanation: isDevelopment
-          ? 'a year-month has no day to print. pick one first: yearMonth.on(15).format(spec)'
+          ? 'a year-month has a year and a month to print. pick a day for the rest: yearMonth.on(15).format(spec)'
           : 0,
       });
     }

@@ -80,6 +80,9 @@ export const timeUnits = ['hour', 'minute', 'second', 'millisecond', 'microsecon
 // a number written as text, the way a form or a query string carries one
 export const isDigits = (value) => isString(value) && /^\s*[-+]?\d+(?:\.\d+)?\s*$/.test(value);
 
+// a count is a number, or one written as text
+export const isCount = (value) => isNumber(value) || isDigits(value);
+
 // day.js keeps M for month and m for minute, and the tokens plugin does too, so the one capital is kept
 export const unit = (input) => {
   const key = input === 'M' ? 'month' : isString(input) ? input.trim().toLowerCase() : '';
@@ -139,6 +142,9 @@ export const singularKeys = (fields) => {
 };
 
 export const quarterStart = (month) => Math.floor((month - 1) / 3) * 3 + 1;
+
+// text that opens on a year, a month and a day is a date, whatever follows: '1990-10-17'
+export const opensOnDate = (value) => isString(value) && /^\s*[+-]?\d{4,6}-?\d{2}-?\d{2}/.test(value);
 
 // one whole unit as duration fields
 export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(name)]: 1 });
