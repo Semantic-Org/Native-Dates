@@ -1,6 +1,18 @@
 import { beforeEach, describe, it } from 'node:test';
 
-import { compare, configure, date, datetime, days, IS_YEAR_MONTH, kindOf, months, today } from 'native-dates';
+import {
+  compare,
+  configure,
+  date,
+  datetime,
+  days,
+  earliest,
+  IS_YEAR_MONTH,
+  kindOf,
+  latest,
+  months,
+  today,
+} from 'native-dates';
 import '@native-dates/plugins/loose';
 import '@native-dates/plugins/ranges';
 import '@native-dates/plugins/tokens';
@@ -31,30 +43,38 @@ describe('yearMonth', () => {
     expect(yearMonth(new Date('2026-10-31T23:30:00Z'), { zone: 'Asia/Tokyo' }).toString()).toBe('2026-11');
   });
 
-  it('is what date() gives for a year and a month with no day', () => {
+  it('is what date() gives for two numbers, a year and a month with no day', () => {
     expect(date(2026, 11)).toBeInstanceOf(YearMonth);
     expect(date(2026, 11).toString()).toBe('2026-11');
-    expect(date('2026', '11').toString()).toBe('2026-11');
     expect(date(...[2026, 11]).equals(yearMonth('2026-11'))).toBe(true);
     expect(date(2026, 11, 16).toString()).toBe('2026-11-16');
     expect(() => date(2026, 13)).toThrow(/unreadableYearMonth/);
   });
 
-  it('leaves a missing day and a month written as text refused by date(), which names it', () => {
+  it('leaves text, digits as text and a missing day refused by date(), which names it', () => {
     expect(() => date(2026, 11, undefined)).toThrow(/unreadableDate/);
+    expect(() => date('2026', '11')).toThrow(/unreadableDate/);
+    expect(() => date(...'2026-11'.split('-'))).toThrow(/unreadableDate/);
     expect(() => date('2026-11')).toThrow(/unreadableDate/);
-    expect(() => date('2026-11')).toThrow(/yearMonth\('2026-11'\) reads it/);
+    expect(() => date('2026-11')).toThrow(/a year and a month alone is yearMonth\('2026-11'\)/);
     expect(date('2026-11', { loose: true }).toString()).toBe('2026-11-01');
+    expect(date('2026', '11', '16').toString()).toBe('2026-11-16');
   });
 
-  it('refuses a month that does not exist, text that is neither, and a date that never was', () => {
+  it('refuses a month that does not exist, and text that is neither a year-month nor a date', () => {
     expect(() => yearMonth('2026-13')).toThrow(/unreadableYearMonth/);
     expect(() => yearMonth(2026, 13)).toThrow(/unreadableYearMonth/);
     expect(() => yearMonth(2026.5, 11)).toThrow(/unreadableYearMonth/);
     expect(() => yearMonth('garbage')).toThrow(/unreadableYearMonth/);
     expect(() => yearMonth('11/2026')).toThrow(/unreadableYearMonth/);
+    expect(() => yearMonth('Nov 2026')).toThrow(/unreadableYearMonth/);
     expect(() => yearMonth({ year: 2026 })).toThrow(/unreadableYearMonth/);
+  });
+
+  it('refuses a date that never was as a date, written as text or as fields', () => {
+    expect(() => yearMonth('2026-02-30')).toThrow(/unreadableDate/);
     expect(() => yearMonth({ year: 2026, month: 2, day: 30 })).toThrow(/unreadableDate/);
+    expect(() => yearMonth('2026-11-16T09:30:00Z')).toThrow(/notADate/);
   });
 
   it('refuses a missing value, half of one, and a bad zone', () => {
@@ -129,6 +149,7 @@ describe('yearMonth', () => {
     expect(period.set({ year: 2027 }).toString()).toBe('2027-11');
     expect(() => period.set('month', 13)).toThrow(/cannotSet/);
     expect(() => period.set('day', 5)).toThrow(/notAYearMonthUnit/);
+    expect(() => period.set('quarter', 2)).toThrow(/cannotSet/);
   });
 
   it('hands over any of its days, the 31st being the last day of a month without one', () => {
@@ -167,6 +188,16 @@ describe('yearMonth', () => {
     expect(compare(yearMonth('2026-11'), '2026-11')).toBe(0);
     expect(periods.toSorted(compare).map(String)).toEqual(['2026-03', '2026-11', '2027-01']);
     expect(periods.toSorted((a, b) => b.compare(a)).map(String)).toEqual(['2027-01', '2026-11', '2026-03']);
+  });
+
+  it('refuses to order a year-month against a date, whichever side it stands on', () => {
+    const period = yearMonth('2026-11');
+    expect(() => compare(period, date('2026-11-30'))).toThrow(/mixedKinds/);
+    expect(() => compare(date('2026-11-30'), period)).toThrow(/mixedKinds/);
+    expect(() => earliest(date('2026-11-16'), yearMonth('2026-10'))).toThrow(/mixedKinds/);
+    expect(() => latest(datetime('2026-11-16T09:30Z'), yearMonth('2026-12'))).toThrow(/mixedKinds/);
+    expect(() => earliest(period, yearMonth('2026-10'))).toThrow(/notAPoint/);
+    expect(period.compare(date('2026-11-30'))).toBe(0);
   });
 
   it('is past once its last day is, and future until its first', () => {
@@ -215,6 +246,25 @@ describe('yearMonth', () => {
     expect(() => yearMonth('2026-11').format({ weekday: 'long', month: 'long' })).toThrow(/noField/);
     expect(() => yearMonth('2026-11').format('full')).toThrow(/unknownFormat/);
     expect(yearMonth('2026-11').on(16).format('full')).toBe('Monday, November 16, 2026');
+  });
+
+  it('refuses a clock or a zone, which it has no more than a day', () => {
+    expect(() => yearMonth('2026-11').format({ timeStyle: 'short' })).toThrow(/noField/);
+    expect(() => yearMonth('2026-11').format({ year: 'numeric', month: 'short', hour: 'numeric' })).toThrow(/noField/);
+    expect(() => yearMonth('2026-11').format({ month: 'long', year: 'numeric', timeZoneName: 'short' })).toThrow(
+      /noField/,
+    );
+    expect(yearMonth('-000043-03').format({ year: 'numeric', month: 'long', era: 'short' })).toBe('March 44 BC');
+  });
+
+  it('prints in the Gregorian calendar whatever the locale keeps, since its month straddles two of another', () => {
+    const period = yearMonth('2026-11');
+    expect(period.format('long', 'en-u-ca-hebrew')).toBe('November 2026');
+    expect(period.format('long', 'fa-IR')).toBe(
+      date('2026-11-16').format({ year: 'numeric', month: 'long', calendar: 'gregory' }, 'fa-IR'),
+    );
+    expect(() => period.format({ year: 'numeric', month: 'long', calendar: 'hebrew' })).toThrow(/unknownFormat/);
+    expect(period.on(16).format({ year: 'numeric', month: 'long', calendar: 'hebrew' })).toBe('Kislev 5787');
   });
 
   it('takes a preset an app adds', () => {

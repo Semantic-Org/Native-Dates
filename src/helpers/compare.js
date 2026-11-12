@@ -102,8 +102,15 @@ const asKindOf = (left, value) => {
 // a sort comparator. both sides must be the same kind of thing, a raw value reads as the first's kind.
 // ranges order by their start, then by their end, the order a database gives its range types
 export const compare = (a, b) => {
-  // a duration and a year-month are no points, and each brings its own order
-  if (a?.[IS_DURATION] || a?.[IS_YEAR_MONTH]) {
+  if (a?.[IS_DURATION]) {
+    return a.compare(b);
+  }
+  // a year-month is no point either and brings its own order. a raw value beside it reads as one,
+  // where a date or a datetime beside it is two kinds, whichever side it stands on
+  if (a?.[IS_YEAR_MONTH]) {
+    if (kindOf(b) !== undefined) {
+      sameKind(a, b);
+    }
     return a.compare(b);
   }
   if (a?.[IS_RANGE]) {

@@ -501,7 +501,7 @@ export function latest<T extends Point>(...points: T[] | [T[]]): T extends strin
 /** The kind of a value from this library, or undefined */
 export function kindOf(
   value: unknown,
-): 'datetime' | 'date' | 'time' | 'duration' | 'dateRange' | 'datetimeRange' | 'timeRange' | undefined;
+): 'datetime' | 'date' | 'time' | 'duration' | 'dateRange' | 'datetimeRange' | 'timeRange' | 'yearMonth' | undefined;
 
 /**
  * The brands, keyed with `Symbol.for` so a value is recognised across bundles and realms without

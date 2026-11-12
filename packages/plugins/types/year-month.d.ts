@@ -81,7 +81,10 @@ export class YearMonth {
   since(other: YearMonthInput): Duration;
   since(other: YearMonthInput, unit: Unit): number;
 
-  /** A format that asks for a day or a weekday refuses, since a year-month has none */
+  /**
+   * Prints in the Gregorian calendar, whatever the locale's own. A format that asks for more than a
+   * year and a month refuses: a day, a weekday, a clock, a zone or another calendar
+   */
   format(spec?: YearMonthFormat, locale?: Locale): string;
   /** ISO 8601, `'2026-11'` */
   toString(): string;
@@ -112,7 +115,10 @@ declare module 'native-dates' {
     readonly yearMonth: YearMonth;
   }
 
-  /** Two numbers name a year and a month and no day, so they read as a year-month */
+  /**
+   * Two numbers name a year and a month and no day, so they read as a year-month. Only numbers are
+   * that door: digits written as text read as `date()` reads text, and refuse for want of a day
+   */
   export function date(year: number, month: number): YearMonth;
   export function kindOf(value: YearMonth): 'yearMonth';
   export function compare(a: YearMonth, b: YearMonthInput): -1 | 0 | 1;
