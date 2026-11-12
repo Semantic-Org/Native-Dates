@@ -333,7 +333,7 @@ export class CalendarDate {
 /**
  * Reads `'2026-09-06'`, three numbers, a fields object, a datetime (its date in its zone), a Date (its
  * date in the zone), or a Temporal value. A wall-clock string keeps its day. A missing day refuses:
- * two numbers are a year and a month, which `@native-dates/plugins/year-month` reads as a `YearMonth`
+ * a year and a month alone are `yearMonth(2026, 11)` with `@native-dates/plugins/year-month`
  */
 export function date(input: CalendarDateInput, options?: ReadOptions): CalendarDate;
 export function date(year: number, month: number, day: number): CalendarDate;
