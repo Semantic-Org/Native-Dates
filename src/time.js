@@ -7,6 +7,7 @@ import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
+  endPrecision,
   inspect,
   isDigits,
   isInstant,
@@ -235,7 +236,8 @@ export class Time {
   }
 
   endOf(name) {
-    return this.startOf(name).plus(stepOf(unit(name))).minus({ milliseconds: 1 });
+    const target = unit(name);
+    return this.startOf(target).plus(stepOf(target)).minus(endPrecision(target));
   }
 
   round(increment, name) {
