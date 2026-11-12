@@ -84,7 +84,7 @@ export class Duration {
     return new Duration(
       temporalDurationOf(addFields(this.toFields(), fieldsFrom(other, name), 1)),
       undefined,
-      this.#anchor ?? other?.anchor,
+      this.#anchor ?? (other instanceof Duration ? other.anchor : undefined),
     );
   }
 
@@ -92,7 +92,7 @@ export class Duration {
     return new Duration(
       temporalDurationOf(addFields(this.toFields(), fieldsFrom(other, name), -1)),
       undefined,
-      this.#anchor ?? other?.anchor,
+      this.#anchor ?? (other instanceof Duration ? other.anchor : undefined),
     );
   }
 
