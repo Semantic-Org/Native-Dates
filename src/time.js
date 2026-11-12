@@ -13,6 +13,7 @@ import {
   isPlainDateTime,
   isPlainTime,
   isZonedDateTime,
+  namesInstant,
   singularKeys,
   stepOf,
   unit,
@@ -96,7 +97,10 @@ export class Time {
       return input.toTemporal();
     }
     // a moment falls on a different day and clock in each zone, so it is read in the zone asked for
-    if (input instanceof DateTime || isDate(input) || isZonedDateTime(input) || isInstant(input)) {
+    if (
+      input instanceof DateTime || isDate(input) || isZonedDateTime(input) || isInstant(input)
+      || (isString(input) && namesInstant(input))
+    ) {
       return new DateTime(input, settings).toTemporal().toPlainTime();
     }
     if (isString(input)) {

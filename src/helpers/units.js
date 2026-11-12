@@ -111,6 +111,15 @@ export const weekdayNumber = (input) => {
 
 export const isZonedDateTime = (value) => value instanceof Temporal.ZonedDateTime;
 export const isInstant = (value) => value instanceof Temporal.Instant;
+
+// a string with a clock and a Z, an offset or a bracketed zone names a moment, not a wall clock
+export const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;
+export const hasOffset = /(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$/;
+export const hasZoneName = /\[[^\]]+\]$/;
+export const namesInstant = (text) => {
+  const trimmed = text.trim();
+  return hasTime.test(trimmed) && (hasOffset.test(trimmed) || hasZoneName.test(trimmed));
+};
 export const isPlainDate = (value) => value instanceof Temporal.PlainDate;
 export const isPlainDateTime = (value) => value instanceof Temporal.PlainDateTime;
 export const isPlainTime = (value) => value instanceof Temporal.PlainTime;
