@@ -21,28 +21,36 @@ const presets = {
       timeZoneName: 'short',
     },
   },
-  date: {
-    short: { dateStyle: 'short' },
-    medium: { dateStyle: 'medium' },
-    long: { dateStyle: 'long' },
-    full: { dateStyle: 'full' },
-    month: { month: 'long', year: 'numeric' },
-  },
+  date: {},
   time: {
     default: { timeStyle: 'short' },
     short: { timeStyle: 'short' },
     medium: { timeStyle: 'medium' },
-    long: { timeStyle: 'long' },
-    full: { timeStyle: 'full' },
+    // Intl's long and full time styles only add a zone name, and a time has no zone
+    long: { timeStyle: 'medium' },
+    full: { timeStyle: 'medium' },
   },
 };
 
-// frozen, so a preset keys its formatter by identity and a format call serializes nothing
-for (const kind of Object.values(presets)) {
-  for (const options of Object.values(kind)) {
-    Object.freeze(options);
+const dateParts = ['dateStyle', 'weekday', 'era', 'year', 'month', 'day'];
+const timeParts = ['timeStyle', 'hour', 'minute', 'second', 'fractionalSecondDigits', 'dayPeriod'];
+const zoneParts = ['timeZone', 'timeZoneName'];
+const ownParts = { date: dateParts, time: timeParts };
+const otherParts = { date: [...timeParts, ...zoneParts], time: [...dateParts, ...zoneParts] };
+
+// a date prints only date parts and a time only clock parts, so one options bag can format a datetime, a
+// date and a time alike. a bag that names none of the noun's own parts prints the noun's default
+const ownOptions = (kind, bag) => {
+  const options = { ...bag };
+  for (const part of otherParts[kind]) {
+    delete options[part];
   }
-}
+  if (options.timeStyle === 'long' || options.timeStyle === 'full') {
+    options.timeStyle = 'medium';
+  }
+  const namesOwnPart = ownParts[kind].some((part) => options[part] !== undefined);
+  return namesOwnPart ? options : { ...intlOptions(kind), ...options };
+};
 
 // a preset name or an Intl options bag resolves to Intl options, anything else resolves to undefined
 export const intlOptions = (kind, spec) => {
@@ -50,7 +58,7 @@ export const intlOptions = (kind, spec) => {
     return presets[kind].default ?? presets[kind].medium;
   }
   if (isPlainObject(spec)) {
-    return spec;
+    return kind === 'datetime' ? spec : ownOptions(kind, spec);
   }
   if (!isString(spec)) {
     refuse('unknownFormat', String(spec), {
@@ -61,6 +69,20 @@ export const intlOptions = (kind, spec) => {
   }
   return Object.hasOwn(presets[kind], spec) ? presets[kind][spec] : undefined;
 };
+
+// every preset name formats every noun. a date and a time take their own parts of the datetime preset
+for (const kind of ['date', 'time']) {
+  for (const [name, options] of Object.entries(presets.datetime)) {
+    presets[kind][name] ??= ownOptions(kind, options);
+  }
+}
+
+// frozen, so a preset keys its formatter by identity and a format call serializes nothing
+for (const kind of Object.values(presets)) {
+  for (const options of Object.values(kind)) {
+    Object.freeze(options);
+  }
+}
 
 export const unknownFormat = (spec) =>
   refuse('unknownFormat', String(spec), {
