@@ -162,10 +162,23 @@ export const quarterStart = (month) => Math.floor((month - 1) / 3) * 3 + 1;
 // text that opens on a year, a month and a day is a date, whatever follows: '1990-10-17'
 export const opensOnDate = (value) => isString(value) && /^\s*[+-]?\d{4,6}-?\d{2}-?\d{2}/.test(value);
 
-// loose text that names its year: four digits standing alone, or the last of three numeric parts.
-// Date makes up a year for text without one, so only text that names its own is put to it whole
-export const namesYear = (value) =>
-  isString(value) && /(?<!\d)\d{4}(?!\d)|^\s*\d{1,2}[./-]\d{1,2}[./-]\d{2}(?!\d)/.test(value);
+const monthNames = [
+  'january',
+  'february',
+  'march',
+  'april',
+  'may',
+  'june',
+  'july',
+  'august',
+  'september',
+  'october',
+  'november',
+  'december',
+];
+
+// the month an English name stands for, whole or its first three letters and more: 'Oct', 'sept'
+export const monthNamed = (name) => monthNames.findIndex((full) => full.startsWith(name.toLowerCase())) + 1;
 
 // one whole unit as duration fields
 export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(name)]: 1 });

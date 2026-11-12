@@ -111,36 +111,37 @@ describe('monthDay', () => {
     expect(monthDay('17 Oct.', { loose: true }).toString()).toBe('10-17');
     expect(dayMonth('17 October', { loose: true }).toString()).toBe('10-17');
     expect(monthDay('Sept 5', { loose: true }).toString()).toBe('09-05');
+    expect(monthDay('Oct 17th', { loose: true }).toString()).toBe('10-17');
+    expect(monthDay('October 17,', { loose: true }).toString()).toBe('10-17');
+    expect(monthDay('1st May', { loose: true }).toString()).toBe('05-01');
     expect(monthDay('Feb 29', { loose: true }).toString()).toBe('02-29');
     expect(dayMonth('29 February', { loose: true }).toString()).toBe('02-29');
   });
 
-  it('never puts text without a year to Date, which would make one up, so what is no month and day is null', () => {
-    expect(monthDay('Feb 30', { loose: true })).toBeNull();
-    expect(monthDay('Apr 31', { loose: true })).toBeNull();
-    expect(monthDay('Octopus 17', { loose: true })).toBeNull();
-    expect(monthDay('5', { loose: true })).toBeNull();
-    expect(monthDay('1', { loose: true })).toBeNull();
-    expect(monthDay('Oct 17 10:00', { loose: true })).toBeNull();
-  });
-
-  it('reads loose text with its year in it the way date() does, and drops the year', () => {
-    for (const text of ['October 17, 1990', '10/17/1990', '10/17/90', 'Feb 29, 2028', '2026-11', '2026']) {
-      expect(monthDay(text, { loose: true }).equals(date(text, { loose: true }).monthDay)).toBe(true);
+  it('never puts loose text to Date, which makes up what text leaves out, so anything else is null', () => {
+    for (const text of ['Feb 30', 'Apr 31', 'Octopus 17', '5', '1', '1017', '2026', '2026-11', 'Oct 2026']) {
+      expect(monthDay(text, { loose: true })).toBeNull();
     }
-    expect(monthDay('October 17, 1990', { loose: true }).toString()).toBe('10-17');
-    expect(monthDay('07.09.2026', { loose: true }).toString()).toBe('07-09');
-    expect(dayMonth('07.09.2026', { loose: true }).toString()).toBe('09-07');
-    configure({ dayFirst: true });
-    expect(monthDay('07.09.2026', { loose: true }).toString()).toBe('09-07');
-    configure({ dayFirst: false });
+    for (const text of ['Feb 29 10:00 +0000', 'Feb 29 0900', 'Feb 29, 10:00:00.0000', 'Dec 31 23:30 -1200']) {
+      expect(monthDay(text, { loose: true })).toBeNull();
+    }
   });
 
-  it('reads a loose instant in the zone, on whichever day it falls there', () => {
+  it('leaves a date written loosely to date(), which hands over its month-day', () => {
+    for (const text of ['October 17, 1990', '10/17/90', 'Oct 17, 90', 'Feb 29th 2028', '07.09.2026']) {
+      expect(monthDay(text, { loose: true })).toBeNull();
+    }
+    expect(date('October 17, 1990', { loose: true }).monthDay.toString()).toBe('10-17');
+    expect(date('07.09.2026', { loose: true, dayFirst: true }).monthDay.toString()).toBe('09-07');
+  });
+
+  it('reads an ISO date as date() does when loose, an instant in the zone included', () => {
     const tokyo = { loose: true, zone: 'Asia/Tokyo' };
-    expect(monthDay('Oct 17 2026 23:00 GMT', tokyo).toString()).toBe('10-18');
-    expect(monthDay('Sat, 17 Oct 2026 23:30:00 +0000', tokyo).toString()).toBe('10-18');
     expect(monthDay('2026-10-17T23:30:00Z', tokyo).toString()).toBe('10-18');
+    expect(monthDay('1990-10-17', { loose: true }).toString()).toBe('10-17');
+    expect(monthDay('2027-02-29', { loose: true })).toBeNull();
+    expect(monthDay(Temporal.PlainDate.from('1990-10-17'), { loose: true }).toString()).toBe('10-17');
+    expect(monthDay(Temporal.PlainDate.from('1990-10-17'), 'UTC').toString()).toBe('10-17');
   });
 
   it('leads with its text and prints its parts', () => {
@@ -229,6 +230,12 @@ describe('monthDay', () => {
     expect(morning.previous(monthDay('07-04')).toTemporal().toString()).toBe(
       '2026-07-04T09:30:00-04:00[America/New_York]',
     );
+  });
+
+  it('steps into the year beside the first and the last one Temporal counts, where its dates run out', () => {
+    expect(date('+275760-01-01').previous(monthDay('12-25')).toString()).toBe('+275759-12-25');
+    expect(date('-271821-12-31').next(monthDay('01-15')).toString()).toBe('-271820-01-15');
+    expect(() => date('+275760-01-01').next(monthDay('12-25'))).toThrow(/unreadableDate/);
   });
 
   it('steps from a date in another calendar by its ISO year', () => {
