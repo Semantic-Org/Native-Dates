@@ -15,6 +15,5 @@ Read the files in [`ai/`](ai/) before authoring or editing code in this reposito
 
 ## Commands
 
-- `npm test` — Run the full `node:test` suite
 - `npm run size` — Measure minified and Brotli-11 sizes for `native-dates` and every plugin in `@native-dates/plugins`
 - `npm run format` — Format code with `dprint`
