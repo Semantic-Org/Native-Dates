@@ -80,6 +80,9 @@ export const timeUnits = ['hour', 'minute', 'second', 'millisecond', 'microsecon
 // a number written as text, the way a form or a query string carries one
 export const isDigits = (value) => isString(value) && /^\s*[-+]?\d+(?:\.\d+)?\s*$/.test(value);
 
+// a count is a number, or one written as text
+export const isCount = (value) => isNumber(value) || isDigits(value);
+
 // day.js keeps M for month and m for minute, and the tokens plugin does too, so the one capital is kept
 export const unit = (input) => {
   const key = input === 'M' ? 'month' : isString(input) ? input.trim().toLowerCase() : '';
