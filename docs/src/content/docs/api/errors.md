@@ -69,9 +69,9 @@ Type errors indicate that an argument has the wrong JavaScript type or belongs t
 | Code | Thrown by | Cause |
 |---|---|---|
 | `notADateTime` | `datetime()`, `DateTime` | Input is `null`, `undefined`, or an unsupported type such as a boolean. |
-| `notADate` | `date()`, `CalendarDate` | Input is `null`, `undefined`, a bare single number, an instant string with `Z` or an offset, or an unsupported type. |
+| `notADate` | `date()`, `CalendarDate` | Input is `null`, `undefined`, a bare single number, or an unsupported type. |
 | `notATime` | `time()`, `Time` | Input is `null`, `undefined`, or an unsupported type. |
-| `notADuration` | `duration()`, `Duration`, `plus()`, `minus()` | Input is `null`, `undefined`, an unsupported type, or a `Duration` paired with a second unit argument. |
+| `notADuration` | `duration()`, `Duration`, `plus()`, `minus()` | Input is `null`, `undefined`, an unsupported type, or a unit passed beside a duration that already carries units. |
 | `notAPoint` | `compare()`, `earliest()`, `latest()` | Value is not a `DateTime`, `CalendarDate`, `Time`, `Date`, Temporal point, or parseable string. |
 | `mixedKinds` | `compare()`, `earliest()`, `latest()` | Comparing values of different kinds, such as a `CalendarDate` with a `DateTime`. |
 | `mixedRange` | `DateRange`, `DateTimeRange`, `TimeRange` | Passing a range of one kind to another range constructor or factory in `@native-dates/plugins/ranges`. |

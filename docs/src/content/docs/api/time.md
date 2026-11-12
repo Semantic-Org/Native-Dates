@@ -238,7 +238,7 @@ Moves to the final millisecond of the given clock unit.
 - name: unit
   type: Unit
   required: true
-  description: Clock unit from `'hour'` down to `'second'`.
+  description: Clock unit from `'hour'` down to `'nanosecond'`.
 ```
 
 **Returns**
@@ -481,7 +481,7 @@ time('5:00pm').since('9:00am', 'hours'); // 8
 t.format(spec?, locale?): string
 ```
 
-Formats the time of day using `Intl.DateTimeFormat`. Accepts a preset style, an options object, or a token pattern when [`@native-dates/plugins/tokens`](/plugins/tokens/) is loaded.
+Formats the time of day using `Intl.DateTimeFormat`. Accepts any preset name, an options object, or a token pattern when [`@native-dates/plugins/tokens`](/plugins/tokens/) is loaded. Options objects ignore date and zone keys, so one shared options object can format moments, dates, and times alike.
 
 **Parameters**
 
@@ -489,7 +489,7 @@ Formats the time of day using `Intl.DateTimeFormat`. Accepts a preset style, an 
 - name: spec
   type: FormatSpec
   default: "'short'"
-  description: Time preset from `'short'` through `'full'`, `Intl.DateTimeFormatOptions` object, or token pattern.
+  description: Preset name such as `'short'` or `'medium'`, `Intl.DateTimeFormatOptions` object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding the configured default for this call.
@@ -507,7 +507,7 @@ const afternoon = time('17:30:15');
 
 afternoon.format('short', 'en-US'); // '5:30 PM'
 afternoon.format('medium', 'en-US'); // '5:30:15 PM'
-afternoon.format({ hour: '2-digit', minute: '2-digit', hour12: false }, 'en-US'); // '17:30'
+afternoon.format({ hour12: false }, 'en-US'); // '17:30'
 ```
 :::
 

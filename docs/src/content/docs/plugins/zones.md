@@ -82,14 +82,14 @@ Register shorthand names for offices, regions, or ambiguous abbreviations once a
 configure({ zoneAliases }): Settings
 ```
 
-Adds custom zone names to the global settings table. Alias keys match without case or accent sensitivity, and target values can be full IANA names, city names, or built-in abbreviations.
+Adds or removes custom zone names in the global settings table. Alias keys match without case or accent sensitivity, and targets can be full IANA names, cities, or abbreviations. Set a key to `null` to delete one alias, or pass `zoneAliases: null` to clear them all.
 
 **Parameters**
 
 ```params
 - name: zoneAliases
-  type: Record<string, Zone>
-  description: "Object mapping custom names to valid zones, such as `{ hq: 'Europe/Berlin' }`."
+  type: Record<string, Zone | null> | null
+  description: "Map of custom names to valid zones or `null`, or `null` to clear every custom alias."
 ```
 
 **Returns**
@@ -112,6 +112,8 @@ configure({
 
 datetime('2026-11-16T09:30', 'west').in('hq').zone; // 'Europe/Berlin'
 datetime('2026-11-16T09:30Z', 'IST').zone; // 'Asia/Jerusalem'
+
+configure({ zoneAliases: null });
 ```
 :::
 

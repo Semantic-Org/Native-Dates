@@ -59,8 +59,8 @@ configure({ zone: null, locale: null, weekStart: 'monday' });
       default: 'false'
       description: "Read ambiguous numeric dates such as `'07.09.2026'` day-first with `@native-dates/plugins/loose`."
     - name: zoneAliases
-      type: Record<string, Zone>
-      description: "Custom names mapped to valid zones, merged into active aliases with `@native-dates/plugins/zones`."
+      type: Record<string, Zone | null> | null
+      description: "Custom names mapped to zones with `@native-dates/plugins/zones`. Pass `null` for a key or the whole map to clear aliases."
 ```
 
 **Returns**

@@ -293,7 +293,7 @@ Moves to the final millisecond of a calendar or clock unit in this time zone.
 - name: unit
   type: Unit
   required: true
-  description: Calendar or clock unit from `'year'` down to `'second'`.
+  description: Calendar or clock unit from `'year'` down to `'nanosecond'`.
 - name: firstDay
   type: Weekday
   description: First day of the week when `unit` is `'week'`.

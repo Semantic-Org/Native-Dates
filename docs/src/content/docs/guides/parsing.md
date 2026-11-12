@@ -36,11 +36,14 @@ datetime('2026-11-16T09:30[Europe/Berlin]'); // 9:30 AM CET
 datetime({ year: 2026, month: 11, day: 16, hour: 9, minute: 30 }, 'Europe/Berlin');
 ```
 
-Passing an offset timestamp directly to `date()` throws because its calendar day depends on where you view it. Read the moment in a zone first, then read `.date`:
+Passing an offset timestamp to `date()` or `time()` reads its calendar day or local clock in the time zone you ask for:
 
 ```js
-datetime('2026-11-17T01:30:00Z', 'America/Los_Angeles').date; // 2026-11-16
-datetime('2026-11-17T01:30:00Z', 'Asia/Tokyo').date; // 2026-11-17
+import { time } from 'native-dates';
+
+date('2026-11-17T01:30:00Z', 'America/Los_Angeles'); // 2026-11-16
+date('2026-11-17T01:30:00Z', 'Asia/Tokyo'); // 2026-11-17
+time('2026-11-17T01:30:00Z', 'America/Los_Angeles'); // 17:30:00
 ```
 
 ## Clock times and durations

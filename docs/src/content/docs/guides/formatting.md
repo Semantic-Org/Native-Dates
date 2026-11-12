@@ -26,16 +26,16 @@ Pass a preset name to `format()` to choose how much detail to display:
 
 | Preset | Example | Supported types and output |
 |---|---|---|
-| `'short'` | `'11/16/26, 9:30 AM'` | Numeric date or short clock on `DateTime`, `CalendarDate`, `Time`, and `Duration`. |
-| `'medium'` | `'Nov 16, 2026, 9:30 AM'` | Abbreviated month or seconds-precision clock on `DateTime`, `CalendarDate`, and `Time`. |
-| `'long'` | `'November 16, 2026 at 9:30 AM'` | Full month name or spelled-out units on `DateTime`, `CalendarDate`, `Time`, and `Duration`. |
-| `'full'` | `'Monday, November 16, 2026 at 9:30 AM'` | Adds the full weekday name on `DateTime` and `CalendarDate`, and full clock detail on `Time`. |
-| `'date'` | `'Nov 16, 2026'` | Date portion only on `DateTime`, evaluated in its time zone. |
-| `'time'` | `'9:30 AM'` | Short local clock time only on `DateTime`. |
+| `'short'` | `'11/16/26, 9:30 AM'` | Numeric date or short clock across `DateTime`, `CalendarDate`, `Time`, and `Duration`. |
+| `'medium'` | `'Nov 16, 2026, 9:30 AM'` | Abbreviated month on dates and moments, or clock with seconds on `Time`. |
+| `'long'` | `'November 16, 2026 at 9:30 AM'` | Full month name, clock with seconds on `Time`, or spelled-out units on `Duration`. |
+| `'full'` | `'Monday, November 16, 2026 at 9:30 AM'` | Full weekday and month on dates and moments, or clock with seconds on `Time`. |
+| `'date'` | `'Nov 16, 2026'` | Date portion on `DateTime` and `CalendarDate`. |
+| `'time'` | `'9:30 AM'` | Short clock time on `DateTime` and `Time`. |
 | `'month'` | `'November 2026'` | Full month name and year on `DateTime` and `CalendarDate`. |
-| `'text'` | `'Nov 16, 2026, 9:30 AM PST'` | Date, time, and short time-zone name on `DateTime`, matching `dt.text`. |
+| `'text'` | `'Nov 16, 2026, 9:30 AM PST'` | Date, time, and short zone name on `DateTime`, or each type's own fields on `CalendarDate` and `Time`. |
 
-Dates, times, and [`Duration`](/api/duration/) instances each expose the presets that fit their fields, including compact and digital duration styles:
+Every preset name is accepted across dates, times, and moments, printing only the parts each type carries. [`Duration`](/api/duration/) also supports compact and digital styles:
 
 ```js
 const day = date('2026-11-16');
