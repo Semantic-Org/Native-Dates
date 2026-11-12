@@ -16,14 +16,8 @@ export const PLUGINS = [
   { name: 'legacy-date', category: 'migration', uses: ['now'], line: 'now().getFullYear();' },
 ];
 
-// a sketch: the package ships no presets yet. each is native-dates with a set of plugins already
-// imported, under the scope as @native-dates/core is native-dates with none. the names, the sets and
-// the import are guesses, kept here so the real ones replace them in one place
-export const PRESETS = [
-  { name: 'full', plugins: PLUGINS.map((p) => p.name) },
-  { name: 'scheduling', plugins: ['ranges', 'zones'] },
-  { name: 'compat', plugins: ['tokens', 'relative', 'loose', 'legacy-date'] },
-];
+// a sketch: the package ships no presets yet. populate PRESETS once preset packages publish
+export const PRESETS = [];
 
 // the preset that is exactly these plugins
 export const presetFor = (names) =>

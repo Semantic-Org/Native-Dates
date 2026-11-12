@@ -81,8 +81,8 @@ function engine() {
 /* ---------- view ---------- */
 
 const SUGGESTED = [
+  { section: 'Guides', title: 'Types of time', url: '/guides/types-of-time/' },
   { section: 'Guides', title: 'Time zones', url: '/guides/time-zones/' },
-  { section: 'API', title: 'today()', url: '/api/today/', symbol: true },
   { section: 'API', title: 'DateTime', url: '/api/date-time/', symbol: true },
   { section: 'Plugins', title: 'ranges', url: '/plugins/ranges/', symbol: true },
 ];

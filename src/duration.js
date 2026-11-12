@@ -35,7 +35,9 @@ export class Duration {
   #anchor;
 
   constructor(input, name, anchor) {
-    this.#temporal = isTemporalDuration(input) ? input : temporalDurationOf(fieldsFrom(input, name));
+    this.#temporal = isTemporalDuration(input) && name === undefined
+      ? input
+      : temporalDurationOf(fieldsFrom(input, name));
     this.#anchor = anchor;
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it
@@ -84,7 +86,7 @@ export class Duration {
     return new Duration(
       temporalDurationOf(addFields(this.toFields(), fieldsFrom(other, name), 1)),
       undefined,
-      this.#anchor,
+      this.#anchor ?? (other instanceof Duration ? other.anchor : undefined),
     );
   }
 
@@ -92,7 +94,7 @@ export class Duration {
     return new Duration(
       temporalDurationOf(addFields(this.toFields(), fieldsFrom(other, name), -1)),
       undefined,
-      this.#anchor,
+      this.#anchor ?? (other instanceof Duration ? other.anchor : undefined),
     );
   }
 
@@ -316,6 +318,7 @@ export class Duration {
 Duration.prototype.add = Duration.prototype.plus;
 Duration.prototype.subtract = Duration.prototype.minus;
 Duration.prototype.remove = Duration.prototype.minus;
+Duration.prototype.as = Duration.prototype.total;
 
 // duration(input, unit), or duration(input, { loose })
 export const duration = (input, unitOrOptions) => {

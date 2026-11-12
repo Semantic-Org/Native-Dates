@@ -11,7 +11,7 @@ const summary = document.querySelector('#summary');
 const list = document.querySelector('ul');
 
 function render() {
-  // tomorrow, at the time typed, where this app is running
+  // tomorrow at the selected time in the current time zone
   const meeting = tomorrow().at(input.value);
   summary.textContent = meeting.format('full');
 

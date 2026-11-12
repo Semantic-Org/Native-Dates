@@ -25,7 +25,7 @@ export async function GET({ site }) {
 
   const body = `# native-dates
 
-> A thin date library on the browser's Temporal and Intl APIs. Four nouns (DateTime, CalendarDate, Time, Duration) with plain-English verbs, frozen values and zero dependencies; plugins add the rest.
+> A readable, immutable date and time library built on the browser's Temporal and Intl APIs with zero dependencies. Opt-in subpath plugins add ranges, token formatting, relative time, city zones, loose parsing, and legacy Date methods.
 
 Every page below is also served as markdown at its path plus \`.md\`. The full docs in one file: ${url('/llms-full.txt')}
 

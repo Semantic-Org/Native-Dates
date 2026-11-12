@@ -1,0 +1,74 @@
+---
+// what Temporal ships, one line each: a few words on what it is, the shortest call that hands you
+// one, and the Temporal type underneath. a switch shows the same value made on Temporal alone, and,
+// for the comedy in it, how the same thing was kept before either. the build runs every way of
+// writing a row and stops if they don't hold the same thing, so the page can't set a call beside
+// something it isn't
+import '@native-dates/plugins/ranges';
+import * as library from 'native-dates';
+
+import { localePath, t } from '../../lib/i18n.js';
+import { PRIMITIVES } from '../../scripts/home/primitives.js';
+import { highlight } from '../../scripts/site.js';
+
+const locale = Astro.currentLocale;
+const { date, datetime, duration, now, time } = library;
+const made = (row) => new Function('date', 'datetime', 'duration', 'now', 'time', `return (${row.ours});`)(date, datetime, duration, now, time);
+// a value as Temporal would print it: a range is its two ends, and the current moment is only
+// what it is and where, since two calls can't land on the same instant
+const printed = (value) => {
+  const temporal = (v) => (v.toTemporal ? v.toTemporal() : v);
+  if (Array.isArray(value)) { return value.map(String).join(' to '); }
+  if (value.start) { return [value.start, value.end].map((end) => String(temporal(end))).join(' to '); }
+  return String(temporal(value));
+};
+const momentOf = (text) => text.replace(/^.*\[(.+)\]$/, 'now in $1');
+// whether a legacy value holds what ours does: a Date by its day, a number by what it counts
+const day = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const HOLDS = {
+  date: (legacy, ours) => day(legacy) === String(ours),
+  time: (legacy, ours) => legacy === ours.hour * 60 + ours.minute,
+  datetime: (legacy, ours) => legacy.at.getTime() === ours.epoch && legacy.zone === ours.zone,
+  duration: (legacy, ours) => legacy === ours.toMilliseconds(),
+  now: (legacy) => legacy instanceof Date,
+  range: (legacy, ours) => legacy.map(day).join() === [ours.start, ours.end].map(String).join(),
+};
+for (const row of PRIMITIVES) {
+  const ours = made(row);
+  // more than one line is more than one value
+  const lines = row.temporal.split('\n');
+  const theirs = printed(new Function(`return (${lines.length > 1 ? `[${lines.join(', ')}]` : row.temporal});`)());
+  const same = row.id === 'now' ? momentOf(printed(ours)) === momentOf(theirs) : printed(ours) === theirs;
+  if (!same) { throw new Error(`the homepage sets ${row.ours} beside ${row.temporal}, and they differ: ${printed(ours)} and ${theirs}`); }
+  if (!HOLDS[row.id](new Function(`return (${row.legacy.replace(/\s*\/\/.*$/, '')});`)(), ours)) {
+    throw new Error(`the homepage sets ${row.ours} beside ${row.legacy}, and they don't hold the same thing`);
+  }
+}
+const MODES = [['ours', 'native-dates'], ['temporal', 'Temporal'], ['legacy', t(locale, 'home.prims.legacy')]];
+---
+<div class="prims" data-primitives data-mode="ours">
+  <div class="prims-head">
+    <div class="xr-switch" role="radiogroup" aria-label={t(locale, 'home.prims.switch')}>
+      {MODES.map(([mode, label], i) => <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-prims={mode}>{label}</button>)}
+    </div>
+  </div>
+  <ul class="prims-list" role="list">
+    {PRIMITIVES.map((row) => (
+      <li class="prim">
+        <span class="prim-what">{t(locale, `home.prims.${row.id}`)}</span>
+        <span class="prim-code swap">
+          <code data-prim="ours" set:html={highlight(row.ours)} />
+          <code data-prim="temporal" hidden set:html={highlight(row.temporal)} />
+          <code data-prim="legacy" hidden set:html={highlight(row.legacy)} />
+        </span>
+        <span class="prim-built">
+          <span class="swap">
+            <code class="prim-type" data-prim="ours" data-no-hl>{row.built}</code>
+            <code class="prim-type" data-prim="legacy" data-no-hl hidden>{row.stored}</code>
+          </span>
+          {row.plugin && <a class="prim-plugin" href={localePath(`/plugins/${row.plugin}/`, locale)}>{t(locale, 'home.prims.plugin', { name: row.plugin })}</a>}
+        </span>
+      </li>
+    ))}
+  </ul>
+</div>
