@@ -1,6 +1,6 @@
 import { DateTime } from './date-time.js';
 import { anchored } from './duration.js';
-import { guard, loosely, parseLoose, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
 import { IS_CALENDAR_DATE } from './helpers/identity.js';
@@ -329,6 +329,11 @@ export class CalendarDate {
   at(when, zone) {
     const plainTime = new Time(when ?? '00:00').toTemporal();
     return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }));
+  }
+
+  // a date read as a datetime is its midnight in the zone
+  as(kind, zone) {
+    return readAs(kind, { date: () => this, datetime: () => this.at(undefined, zone) });
   }
 
   /*******************************

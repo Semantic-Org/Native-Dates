@@ -316,6 +316,7 @@ export class Duration {
 Duration.prototype.add = Duration.prototype.plus;
 Duration.prototype.subtract = Duration.prototype.minus;
 Duration.prototype.remove = Duration.prototype.minus;
+Duration.prototype.as = Duration.prototype.total;
 
 // duration(input, unit), or duration(input, { loose })
 export const duration = (input, unitOrOptions) => {

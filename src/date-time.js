@@ -1,6 +1,6 @@
 import { CalendarDate, today } from './calendar-date.js';
 import { anchored } from './duration.js';
-import { guard, loosely, parseLoose, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
 import { IS_DATE_TIME } from './helpers/identity.js';
@@ -207,6 +207,9 @@ export class DateTime {
   }
   get time() {
     return new Time(this.#zoned.toPlainTime());
+  }
+  as(kind) {
+    return readAs(kind, { datetime: () => this, date: () => this.date, time: () => this.time });
   }
 
   /*******************************
