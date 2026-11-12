@@ -1,5 +1,5 @@
 import { CalendarDate, DateTime, IS_YEAR_MONTH, today } from 'native-dates';
-import { guard, loosely, readAs, refuse, refuseType, unreadable } from 'native-dates/helpers/errors';
+import { guard, loosely, readAs, refuse, refuseType, requireLoose, unreadable } from 'native-dates/helpers/errors';
 import { fieldsFrom, temporalDurationOf } from 'native-dates/helpers/fields';
 import { epochOf, formatPattern } from 'native-dates/helpers/format';
 import { isDevelopment, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
@@ -82,6 +82,9 @@ export class YearMonth {
     // the zone resolves first so a bad one throws even when the input turns out unreadable
     if (settings.zone !== undefined) {
       zoneId(settings.zone);
+    }
+    if (settings.loose) {
+      requireLoose('loose');
     }
     if (input === undefined || input === null) {
       return refuseType('notAYearMonth', String(input), {
