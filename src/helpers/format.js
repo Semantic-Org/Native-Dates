@@ -84,8 +84,16 @@ for (const kind of Object.values(presets)) {
   }
 }
 
-export const unknownFormat = (spec) =>
-  refuse('unknownFormat', String(spec), {
+// plugins/tokens supplies the reader of a pattern like 'YYYY-MM-DD'. every noun, a plugin's own
+// included, puts a format that is no preset through here, so the two meet whichever loads first
+let tokenFormatter = null;
+
+export const setTokenExtension = (formatter) => {
+  tokenFormatter = formatter;
+};
+
+export const formatPattern = (spec, subject, kind, locale) =>
+  tokenFormatter ? tokenFormatter(subject, kind, spec, locale) : refuse('unknownFormat', String(spec), {
     explanation: isDevelopment
       ? "a format is a preset like 'medium' or an Intl options object. import '@native-dates/plugins/tokens' for patterns like 'YYYY-MM-DD'"
       : 0,

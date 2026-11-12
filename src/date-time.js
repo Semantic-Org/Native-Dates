@@ -2,7 +2,7 @@ import { CalendarDate, today } from './calendar-date.js';
 import { anchored } from './duration.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
-import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
+import { formatIntl, formatPattern, intlOptions } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
@@ -384,7 +384,9 @@ export class DateTime {
 
   format(spec, locale) {
     const options = intlOptions('datetime', spec);
-    return options ? formatIntl('datetime', this.epoch, options, locale, this.zone) : unknownFormat(spec);
+    return options
+      ? formatIntl('datetime', this.epoch, options, locale, this.zone)
+      : formatPattern(spec, this, 'datetime', locale);
   }
 
   // the instant in UTC, the form every database and API reads. the zone is a view and does not travel
