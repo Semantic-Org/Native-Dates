@@ -2,30 +2,18 @@
 
 > A thin date library built on the browser's Temporal and Intl APIs
 
-- Four nouns for what code actually means: `DateTime`, `CalendarDate`, `Time` and `Duration`
-- Time zones, daylight transitions and calendar math handled by the platform
-- Frozen values that lead in the console with their human-readable `text`
-- Natural phrases (`'1h 30m'`, `today().plus(2, 'days').at('9am')`) and `Intl` presets
-- Plugins you import only if you use them
-- About 6 KB brotli, with zero dependencies
+- **Obvious Time Types** - Makes Temporals canon of irregular words a simple `DateTime`, `CalendarDate`, `Time` and `Duration` so things read like English at callsites
+- **Browser-Native I18N** - Time zones, daylight transitions and calendar math handled by the platform not the library
+- **Immutability**  - Prevents pitfalls from JS date math that modifies antecedents 
+- **Legibility** - Natural phrases (`'1h 30m'`, `today().plus(2, 'days').at('9am')`) and `Intl` presets
+- **Fully Tree Shakeable** -  ~7kb bt for core, everything arbitary is a plugin (day.js style)
 
-Native Dates leaves calendar math and formatting to the platform. The browser's [Temporal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) and [Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) APIs know every time zone, daylight transition and locale, and this library speaks them in plain English: four nouns instead of nine, one word per thought, and values that cannot be mutated in place.
+This library is fully built ontop of [Temporal](https://developer.mozilla.org/en-US/docs/Web/Javacript/Reference/Global_Objects/Temporal) and [Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) API so correctness is a standard-committees problem not a GitHub Issue. 
+
+The library also makes it incredibly easy to ju-jitsu between `DateTime`, `Time`, `Duration` etc by chaining 
 
 ```js
-import { date, duration, now, today } from 'native-dates';
-import '@native-dates/plugins/ranges';
-import '@native-dates/plugins/tokens';
-
-const standup = today().next('monday').at('9:30am', 'America/Los_Angeles');
-standup.in('Europe/Berlin').format('dddd, MMM D [at] HH:mm z');
-
-const sprint = date('2026-09-01').to(2, 'weeks');
-sprint.contains(today());
-sprint.points('day');
-
-const remaining = now().until(standup);
-remaining.total('hours');
-duration('1h 30m').plus(15, 'minutes').format('short');
+standup.in('Asia/Tokyo').as('time');
 ```
 
 ## Packages
