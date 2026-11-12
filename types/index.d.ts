@@ -171,6 +171,10 @@ export class DateTime {
   readonly date: CalendarDate;
   /** The time of day in this zone */
   readonly time: Time;
+  /** This datetime as a date or a time, the call spelling of `.date` and `.time` */
+  as(kind: 'date'): CalendarDate;
+  as(kind: 'time'): Time;
+  as(kind: 'datetime'): DateTime;
 
   /** Adding days keeps the wall clock across a daylight saving change, adding hours counts hours */
   plus(amount: DurationInput, unit?: Unit): DateTime;
@@ -311,6 +315,9 @@ export class CalendarDate {
   since(other: CalendarDateInput, unit: Unit): number;
   /** This date at a time of day in a zone, the moment an appointment happens. No time means midnight */
   at(time?: TimeInput, zone?: Zone): DateTime;
+  /** This date as a datetime, its midnight in the zone */
+  as(kind: 'datetime', zone?: Zone): DateTime;
+  as(kind: 'date'): CalendarDate;
 
   format(spec?: FormatSpec, locale?: Locale): string;
   /** ISO 8601, `'2026-09-06'` */
@@ -385,6 +392,7 @@ export class Time {
   since(other: TimeInput, unit: Unit): number;
   /** This time on a date in a zone, the mirror of `date.at(time, zone)` */
   on(day: CalendarDateInput, zone?: Zone): DateTime;
+  as(kind: 'time'): Time;
 
   format(spec?: FormatSpec, locale?: Locale): string;
   /** ISO 8601, `'17:30:00'` */
@@ -450,6 +458,8 @@ export class Duration {
 
   /** The whole duration in one unit, fractional. Months and years need the anchor */
   total(unit: Unit): number;
+  /** Alias of `total` */
+  as(unit: Unit): number;
   /** -1, 0 or 1 by length */
   compare(other: DurationInput): number;
   equals(other: DurationInput): boolean;
