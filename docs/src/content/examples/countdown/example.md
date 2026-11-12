@@ -1,18 +1,19 @@
 ---
 title: Countdown to a launch
-description: The time left until Friday at 5 PM, as a duration you can print three ways. `until()` does the subtraction and keeps the units.
+description: Count down live to Friday at 5:00 PM and display the remaining duration in full, narrow, and digital styles.
 tabs: [app.js, index.html]
 try:
-  - 'Watch the seconds. Each tick asks `now().until(launch)` again and prints what comes back.'
-  - 'Change `''friday''` to `''monday''` in `app.js`. The launch moves, and so does the count.'
-  - 'Pick `Asia/Tokyo` in the preview’s bar. Friday at 5 PM comes sooner there, so less time is left.'
+  - 'Watch each second tick as `now().until(launch)` recomputes the remaining span.'
+  - 'Change `''friday''` to `''monday''` in `app.js` to move the target launch day.'
+  - 'Pick `Asia/Tokyo` in the preview bar, where Friday at 5:00 PM arrives hours sooner.'
 related:
+  - { title: Durations, href: /guides/durations/ }
   - { title: DateTime, href: /api/date-time/ }
+  - { title: Duration, href: /api/duration/ }
 ---
 
-`today().next('friday').at('5pm')` reads as the sentence it is: the next Friday after today, at five
-in the afternoon, here. `until()` returns a `Duration` whose parts are already balanced into days,
-hours, minutes and seconds, so there is no dividing by 86,400,000.
+The target moment comes from `today().next('friday').at('5pm')`. That steps forward to the upcoming Friday and sets the local clock to five in the afternoon.
 
-`format()` prints a duration in the reader's language. `'narrow'` and `'digital'` are the same
-duration in tighter forms.
+Every second, `now().until(launch)` measures the remaining span as a balanced duration. Calling `round('second')` trims milliseconds so the live readout steps cleanly.
+
+Finally, `format()` renders that same duration in full words alongside its narrow and digital timer styles, without dividing by milliseconds.
