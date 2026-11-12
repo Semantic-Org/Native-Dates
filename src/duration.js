@@ -35,7 +35,9 @@ export class Duration {
   #anchor;
 
   constructor(input, name, anchor) {
-    this.#temporal = isTemporalDuration(input) ? input : temporalDurationOf(fieldsFrom(input, name));
+    this.#temporal = isTemporalDuration(input) && name === undefined
+      ? input
+      : temporalDurationOf(fieldsFrom(input, name));
     this.#anchor = anchor;
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it
