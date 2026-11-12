@@ -53,9 +53,9 @@ describe('date', () => {
     configure({ dayFirst: false });
   });
 
-  it('keeps the day of a wall-clock string and refuses an instant until told the zone', () => {
+  it('keeps the day of a wall-clock string and reads an instant in the zone asked for', () => {
     expect(date('2026-09-06T23:30').toString()).toBe('2026-09-06');
-    expect(() => date('2026-09-06T23:30:00Z')).toThrow(/notADate/);
+    expect(date('2026-09-06T23:30:00Z', 'Asia/Tokyo').toString()).toBe('2026-09-07');
     expect(date('2026-09-06T23:30:00Z', { loose: true, zone: 'Asia/Tokyo' }).toString()).toBe('2026-09-07');
     expect(date('nope', { loose: true })).toBeNull();
     expect(() => date()).toThrow(/notADate/);
