@@ -1,7 +1,7 @@
 import { CalendarDate, DateTime, IS_YEAR_MONTH, today } from 'native-dates';
 import { guard, loosely, readAs, refuse, refuseType, unreadable } from 'native-dates/helpers/errors';
 import { fieldsFrom, temporalDurationOf } from 'native-dates/helpers/fields';
-import { epochOf } from 'native-dates/helpers/format';
+import { epochOf, formatPattern } from 'native-dates/helpers/format';
 import { isDevelopment, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
 import {
   inspect,
@@ -297,7 +297,9 @@ export class YearMonth {
 
   format(spec = 'medium', locale) {
     const options = partOptions(spec, ['year', 'month', 'era'], YearMonth.presets);
-    return partFormatter(options, locale).format(epochOf('date', { year: this.year, month: this.month, day: 1 }));
+    return options
+      ? partFormatter(options, locale).format(epochOf('date', { year: this.year, month: this.month, day: 1 }))
+      : formatPattern(spec, this, 'year-month', locale);
   }
 
   toString() {
