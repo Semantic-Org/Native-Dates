@@ -6,6 +6,7 @@ import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
 import { IS_DATE_TIME } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
+  endPrecision,
   hasOffset,
   hasTime,
   hasZoneName,
@@ -265,7 +266,8 @@ export class DateTime {
 
   // the last millisecond, the precision of Date and of now(). for a query bound prefer range(unit)
   endOf(name, firstDay) {
-    return this.startOf(name, firstDay).plus(stepOf(unit(name))).minus({ milliseconds: 1 });
+    const target = unit(name);
+    return this.startOf(target, firstDay).plus(stepOf(target)).minus(endPrecision(target));
   }
 
   round(increment, name) {

@@ -150,6 +150,11 @@ export const singularKeys = (fields) => {
 export const quarterStart = (month) => Math.floor((month - 1) / 3) * 3 + 1;
 
 // one whole unit as duration fields
+// an end is the last millisecond of its unit, the precision of Date and of now(). a unit finer than a
+// millisecond ends on its last nanosecond, so the end never falls before the start
+export const endPrecision = (name) =>
+  name === 'microsecond' || name === 'nanosecond' ? { nanoseconds: 1 } : { milliseconds: 1 };
+
 export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(name)]: 1 });
 
 // the second argument of a factory is a zone, or an options bag { zone, loose }
