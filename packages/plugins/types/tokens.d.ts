@@ -6,7 +6,7 @@ export function weekdayNames(style?: 'short' | 'long', firstDay?: Weekday, local
 export function monthNames(style?: 'short' | 'long', locale?: Locale): string[];
 export function formatTokens(
   subject: Record<string, unknown>,
-  kind: 'datetime' | 'date' | 'time',
+  kind: string,
   pattern: string,
   locale?: Locale,
 ): string;

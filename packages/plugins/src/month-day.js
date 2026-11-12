@@ -1,6 +1,6 @@
 import { CalendarDate, DateTime, IS_MONTH_DAY, today } from 'native-dates';
 import { guard, loosely, readAs, refuse, refuseType, requireLoose, unreadable } from 'native-dates/helpers/errors';
-import { epochOf } from 'native-dates/helpers/format';
+import { epochOf, formatPattern } from 'native-dates/helpers/format';
 import { isDevelopment, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
 import { inspect, isCount, isDigits, isPlainDate, singularKeys, zoneOptions } from 'native-dates/helpers/units';
 import { zoneId } from 'native-dates/helpers/zones';
@@ -267,7 +267,9 @@ export class MonthDay {
 
   format(spec = 'medium', locale) {
     const options = partOptions(spec, ['month', 'day'], MonthDay.presets);
-    return partFormatter(options, locale).format(epochOf('date', { year: leapYear, month: this.month, day: this.day }));
+    return options
+      ? partFormatter(options, locale).format(epochOf('date', { year: leapYear, month: this.month, day: this.day }))
+      : formatPattern(spec, this, 'month-day', locale);
   }
 
   toString() {
