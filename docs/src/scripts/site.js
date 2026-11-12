@@ -47,7 +47,8 @@ export function highlight(src) {
     else if (arrow) { out += `<span class="tk-k">=&gt;</span>`; }
     else if (tag) { out += `<span class="tk-t">${esc(tag)}</span>`; }
     else if (n) { out += `<span class="tk-n">${n}</span>`; }
-    else if (f) { out += KEYWORDS.has(f) ? `<span class="tk-k">${f}</span>` : `<span class="tk-f">${f}</span>`; }
+    // a keyword's name after a dot is a method: Temporal.PlainDate.from(…)
+    else if (f) { out += KEYWORDS.has(f) && src[m.index - 1] !== '.' ? `<span class="tk-k">${f}</span>` : `<span class="tk-f">${f}</span>`; }
     else if (p) { out += KEYWORDS.has(p) ? `<span class="tk-k">${p}</span>` : `<span class="tk-p">${p}</span>`; }
     else if (w) { out += KEYWORDS.has(w) ? `<span class="tk-k">${w}</span>` : w; }
     else { out += esc(t); }

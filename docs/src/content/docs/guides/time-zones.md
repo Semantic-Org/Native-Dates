@@ -1,105 +1,113 @@
 ---
 title: Time zones
-lede: A datetime is one exact moment and a zone to read it in. Change the zone and the moment stays put, while the platform works out every offset and daylight change.
-updated: 2026-11-10
+lede: Pair every moment with an IANA time zone, view the same instant anywhere in the world, and step cleanly across daylight saving transitions.
+updated: 2026-11-12
 ---
 
-## A zone is a view
+A [`DateTime`](/api/date-time/) pairs two things: when a moment happens and which time zone you read it in. Changing the zone gives you another view of the same moment, while the platform handles every UTC offset and daylight transition.
 
-`in()` reads the same moment in another zone. The moment doesn’t change, so the two values are equal.
+## Pairing a moment with a zone
 
-```js title="standup.js" {4}
+Pass an IANA zone name like `'America/New_York'`, `'UTC'`, or a fixed offset when creating a moment:
+
+```js
+import { date, datetime } from 'native-dates';
+
+const standup = date('2026-11-16').at('9:30am', 'America/Los_Angeles');
+const eastCoast = datetime('2026-11-16T12:30', 'America/New_York');
+const audit = datetime('2026-11-16T17:30:00Z', 'UTC');
+
+standup.zone; // 'America/Los_Angeles'
+standup.offset; // '-08:00'
+```
+
+When you omit the zone, moments use your configured default and fall back to the runtime's local zone.
+
+Set an app-wide default once at startup with [`configure()`](/api/configure/):
+
+```js
+import { configure, now } from 'native-dates';
+
+configure({ zone: 'Europe/Berlin' });
+now().zone; // 'Europe/Berlin'
+```
+
+## Viewing the same moment elsewhere
+
+Call `in()` to view the same moment in another city. Local calendar and clock properties update to match the target zone, while the underlying timestamp stays identical:
+
+```js
 import { date } from 'native-dates';
 
 const standup = date('2026-11-16').at('9:30am', 'America/Los_Angeles');
 const berlin = standup.in('Europe/Berlin');
+const tokyo = standup.in('Asia/Tokyo');
 
-berlin.text; // 'Nov 16, 2026, 6:30 PM GMT+1'
+berlin.format('time', 'en-US'); // '6:30 PM'
+tokyo.day; // 17
 berlin.equals(standup); // true
 ```
 
-:::note[Stored in UTC]
-`toString()` and `toJSON()` print the instant in UTC. Two clients that store the same moment store the same string, whatever zone each one reads it in.
-:::
+## Offsets fix the moment, not the zone
 
-## Name a zone
-
-| Zone | Written as |
-|---|---|
-| An IANA name | `'America/New_York'` |
-| A fixed offset | `'+05:30'` |
-| UTC | `'UTC'` |
-
-### Where a datetime gets its zone
-
-A zone you pass wins. A `Z` or an offset in the string fixes the moment and never becomes the zone, because the offset a database prints is not where your user is.
-
-| You write | Zone |
-|---|---|
-| `datetime('2026-11-16T09:30', 'America/Los_Angeles')` | `America/Los_Angeles` |
-| `datetime('2026-11-16T09:30[Europe/Berlin]')` | `Europe/Berlin` |
-| `datetime('2026-11-16T17:30Z')` | The default zone |
-| `now()` | The default zone |
-
-The default zone is the machine’s until you set one.
+Strings from databases and APIs often end with `Z` or a numeric offset. That suffix fixes when the moment occurred, while the new `DateTime` still uses the zone you asked for:
 
 ```js
-import { configure } from 'native-dates';
+import { datetime } from 'native-dates';
 
-configure({ zone: 'Europe/Berlin' });
+const created = datetime('2026-03-07T14:00:00Z', 'America/New_York');
+const berlin = datetime('2026-03-07T16:00:00+02:00', 'Europe/Berlin');
+
+created.zone; // 'America/New_York'
+created.hour; // 9
+berlin.hour; // 15
 ```
 
-## Daylight saving
+Keeping the real IANA zone matters as soon as you add days or months across a daylight change.
 
-Adding days keeps the wall clock. Adding hours counts hours. On the night New York’s clocks spring forward, the two differ.
+A fixed offset never shifts with the seasons, whereas an IANA zone knows every local transition rule.
 
-```js {4,5}
+:::note[Working in UTC]
+Pass `'UTC'` as the zone when you want properties and calendar math evaluated in UTC. Serialization methods like `toString()` always write UTC strings regardless of the viewing zone. See [Storing and sending](/guides/storing-and-sending/).
+:::
+
+## Daylight saving transitions
+
+Calendar units and clock units behave differently when clocks shift. On March 8, 2026, New York springs forward from 2:00 AM to 3:00 AM, making that Sunday 23 hours long.
+
+Adding 1 day keeps the 9:00 AM local appointment time. Adding 24 hours counts 24 elapsed hours instead:
+
+```js
 import { datetime } from 'native-dates';
 
 const saturday = datetime('2026-03-07T09:00', 'America/New_York');
+
 saturday.plus(1, 'day').text; // 'Mar 8, 2026, 9:00 AM EDT'
 saturday.plus(24, 'hours').text; // 'Mar 8, 2026, 10:00 AM EDT'
+saturday.plus(1, 'day').hoursInDay; // 23
 ```
 
-`hoursInDay` is `23`, `24` or `25`, so a day’s length is never assumed.
-
-:::warning[A time the clock skips]
-New York has no 2:30 AM on March 8, 2026: the clock goes from 2:00 to 3:00. Asking for it gives the moment an hour later, `3:30 AM EDT`.
+:::warning[Times skipped by spring-forward]
+When clocks jump from 2:00 AM to 3:00 AM, local times like 2:30 AM never happen in that zone. Asking for a skipped local time moves forward cleanly by the length of the gap instead of throwing.
 :::
 
-## Plan a meeting in three steps
+```js
+const skipped = datetime('2026-03-08T02:30', 'America/New_York');
+skipped.text; // 'Mar 8, 2026, 3:30 AM EDT'
+```
 
-:::steps
-1. **Start from the day**
+## City names and abbreviations
 
-   A meeting is on a calendar day, so start with a date. It has no clock and no zone to get wrong.
+Core accepts canonical IANA names, `'UTC'`, and fixed offsets. Import [`@native-dates/plugins/zones`](/plugins/zones/) when you also want to look up city names, common abbreviations, and custom aliases:
 
-   ```js
-   const day = date('2026-11-16');
-   ```
+```js
+import '@native-dates/plugins/zones';
+import { configure, datetime } from 'native-dates';
 
-2. **Give it a time and a place**
+datetime('2026-11-16T09:30', 'los angeles').zone; // 'America/Los_Angeles'
+datetime('2026-11-16T09:30', 'PT').zone; // 'America/Los_Angeles'
+datetime('2026-11-16T09:30', 'Berlin').zone; // 'Europe/Berlin'
 
-   `at()` takes the time and the zone it happens in, and returns the moment.
-
-   ```js
-   const standup = day.at('9:30am', 'America/Los_Angeles');
-   ```
-
-3. **Read it where each person is**
-
-   ```js
-   standup.in('Europe/Berlin').format('time'); // '6:30 PM'
-   standup.in('Asia/Tokyo').format('time'); // '2:30 AM'
-   ```
-:::
-
-:::tip[Cities and abbreviations]
-Import `@native-dates/plugins/zones` and a zone also answers to a city, `'Berlin'`, or an abbreviation, `'PT'`.
-:::
-
-## Next
-
-- [Installation](/guides/installation/): the package, the plugins and where it runs.
-- [`DateTime` reference](/api/date-time/): every property and method.
-- [A meeting across zones](/examples/meeting-planner/): this page as a running app.
+configure({ zoneAliases: { hq: 'Europe/Berlin' } });
+datetime('2026-11-16T09:30', 'hq').zone; // 'Europe/Berlin'
+```
