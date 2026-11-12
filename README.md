@@ -16,14 +16,20 @@ The library also makes it incredibly easy to ju-jitsu between `DateTime`, `Time`
 standup.in('Asia/Tokyo').as('time');
 ```
 
+### Browser Compatibility
+
+This library is compatible with latest Chrome, Internet Explorer, Firefox, and Safari Technical Preview.
+
+For those needing Safari support before Spring 2027 (when this lands in baseline) or for other reasons use the included polyfill in @native-dates/polyfill
+
 ## Packages
 
 | Package | Description |
 | --- | --- |
-| [native-dates](src) | The four nouns (`DateTime`, `CalendarDate`, `Time`, `Duration`), presets, comparisons and `configure()` |
-| [@native-dates/plugins](packages/plugins) | The plugins (`ranges`, `tokens`, `relative`, `zones`, `loose`, `legacy-date`), each installed by importing it |
-| [@native-dates/polyfill](packages/polyfill) | Loads `temporal-polyfill` only when `globalThis.Temporal` is absent |
-| [@native-dates/core](packages/core) | Native Dates under its scoped name, a thin re-export |
+| [native-dates](src) | The core date library |
+| [@native-dates/plugins](packages/plugins) | Plugins like (`ranges`, `tokens`, `relative`, `zones`, `loose`, `legacy-date`) |
+| [@native-dates/polyfill](packages/polyfill) | Required for Safari/iOS until Spring 2027.  `temporal-polyfill` only when `globalThis.Temporal` is absent |
+| [@native-dates/core](packages/core) | Alias of `native-dates` |
 
 ## License
 
