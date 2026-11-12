@@ -8,9 +8,11 @@ import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './help
 import {
   inspect,
   isDigits,
+  isInstant,
   isPlainDate,
   isPlainDateTime,
   isZonedDateTime,
+  namesInstant,
   plural,
   quarterStart,
   singularKeys,
@@ -28,9 +30,6 @@ import { Time } from './time.js';
   a calendar date with no time and no zone: a due date, a birthday, a booking night. it is not a
   moment, so it never shifts when read from another zone
 */
-
-const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;
-const hasOffset = /(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$/;
 
 export class CalendarDate {
   // brand calendar date
@@ -98,8 +97,12 @@ export class CalendarDate {
     if (input instanceof CalendarDate) {
       return input.toTemporal();
     }
-    if (input instanceof DateTime) {
-      return input.toTemporal().toPlainDate();
+    // a moment falls on a different day and clock in each zone, so it is read in the zone asked for
+    if (
+      input instanceof DateTime || isDate(input) || isZonedDateTime(input) || isInstant(input)
+      || (isString(input) && namesInstant(input))
+    ) {
+      return new DateTime(input, settings).toTemporal().toPlainDate();
     }
     if (isNumber(input)) {
       return refuseType('notADate', String(input), {
@@ -107,9 +110,6 @@ export class CalendarDate {
           ? 'a number alone is ambiguous. epoch milliseconds are a datetime, datetime(n).date, and a year needs its month and day, date(2026, 9, 6)'
           : 0,
       });
-    }
-    if (isDate(input)) {
-      return new DateTime(input, settings).toTemporal().toPlainDate();
     }
     if (isString(input)) {
       try {
@@ -126,7 +126,7 @@ export class CalendarDate {
         return zoned.toPlainDate();
       }
     }
-    if (isZonedDateTime(input) || isPlainDateTime(input)) {
+    if (isPlainDateTime(input)) {
       return input.toPlainDate();
     }
     if (isPlainObject(input)) {
@@ -143,19 +143,10 @@ export class CalendarDate {
     });
   }
 
-  // a wall-clock string keeps its day and drops the clock. a string carrying Z or an offset is an
-  // instant, and which day it falls on depends on the zone, so it is refused with the two ways to choose
+  // a wall-clock string keeps its day and drops the clock
   static #parse(text) {
-    const trimmed = text.trim();
-    if (hasTime.test(trimmed) && hasOffset.test(trimmed)) {
-      refuseType('notADate', text, {
-        explanation: isDevelopment
-          ? 'that string is an instant. datetime(text, zone).date chooses its day in a zone, and so does { loose: true, zone } with plugins/loose'
-          : 0,
-      });
-    }
     return guard(
-      () => Temporal.PlainDate.from(trimmed),
+      () => Temporal.PlainDate.from(text.trim()),
       'unreadableDate',
       text,
       isDevelopment ? "write ISO 8601: '2026-09-06'. plugins/loose adds { loose: true } for what Date reads" : 0,

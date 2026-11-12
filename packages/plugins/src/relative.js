@@ -31,9 +31,12 @@ const pickUnit = (seconds) => {
   return ['year', yearSeconds];
 };
 
+// Math.round sends a negative half toward zero, so the past rounds as the future does
+const roundAway = (value) => Math.sign(value) * Math.round(Math.abs(value));
+
 export const relativeSeconds = (seconds, locale) => {
   const [name, size] = pickUnit(seconds);
-  const value = Math.round(seconds / size);
+  const value = roundAway(seconds / size);
   return relativeTimeFormat(pickLocale(locale)).format(value, name);
 };
 
@@ -43,10 +46,10 @@ export const relativeDays = (days, locale) => {
   const [name, value] = size < 7
     ? ['day', days]
     : size < 26
-    ? ['week', Math.round(days / 7)]
+    ? ['week', roundAway(days / 7)]
     : size < 320
-    ? ['month', Math.round(days / 30.436875)]
-    : ['year', Math.round(days / 365.2425)];
+    ? ['month', roundAway(days / 30.436875)]
+    : ['year', roundAway(days / 365.2425)];
   return relativeTimeFormat(pickLocale(locale)).format(value, name);
 };
 

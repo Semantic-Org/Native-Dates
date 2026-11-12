@@ -7,11 +7,14 @@ import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
+  endPrecision,
   inspect,
   isDigits,
+  isInstant,
   isPlainDateTime,
   isPlainTime,
   isZonedDateTime,
+  namesInstant,
   singularKeys,
   stepOf,
   unit,
@@ -94,10 +97,11 @@ export class Time {
     if (input instanceof Time) {
       return input.toTemporal();
     }
-    if (input instanceof DateTime) {
-      return input.toTemporal().toPlainTime();
-    }
-    if (isDate(input)) {
+    // a moment falls on a different day and clock in each zone, so it is read in the zone asked for
+    if (
+      input instanceof DateTime || isDate(input) || isZonedDateTime(input) || isInstant(input)
+      || (isString(input) && namesInstant(input))
+    ) {
       return new DateTime(input, settings).toTemporal().toPlainTime();
     }
     if (isString(input)) {
@@ -115,7 +119,7 @@ export class Time {
         return zoned.toPlainTime();
       }
     }
-    if (isZonedDateTime(input) || isPlainDateTime(input)) {
+    if (isPlainDateTime(input)) {
       return input.toPlainTime();
     }
     if (isPlainObject(input)) {
@@ -232,7 +236,8 @@ export class Time {
   }
 
   endOf(name) {
-    return this.startOf(name).plus(stepOf(unit(name))).minus({ milliseconds: 1 });
+    const target = unit(name);
+    return this.startOf(target).plus(stepOf(target)).minus(endPrecision(target));
   }
 
   round(increment, name) {

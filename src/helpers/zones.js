@@ -63,13 +63,22 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases } = {
           : 0,
       });
     }
-    if (!isPlainObject(zoneAliases)) {
+    if (zoneAliases !== null && !isPlainObject(zoneAliases)) {
       refuse('unknownZone', String(zoneAliases), {
         explanation: isDevelopment ? "zoneAliases is an object of names to zones: { hq: 'Europe/Berlin' }" : 0,
       });
     }
-    for (const [name, target] of Object.entries(zoneAliases)) {
-      settings.zoneAliases[name] = zoneId(target);
+    // null clears every alias, and a null target clears that one name
+    if (zoneAliases === null) {
+      settings.zoneAliases = {};
+    }
+    for (const [name, target] of Object.entries(zoneAliases ?? {})) {
+      if (target == null) {
+        delete settings.zoneAliases[name];
+      }
+      else {
+        settings.zoneAliases[name] = zoneId(target);
+      }
     }
     resolved.clear();
     resolved.set('UTC', 'UTC');

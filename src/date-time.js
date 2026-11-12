@@ -6,6 +6,10 @@ import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
 import { IS_DATE_TIME } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
+  endPrecision,
+  hasOffset,
+  hasTime,
+  hasZoneName,
   inspect,
   isDigits,
   isInstant,
@@ -29,9 +33,6 @@ import { Time } from './time.js';
   the string fixes the instant only, it never becomes the zone: the offset a database prints is a
   view, and arithmetic across a DST boundary needs the real zone
 */
-
-const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;
-const hasOffset = /(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$/;
 
 export class DateTime {
   // brand datetime
@@ -131,7 +132,7 @@ export class DateTime {
     try {
       return guard(
         () => {
-          if (/\[[^\]]+\]$/.test(trimmed)) {
+          if (hasZoneName.test(trimmed)) {
             const zoned = Temporal.ZonedDateTime.from(trimmed);
             return zone === undefined ? zoned : zoned.withTimeZone(zoneId(zone));
           }
@@ -268,7 +269,8 @@ export class DateTime {
 
   // the last millisecond, the precision of Date and of now(). for a query bound prefer range(unit)
   endOf(name, firstDay) {
-    return this.startOf(name, firstDay).plus(stepOf(unit(name))).minus({ milliseconds: 1 });
+    const target = unit(name);
+    return this.startOf(target, firstDay).plus(stepOf(target)).minus(endPrecision(target));
   }
 
   round(increment, name) {
