@@ -27,7 +27,7 @@ export const SECTIONS = [
       {
         ...named('nav.group.time'),
         items: [
-          { title: 'The four nouns', slug: 'guides/four-nouns' },
+          { title: 'Types of time', slug: 'guides/types-of-time' },
           { title: 'Time zones', slug: 'guides/time-zones' },
           { title: 'Adding and subtracting', slug: 'guides/arithmetic' },
           { title: 'Durations', slug: 'guides/durations' },
