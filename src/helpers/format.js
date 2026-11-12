@@ -1,5 +1,5 @@
 import { refuse } from './errors.js';
-import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
+import { cached, plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
 import { isDevelopment, isPlainObject, isString } from './types.js';
 import { locale as pickLocale } from './zones.js';
 
@@ -99,13 +99,21 @@ const gregorianMonths = ['gregory', 'buddhist', 'japanese', 'roc'];
 // other months the part falls on different days each year, so a locale that keeps one prints the
 // Gregorian months instead, and such a calendar asked for by name has no formatter. the ISO
 // calendar's months are the Gregorian ones, but Intl has no names for them, so it prints as Gregorian
-export const partFormatter = (options, locale) => {
-  const format = formatter('date', options, locale);
+const partFormatterFor = (locale, options) => {
+  const format = plainDateTimeFormat(locale, options);
   const calendar = format.resolvedOptions().calendar;
   if (gregorianMonths.includes(calendar)) {
     return format;
   }
   return options.calendar === undefined || calendar === 'iso8601'
-    ? formatter('date', { ...options, calendar: 'gregory' }, locale)
+    ? plainDateTimeFormat(locale, { ...options, calendar: 'gregory' })
     : undefined;
+};
+
+// the choice is made once per locale and options, on first use, so a bundle that formats no such
+// part carries no cache for one
+let partFormatters;
+export const partFormatter = (options, locale) => {
+  partFormatters ??= cached(partFormatterFor);
+  return partFormatters(pickLocale(locale), options);
 };
