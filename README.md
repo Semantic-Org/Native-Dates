@@ -8,6 +8,8 @@
 - **Legibility** - Natural phrases (`'1h 30m'`, `today().plus(2, 'days').at('9am')`) and `Intl` presets
 - **Fully Tree Shakeable** -  ~7kb bt for core, everything arbitary is a plugin (day.js style)
 
+### Usage
+
 This library is fully built ontop of [Temporal](https://developer.mozilla.org/en-US/docs/Web/Javacript/Reference/Global_Objects/Temporal) and [Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) API so correctness is a standard-committees problem not a GitHub Issue. 
 
 The library also makes it incredibly easy to ju-jitsu between `DateTime`, `Time`, `Duration` etc by chaining 
