@@ -33,7 +33,7 @@ duration('1h 30m').plus(15, 'minutes').format('short');
 | Package | Description |
 | --- | --- |
 | [native-dates](src) | The four nouns (`DateTime`, `CalendarDate`, `Time`, `Duration`), presets, comparisons and `configure()` |
-| [@native-dates/plugins](packages/plugins) | The plugins (`ranges`, `tokens`, `relative`, `zones`, `loose`, `legacy-date`), each installed by importing it |
+| [@native-dates/plugins](packages/plugins) | The plugins (`ranges`, `month-day`, `tokens`, `relative`, `zones`, `loose`, `legacy-date`), each installed by importing it |
 | [@native-dates/polyfill](packages/polyfill) | Loads `temporal-polyfill` only when `globalThis.Temporal` is absent |
 | [@native-dates/core](packages/core) | Native Dates under its scoped name, a thin re-export |
 

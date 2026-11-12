@@ -14,7 +14,10 @@ export type MonthDayInput = MonthDay | MonthDayFields | CalendarDateInput;
 
 /** The options form of `monthDay()`'s second argument */
 export interface MonthDayOptions extends ReadOptions {
-  /** Read `'17/10'` day first, the order `dayMonth()` reads. The word decides it, never `configure()` */
+  /**
+   * Read `'17/10'` or `'17.10'` day first, the order `dayMonth()` reads. The word decides it, never
+   * `configure()`. A dash is ISO's and month first either way, so `'10-17'` from `toJSON()` reads back
+   */
   dayFirst?: boolean;
 }
 
@@ -50,7 +53,10 @@ export class MonthDay {
   isTomorrow(zone?: Zone): boolean;
   isYesterday(zone?: Zone): boolean;
 
-  /** A format that asks for a year, an era or a weekday refuses, since a month-day has none */
+  /**
+   * Prints in the Gregorian calendar, whatever the locale's own. A format that asks for more than a
+   * month and a day refuses: a year, a weekday, a clock, a zone or another calendar
+   */
   format(spec?: MonthDayFormat, locale?: Locale): string;
   /** ISO 8601, `'10-17'` */
   toString(): string;
@@ -68,7 +74,10 @@ export function monthDay(input: unknown, options: MonthDayOptions & { loose: tru
 export function monthDay(input: MonthDayInput, options?: Zone | MonthDayOptions): MonthDay;
 export function monthDay(month: number | string, day: number | string): MonthDay;
 
-/** The same value read day first, the order most of the world writes it: `dayMonth('17/10')` is `monthDay('10/17')` */
+/**
+ * The same value read day first across a slash or a dot, the order most of the world writes it:
+ * `dayMonth('17/10')` is `monthDay('10/17')`. A dash is ISO's, month first under both
+ */
 export function dayMonth(input: unknown, options: MonthDayOptions & { loose: true; }): MonthDay | null;
 export function dayMonth(input: MonthDayInput, options?: Zone | MonthDayOptions): MonthDay;
 export function dayMonth(day: number | string, month: number | string): MonthDay;
