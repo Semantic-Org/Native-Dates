@@ -45,7 +45,8 @@ export class MonthDay {
 
   /**
    * Against a date, whether that date is this month-day's occurrence in its year, so Feb 29 answers to
-   * Feb 28, 2027. Against another month-day, the same month and day
+   * Feb 28, 2027. Against another month-day, the same month and day. Text across a slash or a dot
+   * refuses, since it has an order only under `monthDay()` or `dayMonth()`: ISO `'10-17'` reads
    */
   equals(other: MonthDayInput): boolean;
   /** Today depends on where you stand, so these take the zone to judge from */
@@ -54,8 +55,9 @@ export class MonthDay {
   isYesterday(zone?: Zone): boolean;
 
   /**
-   * Prints in the Gregorian calendar, whatever the locale's own. A format that asks for more than a
-   * month and a day refuses: a year, a weekday, a clock, a zone or another calendar
+   * A format that asks for more than a month and a day refuses: a year, a weekday, a clock or a zone.
+   * A locale whose calendar keeps other months (Hebrew, Persian, Islamic) prints the Gregorian ones,
+   * and such a calendar asked for by name refuses, since the day moves there each year
    */
   format(spec?: MonthDayFormat, locale?: Locale): string;
   /** ISO 8601, `'10-17'` */
@@ -68,7 +70,9 @@ export class MonthDay {
 
 /**
  * Reads `'10-17'`, `'10/17'` or `'10.17'` month first, two numbers, a fields object, or anything a date
- * reads with its year dropped. A missing value refuses, `today().monthDay` reads the current one
+ * reads with its year dropped. A missing value refuses, `today().monthDay` reads the current one.
+ * With `{ loose: true }` it also reads a month by its English name and a day, `'Oct 17'` or
+ * `'17 October'`, and text with its year in it as `date()` reads it loosely
  */
 export function monthDay(input: unknown, options: MonthDayOptions & { loose: true; }): MonthDay | null;
 export function monthDay(input: MonthDayInput, options?: Zone | MonthDayOptions): MonthDay;

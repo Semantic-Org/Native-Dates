@@ -7,6 +7,7 @@ import { IS_CALENDAR_DATE } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
   inspect,
+  isCount,
   isDigits,
   isPlainDate,
   isPlainDateTime,
@@ -45,7 +46,7 @@ export class CalendarDate {
 
   // date(2026, 9, 6), date(input, zone), or date(input, { zone, loose })
   constructor(input, monthOrOptions, day) {
-    if (isDigits(input) && (isNumber(monthOrOptions) || isDigits(monthOrOptions))) {
+    if (isDigits(input) && isCount(monthOrOptions)) {
       [input, monthOrOptions, day] = [Number(input), Number(monthOrOptions), day === undefined ? day : Number(day)];
     }
     const settings = isPlainObject(monthOrOptions)

@@ -141,7 +141,31 @@ export const singularKeys = (fields) => {
   return out;
 };
 
+// the parts a fields object is allowed, as whole numbers. Temporal would truncate 11.7, read true as
+// 1 and drop a part it has no use for, so each of those is refused before it gets there
+export const wholeParts = (fields, names) => {
+  const parts = {};
+  for (const [name, value] of Object.entries(fields)) {
+    if (!names.includes(name)) {
+      throw new RangeError(`${name} is not a part here, only ${names.join(' and ')}`);
+    }
+    if (!isCount(value) || !Number.isInteger(Number(value))) {
+      throw new RangeError(`${name} is a whole number`);
+    }
+    parts[name] = Number(value);
+  }
+  return parts;
+};
+
 export const quarterStart = (month) => Math.floor((month - 1) / 3) * 3 + 1;
+
+// text that opens on a year, a month and a day is a date, whatever follows: '1990-10-17'
+export const opensOnDate = (value) => isString(value) && /^\s*[+-]?\d{4,6}-?\d{2}-?\d{2}/.test(value);
+
+// loose text that names its year: four digits standing alone, or the last of three numeric parts.
+// Date makes up a year for text without one, so only text that names its own is put to it whole
+export const namesYear = (value) =>
+  isString(value) && /(?<!\d)\d{4}(?!\d)|^\s*\d{1,2}[./-]\d{1,2}[./-]\d{2}(?!\d)/.test(value);
 
 // one whole unit as duration fields
 export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(name)]: 1 });

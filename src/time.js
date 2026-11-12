@@ -8,6 +8,7 @@ import { IS_TIME } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
   inspect,
+  isCount,
   isDigits,
   isPlainDateTime,
   isPlainTime,
@@ -35,7 +36,7 @@ export class Time {
 
   // time(9, 30), time(input, zone), or time(input, { zone, loose })
   constructor(input, minuteOrOptions, second) {
-    if (isDigits(input) && (isNumber(minuteOrOptions) || isDigits(minuteOrOptions))) {
+    if (isDigits(input) && isCount(minuteOrOptions)) {
       [input, minuteOrOptions, second] = [
         Number(input),
         Number(minuteOrOptions),
