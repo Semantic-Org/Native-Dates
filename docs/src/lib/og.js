@@ -32,7 +32,7 @@ const FONTS = [
 const C = { bg: '#000000', text: '#ececec', text2: '#b4b4b4', text3: '#7c7c7c', line: '#1a1a22', accent: '#b296ff' };
 const MARK = `data:image/svg+xml;utf8,${
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.1" stroke="#ececec" stroke-width="1.8"/><path d="M12 4.6v1.2M19.4 12h-1.2M12 19.4v-1.2M4.6 12h1.2" stroke="#ececec" stroke-width="1.3" stroke-linecap="round" opacity="0.6"/><path d="M12 12V6.5" stroke="#ececec" stroke-width="1.5" stroke-linecap="round" transform="rotate(60 12 12)"/><path d="M12 12V8.6" stroke="#b296ff" stroke-width="2.4" stroke-linecap="round" transform="rotate(305 12 12)"/></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.1" stroke="#b296ff" stroke-width="1.8"/><path d="M12 4.6v1.2M19.4 12h-1.2M12 19.4v-1.2M4.6 12h1.2" stroke="#b296ff" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/><path d="M12 12V6.5" stroke="#ececec" stroke-width="1.5" stroke-linecap="round" transform="rotate(60 12 12)"/><path d="M12 12V8.6" stroke="#ececec" stroke-width="2.4" stroke-linecap="round" transform="rotate(305 12 12)"/></svg>',
   )
 }`;
 

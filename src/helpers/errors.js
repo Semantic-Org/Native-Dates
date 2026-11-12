@@ -28,6 +28,17 @@ export const guard = (attempt, code, at, explanation) => {
   }
 };
 
+// value.as('date') is the call spelling of crossing to another kind, so a chain never stops at a
+// property. each noun lists the kinds it can be read as, and any other kind is refused
+export const readAs = (kind, readings) => {
+  if (!Object.hasOwn(readings, kind)) {
+    refuse('unknownKind', String(kind), {
+      explanation: isDevelopment ? `this value reads as ${Object.keys(readings).join(' or ')}` : 0,
+    });
+  }
+  return readings[kind]();
+};
+
 // { loose: true } gives null for input that cannot be read, and only for that. a bad zone is a
 // mistake in the code, not in the data, and still throws. a bad unit is data when it sits inside a
 // duration string and code when it names a method's unit, so only the duration door forgives it
@@ -86,22 +97,4 @@ export const loosely = (build, codes = point) => {
     }
     throw error;
   }
-};
-
-// plugins/year-month reads date(2026, 11), a year and a month with no day
-let yearMonthReader = null;
-
-export const setYearMonthExtension = (reader) => {
-  yearMonthReader = reader;
-};
-
-export const readYearMonth = (year, month) => {
-  if (!yearMonthReader) {
-    refuse('missingPlugin', `date(${year}, ${month})`, {
-      explanation: isDevelopment
-        ? "a date needs its day: date(2026, 11, 16). a year and a month alone are a yearMonth. import '@native-dates/plugins/year-month' to read one"
-        : 0,
-    });
-  }
-  return yearMonthReader(year, month);
 };

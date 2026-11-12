@@ -8,6 +8,7 @@ import {
   IS_DATE_TIME,
   IS_DATE_TIME_RANGE,
   IS_DURATION,
+  IS_MONTH_DAY,
   IS_RANGE,
   IS_TIME,
   IS_TIME_RANGE,
@@ -22,7 +23,8 @@ const looksLikeDateTime = /[T ]\d|[zZ]$|\[[^\]]+\]$/;
 // a string reads by its shape: a clock is a time, anything carrying a time or zone is a datetime, the
 // rest is a date. every other input already knows what it is
 export const point = (input) => {
-  if (input?.[IS_DATE_TIME] || input?.[IS_CALENDAR_DATE] || input?.[IS_TIME]) {
+  // a year-month has an order too, so earliest() and latest() pick among them
+  if (input?.[IS_DATE_TIME] || input?.[IS_CALENDAR_DATE] || input?.[IS_TIME] || input?.[IS_YEAR_MONTH]) {
     return input;
   }
   if (isString(input)) {
@@ -61,6 +63,9 @@ export const kindOf = (value) => {
   }
   if (value?.[IS_DURATION]) {
     return 'duration';
+  }
+  if (value?.[IS_MONTH_DAY]) {
+    return 'monthDay';
   }
   if (value?.[IS_DATE_RANGE]) {
     return 'dateRange';

@@ -11,7 +11,7 @@ import {
   IS_TIME_RANGE,
   Time,
 } from 'native-dates';
-import { isUnreadable, loosely, refuse, refuseType, unreadable } from 'native-dates/helpers/errors';
+import { isUnreadable, loosely, readAs, refuse, refuseType, unreadable } from 'native-dates/helpers/errors';
 import { isDurationFields } from 'native-dates/helpers/fields';
 import { epochOf, formatter, intlOptions } from 'native-dates/helpers/format';
 import { isDevelopment, isNumber, isPlainObject, isString } from 'native-dates/helpers/types';
@@ -188,6 +188,10 @@ class Range {
 
   #wraps() {
     return this.kind === 'time' && this.end.isBefore(this.start);
+  }
+
+  as(kind) {
+    return readAs(kind, { duration: () => this.duration });
   }
 
   /*******************************

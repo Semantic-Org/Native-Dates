@@ -7,8 +7,9 @@
 // only works with the plugin imported
 
 export const PLUGINS = [
-  { name: 'year-month', category: 'dates', uses: ['date'], line: 'const period = date(2026, 11);' },
+  { name: 'year-month', category: 'dates', uses: ['today'], line: 'const period = today().yearMonth;' },
   { name: 'ranges', category: 'spans', uses: ['today'], line: "const sprint = today().to(2, 'weeks');" },
+  { name: 'month-day', category: 'dates', uses: ['date', 'today'], line: "today().next(date('1990-10-17').monthDay);" },
   { name: 'tokens', category: 'formatting', uses: ['today'], line: "today().format('YYYY-MM-DD');" },
   { name: 'relative', category: 'formatting', uses: ['now'], line: "now().minus(3, 'hours').formatRelative();" },
   { name: 'zones', category: 'zones', uses: ['now'], line: "now().in('Berlin');" },
@@ -16,14 +17,8 @@ export const PLUGINS = [
   { name: 'legacy-date', category: 'migration', uses: ['now'], line: 'now().getFullYear();' },
 ];
 
-// a sketch: the package ships no presets yet. each is native-dates with a set of plugins already
-// imported, under the scope as @native-dates/core is native-dates with none. the names, the sets and
-// the import are guesses, kept here so the real ones replace them in one place
-export const PRESETS = [
-  { name: 'full', plugins: PLUGINS.map((p) => p.name) },
-  { name: 'scheduling', plugins: ['ranges', 'zones'] },
-  { name: 'compat', plugins: ['tokens', 'relative', 'loose', 'legacy-date'] },
-];
+// a sketch: the package ships no presets yet. populate PRESETS once preset packages publish
+export const PRESETS = [];
 
 // the preset that is exactly these plugins
 export const presetFor = (names) =>

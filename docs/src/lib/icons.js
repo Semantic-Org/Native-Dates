@@ -10,8 +10,9 @@ export const ICON = {
   menu:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
 };
-// the mark: a watch face. the quarter marks make it a clock at any hour, and the hands differ in
-// length, weight and color, so two that overlap or line up still read as two. drawn at ten past
-// ten, where every watch in an ad is set, and turned to the reader's own time (scripts/mark-clock.js)
+// the mark: a watch face, the face in the accent and the hands in the text color. the quarter
+// marks make it a clock at any hour, and the hands differ in length and weight, so two that
+// overlap or line up still read as two. drawn at ten past ten, where every watch in an ad is
+// set, and turned to the reader's own time (scripts/mark-clock.js)
 export const MARK =
-  '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.1" stroke="var(--text)" stroke-width="1.8"/><path d="M12 4.6v1.2M19.4 12h-1.2M12 19.4v-1.2M4.6 12h1.2" stroke="var(--text)" stroke-width="1.3" stroke-linecap="round" opacity="0.6"/><path class="mark-hand" data-hand="minute" d="M12 12V6.5" stroke="var(--text)" stroke-width="1.5" stroke-linecap="round" style="rotate: 60deg"/><path class="mark-hand" data-hand="hour" d="M12 12V8.6" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" style="rotate: 305deg"/></svg>';
+  '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.1" stroke="var(--accent)" stroke-width="1.8"/><path d="M12 4.6v1.2M19.4 12h-1.2M12 19.4v-1.2M4.6 12h1.2" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/><path class="mark-hand" data-hand="minute" d="M12 12V6.5" stroke="var(--text)" stroke-width="1.5" stroke-linecap="round" style="rotate: 60deg"/><path class="mark-hand" data-hand="hour" d="M12 12V8.6" stroke="var(--text)" stroke-width="2.4" stroke-linecap="round" style="rotate: 305deg"/></svg>';

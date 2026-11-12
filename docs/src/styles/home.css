@@ -51,6 +51,12 @@
   margin-top: 0; max-width: 58ch;
   font-size: var(--fs-lg); line-height: var(--lh-lg); color: var(--text-2);
 }
+.lede a, .ribbon-head p a {
+  color: var(--text); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 4px;
+}
+.lede a:hover, .ribbon-head p a:hover {
+  color: var(--accent); text-decoration-color: var(--accent);
+}
 
 
 .install { margin-top: 0; display: inline-flex; flex-direction: column; gap: 0; }
@@ -75,22 +81,7 @@
 .ribbon { padding: var(--section-y) 0; border-top: 1px solid var(--line); }
 .ribbon h2 { font-size: var(--heading); line-height: var(--heading-lh); letter-spacing: var(--heading-track); font-weight: 620; }
 .ribbon-head { max-width: 640px; margin-bottom: 48px; }
-.ribbon-head p, .ribbon-copy > p { margin-top: 16px; font-size: var(--fs-lg); line-height: var(--lh-lg); color: var(--text-2); }
-
-.ribbon-split { display: grid; grid-template-columns: 5fr 7fr; gap: 72px; align-items: start; }
-.ribbon-split.reverse { grid-template-columns: 5fr 7fr; }
-.ribbon-split > * { min-width: 0; }
-.ribbon-copy { position: sticky; top: 100px; }
-
-
-.ribbon-copy .code { margin-top: 28px; }
-
-.facts { list-style: none; margin: 28px 0 0; padding: 0; border-top: 1px solid var(--line); }
-.facts li { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); line-height: var(--lh-sm); color: var(--text-2); }
-/* each fact leads with its name on a line of its own, then the sentence */
-.facts strong { display: block; margin-bottom: 2px; color: var(--text); font-weight: 600; }
-/* a fact's own line of code, shown where the code block is out of reach below (scripts/xray.js) */
-.facts .fact-line { display: none; }
+.ribbon-head p { margin-top: 16px; font-size: var(--fs-lg); line-height: var(--lh-lg); color: var(--text-2); }
 
 .text-link {
   display: inline-flex; margin-top: 24px;
@@ -144,7 +135,11 @@
   display: grid; grid-template-columns: max-content repeat(4, max-content); justify-content: start;
   column-gap: 28px; padding: 40px 32px 32px; overflow-x: auto;
 }
-.say-grid[hidden] { display: none; }
+/* the sentences share one cell, so the figure keeps the tallest one's height whichever is shown
+   (a call that wraps on a phone, a value that wraps anywhere). the others keep their box, unseen */
+.say-panels { display: grid; }
+.say-panels > .say-grid { grid-area: 1 / 1; min-width: 0; }
+.say-grid[hidden] { display: grid; visibility: hidden; }
 .say-label {
   grid-column: 1; grid-row: var(--row); align-self: start; padding-inline-end: 12px;
   color: var(--text-4); font-size: var(--fs-xs); line-height: 28px;
@@ -154,7 +149,7 @@
 .say-cell { grid-column: calc(var(--col) + 2); grid-row: var(--row); min-width: 116px; }
 /* a sentence writes itself as it is shown: each thought steps in after the one before, its words,
    then its call, then what it is */
-.say-cell { animation: say-in 0.5s var(--ease) both; animation-delay: calc(0.25s + var(--col) * 0.3s + var(--row) * 0.08s); }
+.say-grid:not([hidden]) .say-cell { animation: say-in 0.5s var(--ease) both; animation-delay: calc(0.25s + var(--col) * 0.3s + var(--row) * 0.08s); }
 @keyframes say-in {
   from { opacity: 0; translate: 0 8px; }
 }
@@ -172,28 +167,101 @@
   font-size: var(--fs-lg); line-height: var(--lh-lg);
 }
 .say-code:has([data-option='1']) { cursor: pointer; }
-.say-value { min-height: 72px; padding-block: 12px 0; padding-inline: 8px; margin-inline: -8px; border-top: 1px solid var(--line-2); border-radius: 0 0 var(--r-2) var(--r-2); max-width: max(116px, 100%); }
+/* a value keeps room for two lines under its noun, so a long one (a date written out in full)
+   wraps without the figure growing: the rule, the padding, the noun, the gap, two lines of text */
+.say-value { min-height: calc(1px + 12px + var(--lh-3xs) + 2px + 2 * var(--lh-sm)); padding-block: 12px 0; padding-inline: 8px; margin-inline: -8px; border-top: 1px solid var(--line-2); border-radius: 0 0 var(--r-2) var(--r-2); max-width: max(116px, 100%); }
 .say-noun { display: block; color: var(--c-green); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); }
 .say-text { display: block; margin-top: 2px; color: var(--text); font-size: var(--fs-sm); line-height: var(--lh-sm); text-wrap: balance; }
-.say-caption { padding: 14px 24px; border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
 
-/* ---------- two consoles: Date and native-dates, asked the same questions ---------- */
+/* ---------- the primitives Temporal ships, and the call for each ----------
+   a plain list: what it is, the call, and the Temporal type underneath. the switch turns every
+   call to its Temporal spelling, and each row keeps the width of the longer one */
 
-.consoles { border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); overflow: hidden; }
-.console-heads, .console-row { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 5fr) minmax(0, 5fr); }
-.console-heads { background: var(--surface-2); border-bottom: 1px solid var(--line); }
-.console-head { padding: 11px 20px; border-inline-start: 1px solid var(--line); color: var(--text-3); font: 400 var(--fs-xs)/var(--lh-xs) var(--font-mono); }
-.console-head b { margin-inline-end: 8px; color: var(--text); font-weight: 400; }
-.console-row + .console-row { border-top: 1px solid var(--line); }
-.console-ask { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 14px; align-content: start; padding: 24px; }
+.prims { border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); overflow: hidden; }
+.prims-head { display: flex; align-items: center; height: 44px; padding-inline: 8px; border-bottom: 1px solid var(--line); background: var(--code-head); }
+.prims-list { margin: 0; padding: 0; list-style: none; }
+.prim { display: flex; align-items: center; gap: 24px; min-height: 60px; padding: 14px 24px; }
+.prim + .prim { border-top: 1px solid var(--line); }
+.prim-what { flex: none; width: 24%; color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); font-weight: 550; }
+.prim-code { flex: 1; justify-items: start; align-items: center; }
+/* the calls are set as code, not as chips: a line each, like a listing */
+.prim-code code, .prim-type {
+  padding: 0; margin: 0; border-radius: 0; background: none; box-shadow: none; white-space: nowrap;
+}
+.prim-code code { color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); }
+/* on Temporal and before it the calls are longer: they are set a size down, whichever is showing,
+   so a row is as tall in one mode as in another */
+.prim-code :is([data-prim='temporal'], [data-prim='legacy']) { font-size: var(--fs-xs); line-height: var(--lh-xs); white-space: pre; }
+.prim-built { flex: none; display: flex; align-items: center; gap: 10px; }
+.prim-type { color: var(--text-3); font-size: var(--fs-2xs); line-height: var(--lh-2xs); }
+/* the label beside a call is the Temporal type under it, or what held it before. a call on
+   Temporal names its own type, so there the label is spare: it keeps its place, unseen */
+.prim-built .swap { justify-items: end; }
+.prim-plugin {
+  padding: 1px 8px; border: 1px solid var(--line-2); border-radius: 999px;
+  color: var(--text-2); font: 500 var(--fs-3xs)/var(--lh-3xs) var(--font-sans); text-decoration: none; white-space: nowrap;
+}
+/* a plugin's tag sits before the label, so every row's label ends on the same edge whether the
+   tag is showing or not */
+.prim-plugin { order: -1; }
+.prim-plugin:hover { color: var(--accent-strong); border-color: var(--accent-line); }
+/* the plugin is what the native-dates call needs: beside the other spellings its tag keeps its place, unseen */
+.prims:not([data-mode='ours']) .prim-plugin { visibility: hidden; }
+
+/* the ribbon's heading runs as any heading does, with two marks drawn on it by hand: a scribble
+   through "wrong", and two lines under "right". each mark is a box laid over its word and stretched
+   to it, so it fits whatever word a language puts there */
+.verdict em { position: relative; font-style: normal; white-space: nowrap; }
+.doodle { position: absolute; overflow: visible; pointer-events: none; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.doodle-scribble { inset-inline-start: -4%; top: 14%; width: 108%; height: 78%; stroke: var(--danger); stroke-width: 3.6; }
+.doodle-underline { inset-inline-start: -3%; top: 90%; width: 106%; height: 0.36em; stroke: var(--tip); stroke-width: 3.2; }
+/* drawn by hand: a line runs out along its own length. will-draw holds them back until the heading
+   is in view, then is-drawn lets them go in turn (scripts/home/verdict.js) */
+/* the paths are named by their element alone: chrome doesn't restyle a path picked out by its
+   pathLength attribute when a class changes above it, so the marks would sometimes not hold back */
+.doodle path { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.verdict.will-draw .doodle path { stroke-dashoffset: 1; }
+.verdict.is-drawn .doodle-scribble path { stroke-dashoffset: 0; transition: stroke-dashoffset 0.6s cubic-bezier(0.45, 0, 0.25, 1) 0.1s; }
+.verdict.is-drawn .doodle-underline path { stroke-dashoffset: 0; transition: stroke-dashoffset 0.32s cubic-bezier(0.45, 0, 0.25, 1) 0.8s; }
+.verdict.is-drawn .doodle-underline path + path { transition-delay: 1.1s; transition-duration: 0.26s; }
+
+/* ---------- one question at a time, asked of Date and of native-dates ----------
+   the questions down one side, and beside them the two consoles' answers to the one picked, with
+   the reason under both. every question's answers share one cell, so the frame keeps the size of
+   the longest whichever is showing */
+
+.ask {
+  display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 10fr);
+  border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); overflow: hidden;
+}
+.ask-list { display: grid; grid-auto-rows: 1fr; border-inline-end: 1px solid var(--line); }
+.ask-tab {
+  position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; column-gap: 14px;
+  padding: 18px 20px; border: 0; background: none; cursor: pointer; text-align: start;
+  color: var(--text-2); font: 550 var(--fs-md)/var(--lh-md) var(--font-sans);
+  /* a question is a sentence: it wraps, where a button's label otherwise never does */
+  text-wrap: pretty;
+}
+.ask-tab + .ask-tab { border-top: 1px solid var(--line); }
+.ask-tab:hover { color: var(--text); background: var(--surface-2); }
+.ask-tab:focus-visible { outline-offset: -2px; }
+/* the question being asked: lit, with the accent down its leading edge */
+.ask-tab[aria-selected='true'] { color: var(--text); background: var(--surface-2); }
+.ask-tab[aria-selected='true']::before { content: ''; position: absolute; inset-block: 0; inset-inline-start: 0; width: 2px; background: var(--accent); }
+.ask-tab[aria-selected='true'] .console-number { background: var(--accent-wash); box-shadow: inset 0 0 0 1px var(--accent-line); color: var(--accent-strong); }
 .console-number {
   display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
   background: var(--bevel), var(--surface-3); box-shadow: inset 0 0 0 1px var(--line-2);
   color: var(--text); font: 400 var(--fs-2xs)/1 var(--font-mono);
 }
-.console-ask h3 { align-self: center; font-size: var(--fs-md); line-height: var(--lh-md); font-weight: 600; }
-.console-ask p { grid-column: 2; margin-top: 8px; color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-sm); }
-.console { min-width: 0; padding: 24px 20px; border-inline-start: 1px solid var(--line); background: var(--code-bg); }
+.ask-answers { min-width: 0; }
+.ask-panel, .ask-answers > .ask-panel[hidden] { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; }
+.ask-consoles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* a console keeps a band clear under its answer, where the stamp lands */
+.console { position: relative; min-width: 0; padding: 20px 20px 72px; background: var(--code-bg); }
+.console + .console { border-inline-start: 1px solid var(--line); }
+.console-head { margin-bottom: 14px; color: var(--text-3); font: 400 var(--fs-xs)/var(--lh-xs) var(--font-mono); }
+.console-head b { margin-inline-end: 8px; color: var(--text); font-weight: 400; }
 .console-in, .console-out {
   position: relative; margin: 0; padding-inline-start: 20px;
   font: 400 var(--code-sm-fs)/var(--code-sm-lh) var(--font-mono); font-variant-ligatures: none; font-feature-settings: 'liga' 0, 'calt' 0;
@@ -211,11 +279,40 @@
   background: color-mix(in oklab, var(--danger) 14%, transparent); color: var(--danger);
   font: 500 var(--fs-3xs)/var(--lh-3xs) var(--font-sans); white-space: nowrap;
 }
-/* a row steps in as it is reached: the question, then Date's answer, then Temporal's */
-.console-row > * { transition: opacity 0.5s var(--ease), translate 0.5s var(--ease); }
-.console-row > .is-date { transition-delay: 0.25s; }
-.console-row > .is-native { transition-delay: 0.7s; }
-.console-row.is-waiting > * { opacity: 0; translate: 0 10px; }
+/* the reason reads as prose, so its lines stop at a reading measure while its rule runs the full width */
+.ask-why {
+  padding-block: 16px; padding-inline: 20px max(20px, calc(100% - 20px - 68ch));
+  border-top: 1px solid var(--line); color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-sm);
+}
+.ask-why strong { margin-inline-end: 4px; color: var(--text); font-weight: 600; }
+/* the verdict, stamped: a boxed word in ink, set a little askew. the ink is worn and ragged by the
+   filter the component carries (#stamp-ink), and a second line runs inside the box as on a real stamp */
+.stamp-ink { position: absolute; }
+.stamp {
+  position: absolute; inset-inline-end: 22px; bottom: 16px; rotate: -8deg;
+  padding: 7px 14px 6px; border: 3px solid currentColor; border-radius: 8px;
+  outline: 1px solid currentColor; outline-offset: -7px;
+  color: var(--danger); opacity: 0.9; filter: url(#stamp-ink);
+  font: 800 var(--fs-xl)/1 var(--font-sans); letter-spacing: 3px; text-transform: uppercase; white-space: nowrap;
+  pointer-events: none; user-select: none;
+}
+.stamp.is-right { color: var(--tip); rotate: 5deg; }
+/* asking: both answers are held back together, then return together. a stamp comes down on each, the
+   wrong one first, and the reason follows the stamps */
+.console-out, .ask-why { transition: opacity 0.3s var(--ease), translate 0.3s var(--ease); }
+.is-stamped .ask-why { transition-delay: 1s; }
+.is-asking .console-out, .is-asking .ask-why { opacity: 0; translate: 0 4px; transition: none; }
+.is-asking .stamp { opacity: 0; }
+.is-stamped .stamp { animation: stamp-down 0.4s both 0.35s; }
+.is-stamped .stamp.is-right { animation-delay: 0.62s; }
+/* down hard from above the page, pressed a touch past flat, then let up: the fall speeds up into
+   the paper and the release eases off */
+@keyframes stamp-down {
+  0% { opacity: 0; scale: 2.6; animation-timing-function: cubic-bezier(0.7, 0, 0.95, 0.5); }
+  52% { opacity: 1; scale: 0.92; animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+  76% { opacity: 1; scale: 1.03; }
+  100% { opacity: 0.9; scale: 1; }
+}
 
 /* ---------- a year of one standup, read on another city's clock ---------- */
 
@@ -307,6 +404,17 @@
   .say-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-height: 0; max-width: none; margin-bottom: 20px; padding-block: 10px 0; }
   .say-text { margin-top: 0; }
 }
+/* a row no longer fits on one line (the span's legacy spelling is the first to run out of room): what
+   it is and its type share a line, the call takes the next */
+@media (max-width: 1240px) {
+  .prim { flex-wrap: wrap; align-items: flex-start; gap: 6px 16px; }
+  .prim-what { flex: 1; width: auto; }
+  /* the label and a plugin's tag stack at the row's far corner, so both stay beside what it is */
+  .prim-built { flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 3px; }
+  .prim-plugin { order: 0; }
+  .prim-code { order: 1; flex: none; width: 100%; }
+  .prim-code code, .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { white-space: pre-wrap; overflow-wrap: anywhere; }
+}
 @media (max-width: 900px) {
   .topnav, .version, .version-menu { display: none; }
   /* the topnav folds into a menu under the topbar */
@@ -323,27 +431,22 @@
   }
   .home-menu a:hover { color: var(--text); background: var(--surface-2); }
   .topbar .search-trigger { min-width: 0; }
-  .ribbon-split, .ribbon-split.reverse { grid-template-columns: 1fr; }
-  .facts .fact-line {
-    display: block; margin-top: 10px; padding: 8px 12px;
-    border: 0; border-inline-start: 2px solid var(--accent); border-radius: 0 var(--r-2) var(--r-2) 0;
-    background: var(--accent-wash); box-shadow: none; color: var(--text);
-    font: 400 var(--code-sm-fs)/20px var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere;
-    /* the font shorthand turns ligatures back on, and => must stay two characters */
-    font-variant-ligatures: none; font-feature-settings: 'liga' 0, 'calt' 0;
-  }
-  .ribbon-copy { position: static; }
-  /* a question, then each console under its own name */
-  .console-heads { display: none; }
-  .console-row { grid-template-columns: minmax(0, 1fr); }
-  .console { padding: 16px 20px; border-inline-start: 0; border-top: 1px solid var(--line); }
-  .console::before { content: attr(data-name); display: block; margin-bottom: 8px; color: var(--text-3); font: 400 var(--fs-2xs)/var(--lh-2xs) var(--font-mono); }
-  .console-ask { padding: 20px; }
+  /* the questions sit above their answers, and the two consoles stack */
+  .ask { grid-template-columns: minmax(0, 1fr); }
+  .ask-list { border-inline-end: 0; border-bottom: 1px solid var(--line); }
+  .ask-tab { padding: 14px 16px; font-size: var(--fs-sm); line-height: var(--lh-sm); }
+  .ask-consoles { grid-template-columns: minmax(0, 1fr); }
+  .console { padding: 16px 16px 76px; }
+  .console + .console { border-inline-start: 0; border-top: 1px solid var(--line); }
+  .ask-why { padding-block: 14px; padding-inline: 16px max(16px, calc(100% - 16px - 68ch)); }
   .bytes-plugins { grid-template-columns: minmax(0, 1fr); }
   .bytes-presets { margin-inline-start: 0; flex-basis: 100%; }
 }
 @media (max-width: 600px) {
   .topbar-inner { gap: 12px; }
+  .prim { padding: 14px 16px; }
+  .prim-code code { font-size: var(--fs-sm); line-height: var(--lh-sm); }
+  .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { font-size: var(--fs-2xs); line-height: var(--lh-2xs); }
   .topbar .search-trigger { width: 34px; padding: 0; justify-content: center; }
   .topbar .search-trigger .keys { display: none; }
   .topbar .search-trigger .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -362,7 +465,6 @@
   .say-where { display: none; }
   .say-tab { padding: 0 9px; font-size: var(--fs-xs); }
   .say-grid { padding: 20px 16px 4px; }
-  .say-caption { padding: 12px 16px; }
   .year { padding: 20px 16px 16px; }
   .year-clocks { gap: 8px; }
   .year-time { font-size: var(--fs-2xl); line-height: var(--lh-2xl); letter-spacing: -1px; }
@@ -374,8 +476,9 @@
   .footer-cols { gap: 40px; flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .console-row > *, .bytes-added, .year-time, .year-gap span { transition: none; }
-  .say-cell { animation: none; }
+  .console-out, .ask-why, .bytes-added, .year-time, .year-gap span { transition: none; }
+  .stamp { animation: none; }
+  .say-grid:not([hidden]) .say-cell { animation: none; }
 }
 
 /* ---------- try it: a live app ---------- */
@@ -385,10 +488,17 @@
 @media (max-width: 900px) { .ribbon-try .pg { height: auto; } }
 
 
-/* ---------- x-ray: the same dates in native-dates, and on Temporal alone ----------
-   native turns the panel to film: a cool tint and faint scan lines behind highlighted code */
+/* ---------- x-ray: the same dates in native-dates, on Temporal alone, and on Date ----------
+   four samples, a panel each under its heading, two across while a panel that wide holds the
+   longest line of native-dates. switched off native-dates, a panel turns to film: a cool tint and
+   faint scan lines behind its code */
+.xrays { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 600px), 1fr)); gap: 32px 16px; align-items: start; }
+.xrays > * { min-width: 0; }
+.xrays h3 { margin: 0 0 12px; color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); font-weight: 600; }
 .xr { --film: oklch(0.13 0.025 240); --film-line: oklch(1 0 0 / 0.025); transition: background-color 0.4s var(--ease); }
 :root[data-theme='light'] .xr { --film: oklch(0.95 0.02 240); --film-line: oklch(0 0 0 / 0.03); }
+/* half the width a code block has elsewhere, so the code is set a size down */
+.xr pre { font-size: var(--code-sm-fs); line-height: var(--code-sm-lh); }
 .xr-switch { display: flex; gap: 2px; }
 .xr-switch button {
   height: 30px; padding: 0 12px; border: 0; border-radius: var(--r-2); background: none; cursor: pointer;
@@ -406,14 +516,6 @@
     repeating-linear-gradient(to bottom, var(--film-line) 0 1px, transparent 1px 3px);
 }
 .xr.is-native .code-head { background: transparent; }
-/* a fact pointed at: its line stays lit, the other highlights step back */
-.xr pre.has-lit .line-hl:not(.is-lit) { background: transparent; border-inline-start-color: transparent; }
-.xr pre .line-hl { transition: background-color 0.2s var(--ease), border-color 0.2s var(--ease); }
-.facts li[data-line] { cursor: default; transition: opacity 0.2s var(--ease); }
-/* pointing at a fact quiets the others, as the code quiets its other highlighted lines */
-.facts:has(li.is-lit) li:not(.is-lit) { opacity: 0.4; }
-.xr-note { margin: 0; padding: 12px 20px; border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
-.xr-note[hidden] { display: none; }
 /* the scan: one pass down the panel as it turns */
 .xr-body::after {
   content: ''; position: absolute; inset-inline-start: 0; inset-inline-end: 0; top: 0; height: 96px; pointer-events: none; opacity: 0;
@@ -426,5 +528,12 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .xr, .xr.is-scanning .xr-body::after { transition: none; animation: none; }
+}
+@media (max-width: 600px) {
+  /* the three names fill a phone's panel head, so the count gives way */
+  .xr-count { display: none; }
+  .xr .code-head .copy { margin-inline-start: auto; }
+  /* a single line is read whole, not scrolled to */
+  .xr pre.is-line { white-space: pre-wrap; overflow-wrap: anywhere; }
 }
 

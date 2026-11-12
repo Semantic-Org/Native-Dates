@@ -1,17 +1,21 @@
 import { CalendarDate } from './calendar-date.js';
 import { DateTime } from './date-time.js';
 import { anchored } from './duration.js';
-import { guard, loosely, parseLoose, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
+  endPrecision,
   inspect,
+  isCount,
   isDigits,
+  isInstant,
   isPlainDateTime,
   isPlainTime,
   isZonedDateTime,
+  namesInstant,
   singularKeys,
   stepOf,
   unit,
@@ -35,7 +39,7 @@ export class Time {
 
   // time(9, 30), time(input, zone), or time(input, { zone, loose })
   constructor(input, minuteOrOptions, second) {
-    if (isDigits(input) && (isNumber(minuteOrOptions) || isDigits(minuteOrOptions))) {
+    if (isDigits(input) && isCount(minuteOrOptions)) {
       [input, minuteOrOptions, second] = [
         Number(input),
         Number(minuteOrOptions),
@@ -94,10 +98,11 @@ export class Time {
     if (input instanceof Time) {
       return input.toTemporal();
     }
-    if (input instanceof DateTime) {
-      return input.toTemporal().toPlainTime();
-    }
-    if (isDate(input)) {
+    // a moment falls on a different day and clock in each zone, so it is read in the zone asked for
+    if (
+      input instanceof DateTime || isDate(input) || isZonedDateTime(input) || isInstant(input)
+      || (isString(input) && namesInstant(input))
+    ) {
       return new DateTime(input, settings).toTemporal().toPlainTime();
     }
     if (isString(input)) {
@@ -115,7 +120,7 @@ export class Time {
         return zoned.toPlainTime();
       }
     }
-    if (isZonedDateTime(input) || isPlainDateTime(input)) {
+    if (isPlainDateTime(input)) {
       return input.toPlainTime();
     }
     if (isPlainObject(input)) {
@@ -232,7 +237,8 @@ export class Time {
   }
 
   endOf(name) {
-    return this.startOf(name).plus(stepOf(unit(name))).minus({ milliseconds: 1 });
+    const target = unit(name);
+    return this.startOf(target).plus(stepOf(target)).minus(endPrecision(target));
   }
 
   round(increment, name) {
@@ -301,6 +307,10 @@ export class Time {
 
   on(day, zone) {
     return new CalendarDate(day).at(this, zone);
+  }
+
+  as(kind) {
+    return readAs(kind, { time: () => this });
   }
 
   /*******************************

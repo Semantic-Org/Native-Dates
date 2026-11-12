@@ -19,20 +19,19 @@ export const SECTIONS = [
       {
         ...named('nav.group.start'),
         items: [
-          { title: 'Introduction', slug: 'guides/introduction' },
+          { title: 'Overview', slug: 'guides/overview' },
           { title: 'Installation', slug: 'guides/installation' },
-          { title: 'Your first date', slug: 'guides/first-date' },
         ],
       },
       {
         ...named('nav.group.time'),
         items: [
-          { title: 'The four nouns', slug: 'guides/four-nouns' },
+          { title: 'Types of time', slug: 'guides/types-of-time' },
           { title: 'Time zones', slug: 'guides/time-zones' },
-          { title: 'Adding and subtracting', slug: 'guides/arithmetic' },
+          { title: 'Date math', slug: 'guides/date-math' },
           { title: 'Durations', slug: 'guides/durations' },
           { title: 'Formatting', slug: 'guides/formatting' },
-          { title: 'Reading values', slug: 'guides/reading-values' },
+          { title: 'Parsing', slug: 'guides/parsing' },
           { title: 'Storing and sending', slug: 'guides/storing-and-sending' },
         ],
       },
@@ -64,9 +63,9 @@ export const SECTIONS = [
         ...named('nav.group.functions'),
         items: [
           { title: 'datetime()', slug: 'api/datetime-fn', symbol: true },
-          { title: 'now()', slug: 'api/now', symbol: true },
+          { title: 'now()', slug: 'api/datetime-fn#now', symbol: true },
           { title: 'date()', slug: 'api/date-fn', symbol: true },
-          { title: 'today()', slug: 'api/today', symbol: true },
+          { title: 'today()', slug: 'api/date-fn#today', symbol: true },
           { title: 'time()', slug: 'api/time-fn', symbol: true },
           { title: 'duration()', slug: 'api/duration-fn', symbol: true },
           { title: 'compare()', slug: 'api/compare', symbol: true },

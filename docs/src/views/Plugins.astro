@@ -66,14 +66,16 @@ const ICONS = {
     <h1>{t(locale, 'nav.plugins')}</h1>
     <p class="doc-lede">{lede}</p>
 
-    <div class="preset-row" role="group" aria-label={t(locale, 'plugins.presets.label')} data-pagefind-ignore>
-      <span class="preset-label">{t(locale, 'plugins.presets.label')}</span>
-      {presets.map((p) => (
-        <button class="preset" type="button" aria-pressed="false" data-preset={p.plugins.join(',')} title={p.description}>
-          <code>{p.name}</code><bdi>{p.size}</bdi>
-        </button>
-      ))}
-    </div>
+    {presets.length > 0 && (
+      <div class="preset-row" role="group" aria-label={t(locale, 'plugins.presets.label')} data-pagefind-ignore>
+        <span class="preset-label">{t(locale, 'plugins.presets.label')}</span>
+        {presets.map((p) => (
+          <button class="preset" type="button" aria-pressed="false" data-preset={p.plugins.join(',')} title={p.description}>
+            <code>{p.name}</code><bdi>{p.size}</bdi>
+          </button>
+        ))}
+      </div>
+    )}
 
     <div class="plugins-intro" data-pagefind-ignore>
       <div class="code" data-plugin-sample>
