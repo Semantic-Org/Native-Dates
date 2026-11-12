@@ -91,3 +91,17 @@ export const formatter = (kind, options, locale, zone) =>
 
 export const formatIntl = (kind, subject, options, locale, zone) =>
   formatter(kind, options, locale, zone).format(epochOf(kind, subject));
+
+// the calendars that keep the Gregorian months and days, and count only the year their own way
+const gregorianMonths = ['gregory', 'iso8601', 'buddhist', 'japanese', 'roc'];
+
+// the formatter for a part of a date, a month and a day or a year and a month. in a calendar with
+// other months the part falls on different days each year, so a locale that keeps one prints the
+// Gregorian months instead, and such a calendar asked for by name has no formatter
+export const partFormatter = (options, locale) => {
+  const format = formatter('date', options, locale);
+  if (gregorianMonths.includes(format.resolvedOptions().calendar)) {
+    return format;
+  }
+  return options.calendar === undefined ? formatter('date', { ...options, calendar: 'gregory' }, locale) : undefined;
+};
