@@ -68,7 +68,7 @@ Without an argument, standalone durations balance clock units up to hours rather
 
 Pass `'day'` or `'week'` when you want fixed 24-hour days or 7-day weeks.
 
-Call `total()` to collapse the entire span into a single floating-point number in one unit:
+Call `total()` or its chain-friendly alias `as()` to collapse the entire span into a single floating-point number in one unit:
 
 ```js
 import { duration } from 'native-dates';
@@ -76,7 +76,7 @@ import { duration } from 'native-dates';
 const shift = duration('7h 30m');
 
 shift.total('hours'); // 7.5
-shift.total('minutes'); // 450
+shift.as('minutes'); // 450
 ```
 
 :::note[Totals in months and years]

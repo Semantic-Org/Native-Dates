@@ -16,7 +16,7 @@ updated: 2026-11-12
 compare(a, b): -1 | 0 | 1
 ```
 
-Orders two values of the same kind for `Array.prototype.sort()`, returning negative, zero, or positive numbers. Works across moments, calendar dates, clock times, durations, and [range instances](/plugins/ranges/).
+Orders two values of the same kind for `Array.prototype.sort()`, returning negative, zero, or positive numbers. Works across moments, calendar dates, clock times, durations, [year-month values](/plugins/year-month/), and [range instances](/plugins/ranges/).
 
 When the first argument is a typed point or `Duration`, a raw second argument such as an ISO string is read as the same kind. Comparing two different kinds throws a `TypeError`.
 
@@ -79,32 +79,32 @@ windows.sort(compare).map(String);
 
 ## Picking boundary points
 
-Find the minimum or maximum point across a set of dates, moments, or clock times. Both helpers accept rest arguments or a single non-empty array.
+Find the minimum or maximum value across a set of dates, moments, clock times, or [year-month values](/plugins/year-month/). Both helpers accept rest arguments or a single non-empty array.
 
 :::entry
 ### `earliest()` :kind[function]
 
 ```js signature
-earliest(...points): DateTime | CalendarDate | Time
-earliest(points): DateTime | CalendarDate | Time
+earliest(...points): DateTime | CalendarDate | Time | YearMonth
+earliest(points): DateTime | CalendarDate | Time | YearMonth
 ```
 
-Returns the earliest point from one or more arguments or a non-empty array of the same kind. Passing an empty array throws a `RangeError`.
+Returns the earliest value from one or more arguments or a non-empty array of the same kind. Passing an empty array throws a `RangeError`.
 
 **Parameters**
 
 ```params
 - name: points
-  type: Point[]
+  type: Point[] | YearMonth[]
   required: true
-  description: One or more dates, moments, or clock times of the same kind, passed as arguments or an array.
+  description: One or more dates, moments, clock times, or year-months of the same kind.
 ```
 
 **Returns**
 
 ```returns
-type: DateTime | CalendarDate | Time
-description: The point that comes first. Equal moments keep the earlier item in the list.
+type: DateTime | CalendarDate | Time | YearMonth
+description: The value that comes first. Equal moments keep the earlier item in the list.
 ```
 
 ```js
@@ -119,26 +119,26 @@ earliest([time('5:30pm'), time('9:00am'), time('12:15pm')]).toString(); // '09:0
 ### `latest()` :kind[function]
 
 ```js signature
-latest(...points): DateTime | CalendarDate | Time
-latest(points): DateTime | CalendarDate | Time
+latest(...points): DateTime | CalendarDate | Time | YearMonth
+latest(points): DateTime | CalendarDate | Time | YearMonth
 ```
 
-Returns the latest point from one or more arguments or a non-empty array of the same kind. Passing an empty array throws a `RangeError`.
+Returns the latest value from one or more arguments or a non-empty array of the same kind. Passing an empty array throws a `RangeError`.
 
 **Parameters**
 
 ```params
 - name: points
-  type: Point[]
+  type: Point[] | YearMonth[]
   required: true
-  description: One or more dates, moments, or clock times of the same kind, passed as arguments or an array.
+  description: One or more dates, moments, clock times, or year-months of the same kind.
 ```
 
 **Returns**
 
 ```returns
-type: DateTime | CalendarDate | Time
-description: The point that comes last. Equal moments keep the earlier item in the list.
+type: DateTime | CalendarDate | Time | YearMonth
+description: The value that comes last. Equal moments keep the earlier item in the list.
 ```
 
 Combine `earliest()` and `latest()` to clamp a value between two bounds:

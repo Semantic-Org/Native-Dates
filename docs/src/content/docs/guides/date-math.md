@@ -117,3 +117,12 @@ monday.next('friday').toString(); // '2026-11-20'
 monday.next('monday').toString(); // '2026-11-23'
 monday.previous('friday').toString(); // '2026-11-13'
 ```
+
+With the [`month-day`](/plugins/month-day/) plugin loaded, `next()` and `previous()` also step to the upcoming or prior occurrence of a recurring date such as a birthday or holiday:
+
+```js
+import { monthDay } from '@native-dates/plugins/month-day';
+
+const birthday = monthDay('10/17');
+monday.next(birthday).toString(); // '2027-10-17'
+```

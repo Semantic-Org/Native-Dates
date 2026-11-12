@@ -27,9 +27,11 @@ JSON.stringify({
 | Type | Wire output | Typical payload field |
 |---|---|---|
 | [`DateTime`](/api/date-time/) | `'2026-11-16T17:30:00.000Z'` | Audit timestamps, flight departures, and meeting instants |
-| [`CalendarDate`](/api/calendar-date/) | `'2026-11-16'` | Birthdays, due dates, holidays, and booking nights |
+| [`CalendarDate`](/api/calendar-date/) | `'2026-11-16'` | Due dates, holidays, and booking nights |
 | [`Time`](/api/time/) | `'09:30:00'` | Store opening hours and daily reminder times |
 | [`Duration`](/api/duration/) | `'PT1H30M'` | Timeouts, SLAs, billing spans, and timers |
+| [`YearMonth`](/plugins/year-month/) | `'2026-11'` | Billing periods, card expiries, and `<input type="month">` values |
+| [`MonthDay`](/plugins/month-day/) | `'10-17'` | Recurring birthdays and annual holidays without a birth year |
 
 When an external API, cache key, or integer column expects a number, read `epoch` on a moment or `toMilliseconds()` on a duration:
 

@@ -529,6 +529,20 @@ datetime('2026-09-06T09:00Z', 'UTC').to(1, 'hour').format('time', 'en-US'); // '
 :::
 
 :::entry
+### `as()` :kind[method]
+
+```js signature
+range.as('duration'): Duration
+```
+
+Returns the range's [`Duration`](/api/duration/) inside a method chain, matching `range.duration`.
+
+```js
+date('2026-09-01').to('2026-09-07').as('duration').as('days'); // 7
+```
+:::
+
+:::entry
 ### `toString()` :kind[method]
 
 ```js signature

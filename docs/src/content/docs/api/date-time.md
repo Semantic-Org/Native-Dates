@@ -320,7 +320,7 @@ nov.endOf('month').toString(); // '2026-11-30T23:59:59.999Z'
 dt.next(weekday): DateTime
 ```
 
-Moves forward to the next given weekday at the same time of day. If it is already that weekday, it advances a full week.
+Moves forward to the next given weekday at the same time of day. If it is already that weekday, it advances a full week. Also steps forward to a recurring [`MonthDay`](/plugins/month-day/) when that plugin is loaded.
 
 **Parameters**
 
@@ -353,7 +353,7 @@ mon.next('monday').day; // 23
 dt.previous(weekday): DateTime
 ```
 
-Moves back to the most recent given weekday before this date, keeping the same time of day.
+Moves back to the most recent given weekday before this date, keeping the same time of day. Also steps back to a [`MonthDay`](/plugins/month-day/) when that plugin is loaded.
 
 **Parameters**
 
@@ -662,6 +662,41 @@ standup.format('time', 'en-US'); // '9:30 AM'
 standup.format('month', 'en-US'); // 'November 2026'
 standup.format('text', 'en-US'); // 'Nov 16, 2026, 9:30 AM PST'
 standup.format({ weekday: 'short', hour: '2-digit', minute: '2-digit' }, 'de-DE'); // 'Mo., 09:30'
+```
+:::
+
+:::entry
+### `as()` :kind[method]
+
+```js signature
+dt.as('datetime'): DateTime
+dt.as('date'): CalendarDate
+dt.as('time'): Time
+```
+
+Converts this moment to another kind inside a method chain without breaking for property access. Also converts to [year-month](/plugins/year-month/) and [month-day](/plugins/month-day/) values when those plugins are loaded, matching `.yearMonth` and `.monthDay`.
+
+**Parameters**
+
+```params
+- name: kind
+  type: "'datetime' | 'date' | 'time'"
+  required: true
+  description: Target kind to read this moment as in its active time zone.
+```
+
+**Returns**
+
+```returns
+type: DateTime | CalendarDate | Time
+description: Converted value in this instance's time zone.
+```
+
+```js
+const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
+
+standup.in('Asia/Tokyo').as('date').toString(); // '2026-11-17'
+standup.in('Asia/Tokyo').as('time').toString(); // '02:30:00'
 ```
 :::
 

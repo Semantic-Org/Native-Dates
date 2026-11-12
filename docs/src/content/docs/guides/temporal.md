@@ -18,6 +18,8 @@ Each class wraps one underlying `Temporal` type and hands it back whenever you n
 | [`CalendarDate`](/api/calendar-date/) | `Temporal.PlainDate` | Pairs with `at(time, zone)` and formats locale presets directly through `Intl` |
 | [`Time`](/api/time/) | `Temporal.PlainTime` | Reads 12-hour strings like `'9:30am'` alongside 24-hour ISO clock times |
 | [`Duration`](/api/duration/) | `Temporal.Duration` | Parses `'1h 30m'` phrases, spills fractional units, and remembers anchors from `until()` |
+| [`YearMonth`](/plugins/year-month/) | `Temporal.PlainYearMonth` | Opt-in plugin for billing months and card expiries with `monthYear()` and `on()` |
+| [`MonthDay`](/plugins/month-day/) | `Temporal.PlainMonthDay` | Opt-in plugin for birthdays and recurring dates with `dayMonth()`, `fallsOn()`, and `next()` |
 
 ## Passing Temporal objects in
 
@@ -49,7 +51,7 @@ standup.equals(berlin); // true
 
 Call `toTemporal()` on any value to access its underlying Temporal instance.
 
-Use it when calling third-party libraries that expect Temporal objects, working with non-ISO calendar systems, or converting to `PlainYearMonth` and `PlainMonthDay`.
+Use it when calling third-party libraries that expect Temporal objects or working with non-ISO calendar systems.
 
 ```js
 import { date } from 'native-dates';
@@ -60,8 +62,6 @@ const plain = d.toTemporal(); // Temporal.PlainDate
 const japanese = plain.withCalendar('japanese');
 japanese.era; // 'reiwa'
 japanese.eraYear; // 8
-
-plain.toPlainYearMonth().toString(); // '2026-11'
 ```
 
 :::note[Zero-copy unwrapping]

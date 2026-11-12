@@ -4,9 +4,9 @@
 
 `native-dates` (`src/`, also re-exported as `@native-dates/core`) wraps the browser's `Temporal` and `Intl` APIs in plain-English nouns and verbs with zero runtime dependencies. Like `nav-router`, the core stays lean at the repo root and opt-in plugins in `@native-dates/plugins/*` (`packages/plugins/src/`) add specialized capabilities when imported.
 
-## The Four Core Nouns
+## Core Nouns
 
-Temporal exposes nine classes (`Instant`, `ZonedDateTime`, `PlainDateTime`, `PlainDate`, `PlainTime`, `PlainYearMonth`, `PlainMonthDay`, `Duration`, `Calendar`). Core collapses them into the four things application code actually talks about:
+Temporal exposes classes across instants, zoned and plain moments, dates, times, partial dates, durations, and calendars (`Instant`, `ZonedDateTime`, `PlainDateTime`, `PlainDate`, `PlainTime`, `PlainYearMonth`, `PlainMonthDay`, `Duration`, `Calendar`). Core ships the everyday nouns application code reaches for first, while plugins add partial dates and ranges:
 
 | Noun | Factory | Wraps | Key Invariant |
 |---|---|---|---|
@@ -21,7 +21,7 @@ Every instance freezes on construction and sets `text` first among its own prope
 
 Core holds what nearly every caller needs:
 
-- The four nouns (`DateTime`, `CalendarDate`, `Time`, `Duration`) and their lowercase factories (`datetime`, `date`, `time`, `duration`, `now`, `today`, `tomorrow`, `yesterday`, `hours`..`years`)
+- Core nouns (`DateTime`, `CalendarDate`, `Time`, `Duration`) and their lowercase factories (`datetime`, `date`, `time`, `duration`, `now`, `today`, `tomorrow`, `yesterday`, `hours`..`years`)
 - Plain-English arithmetic (`plus`/`minus`, with zero-cost `add`/`subtract`/`remove` prototype aliases), rounding, weekday stepping (`next`/`previous`), comparisons, and `until`/`since`
 - `Intl` preset formatting (`short`, `medium`, `long`, `full`, `date`, `time`, `month`, `text`) and `Intl` options bags
 - Duration phrases (`'1h 30m'`, `'2 weeks and 3 days'`) and fractional unit spilling (`1.5 days` -> `1d 12h`)

@@ -96,11 +96,30 @@ These types connect directly when you add or drop parts. Attach a time to a `Cal
 const reminder = today().plus(1, 'day').at('9:00am');
 ```
 
-Going the other way, read the date or time off any `DateTime`:
+Going the other way, read the date or time off any `DateTime`, or call `as()` to convert inside a method chain:
 
 ```js
 reminder.date; // CalendarDate for tomorrow
 reminder.time; // Time for 09:00:00
+reminder.in('Asia/Tokyo').as('time'); // Time in Tokyo
+```
+
+## Partial dates and ranges
+
+When a value deliberately omits a year or day, or spans between two endpoints, import the matching plugin instead of inventing placeholder fields:
+
+- [`YearMonth`](/plugins/year-month/) for a billing period or card expiry like November 2026
+- [`MonthDay`](/plugins/month-day/) for a recurring birthday or annual holiday like October 17
+- [Ranges](/plugins/ranges/) for a span between two dates, times, or moments
+
+```js
+import { monthDay } from '@native-dates/plugins/month-day';
+import '@native-dates/plugins/ranges';
+import { yearMonth } from '@native-dates/plugins/year-month';
+
+const billing = yearMonth('2026-11');
+const birthday = monthDay('10/17');
+const sprint = today().to(2, 'weeks');
 ```
 
 :::tip[DateTime or CalendarDate?]

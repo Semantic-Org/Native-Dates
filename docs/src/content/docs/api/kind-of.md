@@ -15,20 +15,25 @@ updated: 2026-11-12
 ```js signature
 kindOf(value):
   | 'datetime' | 'date' | 'time' | 'duration'
+  | 'yearMonth' | 'monthDay'
   | 'dateRange' | 'datetimeRange' | 'timeRange'
   | undefined
 ```
 
-Returns a string tag naming which type a value belongs to, or `undefined` for plain JavaScript values such as native dates, strings, numbers, and objects. Also identifies range instances when [`@native-dates/plugins/ranges`](/plugins/ranges/) is loaded.
+Returns a string tag naming which type a value belongs to, or `undefined` for plain JavaScript values such as native dates, strings, numbers, and objects. Also identifies [year-month](/plugins/year-month/), [month-day](/plugins/month-day/), and [range](/plugins/ranges/) instances when those plugins are loaded.
 
 ```js title="inspect.js"
 import { date, hours, kindOf, now, time } from 'native-dates';
+import { monthDay } from '@native-dates/plugins/month-day';
 import { dateRange } from '@native-dates/plugins/ranges';
+import { yearMonth } from '@native-dates/plugins/year-month';
 
 kindOf(now()); // 'datetime'
 kindOf(date('2026-11-16')); // 'date'
 kindOf(time('9:30am')); // 'time'
 kindOf(hours(2)); // 'duration'
+kindOf(yearMonth('2026-11')); // 'yearMonth'
+kindOf(monthDay('10/17')); // 'monthDay'
 kindOf(dateRange('2026-11-01', '2026-11-07')); // 'dateRange'
 kindOf(new Date()); // undefined
 ```
@@ -45,14 +50,14 @@ kindOf(new Date()); // undefined
 **Returns**
 
 ```returns
-type: "'datetime' | 'date' | 'time' | 'duration' | 'dateRange' | 'datetimeRange' | 'timeRange' | undefined"
+type: "'datetime' | 'date' | 'time' | 'duration' | 'yearMonth' | 'monthDay' | 'dateRange' | 'datetimeRange' | 'timeRange' | undefined"
 description: String tag for the value's kind, or `undefined` when `value` is not from this library.
 ```
 :::
 
 ## Type guards
 
-Type guards check global symbol brands rather than prototype identity. Guards for range types are exported by [`@native-dates/plugins/ranges`](/plugins/ranges/).
+Type guards check global symbol brands rather than prototype identity. Guards for plugin types are exported by [`year-month`](/plugins/year-month/), [`month-day`](/plugins/month-day/), and [`ranges`](/plugins/ranges/).
 
 :::entry
 ### `isDateTime()` :kind[guard]
@@ -145,6 +150,8 @@ Boolean(shift[IS_RANGE]); // true
 | `IS_CALENDAR_DATE` | `Symbol.for('native-dates/CalendarDate')` | Matches any CalendarDate instance. |
 | `IS_TIME` | `Symbol.for('native-dates/Time')` | Matches any Time instance. |
 | `IS_DURATION` | `Symbol.for('native-dates/Duration')` | Matches any Duration instance. |
+| `IS_YEAR_MONTH` | `Symbol.for('native-dates/YearMonth')` | Matches YearMonth instances. |
+| `IS_MONTH_DAY` | `Symbol.for('native-dates/MonthDay')` | Matches MonthDay instances. |
 | `IS_RANGE` | `Symbol.for('native-dates/Range')` | Matches DateRange, DateTimeRange, and TimeRange instances. |
 | `IS_DATE_RANGE` | `Symbol.for('native-dates/DateRange')` | Matches DateRange instances. |
 | `IS_DATE_TIME_RANGE` | `Symbol.for('native-dates/DateTimeRange')` | Matches DateTimeRange instances. |

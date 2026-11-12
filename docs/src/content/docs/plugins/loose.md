@@ -34,12 +34,16 @@ const rolled = date('2026-02-30', { loose: true }); // null
 const missing = datetime(undefined, { loose: true }); // null
 ```
 
-Range factories from [`ranges`](/plugins/ranges/) accept the same option and return `null` if either endpoint cannot be read:
+Range factories from [ranges](/plugins/ranges/) and partial-date factories from [year-month](/plugins/year-month/) and [month-day](/plugins/month-day/) accept the same option:
 
 ```js
+import { monthDay } from '@native-dates/plugins/month-day';
 import { dateRange } from '@native-dates/plugins/ranges';
+import { yearMonth } from '@native-dates/plugins/year-month';
 
 dateRange('Sep 1 2026', 'Sep 7 2026', { loose: true })?.toString(); // '2026-09-01/2026-09-07'
+yearMonth('Nov 2026', { loose: true })?.toString(); // '2026-11'
+monthDay('Oct 17', { loose: true })?.toString(); // '10-17'
 dateRange('TBD', '2026-09-07', { loose: true }); // null
 ```
 
@@ -89,9 +93,11 @@ datetime(input, { loose: true, zone?, dayFirst? }): DateTime | null
 date(input, { loose: true, zone?, dayFirst? }): CalendarDate | null
 time(input, { loose: true, zone?, dayFirst? }): Time | null
 duration(input, { loose: true }): Duration | null
+yearMonth(input, { loose: true, zone? }): YearMonth | null
+monthDay(input, { loose: true, zone?, dayFirst? }): MonthDay | null
 ```
 
-Extends core factories and range factories with fallback parsing and `null` returns on unreadable input. Calling class constructors like `new DateTime()` with `{ loose: true }` enables fallback parsing while still throwing if the input cannot be read.
+Extends core, partial-date, and range factories with fallback parsing and `null` returns on unreadable input. Calling class constructors like `new DateTime()` with `{ loose: true }` enables fallback parsing while still throwing if the input cannot be read.
 
 **Parameters**
 

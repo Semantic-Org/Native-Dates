@@ -9,7 +9,7 @@ updated: 2026-11-12
 
 ## Formatting with patterns
 
-Import the plugin once to teach [`format()`](#format) token patterns on core dates, datetimes, and times. All built-in preset names and `Intl` options objects continue working unchanged.
+Import the plugin once to teach [`format()`](#format) token patterns on core dates, datetimes, and times, as well as [year-month](/plugins/year-month/) and [month-day](/plugins/month-day/) values. All built-in preset names and `Intl` options objects continue working unchanged.
 
 ```js title="tokens.js"
 import '@native-dates/plugins/tokens';
@@ -55,7 +55,7 @@ Longer tokens match first, so `MMMM` always reads as the full month name.
 | `X`, `x` | `'1794850200'`, `'1794850200000'` | Unix timestamp in whole seconds or milliseconds. |
 | `[text]` | `'at'` | Escaped literal characters copied straight into the output. |
 
-Each value type only formats fields it owns. A `DateTime` supports every token above, a calendar date supports calendar tokens from year through ISO week, and a time supports clock and meridiem tokens.
+Each value type only formats fields it owns. A `DateTime` supports every token above, a calendar date supports calendar tokens from year through ISO week, and a time supports clock and meridiem tokens. Year-month values format year, quarter, and month tokens, while month-day values format month and day tokens.
 
 :::note[Missing fields throw instead of printing zeros]
 Formatting clock tokens on a `CalendarDate` or calendar tokens on a `Time` throws an error rather than inventing midnight or a dummy date. Combine them into a datetime first when a pattern needs both parts.
@@ -70,6 +70,8 @@ Formatting clock tokens on a `CalendarDate` or calendar tokens on a `Time` throw
 dt.format(pattern, locale?): string
 d.format(pattern, locale?): string
 t.format(pattern, locale?): string
+ym.format(pattern, locale?): string
+md.format(pattern, locale?): string
 ```
 
 Extends core formatting so any string that is not a preset name is evaluated as a token pattern. Preset names and options objects pass straight through to `Intl.DateTimeFormat`.
