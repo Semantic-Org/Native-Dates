@@ -12,6 +12,7 @@ import {
   IS_RANGE,
   IS_TIME,
   IS_TIME_RANGE,
+  IS_YEAR_MONTH,
 } from './identity.js';
 import { isArray, isDate, isDevelopment, isString } from './types.js';
 import { isInstant, isPlainDate, isPlainDateTime, isPlainTime, isZonedDateTime } from './units.js';
@@ -22,7 +23,8 @@ const looksLikeDateTime = /[T ]\d|[zZ]$|\[[^\]]+\]$/;
 // a string reads by its shape: a clock is a time, anything carrying a time or zone is a datetime, the
 // rest is a date. every other input already knows what it is
 export const point = (input) => {
-  if (input?.[IS_DATE_TIME] || input?.[IS_CALENDAR_DATE] || input?.[IS_TIME]) {
+  // a year-month has an order too, so earliest() and latest() pick among them
+  if (input?.[IS_DATE_TIME] || input?.[IS_CALENDAR_DATE] || input?.[IS_TIME] || input?.[IS_YEAR_MONTH]) {
     return input;
   }
   if (isString(input)) {
@@ -74,6 +76,9 @@ export const kindOf = (value) => {
   if (value?.[IS_TIME_RANGE]) {
     return 'timeRange';
   }
+  if (value?.[IS_YEAR_MONTH]) {
+    return 'yearMonth';
+  }
   return undefined;
 };
 
@@ -103,6 +108,14 @@ const asKindOf = (left, value) => {
 // ranges order by their start, then by their end, the order a database gives its range types
 export const compare = (a, b) => {
   if (a?.[IS_DURATION]) {
+    return a.compare(b);
+  }
+  // a year-month is no point either and brings its own order. a raw value beside it reads as one,
+  // where a date or a datetime beside it is two kinds, whichever side it stands on
+  if (a?.[IS_YEAR_MONTH]) {
+    if (kindOf(b) !== undefined) {
+      sameKind(a, b);
+    }
     return a.compare(b);
   }
   if (a?.[IS_RANGE]) {

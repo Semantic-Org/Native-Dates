@@ -84,12 +84,20 @@ export class CalendarDate {
       });
     }
     if (isNumber(input) && isNumber(month)) {
+      // a missing day is refused so an absent field never silently becomes the 1st
+      if (day === undefined) {
+        return refuse('unreadableDate', `${input}-${month}`, {
+          explanation: isDevelopment
+            ? 'a date needs its day: date(2026, 11, 16). a year and a month alone are yearMonth(2026, 11) with plugins/year-month'
+            : 0,
+        });
+      }
       return guard(
         () => {
           if (!wholeNumbers([input, month, day])) {
             throw new RangeError('a date reads whole numbers');
           }
-          return Temporal.PlainDate.from({ year: input, month, day: day ?? 1 }, { overflow: 'reject' });
+          return Temporal.PlainDate.from({ year: input, month, day }, { overflow: 'reject' });
         },
         'unreadableDate',
         `${input}-${month}-${day}`,
@@ -150,7 +158,9 @@ export class CalendarDate {
       () => Temporal.PlainDate.from(text.trim()),
       'unreadableDate',
       text,
-      isDevelopment ? "write ISO 8601: '2026-09-06'. plugins/loose adds { loose: true } for what Date reads" : 0,
+      isDevelopment
+        ? "write ISO 8601: '2026-09-06'. a year and a month alone is yearMonth('2026-11') with plugins/year-month. plugins/loose adds { loose: true } for what Date reads"
+        : 0,
     );
   }
 

@@ -258,7 +258,7 @@ export function isDateTime(value: unknown): value is DateTime;
  */
 export class CalendarDate {
   constructor(input: CalendarDateInput, options?: ReadOptions);
-  constructor(year: number, month: number, day?: number);
+  constructor(year: number, month: number, day: number);
 
   /** The day in the configured locale's common form, `'Sep 6, 2026'`, what `format()` prints */
   readonly text: string;
@@ -332,10 +332,11 @@ export class CalendarDate {
 
 /**
  * Reads `'2026-09-06'`, three numbers, a fields object, a datetime (its date in its zone), a Date (its
- * date in the zone), or a Temporal value. A wall-clock string keeps its day
+ * date in the zone), or a Temporal value. A wall-clock string keeps its day. A missing day refuses:
+ * a year and a month alone are `yearMonth(2026, 11)` with `@native-dates/plugins/year-month`
  */
 export function date(input: CalendarDateInput, options?: ReadOptions): CalendarDate;
-export function date(year: number, month: number, day?: number): CalendarDate;
+export function date(year: number, month: number, day: number): CalendarDate;
 export function date(input: CalendarDateInput, zone: Zone): CalendarDate;
 
 export function today(zone?: Zone): CalendarDate;
@@ -510,7 +511,7 @@ export function latest<T extends Point>(...points: T[] | [T[]]): T extends strin
 /** The kind of a value from this library, or undefined */
 export function kindOf(
   value: unknown,
-): 'datetime' | 'date' | 'time' | 'duration' | 'monthDay' | 'dateRange' | 'datetimeRange' | 'timeRange' | undefined;
+): 'datetime' | 'date' | 'time' | 'duration' | 'monthDay' | 'yearMonth' | 'dateRange' | 'datetimeRange' | 'timeRange' | undefined;
 
 /**
  * The brands, keyed with `Symbol.for` so a value is recognised across bundles and realms without
@@ -527,6 +528,8 @@ export const IS_RANGE: unique symbol;
 export const IS_DATE_RANGE: unique symbol;
 export const IS_DATE_TIME_RANGE: unique symbol;
 export const IS_TIME_RANGE: unique symbol;
+/** A `YearMonth` from `@native-dates/plugins/year-month` */
+export const IS_YEAR_MONTH: unique symbol;
 
 /** The ISO number of a weekday from its name, `weekday('sunday')` is 7, a number passing through */
 export function weekday(day: Weekday): number;

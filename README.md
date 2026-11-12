@@ -29,7 +29,7 @@ For those needing Safari support before Spring 2027 (when this lands in baseline
 | Package | Description |
 | --- | --- |
 | [native-dates](src) | The core date library |
-| [@native-dates/plugins](packages/plugins) | Plugins like (`ranges`, `month-day`, `tokens`, `relative`, `zones`, `loose`, `legacy-date`) |
+| [@native-dates/plugins](packages/plugins) | Plugins like (`ranges`, `month-day`, `year-month`, `tokens`, `relative`, `zones`, `loose`, `legacy-date`) |
 | [@native-dates/polyfill](packages/polyfill) | Required for Safari/iOS until Spring 2027.  `temporal-polyfill` only when `globalThis.Temporal` is absent |
 | [@native-dates/core](packages/core) | Alias of `native-dates` |
 
