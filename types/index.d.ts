@@ -510,7 +510,7 @@ export function latest<T extends Point>(...points: T[] | [T[]]): T extends strin
 /** The kind of a value from this library, or undefined */
 export function kindOf(
   value: unknown,
-): 'datetime' | 'date' | 'time' | 'duration' | 'dateRange' | 'datetimeRange' | 'timeRange' | undefined;
+): 'datetime' | 'date' | 'time' | 'duration' | 'monthDay' | 'dateRange' | 'datetimeRange' | 'timeRange' | undefined;
 
 /**
  * The brands, keyed with `Symbol.for` so a value is recognised across bundles and realms without
@@ -520,6 +520,8 @@ export const IS_DATE_TIME: unique symbol;
 export const IS_CALENDAR_DATE: unique symbol;
 export const IS_TIME: unique symbol;
 export const IS_DURATION: unique symbol;
+/** A `MonthDay` from `@native-dates/plugins/month-day` */
+export const IS_MONTH_DAY: unique symbol;
 /** Every range kind */
 export const IS_RANGE: unique symbol;
 export const IS_DATE_RANGE: unique symbol;

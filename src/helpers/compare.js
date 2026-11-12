@@ -8,6 +8,7 @@ import {
   IS_DATE_TIME,
   IS_DATE_TIME_RANGE,
   IS_DURATION,
+  IS_MONTH_DAY,
   IS_RANGE,
   IS_TIME,
   IS_TIME_RANGE,
@@ -60,6 +61,9 @@ export const kindOf = (value) => {
   }
   if (value?.[IS_DURATION]) {
     return 'duration';
+  }
+  if (value?.[IS_MONTH_DAY]) {
+    return 'monthDay';
   }
   if (value?.[IS_DATE_RANGE]) {
     return 'dateRange';

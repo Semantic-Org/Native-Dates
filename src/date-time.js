@@ -2,8 +2,8 @@ import { CalendarDate, today } from './calendar-date.js';
 import { anchored } from './duration.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
-import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
-import { IS_DATE_TIME } from './helpers/identity.js';
+import { formatIntl, formatPattern, intlOptions } from './helpers/format.js';
+import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
   endPrecision,
@@ -296,13 +296,20 @@ export class DateTime {
     );
   }
 
-  next(weekday) {
-    const delta = (weekdayNumber(weekday) - this.weekday + 7) % 7 || 7;
+  // steps to a weekday, or to a month-day's occurrence, at this time of day in this zone
+  next(target) {
+    if (target?.[IS_MONTH_DAY]) {
+      return target.after(this.date).at(this.time, this.zone);
+    }
+    const delta = (weekdayNumber(target) - this.weekday + 7) % 7 || 7;
     return this.plus({ days: delta });
   }
 
-  previous(weekday) {
-    const delta = (this.weekday - weekdayNumber(weekday) + 7) % 7 || 7;
+  previous(target) {
+    if (target?.[IS_MONTH_DAY]) {
+      return target.before(this.date).at(this.time, this.zone);
+    }
+    const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
   }
 
@@ -377,7 +384,9 @@ export class DateTime {
 
   format(spec, locale) {
     const options = intlOptions('datetime', spec);
-    return options ? formatIntl('datetime', this.epoch, options, locale, this.zone) : unknownFormat(spec);
+    return options
+      ? formatIntl('datetime', this.epoch, options, locale, this.zone)
+      : formatPattern(spec, this, 'datetime', locale);
   }
 
   // the instant in UTC, the form every database and API reads. the zone is a view and does not travel
