@@ -3,7 +3,7 @@ import { anchored } from './duration.js';
 import { guard, loosely, parseLoose, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
-import { IS_CALENDAR_DATE } from './helpers/identity.js';
+import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
   inspect,
@@ -256,13 +256,21 @@ export class CalendarDate {
     return this.startOf(name, firstDay).plus(stepOf(unit(name))).minus({ days: 1 });
   }
 
-  next(weekday) {
-    const delta = (weekdayNumber(weekday) - this.weekday + 7) % 7 || 7;
+  // steps to a weekday, which comes around each week. a month-day, from plugins/month-day, comes
+  // around each year and finds its own occurrence. either way this day itself never counts
+  next(target) {
+    if (target?.[IS_MONTH_DAY]) {
+      return target.after(this);
+    }
+    const delta = (weekdayNumber(target) - this.weekday + 7) % 7 || 7;
     return this.plus({ days: delta });
   }
 
-  previous(weekday) {
-    const delta = (this.weekday - weekdayNumber(weekday) + 7) % 7 || 7;
+  previous(target) {
+    if (target?.[IS_MONTH_DAY]) {
+      return target.before(this);
+    }
+    const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
   }
 

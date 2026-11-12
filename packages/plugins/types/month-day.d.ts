@@ -15,8 +15,9 @@ export type MonthDayInput = MonthDay | MonthDayFields | CalendarDateInput;
 /** The options form of `monthDay()`'s second argument */
 export interface MonthDayOptions extends ReadOptions {
   /**
-   * Read `'17/10'` or `'17.10'` day first, the order `dayMonth()` reads. The word decides it, never
-   * `configure()`. A dash is ISO's and month first either way, so `'10-17'` from `toJSON()` reads back
+   * Read `'17/10'`, `'17.10'` or `'17-5'` day first, the order `dayMonth()` reads. The word decides
+   * it, never `configure()`. ISO's `'10-17'`, two digits a side across a dash, is month first either
+   * way, so what `toJSON()` writes reads back
    */
   dayFirst?: boolean;
 }
@@ -42,14 +43,23 @@ export class MonthDay {
 
   /** The date this falls on in a year. Feb 29 falls on Feb 28 in a year without one */
   in(year: number | string): CalendarDate;
+  /** The occurrence strictly after a day, the day itself never counting. What `date.next(monthDay)` asks */
+  after(day: CalendarDateInput): CalendarDate;
+  /** The occurrence strictly before a day. What `date.previous(monthDay)` asks */
+  before(day: CalendarDateInput): CalendarDate;
 
   /**
-   * Against a date, whether that date is this month-day's occurrence in its year, so Feb 29 answers to
-   * Feb 28, 2027. Against another month-day, the same month and day. Text across a slash or a dot
-   * refuses, since it has an order only under `monthDay()` or `dayMonth()`: ISO `'10-17'` reads
+   * The same month and day. A date reads as the month and day it is, so two birthdays are equal or not
+   * whichever one asks. Text as people write it, `'05/10'`, refuses, since it has an order only under
+   * `monthDay()` or `dayMonth()`: ISO `'10-17'` reads
    */
   equals(other: MonthDayInput): boolean;
-  /** Today depends on where you stand, so these take the zone to judge from */
+  /**
+   * Whether a date is this month-day's occurrence in the date's own year, so Feb 29 falls on
+   * Feb 28, 2027 and not on Feb 28, 2028
+   */
+  fallsOn(day: CalendarDateInput): boolean;
+  /** Whether it falls on today. Today depends on where you stand, so these take the zone to judge from */
   isToday(zone?: Zone): boolean;
   isTomorrow(zone?: Zone): boolean;
   isYesterday(zone?: Zone): boolean;
@@ -73,15 +83,16 @@ export class MonthDay {
  * reads with its year dropped. A missing value refuses, `today().monthDay` reads the current one.
  * With `{ loose: true }` it also reads a month by its English name and a day, `'Oct 17'` or
  * `'17th October'`, and gives null for what it cannot read. It never puts text to `Date`, which makes
- * up the parts text leaves out: a date written loosely is `date(text, { loose: true })?.monthDay`
+ * up the parts text leaves out: a date written loosely is `date(text, { loose: true })?.monthDay`,
+ * and an instant is `datetime(text, zone).monthDay`
  */
 export function monthDay(input: unknown, options: MonthDayOptions & { loose: true; }): MonthDay | null;
 export function monthDay(input: MonthDayInput, options?: Zone | MonthDayOptions): MonthDay;
 export function monthDay(month: number | string, day: number | string): MonthDay;
 
 /**
- * The same value read day first across a slash or a dot, the order most of the world writes it:
- * `dayMonth('17/10')` is `monthDay('10/17')`. A dash is ISO's, month first under both
+ * The same value read day first, the order most of the world writes it: `dayMonth('17/10')` is
+ * `monthDay('10/17')`. ISO's `'10-17'`, two digits a side across a dash, is month first under both
  */
 export function dayMonth(input: unknown, options: MonthDayOptions & { loose: true; }): MonthDay | null;
 export function dayMonth(input: MonthDayInput, options?: Zone | MonthDayOptions): MonthDay;
