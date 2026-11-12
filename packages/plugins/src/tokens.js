@@ -1,8 +1,7 @@
-import { CalendarDate, DateTime, Time } from 'native-dates';
 import { refuse } from 'native-dates/helpers/errors';
-import { intlOptions } from 'native-dates/helpers/format';
+import { setTokenExtension } from 'native-dates/helpers/format';
 import { plainDateTimeFormat, zonedDateTimeFormat } from 'native-dates/helpers/intl';
-import { isDevelopment, isString } from 'native-dates/helpers/types';
+import { isDevelopment } from 'native-dates/helpers/types';
 import { pad } from 'native-dates/helpers/units';
 import { locale as pickLocale, weekStart } from 'native-dates/helpers/zones';
 
@@ -137,18 +136,11 @@ export const formatTokens = (subject, kind, pattern, locale) => {
     }
     if (subject[needs[token]] === undefined) {
       refuse('noField', `${token} in '${pattern}'`, {
-        explanation: isDevelopment ? `a ${kind} has no ${needs[token]}. combine it into a datetime first` : 0,
+        explanation: isDevelopment ? `a ${kind} has no ${needs[token]}` : 0,
       });
     }
     return tokenReaders[token](subject, resolved);
   });
 };
 
-for (const [Kind, kind] of [[DateTime, 'datetime'], [CalendarDate, 'date'], [Time, 'time']]) {
-  const base = Kind.prototype.format;
-  Kind.prototype.format = function format(spec, locale) {
-    return isString(spec) && !intlOptions(kind, spec)
-      ? formatTokens(this, kind, spec, locale)
-      : base.call(this, spec, locale);
-  };
-}
+setTokenExtension(formatTokens);

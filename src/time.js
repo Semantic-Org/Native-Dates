@@ -3,7 +3,7 @@ import { DateTime } from './date-time.js';
 import { anchored } from './duration.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
-import { formatIntl, intlOptions, unknownFormat } from './helpers/format.js';
+import { formatIntl, formatPattern, intlOptions } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
@@ -319,7 +319,7 @@ export class Time {
 
   format(spec, locale) {
     const options = intlOptions('time', spec);
-    return options ? formatIntl('time', this.#plain, options, locale) : unknownFormat(spec);
+    return options ? formatIntl('time', this.#plain, options, locale) : formatPattern(spec, this, 'time', locale);
   }
 
   // a fraction prints in groups of three, the width its precision needs, so one precision is one width
