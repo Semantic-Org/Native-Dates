@@ -1,28 +1,25 @@
 import { CalendarDate, DateTime, IS_MONTH_DAY, today } from 'native-dates';
 import { guard, loosely, refuse, refuseType, requireLoose, unreadable } from 'native-dates/helpers/errors';
-import { epochOf, partFormatter } from 'native-dates/helpers/format';
+import { epochOf } from 'native-dates/helpers/format';
 import { isDevelopment, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
-import {
-  inspect,
-  isCount,
-  isDigits,
-  isPlainDate,
-  monthNamed,
-  opensOnDate,
-  singularKeys,
-  wholeParts,
-  zoneOptions,
-} from 'native-dates/helpers/units';
+import { inspect, isCount, isDigits, isPlainDate, singularKeys, zoneOptions } from 'native-dates/helpers/units';
 import { zoneId } from 'native-dates/helpers/zones';
+
+import { partFormatter } from './helpers/format.js';
+import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
 
 /*
   a month and a day with no year: a birthday, an anniversary, a holiday. it comes around once a year,
   and Feb 29 falls on Feb 28 in a year without one, the way Temporal places it
 */
 
-// a month and a day across a dash, a slash or a dot: '10-17', '10/17', '10.17'. the dash is ISO's
-// and is month first whoever reads it, so what toJSON() writes reads back under either word
-const twoParts = /^(\d{1,2})([-/.])(\d{1,2})$/;
+// ISO's month and day, two digits a side across a dash: '10-17'. it is month first whoever reads it,
+// so what toJSON() writes reads back under either word
+const isoParts = /^(\d{2})-(\d{2})$/;
+
+// a month and a day as people write them, across a dash, a slash or a dot: '10/17', '17.10', '5-6'.
+// which part leads is for the word that reads it to say
+const twoParts = /^(\d{1,2})[-/.](\d{1,2})$/;
 
 // a month by its English name and a day, in either order: 'Oct 17', '17th October', 'Oct. 17,'
 const nameAndDay = /^(?:([a-z]{3,9})\.?,?\s+(\d{1,2})(?:st|nd|rd|th)?|(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]{3,9})\.?),?$/i;
@@ -52,8 +49,7 @@ export class MonthDay {
 
   // monthDay(10, 17), monthDay(input, zone), or monthDay(input, { zone, loose, dayFirst })
   constructor(input, dayOrOptions) {
-    const read = MonthDay.#read(input, dayOrOptions);
-    this.#plain = isPlainDate(read) ? read.toPlainMonthDay() : read;
+    this.#plain = MonthDay.#read(input, dayOrOptions);
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it, and filled once the parts it reads are in
     this.text = undefined;
@@ -65,8 +61,7 @@ export class MonthDay {
     Object.freeze(this);
   }
 
-  // a value with a year in it reads as a date, and one without as a month-day. the constructor drops
-  // the year, and equals() keeps it to ask whether the date is this month-day's occurrence that year
+  // a value with a year in it is a date, and reads as the month and day it falls on
   static #read(input, dayOrOptions) {
     if (isCount(input) && isCount(dayOrOptions)) {
       return MonthDay.#fromParts({ month: input, day: dayOrOptions });
@@ -113,7 +108,7 @@ export class MonthDay {
         return MonthDay.#fromParts(fields, JSON.stringify(input));
       }
     }
-    return MonthDay.#fromDate(input, settings);
+    return MonthDay.#dayOf(input, settings.zone).toPlainMonthDay();
   }
 
   static #fromParts(parts, at = JSON.stringify(parts), explanation) {
@@ -131,24 +126,25 @@ export class MonthDay {
     if (text.startsWith('--')) {
       return guard(() => Temporal.PlainMonthDay.from(text), 'unreadableMonthDay', input);
     }
-    const parts = twoParts.exec(text);
+    const parts = isoParts.exec(text) ?? twoParts.exec(text);
     if (parts) {
-      const [, first, separator, second] = parts;
-      const [month, day] = settings.dayFirst && separator !== '-' ? [second, first] : [first, second];
+      const [, first, second] = parts;
+      const [month, day] = settings.dayFirst && !isoParts.test(text) ? [second, first] : [first, second];
       return MonthDay.#fromParts(
         { month, day },
         input,
         isDevelopment
-          ? `that reads as month ${month}, day ${day}. monthDay reads the month first and dayMonth the day first, and a dash is ISO's, month first for both`
+          ? `that reads as month ${month}, day ${day}. monthDay reads the month first and dayMonth the day first. ISO's '10-17', two digits a side across a dash, is month first for both`
           : 0,
       );
     }
-    // text that opens on a whole ISO date is whatever date() reads
+    // text that opens on a whole ISO date is a date, read as strictly as date() reads one
     if (opensOnDate(text)) {
-      return MonthDay.#fromDate(input, settings);
+      return MonthDay.#dayOf(input, settings.zone).toPlainMonthDay();
     }
-    // no other text is put to Date, which makes up the parts text leaves out: a year with no Feb 29
-    // in it, the 1st, January. when loose, a month-day is also a month by name and a day
+    // no text is ever put to Date, which makes up the parts text leaves out: a year with no Feb 29
+    // in it, the 1st, the month after a day too many. when loose, a month-day is also a month by
+    // name and a day
     const named = settings.loose ? nameAndDay.exec(text) : null;
     const month = named && monthNamed(named[1] ?? named[4]);
     return month
@@ -160,16 +156,25 @@ export class MonthDay {
       });
   }
 
-  // anything a date reads, a date's own refusals included. a Temporal date needs no reading, and
-  // date() refuses one beside a zone
-  static #fromDate(input, { zone, loose, dayFirst }) {
-    if (isPlainDate(input)) {
-      return input.withCalendar('iso8601');
+  // the ISO date of anything a date reads, a date's own refusals included. a Temporal date needs no
+  // reading, and date() refuses one beside a zone
+  static #dayOf(value, zone) {
+    if (isPlainDate(value)) {
+      return value.withCalendar('iso8601');
     }
-    const day = input instanceof CalendarDate
-      ? input
-      : new CalendarDate(input, loose ? { zone, loose, dayFirst } : { zone });
+    const day = value instanceof CalendarDate ? value : new CalendarDate(value, { zone });
     return day.toTemporal().withCalendar('iso8601');
+  }
+
+  // where Temporal places a month-day in a year, or nothing in the first and the last year it
+  // counts, where its dates run out partway through
+  static #placed(plain, year) {
+    try {
+      return plain.toPlainDate({ year });
+    }
+    catch {
+      return undefined;
+    }
   }
 
   /*******************************
@@ -189,47 +194,60 @@ export class MonthDay {
     );
   }
 
+  // the occurrence strictly after a day, or strictly before it. the day itself never counts, the way
+  // next('monday') on a monday is a week away. date.next(monthDay) and date.previous(monthDay) ask here
+  after(day) {
+    const from = MonthDay.#dayOf(day);
+    const thisYear = MonthDay.#placed(this.#plain, from.year);
+    return thisYear && Temporal.PlainDate.compare(thisYear, from) > 0
+      ? new CalendarDate(thisYear)
+      : this.in(from.year + 1);
+  }
+
+  before(day) {
+    const from = MonthDay.#dayOf(day);
+    const thisYear = MonthDay.#placed(this.#plain, from.year);
+    return thisYear && Temporal.PlainDate.compare(thisYear, from) < 0
+      ? new CalendarDate(thisYear)
+      : this.in(from.year - 1);
+  }
+
   /*******************************
             Comparison
   *******************************/
 
-  // against a date the question is whether it is this month-day's occurrence in the date's year, so
-  // Feb 29 answers to Feb 28 in a year without one. against another month-day it is the same parts
+  // the same month and day. a date beside a month-day reads as the month and day it falls on, so
+  // two birthdays are equal or not whichever one asks. whether a date is the occurrence is fallsOn()
   equals(other) {
-    // text across a slash or a dot has an order only under the word that read it, and equals has none
-    const separator = isString(other) ? twoParts.exec(other.trim())?.[2] : undefined;
-    if (separator === '/' || separator === '.') {
+    // text as people write it has an order only under the word that read it, and equals has none
+    if (isString(other) && twoParts.test(other.trim()) && !isoParts.test(other.trim())) {
       refuse('unreadableMonthDay', other, {
         explanation: isDevelopment
           ? "equals reads ISO text, '10-17'. read text across a slash or a dot with monthDay() or dayMonth() first, which say whether the month or the day leads"
           : 0,
       });
     }
-    const rival = MonthDay.#read(other);
-    return isPlainDate(rival) ? !!MonthDay.#placed(this.#plain, rival.year)?.equals(rival) : this.#plain.equals(rival);
+    return this.#plain.equals(MonthDay.#read(other));
   }
 
-  // where Temporal places a month-day in a year, or nothing in the year its dates run out
-  static #placed(plain, year) {
-    try {
-      return plain.toPlainDate({ year });
-    }
-    catch {
-      return undefined;
-    }
+  // whether a date is this month-day's occurrence in the date's own year, so Feb 29 falls on Feb 28
+  // in a year without one
+  fallsOn(day) {
+    const date = MonthDay.#dayOf(day);
+    return !!MonthDay.#placed(this.#plain, date.year)?.equals(date);
   }
 
   // today depends on where you stand, so these take the zone to judge from
   isToday(zone) {
-    return this.equals(today(zone));
+    return this.fallsOn(today(zone));
   }
 
   isTomorrow(zone) {
-    return this.equals(today(zone).plus({ days: 1 }));
+    return this.fallsOn(today(zone).plus({ days: 1 }));
   }
 
   isYesterday(zone) {
-    return this.equals(today(zone).minus({ days: 1 }));
+    return this.fallsOn(today(zone).minus({ days: 1 }));
   }
 
   /*******************************
@@ -320,54 +338,3 @@ for (const Kind of [CalendarDate, DateTime]) {
     },
   });
 }
-
-// the day's ISO year, the calendar a month-day is in
-const isoYear = (day) => day.toTemporal().withCalendar('iso8601').year;
-
-// the occurrence in a year, or nothing in the first and the last year Temporal counts, where its
-// dates run out partway through
-const occurrenceIn = (target, year) => {
-  try {
-    return target.in(year);
-  }
-  catch (error) {
-    if (error.code !== 'unreadableDate') {
-      throw error;
-    }
-    return undefined;
-  }
-};
-
-// the occurrence strictly after a day, or strictly before it. the day itself never counts, the way
-// next('monday') on a monday is a week away
-const occurrenceAfter = (day, target) => {
-  const thisYear = occurrenceIn(target, isoYear(day));
-  return thisYear?.isAfter(day) ? thisYear : target.in(isoYear(day) + 1);
-};
-const occurrenceBefore = (day, target) => {
-  const thisYear = occurrenceIn(target, isoYear(day));
-  return thisYear?.isBefore(day) ? thisYear : target.in(isoYear(day) - 1);
-};
-
-// next() and previous() step to a weekday, which comes around each week. a month-day comes around
-// each year, so the same two verbs step to it
-const dateSteps = { next: CalendarDate.prototype.next, previous: CalendarDate.prototype.previous };
-CalendarDate.prototype.next = function next(target) {
-  return target instanceof MonthDay ? occurrenceAfter(this, target) : dateSteps.next.call(this, target);
-};
-CalendarDate.prototype.previous = function previous(target) {
-  return target instanceof MonthDay ? occurrenceBefore(this, target) : dateSteps.previous.call(this, target);
-};
-
-// a datetime lands on the occurrence at its own time of day, in its own zone
-const datetimeSteps = { next: DateTime.prototype.next, previous: DateTime.prototype.previous };
-DateTime.prototype.next = function next(target) {
-  return target instanceof MonthDay
-    ? occurrenceAfter(this.date, target).at(this.time, this.zone)
-    : datetimeSteps.next.call(this, target);
-};
-DateTime.prototype.previous = function previous(target) {
-  return target instanceof MonthDay
-    ? occurrenceBefore(this.date, target).at(this.time, this.zone)
-    : datetimeSteps.previous.call(this, target);
-};

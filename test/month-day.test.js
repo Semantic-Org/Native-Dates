@@ -42,7 +42,7 @@ describe('monthDay', () => {
     configure({ dayFirst: false });
   });
 
-  it('reads a dash as ISO and a whole date in their one order, whichever word reads them', () => {
+  it('reads ISO text and a whole date in their one order, whichever word reads them', () => {
     expect(dayMonth('--10-17').toString()).toBe('10-17');
     expect(dayMonth('--1017').toString()).toBe('10-17');
     expect(() => monthDay('--10/17')).toThrow(/unreadableMonthDay/);
@@ -50,6 +50,14 @@ describe('monthDay', () => {
     expect(dayMonth('1990-10-17').toString()).toBe('10-17');
     expect(dayMonth(date('1990-10-17')).toString()).toBe('10-17');
     expect(() => dayMonth('17-10')).toThrow(/unreadableMonthDay/);
+  });
+
+  it('reads a dash as people write it by the word, where it is not two digits a side', () => {
+    expect(dayMonth('5-6').toString()).toBe('06-05');
+    expect(dayMonth('5/6').toString()).toBe('06-05');
+    expect(monthDay('5-6').toString()).toBe('05-06');
+    expect(dayMonth('17-5').toString()).toBe('05-17');
+    expect(dayMonth('05-06').toString()).toBe('05-06');
   });
 
   it('reads back what it serializes under either word', () => {
@@ -135,13 +143,20 @@ describe('monthDay', () => {
     expect(date('07.09.2026', { loose: true, dayFirst: true }).monthDay.toString()).toBe('09-07');
   });
 
-  it('reads an ISO date as date() does when loose, an instant in the zone included', () => {
-    const tokyo = { loose: true, zone: 'Asia/Tokyo' };
-    expect(monthDay('2026-10-17T23:30:00Z', tokyo).toString()).toBe('10-18');
+  it('reads an ISO date as strictly when loose, so a day that never was is null and never the day after', () => {
     expect(monthDay('1990-10-17', { loose: true }).toString()).toBe('10-17');
-    expect(monthDay('2027-02-29', { loose: true })).toBeNull();
+    expect(monthDay('1990-10-17T09:30', { loose: true }).toString()).toBe('10-17');
+    for (const text of ['2027-02-29', '2027-02-29T10:00', '2026-04-31 12:00', '2026-10-17T24:00']) {
+      expect(monthDay(text, { loose: true })).toBeNull();
+    }
     expect(monthDay(Temporal.PlainDate.from('1990-10-17'), { loose: true }).toString()).toBe('10-17');
     expect(monthDay(Temporal.PlainDate.from('1990-10-17'), 'UTC').toString()).toBe('10-17');
+  });
+
+  it('leaves an instant to datetime(), which says which day it falls on in a zone', () => {
+    expect(() => monthDay('2026-10-17T23:30:00Z')).toThrow(/notADate/);
+    expect(monthDay('2026-10-17T23:30:00Z', { loose: true, zone: 'Asia/Tokyo' })).toBeNull();
+    expect(datetime('2026-10-17T23:30:00Z', 'Asia/Tokyo').monthDay.toString()).toBe('10-18');
   });
 
   it('leads with its text and prints its parts', () => {
@@ -163,31 +178,43 @@ describe('monthDay', () => {
     expect(() => monthDay('10-17').in()).toThrow(/unreadableDate/);
   });
 
-  it('equals a date that is its occurrence that year, so a leap day answers to Feb 28', () => {
+  it('falls on a date that is its occurrence that year, so a leap day falls on Feb 28', () => {
     const leapDay = monthDay('02-29');
-    expect(leapDay.equals(date('2027-02-28'))).toBe(true);
-    expect(leapDay.equals('2027-02-28')).toBe(true);
-    expect(leapDay.equals('2028-02-28')).toBe(false);
-    expect(leapDay.equals('2028-02-29')).toBe(true);
-    expect(monthDay('02-28').equals('2028-02-29')).toBe(false);
-    expect(monthDay('09-07').equals(datetime('2026-09-06T23:30Z').in('Asia/Tokyo'))).toBe(true);
-    expect(monthDay('09-06').equals(new Date('2026-09-06T12:00:00Z'))).toBe(true);
-    expect(monthDay('01-01').equals('-271821-04-20')).toBe(false);
+    expect(leapDay.fallsOn(date('2027-02-28'))).toBe(true);
+    expect(leapDay.fallsOn('2027-02-28')).toBe(true);
+    expect(leapDay.fallsOn('2028-02-28')).toBe(false);
+    expect(leapDay.fallsOn('2028-02-29')).toBe(true);
+    expect(monthDay('02-28').fallsOn('2028-02-29')).toBe(false);
+    expect(monthDay('09-07').fallsOn(datetime('2026-09-06T23:30Z').in('Asia/Tokyo'))).toBe(true);
+    expect(monthDay('09-06').fallsOn(new Date('2026-09-06T12:00:00Z'))).toBe(true);
+    expect(monthDay('01-01').fallsOn('-271821-04-20')).toBe(false);
+    expect(() => leapDay.fallsOn('02-28')).toThrow(/unreadableDate/);
   });
 
-  it('equals another month-day with the same month and day, however it was made', () => {
+  it('equals the same month and day, however it was made, and a date as the month and day it is', () => {
     expect(monthDay('10-17').equals(dayMonth('17/10'))).toBe(true);
     expect(monthDay('10-17').equals('10-17')).toBe(true);
     expect(monthDay('10-17').equals('--10-17')).toBe(true);
     expect(monthDay('10-17').equals({ month: 10, day: 17 })).toBe(true);
     expect(monthDay('10-17').equals(new Temporal.PlainMonthDay(10, 17, 'iso8601', 2000))).toBe(true);
+    expect(monthDay('10-17').equals(date('1990-10-17'))).toBe(true);
     expect(monthDay('02-29').equals('02-28')).toBe(false);
     expect(() => monthDay('10-17').equals('garbage')).toThrow(/unreadableMonthDay/);
   });
 
-  it('refuses to equal text across a slash or a dot, which has an order only under the word that read it', () => {
+  it('equals the same either way round, where falling on a date is a question about that year', () => {
+    const [leap, common] = ['2000-02-29', '1999-02-28'];
+    expect(monthDay(leap).equals(common)).toBe(false);
+    expect(monthDay(common).equals(leap)).toBe(false);
+    expect(monthDay(leap).equals(monthDay(common))).toBe(false);
+    expect(monthDay(leap).fallsOn(common)).toBe(true);
+    expect(monthDay(common).fallsOn(leap)).toBe(false);
+  });
+
+  it('refuses to equal text as people write it, which has an order only under the word that read it', () => {
     expect(() => dayMonth('05/10').equals('05/10')).toThrow(/unreadableMonthDay/);
     expect(() => monthDay('10/17').equals('10.17')).toThrow(/unreadableMonthDay/);
+    expect(() => monthDay('5-6').equals('5-6')).toThrow(/unreadableMonthDay/);
     expect(dayMonth('05/10').equals(dayMonth('05/10'))).toBe(true);
     expect(dayMonth('05/10').equals(monthDay('05/10'))).toBe(false);
   });
@@ -214,6 +241,15 @@ describe('monthDay', () => {
     expect(date('2026-11-11').previous(birthday).toString()).toBe('2026-10-17');
     expect(date('2026-10-17').previous(birthday).toString()).toBe('2025-10-17');
     expect(date('2026-11-11').until(date('2026-11-11').next(monthDay('12-25')), 'days')).toBe(44);
+  });
+
+  it('finds its own occurrence after a day or before it, which is what next and previous ask', () => {
+    const birthday = monthDay('10-17');
+    expect(birthday.after('2026-10-16').toString()).toBe('2026-10-17');
+    expect(birthday.after(date('2026-10-17')).toString()).toBe('2027-10-17');
+    expect(birthday.before('2026-10-17').toString()).toBe('2025-10-17');
+    expect(birthday.after(datetime('2026-11-11T23:30Z').in('Asia/Tokyo')).toString()).toBe('2027-10-17');
+    expect(() => birthday.after('10-17')).toThrow(/unreadableDate/);
   });
 
   it('steps a leap day through the years that have none', () => {
