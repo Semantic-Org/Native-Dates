@@ -281,7 +281,7 @@ date('2028-02-10').endOf('month').toString(); // '2028-02-29'
 d.next(weekday): CalendarDate
 ```
 
-Moves forward to the next given weekday after this date. If it is already that weekday, it advances a full week.
+Moves forward to the next given weekday after this date. If it is already that weekday, it advances a full week. Also steps forward to a recurring [`MonthDay`](/plugins/month-day/) when that plugin is loaded.
 
 **Parameters**
 
@@ -314,7 +314,7 @@ mon.next('monday').toString(); // '2026-11-23'
 d.previous(weekday): CalendarDate
 ```
 
-Moves back to the most recent given weekday before this date. If it is already that weekday, it steps back a full week.
+Moves back to the most recent given weekday before this date. If it is already that weekday, it steps back a full week. Also steps back to a [`MonthDay`](/plugins/month-day/) when that plugin is loaded.
 
 **Parameters**
 
@@ -551,6 +551,43 @@ day.format('long', 'en-US'); // 'November 16, 2026'
 day.format('full', 'en-US'); // 'Monday, November 16, 2026'
 day.format('month', 'en-US'); // 'November 2026'
 day.format({ weekday: 'long' }, 'en-US'); // 'Monday'
+```
+:::
+
+:::entry
+### `as()` :kind[method]
+
+```js signature
+d.as('date'): CalendarDate
+d.as('datetime', zone?): DateTime
+```
+
+Converts this date to another kind inside a method chain, reading `'datetime'` as midnight in the given or configured zone. Also converts to [year-month](/plugins/year-month/) and [month-day](/plugins/month-day/) values when those plugins are loaded, matching `.yearMonth` and `.monthDay`.
+
+**Parameters**
+
+```params
+- name: kind
+  type: "'date' | 'datetime'"
+  required: true
+  description: Target kind to read this calendar date as.
+- name: zone
+  type: Zone
+  description: Time zone used when converting to a `'datetime'`, defaulting to the configured zone.
+```
+
+**Returns**
+
+```returns
+type: CalendarDate | DateTime
+description: Converted value.
+```
+
+```js
+const due = date('2026-11-16');
+
+due.as('datetime', 'UTC').toString(); // '2026-11-16T00:00:00.000Z'
+due.as('date').toString(); // '2026-11-16'
 ```
 :::
 

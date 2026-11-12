@@ -216,9 +216,10 @@ duration('10d').balance('week').toString(); // 'P1W3D'
 
 ```js signature
 dur.total(unit): number
+dur.as(unit): number
 ```
 
-Returns the entire length of the duration as a single floating-point number in the given unit.
+Returns the entire length of the duration as a single floating-point number in the given unit. Also aliased as [`as()`](#as) for method chains.
 
 **Parameters**
 
@@ -240,6 +241,21 @@ description: Total length in `unit`, including any fractional part.
 minutes(90).total('hours'); // 1.5
 days(14).total('weeks'); // 2
 date('2026-01-01').until('2026-07-01').total('months'); // 6
+```
+:::
+
+:::entry
+### `as()` :kind[method]
+
+```js signature
+dur.as(unit): number
+```
+
+Chain-friendly alias for [`total()`](#total) that converts the duration to a numeric count in the given unit.
+
+```js
+hours(36).as('days'); // 1.5
+date('2026-11-01').until('2026-11-16').as('days'); // 15
 ```
 :::
 

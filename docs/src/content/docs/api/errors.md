@@ -71,6 +71,8 @@ Type errors indicate that an argument has the wrong JavaScript type or belongs t
 | `notADateTime` | `datetime()`, `DateTime` | Input is `null`, `undefined`, or an unsupported type such as a boolean. |
 | `notADate` | `date()`, `CalendarDate` | Input is `null`, `undefined`, a bare single number, or an unsupported type. |
 | `notATime` | `time()`, `Time` | Input is `null`, `undefined`, or an unsupported type. |
+| `notAYearMonth` | `yearMonth()`, `monthYear()`, `YearMonth` | Input is `null`, `undefined`, a single number, a non-ISO calendar, or an unsupported type. |
+| `notAMonthDay` | `monthDay()`, `dayMonth()`, `MonthDay` | Input is `null`, `undefined`, a single number, a non-ISO calendar, or an unsupported type. |
 | `notADuration` | `duration()`, `Duration`, `plus()`, `minus()` | Input is `null`, `undefined`, an unsupported type, or a unit passed beside a duration that already carries units. |
 | `notAPoint` | `compare()`, `earliest()`, `latest()` | Value is not a `DateTime`, `CalendarDate`, `Time`, `Date`, Temporal point, or parseable string. |
 | `mixedKinds` | `compare()`, `earliest()`, `latest()` | Comparing values of different kinds, such as a `CalendarDate` with a `DateTime`. |
@@ -85,8 +87,10 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | Code | Thrown by | Cause |
 |---|---|---|
 | `unreadableDateTime` | `datetime()`, `DateTime` | String cannot be parsed as a date-time, or fields contain out-of-range values like February 30. |
-| `unreadableDate` | `date()`, `CalendarDate` | String cannot be parsed as a date, numbers are fractional, or calendar fields are out of range. |
+| `unreadableDate` | `date()`, `CalendarDate`, `on()`, `in()` | String cannot be parsed as a date, day is omitted, numbers are fractional, or fields are out of range. |
 | `unreadableTime` | `time()`, `Time` | String cannot be parsed as a clock time, 12-hour value is outside 1 to 12, or clock fields are out of range. |
+| `unreadableYearMonth` | `yearMonth()`, `monthYear()`, `YearMonth` | String cannot be parsed as a year-month, numbers are fractional, or month is outside 1 to 12. |
+| `unreadableMonthDay` | `monthDay()`, `dayMonth()`, `MonthDay` | String cannot be parsed as a month-day, ambiguous separator passed to `equals()`, or fields are out of range. |
 | `unreadableDuration` | `duration()`, `Duration` | Empty or unparseable duration phrase, invalid ISO 8601 duration, or out-of-range duration fields. |
 | `notFinite` | `datetime()`, `duration()`, unit helpers | Numeric input is `NaN`, `Infinity`, `-Infinity`, or an invalid `Date` instance. |
 | `mixedSigns` | `duration()`, `Duration` | Duration phrase or fields mix positive and negative units, such as `'1h -30m'`. |
@@ -101,6 +105,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `unknownZone` | Factories, `in()`, `configure()` | Unknown IANA time zone ID, malformed UTC offset, or non-object `zoneAliases`. |
 | `unknownLocale` | `format()`, `configure()` | Invalid BCP 47 locale tag rejected by `Intl.getCanonicalLocales()`. |
 | `unknownFormat` | `format()` | Unknown preset name, invalid `Intl` option, unsupported duration style, or token string used without `@native-dates/plugins/tokens`. |
+| `unknownKind` | `as()` | Target kind is not supported by the receiver, or its plugin has not been imported yet. |
 
 ### Arithmetic and measurement
 
@@ -108,6 +113,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 |---|---|---|
 | `notADateUnit` | `CalendarDate` math, `startOf()`, `endOf()` | Adding, subtracting, or rounding a `CalendarDate` by a clock unit such as hours or minutes. |
 | `notATimeUnit` | `Time` math | Adding or subtracting a calendar unit such as days, weeks, months, or years on a `Time`. |
+| `notAYearMonthUnit` | `YearMonth` math, `set()` | Adding, subtracting, or setting a unit smaller than a month, such as weeks, days, or hours. |
 | `cannotAdd` | `plus()`, `add()` | Addition overflows Temporal's representable date range. |
 | `cannotSubtract` | `minus()`, `subtract()`, `remove()` | Subtraction overflows Temporal's representable date range. |
 | `cannotSet` | `set()` | Field value is fractional or out of range for that calendar month or clock unit. |
@@ -116,7 +122,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `cannotBalance` | `Duration.balance()` | Balancing a duration overflows or fails Temporal rounding. |
 | `cannotTotal` | `Duration.total()`, `until()`, `since()` | Computing a total length overflows or uses an unsupported unit. |
 | `noPoints` | `earliest()`, `latest()` | Called with zero arguments or an empty array. |
-| `notANumber` | `CalendarDate`, `Time`, ranges | Numeric coercion via `valueOf()`, unary `+`, `-`, `<`, or `>` on a type with no epoch number. |
+| `notANumber` | `CalendarDate`, `Time`, `YearMonth`, `MonthDay`, ranges | Numeric coercion via `valueOf()`, unary `+`, `-`, `<`, or `>` on a type with no epoch number. |
 
 ### Environment and plugins
 

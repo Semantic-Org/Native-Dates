@@ -10,6 +10,7 @@ Core parses standard, unambiguous inputs directly into the type you ask for:
 - [`date()`](/api/date-fn/) for calendar days with no clock or time zone
 - [`time()`](/api/time-fn/) for 24-hour and 12-hour times of day
 - [`duration()`](/api/duration-fn/) for human unit phrases and ISO 8601 durations
+- [`yearMonth()`](/plugins/year-month/) and [`monthDay()`](/plugins/month-day/) plugins for billing months, card expiries, and recurring birthdays
 
 ## ISO dates and timestamps
 

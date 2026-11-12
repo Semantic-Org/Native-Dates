@@ -4,7 +4,9 @@
 // for the comedy in it, how the same thing was kept before either. the build runs every way of
 // writing a row and stops if they don't hold the same thing, so the page can't set a call beside
 // something it isn't
+import { monthDay } from '@native-dates/plugins/month-day';
 import '@native-dates/plugins/ranges';
+import { yearMonth } from '@native-dates/plugins/year-month';
 import * as library from 'native-dates';
 
 import { localePath, t } from '../../lib/i18n.js';
@@ -12,14 +14,14 @@ import { PRIMITIVES } from '../../scripts/home/primitives.js';
 import { highlight } from '../../scripts/site.js';
 
 const locale = Astro.currentLocale;
-const { date, datetime, duration, now, time } = library;
-const made = (row) => new Function('date', 'datetime', 'duration', 'now', 'time', `return (${row.ours});`)(date, datetime, duration, now, time);
+const { date, datetime, duration, IS_RANGE, now, time } = library;
+const made = (row) => new Function('date', 'datetime', 'duration', 'monthDay', 'now', 'time', 'yearMonth', `return (${row.ours});`)(date, datetime, duration, monthDay, now, time, yearMonth);
 // a value as Temporal would print it: a range is its two ends, and the current moment is only
 // what it is and where, since two calls can't land on the same instant
 const printed = (value) => {
   const temporal = (v) => (v.toTemporal ? v.toTemporal() : v);
   if (Array.isArray(value)) { return value.map(String).join(' to '); }
-  if (value.start) { return [value.start, value.end].map((end) => String(temporal(end))).join(' to '); }
+  if (value[IS_RANGE]) { return [value.start, value.end].map((end) => String(temporal(end))).join(' to '); }
   return String(temporal(value));
 };
 const momentOf = (text) => text.replace(/^.*\[(.+)\]$/, 'now in $1');
@@ -31,6 +33,8 @@ const HOLDS = {
   datetime: (legacy, ours) => legacy.at.getTime() === ours.epoch && legacy.zone === ours.zone,
   duration: (legacy, ours) => legacy === ours.toMilliseconds(),
   now: (legacy) => legacy instanceof Date,
+  yearMonth: (legacy, ours) => legacy.getFullYear() === ours.year && legacy.getMonth() + 1 === ours.month,
+  monthDay: (legacy, ours) => legacy.getMonth() + 1 === ours.month && legacy.getDate() === ours.day,
   range: (legacy, ours) => legacy.map(day).join() === [ours.start, ours.end].map(String).join(),
 };
 for (const row of PRIMITIVES) {

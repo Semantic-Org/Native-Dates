@@ -33,6 +33,7 @@ import { datetime, now } from 'native-dates';
 
 const deadline = datetime('2027-01-01T00:00:00Z');
 now().until(deadline).format('long');
+now().until(deadline).as('days');
 ```
 
 Read [Types of time](/guides/types-of-time/) next to see how to pick between them and move from one to another.
@@ -68,7 +69,7 @@ Because methods return new instances, `===` checks object references rather than
 
 The core [`native-dates`](/guides/installation/) package stays small. It covers creation, time zones, calendar math, comparisons, durations, and localized presets.
 
-Specialized tools live in [`@native-dates/plugins`](/plugins/) as individual subpath imports. You only bundle the features your project actually uses:
+Specialized tools such as partial dates, ranges, and format tokens live in [`@native-dates/plugins`](/plugins/) as individual subpath imports. You only bundle the features your project actually uses:
 
 ```js
 import '@native-dates/plugins/ranges';

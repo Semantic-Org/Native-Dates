@@ -536,6 +536,16 @@ JSON.stringify({ opens: time('9am') }); // '{"opens":"09:00:00"}'
 :::
 
 :::entry
+### `as()` :kind[method]
+
+```js signature
+t.as('time'): Time
+```
+
+Returns this `Time` when `'time'` is requested in generic conversion chains, throwing a `RangeError` for other kinds.
+:::
+
+:::entry
 ### `toTemporal()` :kind[method]
 
 ```js signature
