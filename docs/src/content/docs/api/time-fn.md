@@ -28,11 +28,13 @@ const closing = time('5:30pm');
 const iso = time('17:30:00');
 const fromNumbers = time(9, 30);
 const fromFields = time({ hour: 17, minute: 30, millisecond: 250 });
-const fromMoment = time(datetime('2026-11-16T17:30:00Z', 'America/New_York'));
+const fromInstant = time('2026-11-16T17:30:00Z', 'America/New_York');
+const fromMoment = time(datetime('2026-11-16T17:30:00Z'), 'Europe/Berlin');
 const fromTemporal = time(Temporal.PlainTime.from('08:15'));
 
 closing.toString(); // '17:30:00'
-fromMoment.toString(); // '12:30:00'
+fromInstant.toString(); // '12:30:00'
+fromMoment.toString(); // '18:30:00'
 ```
 
 **Parameters**
@@ -44,15 +46,15 @@ fromMoment.toString(); // '12:30:00'
   description: Clock string, fields object, existing time or timestamp, or 24-hour `hour` from 0 to 23.
 - name: options
   type: Zone | ReadOptions | number
-  description: Time zone or options object when reading a `Date` or loose string, or `minute` from 0 to 59.
+  description: Time zone or options object when reading a timestamp or loose string, or `minute` from 0 to 59.
   options:
     - name: zone
       type: Zone
-      description: Time zone used to extract the time of day from a JavaScript `Date` or loose timestamp.
+      description: Time zone used to extract the time of day from an instant string, `DateTime`, or `Date`.
     - name: loose
       type: boolean
       default: 'false'
-      description: "Read full timestamp strings and return `null` on unreadable input with `@native-dates/plugins/loose`."
+      description: "Read informal date-time strings and return `null` on unreadable input with `@native-dates/plugins/loose`."
     - name: dayFirst
       type: boolean
       description: "Interpret ambiguous numeric dates day-first when loose mode parses a date-and-time string."
@@ -68,13 +70,16 @@ type: Time
 description: "A `Time` representing a time of day, or `null` when loose mode cannot read `input`."
 ```
 
-When the [loose plugin](/plugins/loose/) is loaded, loose mode extracts the local clock from full timestamp strings. Unreadable inputs return `null` instead of throwing:
+When the [loose plugin](/plugins/loose/) is loaded, loose mode parses informal timestamp strings and returns `null` instead of throwing on unreadable input:
 
 ```js
 import { time } from 'native-dates';
 import '@native-dates/plugins/loose';
 
-time('2026-11-16T17:30:00Z', { zone: 'America/New_York', loose: true })?.toString(); // '12:30:00'
+time('Mon, 16 Nov 2026 17:30:00 GMT', {
+  zone: 'America/New_York',
+  loose: true,
+})?.toString(); // '12:30:00'
 time('whenever', { loose: true }); // null
 ```
 :::
@@ -87,9 +92,10 @@ Twelve-hour strings accept hours from 1 through 12 followed by AM or PM. Midnigh
 |---|---|---|
 | 12-hour clock string | `'9am'`, `'5:30pm'`, `'12:15 a.m.'` | Reads hours 1 through 12 with `am` or `pm` and optional minutes, seconds, and fractions. |
 | 24-hour clock string | `'09:00'`, `'17:30:00'`, `'17:30:15.250'` | Reads 24-hour clock strings down to nanosecond precision. |
+| ISO instant string | `'2026-11-16T17:30:00Z'` | Reads the local clock of that moment in the given zone or configured default. |
 | Clock numbers | `time(9)`, `time(9, 30)`, `time(17, 30, 15)` | Takes whole numbers for hour, optional minute, and optional second. |
 | Fields object | `{ hour: 9, minute: 30, millisecond: 250 }` | Reads singular or plural clock fields and rejects out-of-range numbers. |
-| DateTime or Temporal | `dt`, `Temporal.PlainTime`, `Temporal.ZonedDateTime` | Extracts the local time of day directly. |
+| DateTime or Temporal | `time(dt, 'Asia/Tokyo')`, `Temporal.PlainTime` | Extracts the time of day, shifting instants into the given zone when provided. |
 | JavaScript Date | `time(jsDate, 'America/New_York')` | Reads the clock time of that instant in the given zone or configured default. |
 
 :::tip[Reading the current time of day]

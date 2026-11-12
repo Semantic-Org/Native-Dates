@@ -41,11 +41,11 @@ fromMoment.toString(); // '2026-11-16'
   description: ISO date string, fields object, existing date or timestamp, or the 4-digit `year`.
 - name: options
   type: Zone | ReadOptions | number
-  description: Time zone or options object when reading a `Date` or loose string, or 1-indexed `month` from 1 to 12.
+  description: Time zone or options object when reading a timestamp or loose string, or 1-indexed `month` from 1 to 12.
   options:
     - name: zone
       type: Zone
-      description: Time zone used to determine the calendar day of a JavaScript `Date` or loose timestamp.
+      description: Time zone used to determine the calendar day of an instant string, `DateTime`, or `Date`.
     - name: loose
       type: boolean
       default: 'false'
@@ -65,13 +65,11 @@ type: CalendarDate
 description: "A `CalendarDate` with no clock or zone, or `null` when loose mode cannot read `input`."
 ```
 
-When reading a native JavaScript `Date`, pass a time zone to choose which location's calendar day to extract:
+When reading an ISO timestamp or native JavaScript `Date`, pass a time zone to choose which location's calendar day to extract:
 
 ```js
-const stamp = new Date('2026-11-17T02:00:00Z');
-
-date(stamp, 'America/Los_Angeles').toString(); // '2026-11-16'
-date(stamp, 'UTC').toString(); // '2026-11-17'
+date('2026-11-17T02:00:00Z', 'America/Los_Angeles').toString(); // '2026-11-16'
+date('2026-11-17T02:00:00Z', 'Asia/Tokyo').toString(); // '2026-11-17'
 ```
 :::
 
@@ -83,14 +81,15 @@ Months always run from 1 for January through 12 for December, unlike JavaScript'
 |---|---|---|
 | ISO date string | `'2026-11-16'` | Reads the 4-digit year, 1-indexed month, and day directly. |
 | Local date-time string | `'2026-11-16T09:30'` | Keeps the calendar date and drops the time of day. |
+| ISO instant string | `'2026-11-17T02:00:00Z'` | Reads the calendar day of that moment in the given zone or configured default. |
 | Year, month, and day | `date(2026, 11, 16)` | Takes three whole numbers with `1` for January through `12` for December. |
 | Fields object | `{ year: 2026, month: 11, day: 16 }` | Reads 1-indexed calendar fields and rejects impossible dates. |
-| DateTime | `datetime('2026-11-17T02:00Z', 'America/Los_Angeles')` | Extracts the calendar date in that instance's own time zone. |
+| DateTime | `date(dt, 'Asia/Tokyo')` | Extracts the calendar date in the given zone, or in `dt.zone` when omitted. |
 | JavaScript Date | `date(jsDate, 'America/Los_Angeles')` | Reads the calendar day of that timestamp in the given zone or configured default. |
-| Temporal value | `Temporal.PlainDate`, `Temporal.ZonedDateTime` | Extracts the ISO calendar date. |
+| Temporal value | `Temporal.PlainDate`, `Temporal.Instant` | Reads plain dates directly and shifts instants into the target zone. |
 
-:::warning[Instant strings require a time zone]
-An ISO string with a trailing `Z` or UTC offset names a moment that can fall on two different calendar days around the world. Call `datetime(text, zone).date` to choose the time zone explicitly, or pass a zone in loose mode with [`@native-dates/plugins/loose`](/plugins/loose/).
+:::note[Timestamps depend on the time zone]
+An ISO string with a trailing `Z` or UTC offset names a moment that can fall on two different calendar days around the world. Pass an explicit zone when extracting a user's calendar day on a server.
 :::
 
 ## Relative calendar days

@@ -521,7 +521,7 @@ date('2026-11-16').since('2026-11-02', 'weeks'); // 2
 d.format(spec?, locale?): string
 ```
 
-Formats the date using `Intl.DateTimeFormat`. Accepts a preset style, an options object, or a token pattern when [`@native-dates/plugins/tokens`](/plugins/tokens/) is loaded.
+Formats the date using `Intl.DateTimeFormat`. Accepts any preset name, an options object, or a token pattern when [`@native-dates/plugins/tokens`](/plugins/tokens/) is loaded. Options objects ignore clock and zone keys, so one shared options object can format moments, dates, and times alike.
 
 **Parameters**
 
@@ -529,7 +529,7 @@ Formats the date using `Intl.DateTimeFormat`. Accepts a preset style, an options
 - name: spec
   type: FormatSpec
   default: "'medium'"
-  description: Date preset such as `'medium'` or `'month'`, `Intl.DateTimeFormatOptions` object, or token pattern.
+  description: Preset name such as `'medium'` or `'month'`, `Intl.DateTimeFormatOptions` object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding the configured default for this call.
