@@ -8,6 +8,7 @@ import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './help
 import {
   inspect,
   isDigits,
+  isInstant,
   isPlainDate,
   isPlainDateTime,
   isZonedDateTime,
@@ -98,8 +99,9 @@ export class CalendarDate {
     if (input instanceof CalendarDate) {
       return input.toTemporal();
     }
-    if (input instanceof DateTime) {
-      return input.toTemporal().toPlainDate();
+    // a moment falls on a different day and clock in each zone, so it is read in the zone asked for
+    if (input instanceof DateTime || isDate(input) || isZonedDateTime(input) || isInstant(input)) {
+      return new DateTime(input, settings).toTemporal().toPlainDate();
     }
     if (isNumber(input)) {
       return refuseType('notADate', String(input), {
@@ -107,9 +109,6 @@ export class CalendarDate {
           ? 'a number alone is ambiguous. epoch milliseconds are a datetime, datetime(n).date, and a year needs its month and day, date(2026, 9, 6)'
           : 0,
       });
-    }
-    if (isDate(input)) {
-      return new DateTime(input, settings).toTemporal().toPlainDate();
     }
     if (isString(input)) {
       try {
@@ -126,7 +125,7 @@ export class CalendarDate {
         return zoned.toPlainDate();
       }
     }
-    if (isZonedDateTime(input) || isPlainDateTime(input)) {
+    if (isPlainDateTime(input)) {
       return input.toPlainDate();
     }
     if (isPlainObject(input)) {

@@ -9,6 +9,7 @@ import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './help
 import {
   inspect,
   isDigits,
+  isInstant,
   isPlainDateTime,
   isPlainTime,
   isZonedDateTime,
@@ -94,10 +95,8 @@ export class Time {
     if (input instanceof Time) {
       return input.toTemporal();
     }
-    if (input instanceof DateTime) {
-      return input.toTemporal().toPlainTime();
-    }
-    if (isDate(input)) {
+    // a moment falls on a different day and clock in each zone, so it is read in the zone asked for
+    if (input instanceof DateTime || isDate(input) || isZonedDateTime(input) || isInstant(input)) {
       return new DateTime(input, settings).toTemporal().toPlainTime();
     }
     if (isString(input)) {
@@ -115,7 +114,7 @@ export class Time {
         return zoned.toPlainTime();
       }
     }
-    if (isZonedDateTime(input) || isPlainDateTime(input)) {
+    if (isPlainDateTime(input)) {
       return input.toPlainTime();
     }
     if (isPlainObject(input)) {
