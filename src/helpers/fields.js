@@ -114,27 +114,27 @@ const oneSign = (fields, at) => {
 
 // every shape a duration can be written as, as plural Temporal fields
 export const fieldsFrom = (input, name) => {
+  if (isNumber(input)) {
+    return spill({}, name === undefined ? 'millisecond' : unit(name), input);
+  }
+  // a count from a form or a query string is text, and '30' beside 'days' is thirty days
+  if (isString(input) && isDigits(input) && name !== undefined) {
+    return spill({}, unit(name), Number(input));
+  }
+  if (name !== undefined && input != null) {
+    refuseType('notADuration', `${isPlainObject(input) ? JSON.stringify(input) : input} ${name}`, {
+      explanation: isDevelopment
+        ? "that duration already has its units. a unit goes with a number: duration(90, 'minutes')"
+        : 0,
+    });
+  }
   if (input?.[IS_DURATION]) {
-    if (name !== undefined) {
-      refuseType('notADuration', `${input} ${name}`, {
-        explanation: isDevelopment
-          ? "a duration already has its units. a unit goes with a number: duration(90, 'minutes')"
-          : 0,
-      });
-    }
     return input.toFields();
   }
   if (isTemporalDuration(input)) {
     return fieldsOf(input);
   }
-  if (isNumber(input)) {
-    return spill({}, name === undefined ? 'millisecond' : unit(name), input);
-  }
   if (isString(input)) {
-    // a count from a form or a query string is text, and '30' beside 'days' is thirty days
-    if (name !== undefined && isDigits(input)) {
-      return spill({}, unit(name), Number(input));
-    }
     return /^[-+]?P/i.test(input.trim())
       ? fieldsOf(guard(() => Temporal.Duration.from(input.trim()), 'unreadableDuration', input))
       : oneSign(parseWords(input), input);
