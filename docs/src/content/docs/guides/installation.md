@@ -17,11 +17,15 @@ npm i native-dates
 Import only the functions you call. Bundlers tree-shake everything else automatically:
 
 ```js title="app.js"
-import { date, now, today } from 'native-dates';
+import { date, monthDay, now, today, yearMonth } from 'native-dates';
 
-const due = today().plus(2, 'weeks');
+const sprint = today().to(2, 'weeks');
 const current = now('Europe/Berlin');
 const standup = date('2026-11-16').at('9:30am', 'America/New_York');
+standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
+
+const billing = yearMonth('2026-11');
+const birthday = monthDay('10/17');
 ```
 
 ## Runtime support and polyfilling
@@ -49,21 +53,23 @@ The entry import checks `globalThis.Temporal` first and dynamically loads `tempo
 
 ## Adding plugins
 
-Optional features like date ranges, custom format tokens, relative phrases, city lookup, and loose parsing live in [`@native-dates/plugins`](/plugins/):
+Optional additions like relative phrases, city and abbreviation lookups, loose parsing, and legacy `Date` getters live in [`@native-dates/plugins`](/plugins/):
 
 ```bash
 npm i @native-dates/plugins
 ```
 
-Import each subpath once in your entry file. Loading a subpath attaches its methods immediately with no extra setup call:
+Import each subpath once in your entry file. Loading a subpath attaches its behavior immediately with no extra setup call:
 
 ```js title="main.js"
-import '@native-dates/plugins/ranges';
-import '@native-dates/plugins/tokens';
-import { today } from 'native-dates';
+import '@native-dates/plugins/loose';
+import '@native-dates/plugins/relative';
+import '@native-dates/plugins/zones';
+import { date, datetime, today } from 'native-dates';
 
-const sprint = today().to(2, 'weeks');
-today().format('YYYY-MM-DD');
+today().minus(2, 'days').formatRelative(); // '2 days ago'
+datetime('2026-11-16T09:30', 'Berlin').zone; // 'Europe/Berlin'
+date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 ```
 
 Browse the [Plugins overview](/plugins/) to see every subpath and its size.

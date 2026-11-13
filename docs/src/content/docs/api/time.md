@@ -472,6 +472,42 @@ time('5:00pm').since('9:00am', 'hours'); // 8
 ```
 :::
 
+:::entry
+### `to()` :kind[method]
+
+```js signature
+t.to(end): TimeRange
+t.to(count, unit): TimeRange
+```
+
+Creates a half-open [`TimeRange`](/api/ranges/) from this time until the target time or elapsed duration. An end earlier than the start wraps overnight across midnight.
+
+**Parameters**
+
+```params
+- name: end
+  type: TimeInput | DurationInput | number
+  required: true
+  description: Closing time, clock duration, or numeric `count` paired with `unit`.
+- name: unit
+  type: Unit
+  description: Clock unit name when the first argument is a numeric count, such as `'hours'` or `'minutes'`.
+```
+
+**Returns**
+
+```returns
+type: TimeRange
+description: A half-open `TimeRange` starting at this time.
+```
+
+```js
+time('9:00am').to('5:00pm').duration.hours; // 8
+time('9:00am').to(90, 'minutes').end.toString(); // '10:30:00'
+time('22:00').to('06:00').duration.hours; // 8
+```
+:::
+
 ## Formatting and conversion
 
 :::entry
@@ -481,7 +517,9 @@ time('5:00pm').since('9:00am', 'hours'); // 8
 t.format(spec?, locale?): string
 ```
 
-Formats the time of day using `Intl.DateTimeFormat`. Accepts any preset name, an options object, or a token pattern when [`@native-dates/plugins/tokens`](/plugins/tokens/) is loaded. Options objects ignore date and zone keys, so one shared options object can format moments, dates, and times alike.
+Formats the time of day using named presets, `'LT'` and `'LTS'` localized presets, options objects, or token patterns.
+
+Options objects ignore date and zone keys, so one shared options object can format moments, dates, and times alike. See [Formatting](/guides/formatting/) for the full preset and token reference.
 
 **Parameters**
 
@@ -489,7 +527,7 @@ Formats the time of day using `Intl.DateTimeFormat`. Accepts any preset name, an
 - name: spec
   type: FormatSpec
   default: "'short'"
-  description: Preset name such as `'short'` or `'medium'`, `Intl.DateTimeFormatOptions` object, or token pattern.
+  description: Preset name such as `'short'` or `'LTS'`, `Intl` options object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding the configured default for this call.
@@ -499,14 +537,16 @@ Formats the time of day using `Intl.DateTimeFormat`. Accepts any preset name, an
 
 ```returns
 type: string
-description: Locale-formatted time string.
+description: Formatted time string.
 ```
 
 ```js
 const afternoon = time('17:30:15');
 
 afternoon.format('short', 'en-US'); // '5:30 PM'
-afternoon.format('medium', 'en-US'); // '5:30:15 PM'
+afternoon.format('LTS', 'en-US'); // '5:30:15 PM'
+afternoon.format('HH:mm:ss'); // '17:30:15'
+afternoon.format('h:mm a'); // '5:30 pm'
 afternoon.format({ hour12: false }, 'en-US'); // '17:30'
 ```
 :::

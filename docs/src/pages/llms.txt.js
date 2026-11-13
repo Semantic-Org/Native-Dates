@@ -25,7 +25,7 @@ export async function GET({ site }) {
 
   const body = `# native-dates
 
-> A readable, immutable date and time library built on the browser's Temporal and Intl APIs with zero dependencies. Opt-in subpath plugins add partial dates, ranges, token formatting, relative time, city zones, loose parsing, and legacy Date methods.
+> A readable, immutable date and time library built on the browser's Temporal and Intl APIs with zero dependencies. Core includes zoned datetimes, calendar dates, times, durations, year-months, month-days, ranges, and formatting. Opt-in subpath plugins add relative time, city and abbreviation zones, loose parsing, and legacy Date methods.
 
 Every page below is also served as markdown at its path plus \`.md\`. The full docs in one file: ${url('/llms-full.txt')}
 

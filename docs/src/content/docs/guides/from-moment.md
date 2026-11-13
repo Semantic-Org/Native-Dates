@@ -1,6 +1,6 @@
 ---
 title: Coming from Moment
-lede: Move off Moment and moment-timezone to immutable values, zero bundled timezone data, and incremental Date interop.
+lede: Move off Moment and moment-timezone to immutable values, built-in tokens and ranges, zero bundled timezone data, and incremental Date interop.
 updated: 2026-11-12
 ---
 
@@ -32,23 +32,26 @@ You can delete every `.clone()` call during migration. Immutable addition and su
 
 Moment wraps every concept in one class and numbers months from 0 to 11, where month 10 means November. Here, `month` is a plain property running from 1 through 12.
 
-Pick [`date()`](/api/date-fn/) for calendar days without a clock, [`datetime()`](/api/datetime-fn/) for moments in a time zone, and [`time()`](/api/time-fn/) for daily clock times.
+Pick [`date()`](/api/date-fn/) for calendar days, [`datetime()`](/api/datetime-fn/) for moments in a time zone, and core factories for [clock times](/api/time-fn/), [billing months](/api/year-month-fn/), and [recurring birthdays](/api/month-day-fn/):
 
 ```js
-import { date, datetime } from 'native-dates';
+import { date, datetime, monthDay, yearMonth } from 'native-dates';
 
 const invoiceDate = date(2026, 11, 16);
 invoiceDate.month; // 11, November
 
 const sentAt = datetime('2026-11-16T17:30:00Z', 'America/New_York');
 sentAt.hour; // 12
+
+const billing = yearMonth('2026-11');
+const birthday = monthDay('10/17');
 ```
 
 ## Zero bundled timezone data
 
 `moment-timezone` ships its own copy of the IANA database to the browser.
 
-Core reads time zone rules directly from the runtime's Temporal and Intl engines. Every IANA zone works out of the box with zero timezone data in your bundle.
+Core reads time zone rules directly from the runtime's Temporal and Intl engines. Every IANA zone works out of the box, and [`@native-dates/plugins/zones`](/plugins/zones/) adds city and abbreviation lookups when callers pass names like Berlin or Pacific Time.
 
 ```js
 import { datetime } from 'native-dates';
@@ -57,6 +60,22 @@ const kickoff = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 
 kickoff.in('Europe/London').format('short', 'en-GB'); // '16/11/2026, 17:30'
 kickoff.in('Asia/Tokyo').format('short', 'en-US'); // '11/17/26, 2:30 AM'
+```
+
+## Tokens, presets, and ranges in core
+
+Moment [token patterns](/guides/formatting/#token-patterns), localized presets from `'LT'` through `'llll'`, and [ranges](/api/ranges/) all work in core with zero plugins:
+
+```js
+import { date, datetime } from 'native-dates';
+
+const kickoff = datetime('2026-11-16T09:30', 'America/Los_Angeles');
+kickoff.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
+kickoff.format('LLL', 'en-US'); // 'November 16, 2026 at 9:30 AM'
+
+const quarter = date('2026-10-01').to('2026-12-31');
+quarter.contains('2026-11-16'); // true
+quarter.overlaps(date('2026-12-15').to('2027-01-15')); // true
 ```
 
 ## Side-by-side reference
@@ -70,9 +89,11 @@ kickoff.in('Asia/Tokyo').format('short', 'en-US'); // '11/17/26, 2:30 AM'
 | `m.month()`, `m.date()` | `d.month`, `d.day` | Plain properties with months from 1 to 12 |
 | `b.diff(a, 'hours', true)` | `a.until(b, 'hours')` | Fractional total in the requested unit |
 | `moment.duration(2, 'h')` | `hours(2)` or `duration('2h')` | Built into core |
-| `m.format('LLL')` | `dt.format('long')` | Locale-aware `Intl` presets with zero locale files |
-| `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | Load [`@native-dates/plugins/tokens`](/plugins/tokens/) for custom patterns |
+| `m.format('LLL')` | `dt.format('LLL')` | Localized presets from `'LT'` to `'llll'` with zero locale files |
+| `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) built directly into core |
+| `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) built into core with `to()` and `overlaps()` |
 | `m.fromNow()` | `dt.formatRelative()` | Load [`@native-dates/plugins/relative`](/plugins/relative/) for relative strings |
+| Non-ISO string parsing | `{ loose: true }` | Load [`@native-dates/plugins/loose`](/plugins/loose/) for `Date.parse` fallback |
 
 ## Migrating incrementally
 

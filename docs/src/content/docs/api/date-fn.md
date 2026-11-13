@@ -75,7 +75,7 @@ date('2026-11-17T02:00:00Z', 'Asia/Tokyo').toString(); // '2026-11-17'
 
 ### Accepted inputs
 
-Months always run from 1 for January through 12 for December, unlike JavaScript's zero-indexed `Date` constructor. Inputs with a year and month but no day throw a `RangeError` instead of inventing the first of the month, so use [`yearMonth()`](/plugins/year-month/) for month values.
+Months always run from 1 for January through 12 for December, unlike JavaScript's zero-indexed `Date` constructor. Inputs with a year and month but no day throw a `RangeError` instead of inventing the first of the month, so use [`yearMonth()`](/api/year-month-fn/) for month values.
 
 | Input | Example | How it reads |
 |---|---|---|

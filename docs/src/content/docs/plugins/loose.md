@@ -34,12 +34,10 @@ const rolled = date('2026-02-30', { loose: true }); // null
 const missing = datetime(undefined, { loose: true }); // null
 ```
 
-Range factories from [ranges](/plugins/ranges/) and partial-date factories from [year-month](/plugins/year-month/) and [month-day](/plugins/month-day/) accept the same option:
+Range and partial-date factories for [ranges](/api/ranges/), [`YearMonth`](/api/year-month/), and [`MonthDay`](/api/month-day/) accept the same option:
 
 ```js
-import { monthDay } from '@native-dates/plugins/month-day';
-import { dateRange } from '@native-dates/plugins/ranges';
-import { yearMonth } from '@native-dates/plugins/year-month';
+import { dateRange, monthDay, yearMonth } from 'native-dates';
 
 dateRange('Sep 1 2026', 'Sep 7 2026', { loose: true })?.toString(); // '2026-09-01/2026-09-07'
 yearMonth('Nov 2026', { loose: true })?.toString(); // '2026-11'
@@ -95,9 +93,10 @@ time(input, { loose: true, zone?, dayFirst? }): Time | null
 duration(input, { loose: true }): Duration | null
 yearMonth(input, { loose: true, zone? }): YearMonth | null
 monthDay(input, { loose: true, zone?, dayFirst? }): MonthDay | null
+dateRange(start, end, { loose: true, zone?, dayFirst? }): DateRange | null
 ```
 
-Extends core, partial-date, and range factories with fallback parsing and `null` returns on unreadable input. Calling class constructors like `new DateTime()` with `{ loose: true }` enables fallback parsing while still throwing if the input cannot be read.
+Extends every factory with fallback parsing and `null` returns on unreadable input. Calling class constructors like `new DateTime()` with `{ loose: true }` enables fallback parsing while still throwing if the input cannot be read.
 
 **Parameters**
 
@@ -118,7 +117,7 @@ Extends core, partial-date, and range factories with fallback parsing and `null`
 **Returns**
 
 ```returns
-type: DateTime | CalendarDate | Time | Duration | null
+type: DateTime | CalendarDate | Time | Duration | YearMonth | MonthDay | Range | null
 description: Parsed instance, or `null` when `input` cannot be read.
 ```
 
