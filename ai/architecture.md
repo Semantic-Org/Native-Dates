@@ -2,11 +2,11 @@
 
 ## What This Repo Ships
 
-`native-dates` (`src/`, also re-exported as `@native-dates/core`) wraps the browser's `Temporal` and `Intl` APIs in plain-English nouns and verbs with zero runtime dependencies. Like `nav-router`, the core stays lean at the repo root and opt-in plugins in `@native-dates/plugins/*` (`packages/plugins/src/`) add specialized capabilities when imported.
+`native-dates` (`src/`, also re-exported as `@native-dates/core`) wraps the browser's `Temporal` and `Intl` APIs in plain-English nouns and verbs with zero runtime dependencies. Core at the repo root holds every noun, range and format, and opt-in plugins in `@native-dates/plugins/*` (`packages/plugins/src/`) add leniency, alias tables, relative phrasing and a `Date` shim when imported.
 
 ## Core Nouns
 
-Temporal exposes classes across instants, zoned and plain moments, dates, times, partial dates, durations, and calendars (`Instant`, `ZonedDateTime`, `PlainDateTime`, `PlainDate`, `PlainTime`, `PlainYearMonth`, `PlainMonthDay`, `Duration`, `Calendar`). Core ships the everyday nouns application code reaches for first, while plugins add partial dates and ranges:
+Temporal exposes classes across instants, zoned and plain moments, dates, times, partial dates, durations, and calendars (`Instant`, `ZonedDateTime`, `PlainDateTime`, `PlainDate`, `PlainTime`, `PlainYearMonth`, `PlainMonthDay`, `Duration`, `Calendar`). Core has a noun for every kind of value among them, and adds ranges, which Temporal lacks:
 
 | Noun | Factory | Wraps | Key Invariant |
 |---|---|---|---|

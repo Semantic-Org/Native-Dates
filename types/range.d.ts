@@ -16,6 +16,9 @@ import type {
   Zone,
 } from './index.js';
 
+// keeps BaseRange out of the module's exports, which a declaration file would otherwise add
+export {};
+
 declare abstract class BaseRange<Point, Input> {
   /** The span in the configured locale's common form, `'Sep 1 – 7, 2026'` */
   readonly text: string;
