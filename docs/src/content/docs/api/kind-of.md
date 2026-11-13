@@ -20,13 +20,10 @@ kindOf(value):
   | undefined
 ```
 
-Returns a string tag naming which type a value belongs to, or `undefined` for plain JavaScript values such as native dates, strings, numbers, and objects. Also identifies [year-month](/plugins/year-month/), [month-day](/plugins/month-day/), and [range](/plugins/ranges/) instances when those plugins are loaded.
+Returns a string tag naming which type a value belongs to, or `undefined` for plain JavaScript values such as native dates, strings, numbers, and objects. Identifies moments, dates, times, durations, [year-month](/api/year-month/) and [month-day](/api/month-day/) values, and [ranges](/api/ranges/).
 
 ```js title="inspect.js"
-import { date, hours, kindOf, now, time } from 'native-dates';
-import { monthDay } from '@native-dates/plugins/month-day';
-import { dateRange } from '@native-dates/plugins/ranges';
-import { yearMonth } from '@native-dates/plugins/year-month';
+import { date, dateRange, hours, kindOf, monthDay, now, time, yearMonth } from 'native-dates';
 
 kindOf(now()); // 'datetime'
 kindOf(date('2026-11-16')); // 'date'
@@ -57,7 +54,7 @@ description: String tag for the value's kind, or `undefined` when `value` is not
 
 ## Type guards
 
-Type guards check global symbol brands rather than prototype identity. Guards for plugin types are exported by [`year-month`](/plugins/year-month/), [`month-day`](/plugins/month-day/), and [`ranges`](/plugins/ranges/).
+Type guards check global symbol brands rather than prototype identity, so they work reliably across realms and duplicate bundles.
 
 :::entry
 ### `isDateTime()` :kind[guard]
@@ -126,15 +123,94 @@ isDuration(hours(2)); // true
 ```
 :::
 
+:::entry
+### `isYearMonth()` :kind[guard]
+
+```js signature
+isYearMonth(value): value is YearMonth
+```
+
+Returns true when the value is a [`YearMonth`](/api/year-month/) instance, narrowing its type in TypeScript.
+
+```js
+import { isYearMonth, yearMonth } from 'native-dates';
+
+isYearMonth(yearMonth('2026-11')); // true
+```
+:::
+
+:::entry
+### `isMonthDay()` :kind[guard]
+
+```js signature
+isMonthDay(value): value is MonthDay
+```
+
+Returns true when the value is a [`MonthDay`](/api/month-day/) instance, narrowing its type in TypeScript.
+
+```js
+import { isMonthDay, monthDay } from 'native-dates';
+
+isMonthDay(monthDay('10-17')); // true
+```
+:::
+
+:::entry
+### `isDateRange()` :kind[guard]
+
+```js signature
+isDateRange(value): value is DateRange
+```
+
+Returns true when the value is a [`DateRange`](/api/ranges/) instance, narrowing its type in TypeScript.
+
+```js
+import { dateRange, isDateRange } from 'native-dates';
+
+isDateRange(dateRange('2026-11-01', '2026-11-07')); // true
+```
+:::
+
+:::entry
+### `isDateTimeRange()` :kind[guard]
+
+```js signature
+isDateTimeRange(value): value is DateTimeRange
+```
+
+Returns true when the value is a [`DateTimeRange`](/api/ranges/) instance, narrowing its type in TypeScript.
+
+```js
+import { datetimeRange, isDateTimeRange } from 'native-dates';
+
+isDateTimeRange(datetimeRange('2026-11-16T09:00Z', '2026-11-16T10:00Z')); // true
+```
+:::
+
+:::entry
+### `isTimeRange()` :kind[guard]
+
+```js signature
+isTimeRange(value): value is TimeRange
+```
+
+Returns true when the value is a [`TimeRange`](/api/ranges/) instance, narrowing its type in TypeScript.
+
+```js
+import { isTimeRange, timeRange } from 'native-dates';
+
+isTimeRange(timeRange('9:00am', '5:00pm')); // true
+```
+:::
+
 ## Cross-realm instanceof and brands
 
 Standard JavaScript `instanceof` checks fail across iframe boundaries and duplicate bundled copies. Every class here implements `[Symbol.hasInstance]` over a global registry symbol, so both `instanceof` and the guard functions work across realms.
 
-You can also read the exported brand symbols directly when writing custom serializers, test matchers, or generic helpers that detect ranges without importing the ranges plugin:
+You can also read the exported brand symbols directly when writing custom serializers, test matchers, or generic helpers that match any range kind through `IS_RANGE`:
 
 ```js
-import { DateTime, IS_DATE_TIME, IS_RANGE, now } from 'native-dates';
-import { timeRange } from '@native-dates/plugins/ranges';
+import { DateTime, IS_DATE_TIME, IS_RANGE, now, timeRange } from 'native-dates';
 
 const current = now();
 current instanceof DateTime; // true

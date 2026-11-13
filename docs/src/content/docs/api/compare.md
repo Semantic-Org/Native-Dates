@@ -16,7 +16,7 @@ updated: 2026-11-12
 compare(a, b): -1 | 0 | 1
 ```
 
-Orders two values of the same kind for `Array.prototype.sort()`, returning negative, zero, or positive numbers. Works across moments, calendar dates, clock times, durations, [year-month values](/plugins/year-month/), and [range instances](/plugins/ranges/).
+Orders two values of the same kind for `Array.prototype.sort()`, returning negative, zero, or positive numbers. Works across moments, calendar dates, clock times, durations, [year-month values](/api/year-month/), and [ranges](/api/ranges/).
 
 When the first argument is a typed point or `Duration`, a raw second argument such as an ISO string is read as the same kind. Comparing two different kinds throws a `TypeError`.
 
@@ -40,11 +40,11 @@ spans[0].minutes; // 45
 
 ```params
 - name: a
-  type: Point | Duration | Range
+  type: Point | Duration | YearMonth | Range
   required: true
   description: First typed value to compare.
 - name: b
-  type: Point | Duration | Range
+  type: Point | Duration | YearMonth | Range
   required: true
   description: Second value of the same kind, or a raw input matching `a`.
 ```
@@ -59,8 +59,7 @@ description: "Returns `-1` when the first value comes earlier, `0` when equal, a
 Ranges of the same kind sort by their start point first and break ties by their end point:
 
 ```js
-import { compare } from 'native-dates';
-import { dateRange } from '@native-dates/plugins/ranges';
+import { compare, dateRange } from 'native-dates';
 
 const windows = [
   dateRange('2026-11-10', '2026-11-20'),
@@ -79,7 +78,7 @@ windows.sort(compare).map(String);
 
 ## Picking boundary points
 
-Find the minimum or maximum value across a set of dates, moments, clock times, or [year-month values](/plugins/year-month/). Both helpers accept rest arguments or a single non-empty array.
+Find the minimum or maximum value across a set of dates, moments, clock times, or [`YearMonth`](/api/year-month/) values. Both helpers accept rest arguments or a single non-empty array.
 
 :::entry
 ### `earliest()` :kind[function]

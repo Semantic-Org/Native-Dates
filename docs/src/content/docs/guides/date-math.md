@@ -1,6 +1,6 @@
 ---
 title: Date math
-lede: Add and subtract durations, snap to calendar boundaries, round clock times, and step between weekdays without mutating values.
+lede: Add and subtract durations, snap to calendar boundaries, round clock times, and step across weekdays or ranges without mutating values.
 updated: 2026-11-12
 ---
 
@@ -20,7 +20,7 @@ created.toString(); // '2026-11-16'
 due.toString(); // '2026-11-30'
 ```
 
-Both methods accept a count and unit, a readable phrase, a fields object, or a [`Duration`](/api/duration/) instance. If your codebase prefers `add()` and `subtract()`, both work as aliases:
+Both methods accept a count and unit, a readable phrase, a fields object, or a [`Duration`](/api/duration/) instance. Standard `add()` and `subtract()` names work as aliases too:
 
 ```js
 import { datetime, hours } from 'native-dates';
@@ -89,7 +89,7 @@ wednesday.startOf('week', 'sunday').toString(); // '2026-11-15'
 
 ## Rounding clock times
 
-Moments and times support `round()`, `floor()`, and `ceil()` for snapping to the nearest unit or a step increment:
+Call `round()` on a moment or time to snap to the nearest unit or a step increment, or round in one direction:
 
 ```js
 import { time } from 'native-dates';
@@ -104,7 +104,7 @@ logged.ceil(15, 'minutes').format('short', 'en-US'); // '9:30 AM'
 
 Step increments such as 5, 10, 15, or 30 minutes must divide evenly into the next larger unit.
 
-## Stepping by weekday
+## Stepping by weekday or recurring date
 
 Call `next()` or `previous()` on a date or moment to step to an upcoming or recent weekday. If it already falls on that weekday, it moves a full seven days:
 
@@ -118,11 +118,23 @@ monday.next('monday').toString(); // '2026-11-23'
 monday.previous('friday').toString(); // '2026-11-13'
 ```
 
-With the [`month-day`](/plugins/month-day/) plugin loaded, `next()` and `previous()` also step to the upcoming or prior occurrence of a recurring date such as a birthday or holiday:
+Pass a [`MonthDay`](/api/month-day/) to step directly to the upcoming or prior occurrence of a birthday or annual holiday:
 
 ```js
-import { monthDay } from '@native-dates/plugins/month-day';
+import { monthDay } from 'native-dates';
 
 const birthday = monthDay('10/17');
 monday.next(birthday).toString(); // '2027-10-17'
+```
+
+## Building and stepping ranges
+
+Call `to()` on any date, time, or moment to build a [range](/api/ranges/). Walk across its steps with `points()`, or divide it into smaller sub-ranges:
+
+```js
+const sprint = date('2026-11-02').to(2, 'weeks');
+
+sprint.end.toString(); // '2026-11-15'
+sprint.points('week').map(String); // ['2026-11-02', '2026-11-09']
+sprint.split(1, 'week').length; // 2
 ```
