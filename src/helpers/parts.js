@@ -1,5 +1,5 @@
-import { isString } from 'native-dates/helpers/types';
-import { isCount } from 'native-dates/helpers/units';
+import { isString } from './types.js';
+import { isCount } from './units.js';
 
 // reading for the nouns that are part of a date: a month and a day, a year and a month
 

@@ -1,3 +1,12 @@
+import type { MonthDay } from './month-day.js';
+import type { DateRange, DateTimeRange, TimeRange } from './range.js';
+import type { YearMonth, YearMonthInput } from './year-month.js';
+
+export * from './month-day.js';
+export * from './range.js';
+export { monthNames, weekdayNames } from './tokens.js';
+export * from './year-month.js';
+
 /**
  * A Temporal value. Temporal's own declarations ship with newer TypeScript libs and with the polyfills,
  * so the values this library hands back from `toTemporal()` are typed loosely until they are everywhere
@@ -110,7 +119,7 @@ export type TimeInput = Time | DateTime | Date | string | DateTimeFields | Tempo
 
 /**
  * How to format: a preset (`'short'`, `'medium'`, `'long'`, `'full'`, `'month'`, and for a datetime
- * `'date'`, `'time'` or `'text'`), an `Intl.DateTimeFormat` options bag, or a token pattern with `@native-dates/plugins/tokens`
+ * `'date'`, `'time'` or `'text'`), an `Intl.DateTimeFormat` options bag, or a token pattern like `'YYYY-MM-DD'`
  */
 export type FormatSpec =
   | 'short'
@@ -205,6 +214,15 @@ export class DateTime {
   /** The next such weekday strictly after this one, at the same time of day */
   next(weekday: Weekday): DateTime;
   previous(weekday: Weekday): DateTime;
+  /** The next occurrence of a month-day strictly after this one, at the same time of day */
+  next(monthDay: MonthDay): DateTime;
+  previous(monthDay: MonthDay): DateTime;
+
+  /** A range from this moment until another, the end excluded */
+  to(end: DateTimeInput | DurationInput): DateTimeRange;
+  to(count: number, unit: Unit): DateTimeRange;
+  /** The unit containing this moment as a half-open range, its start until the next start */
+  range(unit: Unit, firstDay?: Weekday): DateTimeRange;
 
   /** The same instant, whatever zone each side reads it in */
   equals(other: DateTimeInput): boolean;
@@ -296,6 +314,21 @@ export class CalendarDate {
   /** The next such weekday strictly after this one */
   next(weekday: Weekday): CalendarDate;
   previous(weekday: Weekday): CalendarDate;
+  /** The next occurrence of a month-day strictly after this date */
+  next(monthDay: MonthDay): CalendarDate;
+  previous(monthDay: MonthDay): CalendarDate;
+
+  /** A range from this date through another, both included */
+  to(end: CalendarDateInput | DurationInput): DateRange;
+  to(count: number, unit: Unit): DateRange;
+  /** Every day of the unit containing this date, first through last */
+  range(unit: DateUnit, firstDay?: Weekday): DateRange;
+  /** The day's points by a step, as datetimes in the zone */
+  points(step: Unit | DurationInput, zone?: Zone): DateTime[];
+  points(count: number | string, unit: Unit, zone?: Zone): DateTime[];
+  /** The day cut into ranges by a step, as datetime ranges in the zone */
+  split(step: Unit | DurationInput, zone?: Zone): DateTimeRange[];
+  split(count: number | string, unit: Unit, zone?: Zone): DateTimeRange[];
 
   equals(other: CalendarDateInput): boolean;
   isBefore(other: CalendarDateInput): boolean;
@@ -333,7 +366,7 @@ export class CalendarDate {
 /**
  * Reads `'2026-09-06'`, three numbers, a fields object, a datetime (its date in its zone), a Date (its
  * date in the zone), or a Temporal value. A wall-clock string keeps its day. A missing day refuses:
- * a year and a month alone are `yearMonth(2026, 11)` with `@native-dates/plugins/year-month`
+ * a year and a month alone are `yearMonth(2026, 11)`
  */
 export function date(input: CalendarDateInput, options?: ReadOptions): CalendarDate;
 export function date(year: number, month: number, day: number): CalendarDate;
@@ -393,6 +426,9 @@ export class Time {
   since(other: TimeInput, unit: Unit): number;
   /** This time on a date in a zone, the mirror of `date.at(time, zone)` */
   on(day: CalendarDateInput, zone?: Zone): DateTime;
+  /** A range from this time until another, the end excluded */
+  to(end: TimeInput | DurationInput): TimeRange;
+  to(count: number, unit: Unit): TimeRange;
   as(kind: 'time'): Time;
 
   format(spec?: FormatSpec, locale?: Locale): string;
@@ -493,19 +529,25 @@ export function isDuration(value: unknown): value is Duration;
 /** A datetime, a date or a time, or a string that reads as one */
 export type Point = DateTime | CalendarDate | Time | Date | string;
 
-/** Augmented by `@native-dates/plugins/ranges` with `DateRange | DateTimeRange | TimeRange` */
-export interface RangeMap {}
+export interface RangeMap {
+  date: DateRange;
+  datetime: DateTimeRange;
+  time: TimeRange;
+}
 
 export type Range = RangeMap[keyof RangeMap];
 
 /** A sort comparator over points of one kind, durations, or ranges of one kind. A raw value reads as the first's kind */
 export function compare(a: Point | Duration | Range, b: Point | Duration | Range): -1 | 0 | 1;
+export function compare(a: YearMonth, b: YearMonthInput): -1 | 0 | 1;
 
 /** The point that comes first, from several arguments or one array */
+export function earliest(...months: YearMonth[] | [YearMonth[]]): YearMonth;
 export function earliest<T extends Point>(
   ...points: T[] | [T[]]
 ): T extends string ? DateTime | CalendarDate | Time : T;
 /** The point that comes last, from several arguments or one array */
+export function latest(...months: YearMonth[] | [YearMonth[]]): YearMonth;
 export function latest<T extends Point>(...points: T[] | [T[]]): T extends string ? DateTime | CalendarDate | Time : T;
 
 /** The kind of a value from this library, or undefined */
@@ -521,14 +563,12 @@ export const IS_DATE_TIME: unique symbol;
 export const IS_CALENDAR_DATE: unique symbol;
 export const IS_TIME: unique symbol;
 export const IS_DURATION: unique symbol;
-/** A `MonthDay` from `@native-dates/plugins/month-day` */
 export const IS_MONTH_DAY: unique symbol;
 /** Every range kind */
 export const IS_RANGE: unique symbol;
 export const IS_DATE_RANGE: unique symbol;
 export const IS_DATE_TIME_RANGE: unique symbol;
 export const IS_TIME_RANGE: unique symbol;
-/** A `YearMonth` from `@native-dates/plugins/year-month` */
 export const IS_YEAR_MONTH: unique symbol;
 
 /** The ISO number of a weekday from its name, `weekday('sunday')` is 7, a number passing through */

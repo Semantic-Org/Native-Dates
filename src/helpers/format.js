@@ -1,5 +1,5 @@
 import { refuse } from './errors.js';
-import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
+import { cached, plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
 import { isDevelopment, isPlainObject, isString } from './types.js';
 import { locale as pickLocale } from './zones.js';
 
@@ -63,7 +63,7 @@ export const intlOptions = (kind, spec) => {
   if (!isString(spec)) {
     refuse('unknownFormat', String(spec), {
       explanation: isDevelopment
-        ? "a format is a preset like 'medium', an Intl options object, or a token pattern with plugins/tokens"
+        ? "a format is a preset like 'medium', an Intl options object, or a token pattern like 'YYYY-MM-DD'"
         : 0,
     });
   }
@@ -83,21 +83,6 @@ for (const kind of Object.values(presets)) {
     Object.freeze(options);
   }
 }
-
-// plugins/tokens supplies the reader of a pattern like 'YYYY-MM-DD'. every noun, a plugin's own
-// included, puts a format that is no preset through here, so the two meet whichever loads first
-let tokenFormatter = null;
-
-export const setTokenExtension = (formatter) => {
-  tokenFormatter = formatter;
-};
-
-export const formatPattern = (spec, subject, kind, locale) =>
-  tokenFormatter ? tokenFormatter(subject, kind, spec, locale) : refuse('unknownFormat', String(spec), {
-    explanation: isDevelopment
-      ? "a format is a preset like 'medium' or an Intl options object. import '@native-dates/plugins/tokens' for patterns like 'YYYY-MM-DD'"
-      : 0,
-  });
 
 // Intl gets epoch milliseconds and a zone on every engine. a date is its UTC midnight read in UTC, a
 // time is that clock on the epoch day, so the fields print unshifted whether Temporal is native or not
@@ -121,3 +106,61 @@ export const formatter = (kind, options, locale, zone) =>
 
 export const formatIntl = (kind, subject, options, locale, zone) =>
   formatter(kind, options, locale, zone).format(epochOf(kind, subject));
+
+// the calendars that keep the Gregorian months and days, and count only the year their own way
+const gregorianMonths = ['gregory', 'buddhist', 'japanese', 'roc'];
+
+// the formatter for a part of a date, a month and a day or a year and a month. in a calendar with
+// other months the part falls on different days each year, so it prints the Gregorian months
+// whatever the locale's own calendar. the ISO calendar's months are the Gregorian ones too, but Intl
+// has no names for them
+const partFormatters = /* @__PURE__ */ cached((locale, options) => {
+  const format = plainDateTimeFormat(locale, options);
+  return gregorianMonths.includes(format.resolvedOptions().calendar)
+    ? format
+    : plainDateTimeFormat(locale, { ...options, calendar: 'gregory' });
+});
+
+export const partFormatter = (options, locale) => partFormatters(pickLocale(locale), options);
+
+// every part a format can name. a part of a date drops the ones it lacks
+const parts = [
+  'weekday',
+  'era',
+  'year',
+  'month',
+  'day',
+  'timeStyle',
+  'hour',
+  'minute',
+  'second',
+  'fractionalSecondDigits',
+  'dayPeriod',
+  'timeZone',
+  'timeZoneName',
+];
+
+// a part of a date prints only the parts it has, so the presets and the options bag that format a
+// datetime format it too. a format that names none of its parts prints its medium form. what is no
+// part, a calendar or a numbering system, goes to Intl as written
+export const partOptions = (spec, names, presets) => {
+  if (isString(spec) && Object.hasOwn(presets, spec)) {
+    return presets[spec];
+  }
+  const bag = isPlainObject(spec) ? spec : intlOptions('datetime', spec);
+  // a string that is no preset is left for the caller to put to formatPattern
+  if (!bag) {
+    return undefined;
+  }
+  if (bag.dateStyle) {
+    return presets[bag.dateStyle];
+  }
+  const options = { ...bag };
+  for (const part of parts) {
+    if (!names.includes(part)) {
+      delete options[part];
+    }
+  }
+  // the first two names are the parts it always has, and an era prints only beside them
+  return names.slice(0, 2).some((name) => options[name] !== undefined) ? options : { ...presets.medium, ...options };
+};

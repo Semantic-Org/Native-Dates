@@ -14,6 +14,9 @@ Temporal exposes classes across instants, zoned and plain moments, dates, times,
 | `CalendarDate` | `date()`, `today()`, `tomorrow()`, `yesterday()` | `Temporal.PlainDate` | Calendar day with no clock and no zone. Refuses clock units (`hours`, `minutes`) and numeric coercion (`<`, `-`). |
 | `Time` | `time()` | `Temporal.PlainTime` | Wall clock (`'9am'`, `'17:30'`), wraps at midnight, refuses calendar units (`days`, `months`) and numeric coercion. |
 | `Duration` | `duration()`, `hours()`..`years()` | `Temporal.Duration` | Keeps fields as written until `.balance()`. Remembers `#anchor` when produced by `.until()` / `.since()` so months and years can `.total()` and `.compare()`. |
+| `MonthDay` | `monthDay()`, `dayMonth()` | `Temporal.PlainMonthDay` | A month and a day with no year. Feb 29 falls on Feb 28 in a year without one. Has no order, so it compares only with `equals()` and `fallsOn()`. Tree-shaken when its factories are not imported. |
+| `YearMonth` | `yearMonth()`, `monthYear()` | `Temporal.PlainYearMonth` | A year and a month with no day. Counts in months and years and refuses smaller units. Tree-shaken when its factories are not imported. |
+| `DateRange`, `DateTimeRange`, `TimeRange` | `dateRange()`, `datetimeRange()`, `timeRange()`, `.to()`, `.range()` | two points of one kind | Not a Temporal type. A date range includes its last day, a datetime or time range excludes its end, and a time range may cross midnight. |
 
 Every instance freezes on construction and sets `text` first among its own properties so logging a value in DevTools or Node leads with its human-readable form without clicking getters.
 
@@ -21,9 +24,10 @@ Every instance freezes on construction and sets `text` first among its own prope
 
 Core holds what nearly every caller needs:
 
-- Core nouns (`DateTime`, `CalendarDate`, `Time`, `Duration`) and their lowercase factories (`datetime`, `date`, `time`, `duration`, `now`, `today`, `tomorrow`, `yesterday`, `hours`..`years`)
+- Core nouns (`DateTime`, `CalendarDate`, `Time`, `Duration`, `MonthDay`, `YearMonth`, and the three ranges) and their lowercase factories (`datetime`, `date`, `time`, `duration`, `now`, `today`, `tomorrow`, `yesterday`, `hours`..`years`, `monthDay`, `dayMonth`, `yearMonth`, `monthYear`, `dateRange`, `datetimeRange`, `timeRange`)
 - Plain-English arithmetic (`plus`/`minus`, with zero-cost `add`/`subtract`/`remove` prototype aliases), rounding, weekday stepping (`next`/`previous`), comparisons, and `until`/`since`
-- `Intl` preset formatting (`short`, `medium`, `long`, `full`, `date`, `time`, `month`, `text`) and `Intl` options bags
+- `Intl` preset formatting (`short`, `medium`, `long`, `full`, `date`, `time`, `month`, `text`), `Intl` options bags, and token patterns (`YYYY-MM-DD HH:mm`) with `monthNames()` and `weekdayNames()`
+- Ranges from any point (`.to()`, `.range()`, `.points()`, `.split()`) with `contains`, `overlaps` and `intersection`
 - Duration phrases (`'1h 30m'`, `'2 weeks and 3 days'`) and fractional unit spilling (`1.5 days` -> `1d 12h`)
 - Standard IANA zones, fixed offsets, `UTC`, `configure({ zone, locale, weekStart })`, `compare`, `earliest`, `latest`, and `kindOf`
 
@@ -31,10 +35,6 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"
 
 | Subpath | Adds | Mechanism |
 |---|---|---|
-| `@native-dates/plugins/year-month` | `YearMonth` over `Temporal.PlainYearMonth`, `yearMonth('2026-11')`, `monthYear('11/26')`, `.yearMonth` | Exports the class and factory, attaches the `.yearMonth` getter and `as('yearMonth')` onto `CalendarDate` and `DateTime` |
-| `@native-dates/plugins/ranges` | `DateRange`, `DateTimeRange`, `TimeRange`, `.to()`, `.range()`, `.points()`, `.split()` | Exports range classes/factories and attaches `.to()` / `.range()` onto point prototypes |
-| `@native-dates/plugins/month-day` | `MonthDay` over `Temporal.PlainMonthDay`, `monthDay('10/17')`, `dayMonth('17/10')`, `.monthDay`, `birthday.next()`, `.next()` / `.previous()` to a month-day | Exports the class and its two factories and attaches the `.monthDay` getter and `as('monthDay')` onto `CalendarDate` and `DateTime`. Core's `.next()` / `.previous()` know the brand and ask a month-day for its own occurrence |
-| `@native-dates/plugins/tokens` | `YYYY-MM-DD HH:mm` token patterns, `monthNames()`, `weekdayNames()` | Registers the pattern reader in `helpers/format.js`, which every noun's `.format()` puts a string that is no preset to, so a plugin's own nouns format with tokens whichever loads first |
 | `@native-dates/plugins/relative` | `.formatRelative(to, locale)` on `DateTime` and `CalendarDate` | Attaches prototype methods backed by `Intl.RelativeTimeFormat` |
 | `@native-dates/plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), abbreviations (`'PT'`, `'CET'`), `configure({ zoneAliases })` | Registers fallback zone resolver in `helpers/zones.js` |
 | `@native-dates/plugins/loose` | `{ loose: true, dayFirst }` `Date.parse` fallback and `null` on unreadable input | Supplies the loose parser and `loosely` wrapper in `helpers/errors.js` across factories and ranges |
