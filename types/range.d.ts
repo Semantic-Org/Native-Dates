@@ -14,7 +14,10 @@ import type {
   Unit,
   Weekday,
   Zone,
-} from 'native-dates';
+} from './index.js';
+
+// keeps BaseRange out of the module's exports, which a declaration file would otherwise add
+export {};
 
 declare abstract class BaseRange<Point, Input> {
   /** The span in the configured locale's common form, `'Sep 1 – 7, 2026'` */
@@ -88,39 +91,3 @@ export function timeRange(interval: string, options?: Zone | ReadOptions): TimeR
 export function isDateRange(value: unknown): value is DateRange;
 export function isDateTimeRange(value: unknown): value is DateTimeRange;
 export function isTimeRange(value: unknown): value is TimeRange;
-
-declare module 'native-dates' {
-  interface DateTime {
-    /** A range from this moment until another, the end excluded */
-    to(end: DateTimeInput | DurationInput): DateTimeRange;
-    to(count: number, unit: Unit): DateTimeRange;
-    /** The unit containing this moment as a half-open range, its start until the next start */
-    range(unit: Unit, firstDay?: Weekday): DateTimeRange;
-  }
-
-  interface CalendarDate {
-    /** A range from this date through another, both included */
-    to(end: CalendarDateInput | DurationInput): DateRange;
-    to(count: number, unit: Unit): DateRange;
-    /** Every day of the unit containing this date, first through last */
-    range(unit: DateUnit, firstDay?: Weekday): DateRange;
-    /** The day's points by a step, as datetimes in the zone */
-    points(step: Unit | DurationInput, zone?: Zone): DateTime[];
-    points(count: number | string, unit: Unit, zone?: Zone): DateTime[];
-    /** The day cut into ranges by a step, as datetime ranges in the zone */
-    split(step: Unit | DurationInput, zone?: Zone): DateTimeRange[];
-    split(count: number | string, unit: Unit, zone?: Zone): DateTimeRange[];
-  }
-
-  interface Time {
-    /** A range from this time until another, the end excluded */
-    to(end: TimeInput | DurationInput): TimeRange;
-    to(count: number, unit: Unit): TimeRange;
-  }
-
-  interface RangeMap {
-    date: DateRange;
-    datetime: DateTimeRange;
-    time: TimeRange;
-  }
-}

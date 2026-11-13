@@ -1,4 +1,4 @@
-import type { Locale, Weekday } from 'native-dates';
+import type { Locale, Weekday } from './index.js';
 
 /** The weekday names in the locale, starting on the configured first day or on `firstDay` */
 export function weekdayNames(style?: 'short' | 'long', firstDay?: Weekday, locale?: Locale): string[];

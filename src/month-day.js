@@ -1,12 +1,12 @@
-import { CalendarDate, DateTime, IS_MONTH_DAY, today } from 'native-dates';
-import { guard, loosely, readAs, refuse, refuseType, requireLoose, unreadable } from 'native-dates/helpers/errors';
-import { epochOf, formatPattern } from 'native-dates/helpers/format';
-import { isDevelopment, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
-import { inspect, isCount, isDigits, isPlainDate, singularKeys, zoneOptions } from 'native-dates/helpers/units';
-import { zoneId } from 'native-dates/helpers/zones';
-
-import { partFormatter, partOptions } from './helpers/format.js';
+import { CalendarDate, today } from './calendar-date.js';
+import { guard, loosely, readAs, refuse, refuseType, requireLoose, unreadable } from './helpers/errors.js';
+import { epochOf, partFormatter, partOptions } from './helpers/format.js';
+import { IS_MONTH_DAY } from './helpers/identity.js';
 import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
+import { formatTokens } from './helpers/tokens.js';
+import { isDevelopment, isObject, isPlainObject, isString } from './helpers/types.js';
+import { inspect, isCount, isDigits, isPlainDate, singularKeys, zoneOptions } from './helpers/units.js';
+import { zoneId } from './helpers/zones.js';
 
 /*
   a month and a day with no year: a birthday, an anniversary, a holiday. it comes around once a year,
@@ -149,7 +149,7 @@ export class MonthDay {
       ? MonthDay.#fromParts({ month, day: named[2] ?? named[3] }, input)
       : refuse('unreadableMonthDay', input, {
         explanation: isDevelopment
-          ? "a month-day is '10-17' or '10/17', or a date like '1990-10-17' with its year dropped. plugins/loose adds { loose: true } for a month by name, 'Oct 17'. a date written any other way is date(text, { loose: true }).monthDay"
+          ? "a month-day is '10-17' or '10/17', or a date like '1990-10-17' with its year dropped. plugins/loose adds { loose: true } for a month by name, 'Oct 17'. a date written any other way is date(text, { loose: true })?.monthDay"
           : 0,
       });
   }
@@ -269,7 +269,7 @@ export class MonthDay {
     const options = partOptions(spec, ['month', 'day'], MonthDay.presets);
     return options
       ? partFormatter(options, locale).format(epochOf('date', { year: leapYear, month: this.month, day: this.day }))
-      : formatPattern(spec, this, 'month-day', locale);
+      : formatTokens(this, 'month-day', spec, locale);
   }
 
   toString() {
@@ -319,18 +319,3 @@ export const dayMonth = (input, monthOrOptions) =>
     : monthDay(input, { ...zoneOptions(monthOrOptions), dayFirst: true });
 
 export const isMonthDay = (value) => value instanceof MonthDay;
-
-// a date and a datetime hand over their month-day, the way a datetime hands over its date, by the
-// property or by as('monthDay')
-for (const Kind of [CalendarDate, DateTime]) {
-  Object.defineProperty(Kind.prototype, 'monthDay', {
-    configurable: true,
-    get() {
-      return new MonthDay(this);
-    },
-  });
-  const as = Kind.prototype.as;
-  Kind.prototype.as = function(kind, zone) {
-    return kind === 'monthDay' ? this.monthDay : as.call(this, kind, zone);
-  };
-}

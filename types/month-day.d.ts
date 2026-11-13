@@ -1,4 +1,4 @@
-import type { CalendarDate, CalendarDateInput, FormatSpec, Locale, ReadOptions, TemporalValue, Zone } from 'native-dates';
+import type { CalendarDate, CalendarDateInput, FormatSpec, Locale, ReadOptions, TemporalValue, Zone } from './index.js';
 
 /** A month and a day, singular, as Temporal's `with()` spells them */
 export interface MonthDayFields {
@@ -88,8 +88,8 @@ export class MonthDay {
  * reads with its year dropped. A missing value refuses, `today().monthDay` reads the current one.
  * With `{ loose: true }` it also reads a month by its English name and a day, `'Oct 17'` or
  * `'17th October'`, and gives null for what it cannot read. It never puts text to `Date`, which makes
- * up the parts text leaves out: a date written loosely is `date(text, { loose: true })?.monthDay`,
- * and an instant is `datetime(text, zone).monthDay`
+ * up the parts text leaves out: a date written loosely is
+ * `date(text, { loose: true })?.monthDay`, and an instant is `datetime(text, zone).monthDay`
  */
 export function monthDay(input: unknown, options: MonthDayOptions & { loose: true; }): MonthDay | null;
 export function monthDay(input: MonthDayInput, options?: Zone | MonthDayOptions): MonthDay;
@@ -104,25 +104,3 @@ export function dayMonth(input: MonthDayInput, options?: Zone | MonthDayOptions)
 export function dayMonth(day: number | string, month: number | string): MonthDay;
 
 export function isMonthDay(value: unknown): value is MonthDay;
-
-declare module 'native-dates' {
-  interface DateTime {
-    /** The month and day in this zone, the year dropped */
-    readonly monthDay: MonthDay;
-    as(kind: 'monthDay'): MonthDay;
-    /** The next occurrence of a month-day strictly after this one, at the same time of day */
-    next(monthDay: MonthDay): DateTime;
-    previous(monthDay: MonthDay): DateTime;
-  }
-
-  interface CalendarDate {
-    /** The month and day, the year dropped */
-    readonly monthDay: MonthDay;
-    as(kind: 'monthDay'): MonthDay;
-    /** The next occurrence of a month-day strictly after this date */
-    next(monthDay: MonthDay): CalendarDate;
-    previous(monthDay: MonthDay): CalendarDate;
-  }
-
-  export function kindOf(value: MonthDay): 'monthDay';
-}

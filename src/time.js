@@ -1,10 +1,11 @@
 import { CalendarDate } from './calendar-date.js';
 import { DateTime } from './date-time.js';
-import { anchored } from './duration.js';
+import { anchored, duration } from './duration.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
-import { formatIntl, formatPattern, intlOptions } from './helpers/format.js';
+import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
+import { formatTokens } from './helpers/tokens.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
   endPrecision,
@@ -23,6 +24,7 @@ import {
   withParts,
 } from './helpers/units.js';
 import { zoneId } from './helpers/zones.js';
+import { TimeRange } from './range.js';
 
 const clock = /^(\d{1,2})(?::(\d{2}))?(?::(\d{2})(?:\.(\d{1,9}))?)?\s*([ap]\.?m\.?)?$/i;
 
@@ -264,6 +266,11 @@ export class Time {
     );
   }
 
+  // a range from this time until another, the end excluded
+  to(end, name) {
+    return new TimeRange(this, name === undefined ? end : duration(end, name));
+  }
+
   /*******************************
             Comparison
   *******************************/
@@ -319,7 +326,7 @@ export class Time {
 
   format(spec, locale) {
     const options = intlOptions('time', spec);
-    return options ? formatIntl('time', this.#plain, options, locale) : formatPattern(spec, this, 'time', locale);
+    return options ? formatIntl('time', this.#plain, options, locale) : formatTokens(this, 'time', spec, locale);
   }
 
   // a fraction prints in groups of three, the width its precision needs, so one precision is one width
