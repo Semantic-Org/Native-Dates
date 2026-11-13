@@ -76,7 +76,7 @@ export class MonthDay {
     if (input === undefined || input === null) {
       return refuseType('notAMonthDay', String(input), {
         explanation: isDevelopment
-          ? 'monthDay(today()) is the current one. a missing value is refused so an absent field never silently becomes today'
+          ? 'today().monthDay is the current one. a missing value is refused so an absent field never silently becomes today'
           : 0,
       });
     }
@@ -150,7 +150,7 @@ export class MonthDay {
       ? MonthDay.#fromParts({ month, day: named[2] ?? named[3] }, input)
       : refuse('unreadableMonthDay', input, {
         explanation: isDevelopment
-          ? "a month-day is '10-17' or '10/17', or a date like '1990-10-17' with its year dropped. plugins/loose adds { loose: true } for a month by name, 'Oct 17'. a date written any other way is monthDay(date(text, { loose: true }))"
+          ? "a month-day is '10-17' or '10/17', or a date like '1990-10-17' with its year dropped. plugins/loose adds { loose: true } for a month by name, 'Oct 17'. a date written any other way is date(text, { loose: true })?.monthDay"
           : 0,
       });
   }

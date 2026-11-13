@@ -26,8 +26,10 @@ import {
   zoneOptions,
 } from './helpers/units.js';
 import { weekStart, zoneId } from './helpers/zones.js';
+import { MonthDay } from './month-day.js';
 import { DateTimeRange } from './range.js';
 import { Time } from './time.js';
+import { YearMonth } from './year-month.js';
 
 /*
   an exact moment with a zone to read it in. one type for timestamps, appointments and deadlines.
@@ -211,8 +213,20 @@ export class DateTime {
   get time() {
     return new Time(this.#zoned.toPlainTime());
   }
+  get monthDay() {
+    return new MonthDay(this);
+  }
+  get yearMonth() {
+    return new YearMonth(this);
+  }
   as(kind) {
-    return readAs(kind, { datetime: () => this, date: () => this.date, time: () => this.time });
+    return readAs(kind, {
+      datetime: () => this,
+      date: () => this.date,
+      time: () => this.time,
+      monthDay: () => this.monthDay,
+      yearMonth: () => this.yearMonth,
+    });
   }
 
   /*******************************
