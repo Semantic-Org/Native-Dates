@@ -20,6 +20,17 @@ const presets = {
       minute: '2-digit',
       timeZoneName: 'short',
     },
+    // the localized names moment and day.js format with
+    LT: { timeStyle: 'short' },
+    LTS: { timeStyle: 'medium' },
+    L: { year: 'numeric', month: '2-digit', day: '2-digit' },
+    l: { year: 'numeric', month: 'numeric', day: 'numeric' },
+    LL: { dateStyle: 'long' },
+    ll: { dateStyle: 'medium' },
+    LLL: { dateStyle: 'long', timeStyle: 'short' },
+    lll: { dateStyle: 'medium', timeStyle: 'short' },
+    LLLL: { dateStyle: 'full', timeStyle: 'short' },
+    llll: { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' },
   },
   date: {},
   time: {
