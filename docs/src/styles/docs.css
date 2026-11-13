@@ -6,8 +6,8 @@
   /* where a linked heading lands: below the topbar (and the on-this-page bar where it shows) */
   --anchor-offset: 84px;
   --sidebar-w: 264px;
-  --toc-w: 232px;
-  --toc-room: 48px;  /* the least space either side of the on-this-page rail */
+  --toc-w: 248px;
+  --toc-room: 28px;  /* the least space either side of the on-this-page rail */
   --doc-w: 720px;
   --lh-prose: 26px;  /* running text in docs reads at 16 on 26 */
 }
@@ -47,22 +47,22 @@
   --shift: calc(var(--sidebar-w) / 2);
 }
 /* a doc with an on-this-page rail: the doc centers on the window as any doc does, moving left only
-   as far as the rail needs room; the rail centers itself, at its own width, in the space between
-   the doc and the window's edge, so the space either side of it is always even */
+   as far as the rail needs room; the rail centers itself in the space between the doc and the
+   window's edge, so the space either side of it is always even */
 @media (min-width: 1241px) {
   .docs-main:has(> .docs-toc) {
     --rail: calc(var(--toc-w) + 2 * var(--toc-room));
     display: grid; align-items: start;
     grid-template-columns:
       max(0px, min(round(down, (100% - var(--doc-w)) / 2 - var(--shift), 1px), 100% - var(--doc-w) - var(--rail) + var(--pad-x)))
-      minmax(0, var(--doc-w)) minmax(var(--toc-w), 1fr);
+      minmax(0, var(--doc-w)) minmax(calc(var(--rail) - var(--pad-x)), 1fr);
   }
   .docs-main:has(> .docs-toc) > :not(.docs-toc) { grid-column: 2; }
   .docs-main:has(> .docs-toc) > .doc { margin: 0; }
   /* the window's edge, not the column's padding, is the far side of the space */
   .docs-main > .docs-toc {
     grid-column: 3; grid-row: 1 / span 20; justify-self: center;
-    width: fit-content; max-width: var(--toc-w); margin-inline-end: calc(-1 * var(--pad-x));
+    width: var(--toc-w); margin-inline-end: calc(-1 * var(--pad-x));
   }
 }
 /* a container, so the doc can measure the room beside it */
@@ -123,7 +123,7 @@
 .toc-label { margin: 0 0 12px; color: var(--text); font-size: var(--fs-xs); line-height: var(--lh-xs); font-weight: 600; }
 .toc-list { list-style: none; margin: 0; padding: 0; border-inline-start: 1px solid var(--line); }
 .toc-list a {
-  display: block; margin-inline-start: -1px; padding-block: 5px; padding-inline: 14px 0;
+  display: block; margin-inline-start: -1px; padding-block: 5px; padding-inline: 14px 12px;
   border-inline-start: 1px solid transparent;
   color: var(--text-3); text-decoration: none;
   font-size: var(--fs-sm); line-height: var(--lh-sm); text-wrap: pretty;
