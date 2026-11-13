@@ -1,8 +1,11 @@
-import { CalendarDate, DateTime, IS_YEAR_MONTH, today } from 'native-dates';
-import { guard, loosely, readAs, refuse, refuseType, requireLoose, unreadable } from 'native-dates/helpers/errors';
-import { fieldsFrom, temporalDurationOf } from 'native-dates/helpers/fields';
-import { epochOf, formatPattern } from 'native-dates/helpers/format';
-import { isDevelopment, isObject, isPlainObject, isString } from 'native-dates/helpers/types';
+import { CalendarDate, today } from './calendar-date.js';
+import { guard, loosely, readAs, refuse, refuseType, requireLoose, unreadable } from './helpers/errors.js';
+import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
+import { epochOf, partFormatter, partOptions } from './helpers/format.js';
+import { IS_YEAR_MONTH } from './helpers/identity.js';
+import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
+import { formatTokens } from './helpers/tokens.js';
+import { isDevelopment, isObject, isPlainObject, isString } from './helpers/types.js';
 import {
   inspect,
   isCount,
@@ -13,11 +16,8 @@ import {
   unit,
   units,
   withParts,
-} from 'native-dates/helpers/units';
-import { zoneId } from 'native-dates/helpers/zones';
-
-import { partFormatter, partOptions } from './helpers/format.js';
-import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
+} from './helpers/units.js';
+import { zoneId } from './helpers/zones.js';
 
 /*
   a year and a month with no day: a billing period, a card's expiry, what a month picker holds. it
@@ -128,7 +128,7 @@ export class YearMonth {
           ? YearMonth.#fromFields({ year: named[2] ?? named[3], month }, input)
           : refuse('unreadableYearMonth', input, {
             explanation: isDevelopment
-              ? "a year-month is '2026-11', or a date like '2026-11-16' with its day dropped. the month first, as a card prints it, is monthYear('11/26'). plugins/loose adds { loose: true } for a month by name, 'Nov 2026'. a date written any other way is date(text, { loose: true }).yearMonth"
+              ? "a year-month is '2026-11', or a date like '2026-11-16' with its day dropped. the month first, as a card prints it, is monthYear('11/26'). plugins/loose adds { loose: true } for a month by name, 'Nov 2026'. a date written any other way is date(text, { loose: true })?.yearMonth"
               : 0,
           });
       }
@@ -302,7 +302,7 @@ export class YearMonth {
     const options = partOptions(spec, ['year', 'month', 'era'], YearMonth.presets);
     return options
       ? partFormatter(options, locale).format(epochOf('date', { year: this.year, month: this.month, day: 1 }))
-      : formatPattern(spec, this, 'year-month', locale);
+      : formatTokens(this, 'year-month', spec, locale);
   }
 
   toString() {
@@ -368,18 +368,3 @@ const inCentury = (year) => {
 };
 
 export const isYearMonth = (value) => value instanceof YearMonth;
-
-// a date and a datetime hand over their year-month, the way a datetime hands over its date, by the
-// property or by as('yearMonth')
-for (const Kind of [CalendarDate, DateTime]) {
-  Object.defineProperty(Kind.prototype, 'yearMonth', {
-    configurable: true,
-    get() {
-      return new YearMonth(this);
-    },
-  });
-  const as = Kind.prototype.as;
-  Kind.prototype.as = function(kind, zone) {
-    return kind === 'yearMonth' ? this.yearMonth : as.call(this, kind, zone);
-  };
-}

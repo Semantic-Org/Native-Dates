@@ -1,9 +1,10 @@
 import { CalendarDate, today } from './calendar-date.js';
-import { anchored } from './duration.js';
+import { anchored, duration } from './duration.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
-import { formatIntl, formatPattern, intlOptions } from './helpers/format.js';
+import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
+import { formatTokens } from './helpers/tokens.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
   endPrecision,
@@ -25,7 +26,10 @@ import {
   zoneOptions,
 } from './helpers/units.js';
 import { weekStart, zoneId } from './helpers/zones.js';
+import { MonthDay } from './month-day.js';
+import { DateTimeRange } from './range.js';
 import { Time } from './time.js';
+import { YearMonth } from './year-month.js';
 
 /*
   an exact moment with a zone to read it in. one type for timestamps, appointments and deadlines.
@@ -209,8 +213,20 @@ export class DateTime {
   get time() {
     return new Time(this.#zoned.toPlainTime());
   }
+  get monthDay() {
+    return new MonthDay(this);
+  }
+  get yearMonth() {
+    return new YearMonth(this);
+  }
   as(kind) {
-    return readAs(kind, { datetime: () => this, date: () => this.date, time: () => this.time });
+    return readAs(kind, {
+      datetime: () => this,
+      date: () => this.date,
+      time: () => this.time,
+      monthDay: () => this.monthDay,
+      yearMonth: () => this.yearMonth,
+    });
   }
 
   /*******************************
@@ -313,6 +329,16 @@ export class DateTime {
     return this.minus({ days: delta });
   }
 
+  // a range from this moment until another, the end excluded, or the unit this moment falls in
+  to(end, name) {
+    return new DateTimeRange(this, name === undefined ? end : duration(end, name));
+  }
+
+  range(name, firstDay) {
+    const start = this.startOf(name, firstDay);
+    return new DateTimeRange(start, start.plus(stepOf(unit(name))));
+  }
+
   /*******************************
             Comparison
   *******************************/
@@ -386,7 +412,7 @@ export class DateTime {
     const options = intlOptions('datetime', spec);
     return options
       ? formatIntl('datetime', this.epoch, options, locale, this.zone)
-      : formatPattern(spec, this, 'datetime', locale);
+      : formatTokens(this, 'datetime', spec, locale);
   }
 
   // the instant in UTC, the form every database and API reads. the zone is a view and does not travel

@@ -83,7 +83,7 @@ export const isDigits = (value) => isString(value) && /^\s*[-+]?\d+(?:\.\d+)?\s*
 // a count is a number, or one written as text
 export const isCount = (value) => isNumber(value) || isDigits(value);
 
-// day.js keeps M for month and m for minute, and the tokens plugin does too, so the one capital is kept
+// day.js keeps M for month and m for minute, and token patterns do too, so the one capital is kept
 export const unit = (input) => {
   const key = input === 'M' ? 'month' : isString(input) ? input.trim().toLowerCase() : '';
   const found = Object.hasOwn(spellings, key) && spellings[key];
@@ -162,3 +162,7 @@ export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(
 
 // the second argument of a factory is a zone, or an options bag { zone, loose }
 export const zoneOptions = (value) => (isPlainObject(value) ? value : { zone: value });
+
+// points('hour', zone), or points(30, 'minutes', zone): a count brings its unit before the zone
+export const stepArguments = (step, [second, third]) =>
+  isNumber(step) || isDigits(step) ? [second, third] : [undefined, second];

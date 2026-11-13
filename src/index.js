@@ -2,13 +2,19 @@
 export { CalendarDate } from './calendar-date.js';
 export { DateTime } from './date-time.js';
 export { Duration } from './duration.js';
+export { MonthDay } from './month-day.js';
+export { DateRange, DateTimeRange, TimeRange } from './range.js';
 export { Time } from './time.js';
+export { YearMonth } from './year-month.js';
 
 // factories
 export { date, today, tomorrow, yesterday } from './calendar-date.js';
 export { datetime, endOfToday, now, startOfToday } from './date-time.js';
 export { days, duration, hours, milliseconds, minutes, months, seconds, weeks, years } from './duration.js';
+export { dayMonth, monthDay } from './month-day.js';
+export { dateRange, datetimeRange, timeRange } from './range.js';
 export { time } from './time.js';
+export { monthYear, yearMonth } from './year-month.js';
 
 // guards, comparisons, brands and setup
 export { isCalendarDate } from './calendar-date.js';
@@ -27,6 +33,10 @@ export {
   IS_TIME_RANGE,
   IS_YEAR_MONTH,
 } from './helpers/identity.js';
+export { monthNames, weekdayNames } from './helpers/tokens.js';
 export { weekdayNumber as weekday } from './helpers/units.js';
 export { configure } from './helpers/zones.js';
+export { isMonthDay } from './month-day.js';
+export { isDateRange, isDateTimeRange, isTimeRange } from './range.js';
 export { isTime } from './time.js';
+export { isYearMonth } from './year-month.js';

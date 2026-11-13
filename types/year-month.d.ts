@@ -9,7 +9,7 @@ import type {
   TemporalValue,
   Unit,
   Zone,
-} from 'native-dates';
+} from './index.js';
 
 /** A year and a month, singular, as Temporal's `with()` spells them */
 export interface YearMonthFields {
@@ -119,22 +119,3 @@ export function monthYear(input: YearMonthInput, options?: Zone | ReadOptions): 
 export function monthYear(month: number | string, year: number | string): YearMonth;
 
 export function isYearMonth(value: unknown): value is YearMonth;
-
-declare module 'native-dates' {
-  interface DateTime {
-    /** The year and month in this zone, the day dropped */
-    readonly yearMonth: YearMonth;
-    as(kind: 'yearMonth'): YearMonth;
-  }
-
-  interface CalendarDate {
-    /** The year and month, the day dropped */
-    readonly yearMonth: YearMonth;
-    as(kind: 'yearMonth'): YearMonth;
-  }
-
-  export function kindOf(value: YearMonth): 'yearMonth';
-  export function compare(a: YearMonth, b: YearMonthInput): -1 | 0 | 1;
-  export function earliest(...months: YearMonth[] | [YearMonth[]]): YearMonth;
-  export function latest(...months: YearMonth[] | [YearMonth[]]): YearMonth;
-}

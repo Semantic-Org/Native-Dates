@@ -1,9 +1,10 @@
 import { DateTime } from './date-time.js';
-import { anchored } from './duration.js';
+import { anchored, duration } from './duration.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
-import { formatIntl, formatPattern, intlOptions } from './helpers/format.js';
+import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
+import { formatTokens } from './helpers/tokens.js';
 import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
   inspect,
@@ -17,6 +18,7 @@ import {
   plural,
   quarterStart,
   singularKeys,
+  stepArguments,
   stepOf,
   timeUnits,
   unit,
@@ -25,7 +27,10 @@ import {
   withParts,
 } from './helpers/units.js';
 import { weekStart, zoneId } from './helpers/zones.js';
+import { MonthDay } from './month-day.js';
+import { DateRange } from './range.js';
 import { Time } from './time.js';
+import { YearMonth } from './year-month.js';
 
 /*
   a calendar date with no time and no zone: a due date, a birthday, a booking night. it is not a
@@ -88,7 +93,7 @@ export class CalendarDate {
       if (day === undefined) {
         return refuse('unreadableDate', `${input}-${month}`, {
           explanation: isDevelopment
-            ? 'a date needs its day: date(2026, 11, 16). a year and a month alone are yearMonth(2026, 11) with plugins/year-month'
+            ? 'a date needs its day: date(2026, 11, 16). a year and a month alone are yearMonth(2026, 11)'
             : 0,
         });
       }
@@ -159,7 +164,7 @@ export class CalendarDate {
       'unreadableDate',
       text,
       isDevelopment
-        ? "write ISO 8601: '2026-09-06'. a year and a month alone is yearMonth('2026-11') with plugins/year-month. plugins/loose adds { loose: true } for what Date reads"
+        ? "write ISO 8601: '2026-09-06'. a year and a month alone is yearMonth('2026-11'). plugins/loose adds { loose: true } for what Date reads"
         : 0,
     );
   }
@@ -257,7 +262,7 @@ export class CalendarDate {
     return this.startOf(name, firstDay).plus(stepOf(unit(name))).minus({ days: 1 });
   }
 
-  // steps to a weekday, which comes around each week. a month-day, from plugins/month-day, comes
+  // steps to a weekday, which comes around each week. a month-day comes
   // around each year and finds its own occurrence. either way this day itself never counts
   next(target) {
     if (target?.[IS_MONTH_DAY]) {
@@ -273,6 +278,27 @@ export class CalendarDate {
     }
     const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
+  }
+
+  // a range from this date through another, both included, or every day of the unit it falls in
+  to(end, name) {
+    return new DateRange(this, name === undefined ? end : duration(end, name));
+  }
+
+  range(name, firstDay) {
+    return new DateRange(this.startOf(name, firstDay), this.endOf(name, firstDay));
+  }
+
+  // a day is a range of time, so it walks and splits like one: today().split('hour') is the day's hours
+  // in the zone, 23 or 25 of them on a transition day, which only the zone knows
+  points(step, ...rest) {
+    const [name, zone] = stepArguments(step, rest);
+    return this.at('00:00', zone).range('day').points(step, name);
+  }
+
+  split(step, ...rest) {
+    const [name, zone] = stepArguments(step, rest);
+    return this.at('00:00', zone).range('day').split(step, name);
   }
 
   /*******************************
@@ -341,9 +367,21 @@ export class CalendarDate {
     return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }));
   }
 
+  get monthDay() {
+    return new MonthDay(this);
+  }
+  get yearMonth() {
+    return new YearMonth(this);
+  }
+
   // a date read as a datetime is its midnight in the zone
   as(kind, zone) {
-    return readAs(kind, { date: () => this, datetime: () => this.at(undefined, zone) });
+    return readAs(kind, {
+      date: () => this,
+      datetime: () => this.at(undefined, zone),
+      monthDay: () => this.monthDay,
+      yearMonth: () => this.yearMonth,
+    });
   }
 
   /*******************************
@@ -352,7 +390,7 @@ export class CalendarDate {
 
   format(spec, locale) {
     const options = intlOptions('date', spec);
-    return options ? formatIntl('date', this.#plain, options, locale) : formatPattern(spec, this, 'date', locale);
+    return options ? formatIntl('date', this.#plain, options, locale) : formatTokens(this, 'date', spec, locale);
   }
 
   toString() {
