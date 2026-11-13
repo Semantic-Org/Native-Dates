@@ -43,7 +43,6 @@ export const PRIMITIVES = [
   {
     id: 'yearMonth',
     built: 'Temporal.PlainYearMonth',
-    plugin: 'year-month',
     ours: "yearMonth('2026-11')",
     temporal: "Temporal.PlainYearMonth.from('2026-11')",
     legacy: 'new Date(2026, 10, 1) // fake 1st, month 10',
@@ -52,7 +51,6 @@ export const PRIMITIVES = [
   {
     id: 'monthDay',
     built: 'Temporal.PlainMonthDay',
-    plugin: 'month-day',
     ours: "monthDay('10/17')",
     temporal: 'Temporal.PlainMonthDay.from({ month: 10, day: 17 })',
     legacy: 'new Date(2000, 9, 17) // fake leap year',
@@ -61,7 +59,6 @@ export const PRIMITIVES = [
   {
     id: 'range',
     built: '2 × Temporal.PlainDate',
-    plugin: 'ranges',
     ours: "date('2026-09-01').to(2, 'weeks')",
     temporal: "Temporal.PlainDate.from('2026-09-01')\nTemporal.PlainDate.from('2026-09-14')",
     legacy: '[new Date(2026, 8, 1), new Date(2026, 8, 14)] // 8 is September',

@@ -33,7 +33,7 @@ ninety.minutes; // 90
 
 ## Measuring between two values
 
-Call `until()` or `since()` on two dates, times, or moments to measure the span between them:
+Call `until()` or `since()` on two dates, times, [`YearMonth`](/api/year-month/) values, or moments to measure the span between them:
 
 ```js
 import { datetime } from 'native-dates';
@@ -51,6 +51,14 @@ When you only need a single number for calculations or progress bars, pass the t
 ```js
 opened.until(resolved, 'hours'); // 2.5
 resolved.since(opened, 'minutes'); // 150
+```
+
+Every [range](/api/ranges/) also exposes `.duration` directly:
+
+```js
+import { date } from 'native-dates';
+
+date('2026-11-01').to('2026-11-07').duration.days; // 7
 ```
 
 ## Balancing and totaling units

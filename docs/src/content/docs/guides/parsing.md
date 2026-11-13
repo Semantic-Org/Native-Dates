@@ -1,6 +1,6 @@
 ---
 title: Parsing
-lede: Read ISO strings, clock times, duration phrases, and user input into the right type without silent guesswork.
+lede: Read ISO strings, clock times, partial dates, ranges, duration phrases, and user input without silent guesswork.
 updated: 2026-11-12
 ---
 
@@ -10,7 +10,8 @@ Core parses standard, unambiguous inputs directly into the type you ask for:
 - [`date()`](/api/date-fn/) for calendar days with no clock or time zone
 - [`time()`](/api/time-fn/) for 24-hour and 12-hour times of day
 - [`duration()`](/api/duration-fn/) for human unit phrases and ISO 8601 durations
-- [`yearMonth()`](/plugins/year-month/) and [`monthDay()`](/plugins/month-day/) plugins for billing months, card expiries, and recurring birthdays
+- [`yearMonth()`](/api/year-month-fn/) and [`monthDay()`](/api/month-day-fn/) for billing months, card expiries, and recurring birthdays
+- [`dateRange()`](/api/range-fn/), `datetimeRange()`, and `timeRange()` for intervals and endpoint pairs
 
 ## ISO dates and timestamps
 
@@ -73,9 +74,32 @@ duration(90, 'minutes');
 duration({ hours: 1, minutes: 30 });
 ```
 
+## Partial dates and ranges
+
+Pass ISO year-month strings to [`yearMonth()`](/api/year-month-fn/), or read card expiries where the month leads with `monthYear()`:
+
+```js
+import { dayMonth, monthDay, monthYear, yearMonth } from 'native-dates';
+
+yearMonth('2026-11');
+monthYear('11/28'); // YearMonth(2028-11)
+
+monthDay('10/17');
+dayMonth('17/10'); // MonthDay(10-17)
+```
+
+Recurring dates without a year work the same way through [`monthDay()`](/api/month-day-fn/) and `dayMonth()`. For spans, [range factories](/api/range-fn/) read two endpoints or a single interval string:
+
+```js
+import { dateRange, timeRange } from 'native-dates';
+
+dateRange('2026-11-01/2026-11-07');
+timeRange('9am - 5pm');
+```
+
 ## Epoch timestamps, Date, and Temporal
 
-`datetime()` also reads epoch milliseconds, native `Date` instances, and [Temporal](/guides/temporal/) objects.
+Epoch milliseconds, native JavaScript dates, and [Temporal](/guides/temporal/) objects pass straight into `datetime()`.
 
 Passing a bare number to a date factory throws as ambiguous. Convert epoch milliseconds to a moment in a zone first, then read its calendar day.
 
@@ -101,20 +125,22 @@ When parsing free-form text from user inputs, CSV exports, or RFC 2822 headers, 
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, datetime } from 'native-dates';
+import { date, datetime, monthDay, yearMonth } from 'native-dates';
 
 date('Nov 16, 2026', { loose: true }); // 2026-11-16
 datetime('Mon, 16 Nov 2026 17:30:00 GMT', { loose: true });
+yearMonth('Nov 2026', { loose: true }); // 2026-11
+monthDay('Oct 17', { loose: true }); // 10-17
 ```
 
-Numeric slash and dot dates default to month-first order. Pass `dayFirst: true` per call, or set it once at startup with [`configure()`](/api/configure/), when reading day-first dates.
+Numeric slash and dot dates default to month-first order. Enable `dayFirst` per call or once at startup via [app configuration](/api/configure/) when reading day-first dates.
 
 ```js
 date('03/05/2026', { loose: true }); // 2026-03-05
 date('03/05/2026', { loose: true, dayFirst: true }); // 2026-05-03
 ```
 
-With `{ loose: true }`, unreadable inputs return `null` instead of throwing across every factory, keeping form validation to a simple check. Invalid option values like an unknown time zone name still throw immediately.
+Under loose parsing, unreadable inputs return `null` instead of throwing across every factory and range, keeping form validation to a simple check. Invalid option values like an unknown time zone name still throw immediately.
 
 ```js
 import { duration } from 'native-dates';

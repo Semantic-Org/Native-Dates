@@ -25,15 +25,23 @@ JavaScript's built-in `Date` uses one object whether you mean a holiday, an open
 - [`Time`](/api/time/) for a time of day like 9:30 AM, wrapping cleanly at midnight
 - [`DateTime`](/api/date-time/) for a specific moment paired with a time zone
 - [`Duration`](/api/duration/) for a length of time like 90 minutes or 2 weeks
+- [`YearMonth`](/api/year-month/) and [`MonthDay`](/api/month-day/) for billing periods, card expiries, and recurring birthdays
+- [Ranges](/api/ranges/) for spans between two dates, times, or moments
 
-Measuring the gap between two moments or dates gives you a `Duration` directly:
+Measuring gaps, building ranges, and formatting with localized presets or token patterns all work out of the box:
 
 ```js
-import { datetime, now } from 'native-dates';
+import { date, datetime, monthDay, now, yearMonth } from 'native-dates';
 
 const deadline = datetime('2027-01-01T00:00:00Z');
 now().until(deadline).format('long');
-now().until(deadline).as('days');
+
+const sprint = date('2026-11-02').to(2, 'weeks');
+sprint.contains('2026-11-10'); // true
+sprint.start.format('YYYY-MM-DD'); // '2026-11-02'
+
+const billing = yearMonth('2026-11');
+const birthday = monthDay('10/17');
 ```
 
 Read [Types of time](/guides/types-of-time/) next to see how to pick between them and move from one to another.
@@ -67,17 +75,17 @@ Because methods return new instances, `===` checks object references rather than
 
 ## Lean core and opt-in plugins
 
-The core [`native-dates`](/guides/installation/) package stays small. It covers creation, time zones, calendar math, comparisons, durations, and localized presets.
+The core [`native-dates`](/guides/installation/) package stays small. It covers creation, time zones, calendar math, partial dates, ranges, durations, localized presets, and token patterns.
 
-Specialized tools such as partial dates, ranges, and format tokens live in [`@native-dates/plugins`](/plugins/) as individual subpath imports. You only bundle the features your project actually uses:
+Optional additions like relative phrases, city and abbreviation lookups, loose parsing, and legacy `Date` methods live in [`@native-dates/plugins`](/plugins/) as individual subpath imports:
 
 ```js
-import '@native-dates/plugins/ranges';
-import '@native-dates/plugins/tokens';
-import { date } from 'native-dates';
+import '@native-dates/plugins/relative';
+import '@native-dates/plugins/zones';
+import { datetime, today } from 'native-dates';
 
-const sprint = date('2026-11-02').to(2, 'weeks');
-sprint.start.format('YYYY-MM-DD'); // '2026-11-02'
+today().minus(3, 'days').formatRelative(); // '3 days ago'
+datetime('2026-11-16T09:30', 'Berlin').zone; // 'Europe/Berlin'
 ```
 
 Head to [Installation](/guides/installation/) to install the package, support older runtimes, and configure app-wide defaults.

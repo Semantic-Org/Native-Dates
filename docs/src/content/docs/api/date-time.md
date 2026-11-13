@@ -47,6 +47,8 @@ Properties read the date and time in the instance's time zone.
 | `epochNanoseconds` | `bigint` | Exact nanoseconds since the Unix epoch. |
 | `date` | `CalendarDate` | Calendar date in this time zone. |
 | `time` | `Time` | Time of day in this time zone. |
+| `yearMonth` | `YearMonth` | Calendar year and month in this time zone. |
+| `monthDay` | `MonthDay` | Calendar month and day in this time zone. |
 | `weekday` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
 | `quarter` | `number` | Calendar quarter (1–4). |
 | `weekOfYear`, `dayOfYear` | `number` | ISO week number (1–53) and day of the year (1–366). |
@@ -317,32 +319,35 @@ nov.endOf('month').toString(); // '2026-11-30T23:59:59.999Z'
 ### `next()` :kind[method]
 
 ```js signature
-dt.next(weekday): DateTime
+dt.next(target): DateTime
 ```
 
-Moves forward to the next given weekday at the same time of day. If it is already that weekday, it advances a full week. Also steps forward to a recurring [`MonthDay`](/plugins/month-day/) when that plugin is loaded.
+Moves forward to the next given weekday or [`MonthDay`](/api/month-day/) at the same time of day. When already on that weekday or annual date, it advances to the following occurrence.
 
 **Parameters**
 
 ```params
-- name: weekday
-  type: Weekday
+- name: target
+  type: Weekday | MonthDay
   required: true
-  description: Weekday name such as `'friday'`, three-letter prefix, or ISO number (1–7).
+  description: Weekday name such as `'friday'`, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
 
 **Returns**
 
 ```returns
 type: DateTime
-description: A new `DateTime` 1 to 7 days later at the same local time.
+description: A new `DateTime` on the next matching date at the same local time.
 ```
 
 ```js
+import { datetime, monthDay } from 'native-dates';
+
 const mon = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 
 mon.next('friday').day; // 20
 mon.next('monday').day; // 23
+mon.next(monthDay('12-25')).month; // 12
 ```
 :::
 
@@ -350,31 +355,32 @@ mon.next('monday').day; // 23
 ### `previous()` :kind[method]
 
 ```js signature
-dt.previous(weekday): DateTime
+dt.previous(target): DateTime
 ```
 
-Moves back to the most recent given weekday before this date, keeping the same time of day. Also steps back to a [`MonthDay`](/plugins/month-day/) when that plugin is loaded.
+Moves back to the most recent given weekday or [`MonthDay`](/api/month-day/) before this date, keeping the same time of day.
 
 **Parameters**
 
 ```params
-- name: weekday
-  type: Weekday
+- name: target
+  type: Weekday | MonthDay
   required: true
-  description: Weekday name, three-letter prefix, or ISO number (1–7).
+  description: Weekday name, three-letter prefix, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
 
 **Returns**
 
 ```returns
 type: DateTime
-description: A new `DateTime` 1 to 7 days earlier at the same local time.
+description: A new `DateTime` on the previous matching date at the same local time.
 ```
 
 ```js
 const mon = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 
 mon.previous('friday').day; // 13
+mon.previous(monthDay('10-31')).month; // 10
 ```
 :::
 
@@ -622,6 +628,79 @@ standup.since('2026-11-16T08:00', 'minutes'); // 90
 ```
 :::
 
+:::entry
+### `to()` :kind[method]
+
+```js signature
+dt.to(end): DateTimeRange
+dt.to(count, unit): DateTimeRange
+```
+
+Creates a half-open [`DateTimeRange`](/api/ranges/) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start.
+
+**Parameters**
+
+```params
+- name: end
+  type: DateTimeInput | DurationInput | number
+  required: true
+  description: Target end moment, duration, or numeric `count` paired with `unit`.
+- name: unit
+  type: Unit
+  description: Unit name when the first argument is a numeric count, such as `'hours'` or `'days'`.
+```
+
+**Returns**
+
+```returns
+type: DateTimeRange
+description: A half-open `DateTimeRange` in this instance's time zone.
+```
+
+```js
+const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
+
+standup.to('2026-11-16T10:00').duration.minutes; // 30
+standup.to(2, 'hours').end.hour; // 11
+```
+:::
+
+:::entry
+### `range()` :kind[method]
+
+```js signature
+dt.range(unit, firstDay?): DateTimeRange
+```
+
+Returns the half-open [`DateTimeRange`](/api/ranges/) for the calendar or clock unit containing this moment, from its start up to the start of the next unit.
+
+**Parameters**
+
+```params
+- name: unit
+  type: Unit
+  required: true
+  description: Calendar or clock unit from `'year'` down to `'nanosecond'`.
+- name: firstDay
+  type: Weekday
+  description: First day of the week when `unit` is `'week'`.
+```
+
+**Returns**
+
+```returns
+type: DateTimeRange
+description: A half-open `DateTimeRange` spanning `unit` in this time zone.
+```
+
+```js
+const event = datetime('2026-11-16T14:45', 'UTC');
+
+event.range('day').toString();
+// '2026-11-16T00:00:00.000Z/2026-11-17T00:00:00.000Z'
+```
+:::
+
 ## Formatting and conversion
 
 :::entry
@@ -631,7 +710,9 @@ standup.since('2026-11-16T08:00', 'minutes'); // 90
 dt.format(spec?, locale?): string
 ```
 
-Formats the date and time in its active zone using `Intl.DateTimeFormat`. Accepts a preset style, an `Intl` options object, or a token string when [`@native-dates/plugins/tokens`](/plugins/tokens/) is loaded.
+Formats the date and time in its active zone using presets, `Intl` options objects, or token patterns such as `'YYYY-MM-DD HH:mm'`.
+
+Localized presets from `'LT'` through `'llll'` are built in alongside `[brackets]` for literal words. See [Formatting](/guides/formatting/) for the full preset and token reference.
 
 **Parameters**
 
@@ -639,7 +720,7 @@ Formats the date and time in its active zone using `Intl.DateTimeFormat`. Accept
 - name: spec
   type: FormatSpec
   default: "'medium'"
-  description: Preset style such as `'medium'` or `'date'`, `Intl.DateTimeFormatOptions` object, or token pattern.
+  description: Preset name such as `'medium'` or `'LLL'`, `Intl` options object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding the configured default for this call.
@@ -657,11 +738,14 @@ const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 
 standup.format('medium', 'en-US'); // 'Nov 16, 2026, 9:30 AM'
 standup.format('full', 'en-US'); // 'Monday, November 16, 2026 at 9:30 AM'
-standup.format('date', 'en-US'); // 'Nov 16, 2026'
-standup.format('time', 'en-US'); // '9:30 AM'
-standup.format('month', 'en-US'); // 'November 2026'
+standup.format('LLL', 'en-US'); // 'November 16, 2026 at 9:30 AM'
 standup.format('text', 'en-US'); // 'Nov 16, 2026, 9:30 AM PST'
-standup.format({ weekday: 'short', hour: '2-digit', minute: '2-digit' }, 'de-DE'); // 'Mo., 09:30'
+standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
+standup.format('MMM D [at] h:mm a', 'en-US'); // 'Nov 16 at 9:30 am'
+standup.format(
+  { weekday: 'short', hour: '2-digit', minute: '2-digit' },
+  'de-DE',
+); // 'Mo., 09:30'
 ```
 :::
 
@@ -672,15 +756,17 @@ standup.format({ weekday: 'short', hour: '2-digit', minute: '2-digit' }, 'de-DE'
 dt.as('datetime'): DateTime
 dt.as('date'): CalendarDate
 dt.as('time'): Time
+dt.as('yearMonth'): YearMonth
+dt.as('monthDay'): MonthDay
 ```
 
-Converts this moment to another kind inside a method chain without breaking for property access. Also converts to [year-month](/plugins/year-month/) and [month-day](/plugins/month-day/) values when those plugins are loaded, matching `.yearMonth` and `.monthDay`.
+Converts this moment to another kind inside a method chain without stopping for property access, including [`YearMonth`](/api/year-month/) and [`MonthDay`](/api/month-day/) values in its active time zone.
 
 **Parameters**
 
 ```params
 - name: kind
-  type: "'datetime' | 'date' | 'time'"
+  type: "'datetime' | 'date' | 'time' | 'yearMonth' | 'monthDay'"
   required: true
   description: Target kind to read this moment as in its active time zone.
 ```
@@ -688,7 +774,7 @@ Converts this moment to another kind inside a method chain without breaking for 
 **Returns**
 
 ```returns
-type: DateTime | CalendarDate | Time
+type: DateTime | CalendarDate | Time | YearMonth | MonthDay
 description: Converted value in this instance's time zone.
 ```
 
@@ -697,6 +783,8 @@ const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 
 standup.in('Asia/Tokyo').as('date').toString(); // '2026-11-17'
 standup.in('Asia/Tokyo').as('time').toString(); // '02:30:00'
+standup.as('yearMonth').toString(); // '2026-11'
+standup.as('monthDay').toString(); // '11-16'
 ```
 :::
 

@@ -6,7 +6,7 @@ updated: 2026-11-12
 
 Plugins install by importing a module, with no registration ceremony or wrapper calls.
 
-You can publish reusable packages or add domain helpers inside your own app using the same pattern as [`@native-dates/plugins`](/plugins/).
+You can publish reusable packages or add domain helpers inside your own app using the same pattern as [`relative`](/plugins/relative/) and [`legacy-date`](/plugins/legacy-date/) in [`@native-dates/plugins`](/plugins/).
 
 ## Attaching prototype methods
 

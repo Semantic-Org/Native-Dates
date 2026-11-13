@@ -5,7 +5,7 @@
 import { ui } from './strings.js';
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const terms = (q) => q.toLowerCase().split(/\s+/).filter(Boolean);
-const looksLikeSymbol = (t) => /^[\w.-]+\(\)$|^[a-z]+(-[a-z]+)+$/.test(t);
+const looksLikeSymbol = (t) => /^[\w.-]+\(\)$|^[A-Z][a-z]+[A-Z]\w*$|^[a-z]+(-[a-z]+)+$/.test(t);
 
 /* ---------- engines ---------- */
 
@@ -84,7 +84,7 @@ const SUGGESTED = [
   { section: 'Guides', title: 'Types of time', url: '/guides/types-of-time/' },
   { section: 'Guides', title: 'Time zones', url: '/guides/time-zones/' },
   { section: 'API', title: 'DateTime', url: '/api/date-time/', symbol: true },
-  { section: 'Plugins', title: 'ranges', url: '/plugins/ranges/', symbol: true },
+  { section: 'API', title: 'Ranges', url: '/api/ranges/' },
 ];
 
 const ICONS = {
