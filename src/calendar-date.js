@@ -27,8 +27,10 @@ import {
   withParts,
 } from './helpers/units.js';
 import { weekStart, zoneId } from './helpers/zones.js';
+import { MonthDay } from './month-day.js';
 import { DateRange } from './range.js';
 import { Time } from './time.js';
+import { YearMonth } from './year-month.js';
 
 /*
   a calendar date with no time and no zone: a due date, a birthday, a booking night. it is not a
@@ -365,9 +367,21 @@ export class CalendarDate {
     return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }));
   }
 
+  get monthDay() {
+    return new MonthDay(this);
+  }
+  get yearMonth() {
+    return new YearMonth(this);
+  }
+
   // a date read as a datetime is its midnight in the zone
   as(kind, zone) {
-    return readAs(kind, { date: () => this, datetime: () => this.at(undefined, zone) });
+    return readAs(kind, {
+      date: () => this,
+      datetime: () => this.at(undefined, zone),
+      monthDay: () => this.monthDay,
+      yearMonth: () => this.yearMonth,
+    });
   }
 
   /*******************************

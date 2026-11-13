@@ -14,8 +14,8 @@ Temporal exposes classes across instants, zoned and plain moments, dates, times,
 | `CalendarDate` | `date()`, `today()`, `tomorrow()`, `yesterday()` | `Temporal.PlainDate` | Calendar day with no clock and no zone. Refuses clock units (`hours`, `minutes`) and numeric coercion (`<`, `-`). |
 | `Time` | `time()` | `Temporal.PlainTime` | Wall clock (`'9am'`, `'17:30'`), wraps at midnight, refuses calendar units (`days`, `months`) and numeric coercion. |
 | `Duration` | `duration()`, `hours()`..`years()` | `Temporal.Duration` | Keeps fields as written until `.balance()`. Remembers `#anchor` when produced by `.until()` / `.since()` so months and years can `.total()` and `.compare()`. |
-| `MonthDay` | `monthDay()`, `dayMonth()` | `Temporal.PlainMonthDay` | A month and a day with no year. Feb 29 falls on Feb 28 in a year without one. Has no order, so it compares only with `equals()` and `fallsOn()`. Tree-shaken when its factories are not imported. |
-| `YearMonth` | `yearMonth()`, `monthYear()` | `Temporal.PlainYearMonth` | A year and a month with no day. Counts in months and years and refuses smaller units. Tree-shaken when its factories are not imported. |
+| `MonthDay` | `monthDay()`, `dayMonth()` | `Temporal.PlainMonthDay` | A month and a day with no year. Feb 29 falls on Feb 28 in a year without one. Has no order, so it compares only with `equals()` and `fallsOn()`. Reached from a date or datetime by `.monthDay` or `as('monthDay')`. |
+| `YearMonth` | `yearMonth()`, `monthYear()` | `Temporal.PlainYearMonth` | A year and a month with no day. Counts in months and years and refuses smaller units. Reached from a date or datetime by `.yearMonth` or `as('yearMonth')`. |
 | `DateRange`, `DateTimeRange`, `TimeRange` | `dateRange()`, `datetimeRange()`, `timeRange()`, `.to()`, `.range()` | two points of one kind | Not a Temporal type. A date range includes its last day, a datetime or time range excludes its end, and a time range may cross midnight. |
 
 Every instance freezes on construction and sets `text` first among its own properties so logging a value in DevTools or Node leads with its human-readable form without clicking getters.

@@ -196,6 +196,12 @@ export class DateTime {
   as(kind: 'date'): CalendarDate;
   as(kind: 'time'): Time;
   as(kind: 'datetime'): DateTime;
+  as(kind: 'monthDay'): MonthDay;
+  as(kind: 'yearMonth'): YearMonth;
+  /** The month and day in this zone, the year dropped */
+  readonly monthDay: MonthDay;
+  /** The year and month in this zone, the day dropped */
+  readonly yearMonth: YearMonth;
 
   /** Adding days keeps the wall clock across a daylight saving change, adding hours counts hours */
   plus(amount: DurationInput, unit?: Unit): DateTime;
@@ -363,6 +369,12 @@ export class CalendarDate {
   /** This date as a datetime, its midnight in the zone */
   as(kind: 'datetime', zone?: Zone): DateTime;
   as(kind: 'date'): CalendarDate;
+  as(kind: 'monthDay'): MonthDay;
+  as(kind: 'yearMonth'): YearMonth;
+  /** The month and day, the year dropped */
+  readonly monthDay: MonthDay;
+  /** The year and month, the day dropped */
+  readonly yearMonth: YearMonth;
 
   format(spec?: FormatSpec, locale?: Locale): string;
   /** ISO 8601, `'2026-09-06'` */

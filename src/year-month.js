@@ -90,7 +90,7 @@ export class YearMonth {
     if (input === undefined || input === null) {
       return refuseType('notAYearMonth', String(input), {
         explanation: isDevelopment
-          ? 'yearMonth(today()) is the current one. a missing value is refused so an absent field never silently becomes this month'
+          ? 'today().yearMonth is the current one. a missing value is refused so an absent field never silently becomes this month'
           : 0,
       });
     }
@@ -129,7 +129,7 @@ export class YearMonth {
           ? YearMonth.#fromFields({ year: named[2] ?? named[3], month }, input)
           : refuse('unreadableYearMonth', input, {
             explanation: isDevelopment
-              ? "a year-month is '2026-11', or a date like '2026-11-16' with its day dropped. the month first, as a card prints it, is monthYear('11/26'). plugins/loose adds { loose: true } for a month by name, 'Nov 2026'. a date written any other way is yearMonth(date(text, { loose: true }))"
+              ? "a year-month is '2026-11', or a date like '2026-11-16' with its day dropped. the month first, as a card prints it, is monthYear('11/26'). plugins/loose adds { loose: true } for a month by name, 'Nov 2026'. a date written any other way is date(text, { loose: true })?.yearMonth"
               : 0,
           });
       }
