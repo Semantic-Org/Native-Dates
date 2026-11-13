@@ -52,6 +52,9 @@ const tokenReaders = {
   D: ['day', (p) => String(p.day)],
   DD: ['day', (p) => pad(p.day)],
   Do: ['day', (p) => ordinal(p.day)],
+  DDD: ['dayOfYear', (p) => String(p.dayOfYear)],
+  DDDD: ['dayOfYear', (p) => pad(p.dayOfYear, 3)],
+  d: ['weekday', (p) => String(p.weekday % 7)],
   dd: ['weekday', (p, l) => names(l).ddd[p.weekday - 1].slice(0, 2)],
   ddd: ['weekday', (p, l) => names(l).ddd[p.weekday - 1]],
   dddd: ['weekday', (p, l) => names(l).dddd[p.weekday - 1]],
@@ -63,22 +66,29 @@ const tokenReaders = {
   mm: ['minute', (p) => pad(p.minute)],
   s: ['second', (p) => String(p.second)],
   ss: ['second', (p) => pad(p.second)],
+  S: ['millisecond', (p) => String(Math.floor(p.millisecond / 100))],
+  SS: ['millisecond', (p) => pad(Math.floor(p.millisecond / 10))],
   SSS: ['millisecond', (p) => pad(p.millisecond, 3)],
   A: ['hour', (p) => (p.hour < 12 ? 'AM' : 'PM')],
   a: ['hour', (p) => (p.hour < 12 ? 'am' : 'pm')],
   Z: ['offset', (p) => p.offset],
   ZZ: ['offset', (p) => p.offset.replace(':', '')],
   z: ['zone', (p, l) => zoneName(p, l, 'short')],
+  zz: ['zone', (p, l) => zoneName(p, l, 'short')],
+  zzz: ['zone', (p, l) => zoneName(p, l, 'long')],
   zzzz: ['zone', (p, l) => zoneName(p, l, 'long')],
   X: ['epoch', (p) => String(Math.floor(p.epoch / 1000))],
   x: ['epoch', (p) => String(p.epoch)],
   Q: ['month', (p) => String(Math.ceil(p.month / 3))],
   W: ['weekOfYear', (p) => String(p.weekOfYear)],
+  WW: ['weekOfYear', (p) => pad(p.weekOfYear)],
 };
 
-// longest spelling first so MMMM never reads as four Ms. text in brackets passes through as written
+// longest spelling first so MMMM never reads as four Ms. text in brackets passes through as written.
+// a letter that is no token is caught last, so a misspelled preset refuses instead of printing
+// 'meduim' as minutes and letters. T passes, the way 'YYYY-MM-DDTHH:mm' writes it
 const tokenPattern = new RegExp(
-  `\\[([^\\]]*)\\]|${Object.keys(tokenReaders).sort((a, b) => b.length - a.length).join('|')}`,
+  `\\[([^\\]]*)\\]|${Object.keys(tokenReaders).sort((a, b) => b.length - a.length).join('|')}|([A-SU-Za-z])`,
   'g',
 );
 
@@ -97,9 +107,16 @@ export const monthNames = (
 
 export const formatTokens = (subject, kind, pattern, locale) => {
   const resolved = pickLocale(locale);
-  return pattern.replace(tokenPattern, (token, literal) => {
+  return pattern.replace(tokenPattern, (token, literal, stray) => {
     if (literal !== undefined) {
       return literal;
+    }
+    if (stray) {
+      refuse('unknownFormat', pattern, {
+        explanation: isDevelopment
+          ? `a format is a preset like 'medium', an Intl options object, or a token pattern like 'YYYY-MM-DD'. '${stray}' is no token. text goes in brackets: [at]`
+          : 0,
+      });
     }
     const [field, read] = tokenReaders[token];
     if (subject[field] === undefined) {

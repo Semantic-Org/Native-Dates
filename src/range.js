@@ -342,10 +342,9 @@ class Range {
 
   format(spec, locale) {
     const options = intlOptions(this.kind, spec);
+    // a token pattern has no range form in Intl, so each end prints by it
     if (!options) {
-      refuse('noTokens', String(spec), {
-        explanation: isDevelopment ? 'a range formats with a preset or Intl options. format each end for tokens' : 0,
-      });
+      return `${this.start.format(spec, locale)} – ${this.end.format(spec, locale)}`;
     }
     if (this.kind === 'datetime') {
       return formatIntlRange('datetime', this.start.epoch, this.end.epoch, options, locale, this.start.zone);
