@@ -17,6 +17,9 @@ import { Time } from './time.js';
 
 const factoryNames = { date: 'dateRange', datetime: 'datetimeRange', time: 'timeRange' };
 
+// written out, since a minified bundle renames the classes and a console would print the short name
+const classNames = { date: 'DateRange', datetime: 'DateTimeRange', time: 'TimeRange' };
+
 // Intl adds the date to a range once its ends fall on different days, whatever the options say, so a
 // time range across midnight prints each end on its own and joins them the way the locale joins a range
 const sameDay = [Date.UTC(1970, 0, 1, 9), Date.UTC(1970, 0, 1, 10)];
@@ -380,7 +383,7 @@ class Range {
   }
 
   [inspect]() {
-    return `${this.constructor.name}(${this.start} ${this.#inclusive() ? 'through' : 'until'} ${this.end})`;
+    return `${classNames[this.kind]}(${this.start} ${this.#inclusive() ? 'through' : 'until'} ${this.end})`;
   }
 }
 

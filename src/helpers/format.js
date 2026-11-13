@@ -154,17 +154,17 @@ const parts = [
 // a part of a date prints only the parts it has, so the presets and the options bag that format a
 // datetime format it too. a format that names none of its parts prints its medium form. what is no
 // part, a calendar or a numbering system, goes to Intl as written
-export const partOptions = (spec, names, presets) => {
-  if (isString(spec) && Object.hasOwn(presets, spec)) {
-    return presets[spec];
+export const partOptions = (spec, names, styles) => {
+  if (isString(spec) && Object.hasOwn(styles, spec)) {
+    return styles[spec];
   }
   const bag = isPlainObject(spec) ? spec : intlOptions('datetime', spec);
-  // a string that is no preset is left for the caller to put to formatPattern
+  // a string that is no preset is a token pattern, which the caller puts to formatTokens
   if (!bag) {
     return undefined;
   }
   if (bag.dateStyle) {
-    return presets[bag.dateStyle];
+    return styles[bag.dateStyle];
   }
   const options = { ...bag };
   for (const part of parts) {
@@ -173,5 +173,5 @@ export const partOptions = (spec, names, presets) => {
     }
   }
   // the first two names are the parts it always has, and an era prints only beside them
-  return names.slice(0, 2).some((name) => options[name] !== undefined) ? options : { ...presets.medium, ...options };
+  return names.slice(0, 2).some((name) => options[name] !== undefined) ? options : { ...styles.medium, ...options };
 };
