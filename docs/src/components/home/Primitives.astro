@@ -4,9 +4,6 @@
 // for the comedy in it, how the same thing was kept before either. the build runs every way of
 // writing a row and stops if they don't hold the same thing, so the page can't set a call beside
 // something it isn't
-import { monthDay } from '@native-dates/plugins/month-day';
-import '@native-dates/plugins/ranges';
-import { yearMonth } from '@native-dates/plugins/year-month';
 import * as library from 'native-dates';
 
 import { localePath, t } from '../../lib/i18n.js';
@@ -14,7 +11,7 @@ import { PRIMITIVES } from '../../scripts/home/primitives.js';
 import { highlight } from '../../scripts/site.js';
 
 const locale = Astro.currentLocale;
-const { date, datetime, duration, IS_RANGE, now, time } = library;
+const { date, datetime, duration, IS_RANGE, monthDay, now, time, yearMonth } = library;
 const made = (row) => new Function('date', 'datetime', 'duration', 'monthDay', 'now', 'time', 'yearMonth', `return (${row.ours});`)(date, datetime, duration, monthDay, now, time, yearMonth);
 // a value as Temporal would print it: a range is its two ends, and the current moment is only
 // what it is and where, since two calls can't land on the same instant

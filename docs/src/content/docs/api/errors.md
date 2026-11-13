@@ -74,9 +74,9 @@ Type errors indicate that an argument has the wrong JavaScript type or belongs t
 | `notAYearMonth` | `yearMonth()`, `monthYear()`, `YearMonth` | Input is `null`, `undefined`, a single number, a non-ISO calendar, or an unsupported type. |
 | `notAMonthDay` | `monthDay()`, `dayMonth()`, `MonthDay` | Input is `null`, `undefined`, a single number, a non-ISO calendar, or an unsupported type. |
 | `notADuration` | `duration()`, `Duration`, `plus()`, `minus()` | Input is `null`, `undefined`, an unsupported type, or a unit passed beside a duration that already carries units. |
-| `notAPoint` | `compare()`, `earliest()`, `latest()` | Value is not a `DateTime`, `CalendarDate`, `Time`, `Date`, Temporal point, or parseable string. |
+| `notAPoint` | `compare()`, `earliest()`, `latest()` | Value is not a `DateTime`, `CalendarDate`, `Time`, `YearMonth`, `Date`, Temporal point, or parseable string. |
 | `mixedKinds` | `compare()`, `earliest()`, `latest()` | Comparing values of different kinds, such as a `CalendarDate` with a `DateTime`. |
-| `mixedRange` | `DateRange`, `DateTimeRange`, `TimeRange` | Passing a range of one kind to another range constructor or factory in `@native-dates/plugins/ranges`. |
+| `mixedRange` | `DateRange`, `DateTimeRange`, `TimeRange` | Passing a range of one kind to another range constructor or factory. |
 
 ## RangeError codes
 
@@ -103,9 +103,10 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `unknownUnit` | Arithmetic, rounding, `set()`, `duration()` | Unrecognized unit name or abbreviation. |
 | `unknownWeekday` | `weekday()`, `next()`, `previous()`, `configure()` | Weekday string is not recognized or weekday number is outside 1 to 7. |
 | `unknownZone` | Factories, `in()`, `configure()` | Unknown IANA time zone ID, malformed UTC offset, or non-object `zoneAliases`. |
-| `unknownLocale` | `format()`, `configure()` | Invalid BCP 47 locale tag rejected by `Intl.getCanonicalLocales()`. |
-| `unknownFormat` | `format()` | Unknown preset name, invalid `Intl` option, unsupported duration style, or token string used without `@native-dates/plugins/tokens`. |
-| `unknownKind` | `as()` | Target kind is not supported by the receiver, or its plugin has not been imported yet. |
+| `unknownLocale` | `format()`, `monthNames()`, `weekdayNames()`, `configure()` | Invalid BCP 47 locale tag rejected by `Intl.getCanonicalLocales()`. |
+| `unknownFormat` | `format()` | Non-string format spec, unsupported duration style, or unrecognized letters in a token pattern outside `[brackets]`. |
+| `noField` | `format()` | Token pattern asks for a field the value lacks, such as `HH` on a `CalendarDate` or `YYYY` on a `Time`. |
+| `unknownKind` | `as()` | Target kind is not supported by the receiver. |
 
 ### Arithmetic and measurement
 
@@ -124,16 +125,19 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `noPoints` | `earliest()`, `latest()` | Called with zero arguments or an empty array. |
 | `notANumber` | `CalendarDate`, `Time`, `YearMonth`, `MonthDay`, ranges | Numeric coercion via `valueOf()`, unary `+`, `-`, `<`, or `>` on a type with no epoch number. |
 
+### Ranges
+
+| Code | Thrown by | Cause |
+|---|---|---|
+| `backwards` | `DateRange`, `DateTimeRange`, `to()` | Range `end` is earlier than `start`. |
+| `emptyStep` | `points()`, `split()` | Step duration passed to a range walk is zero or negative. |
+| `twoPieces` | `TimeRange.intersection()` | Two overnight time ranges overlap in two separate intervals across midnight. |
+| `noZone` | `TimeRange.in()` | Calling `in()` on a `TimeRange`, which has no calendar date to place in a zone. |
+
 ### Environment and plugins
 
 | Code | Thrown by | Cause |
 |---|---|---|
 | `noTemporal` | Module load | `globalThis.Temporal` is missing and `@native-dates/polyfill` has not been imported yet. |
 | `missingPlugin` | Factories, `configure()` | Using `loose`, `dayFirst`, or `zoneAliases` before importing the matching plugin. |
-| `backwards` | `DateRange`, `DateTimeRange` | Range `end` is earlier than `start`. |
-| `emptyStep` | `points()`, `split()` | Step duration passed to a range walk is zero or negative. |
-| `twoPieces` | `TimeRange.intersection()` | Two overnight time ranges overlap in two separate intervals across midnight. |
-| `noZone` | `TimeRange.in()` | Calling `in()` on a `TimeRange`, which has no calendar date to place in a zone. |
-| `noTokens` | Range `format()` | Passing a token string to a range's `format()` instead of a preset or `Intl` options object. |
-| `noField` | `format()` with tokens | Token pattern asks for a field the value lacks, such as `HH` on a `CalendarDate` or `YYYY` on a `Time`. |
 | `immutable` | `DateTime` legacy setters | Calling a mutating `Date` setter such as `setHours()` when `@native-dates/plugins/legacy-date` is loaded. |

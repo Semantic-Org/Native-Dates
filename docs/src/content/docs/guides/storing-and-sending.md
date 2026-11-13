@@ -1,6 +1,6 @@
 ---
 title: Storing and sending
-lede: Serialize dates, times, timestamps, and durations cleanly across JSON APIs, SQL columns, URLs, and HTML inputs.
+lede: Serialize dates, times, timestamps, ranges, and durations cleanly across JSON APIs, SQL columns, URLs, and HTML inputs.
 updated: 2026-11-12
 ---
 
@@ -30,8 +30,9 @@ JSON.stringify({
 | [`CalendarDate`](/api/calendar-date/) | `'2026-11-16'` | Due dates, holidays, and booking nights |
 | [`Time`](/api/time/) | `'09:30:00'` | Store opening hours and daily reminder times |
 | [`Duration`](/api/duration/) | `'PT1H30M'` | Timeouts, SLAs, billing spans, and timers |
-| [`YearMonth`](/plugins/year-month/) | `'2026-11'` | Billing periods, card expiries, and `<input type="month">` values |
-| [`MonthDay`](/plugins/month-day/) | `'10-17'` | Recurring birthdays and annual holidays without a birth year |
+| [`YearMonth`](/api/year-month/) | `'2026-11'` | Billing periods, card expiries, and month inputs |
+| [`MonthDay`](/api/month-day/) | `'10-17'` | Recurring birthdays and annual holidays without a birth year |
+| [Ranges](/api/ranges/) | `'2026-11-01/2026-11-07'` | Booking windows, sprints, and ISO 8601 slash intervals |
 
 When an external API, cache key, or integer column expects a number, read `epoch` on a moment or `toMilliseconds()` on a duration:
 
@@ -46,12 +47,14 @@ duration('1h 30m').toMilliseconds(); // 5400000
 Feed each wire string back into its matching factory when reading JSON responses, database rows, or URL parameters:
 
 ```js
-import { date, datetime, duration, time } from 'native-dates';
+import { date, dateRange, datetime, duration, time, yearMonth } from 'native-dates';
 
 const startsAt = datetime('2026-11-16T17:30:00.000Z', 'America/Los_Angeles');
 const dueOn = date('2026-11-16');
 const opensAt = time('09:30:00');
 const length = duration('PT1H30M');
+const billing = yearMonth('2026-11');
+const window = dateRange('2026-11-01/2026-11-07');
 ```
 
 Every `DateTime` serializes to UTC so two clients recording the same event produce identical strings. Passing a time zone when reading that string back views the exact UTC moment locally without shifting when it happened.
@@ -94,14 +97,18 @@ Avoid bare SQL `timestamp` columns without time zone for real moments. Database 
 
 ## HTML inputs and URLs
 
-Native `<input type="date">` and `<input type="time">` controls read and write the exact ISO strings that dates and times produce. URL search parameters carry the same compact format.
+Native HTML date, month, and time controls read and write the exact ISO strings that core types produce. URL search parameters carry the same compact format.
 
 ```js
-import { date, time } from 'native-dates';
+import { date, time, yearMonth } from 'native-dates';
 
 // <input type="date" value="2026-11-16">
 const due = date('2026-11-16');
 due.toString(); // '2026-11-16'
+
+// <input type="month" value="2026-11">
+const billing = yearMonth('2026-11');
+billing.toString(); // '2026-11'
 
 // <input type="time" value="09:30">
 const opens = time('09:30');

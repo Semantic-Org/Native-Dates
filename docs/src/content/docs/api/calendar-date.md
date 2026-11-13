@@ -37,6 +37,8 @@ Properties read the ISO calendar fields directly.
 |---|---|---|
 | `text` | `string` | Locale-formatted calendar date, such as `'Nov 16, 2026'`. |
 | `year`, `month`, `day` | `number` | Calendar year, month (1–12), and day of month (1–31). |
+| `yearMonth` | `YearMonth` | Calendar year and month with the day dropped. |
+| `monthDay` | `MonthDay` | Calendar month and day with the year dropped. |
 | `weekday` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
 | `quarter` | `number` | Calendar quarter (1–4). |
 | `weekOfYear`, `dayOfYear` | `number` | ISO week number (1–53) and day of the year (1–366). |
@@ -278,32 +280,35 @@ date('2028-02-10').endOf('month').toString(); // '2028-02-29'
 ### `next()` :kind[method]
 
 ```js signature
-d.next(weekday): CalendarDate
+d.next(target): CalendarDate
 ```
 
-Moves forward to the next given weekday after this date. If it is already that weekday, it advances a full week. Also steps forward to a recurring [`MonthDay`](/plugins/month-day/) when that plugin is loaded.
+Moves forward to the next given weekday or [`MonthDay`](/api/month-day/) after this date. When already on that weekday or annual date, it advances to the following occurrence.
 
 **Parameters**
 
 ```params
-- name: weekday
-  type: Weekday
+- name: target
+  type: Weekday | MonthDay
   required: true
-  description: Weekday name such as `'friday'`, three-letter prefix, or ISO number (1–7).
+  description: Weekday name such as `'friday'`, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
 
 **Returns**
 
 ```returns
 type: CalendarDate
-description: A new `CalendarDate` 1 to 7 days later.
+description: A new `CalendarDate` on the next matching day.
 ```
 
 ```js
+import { date, monthDay } from 'native-dates';
+
 const mon = date('2026-11-16');
 
 mon.next('friday').toString(); // '2026-11-20'
 mon.next('monday').toString(); // '2026-11-23'
+mon.next(monthDay('12-25')).toString(); // '2026-12-25'
 ```
 :::
 
@@ -311,29 +316,30 @@ mon.next('monday').toString(); // '2026-11-23'
 ### `previous()` :kind[method]
 
 ```js signature
-d.previous(weekday): CalendarDate
+d.previous(target): CalendarDate
 ```
 
-Moves back to the most recent given weekday before this date. If it is already that weekday, it steps back a full week. Also steps back to a [`MonthDay`](/plugins/month-day/) when that plugin is loaded.
+Moves back to the most recent given weekday or [`MonthDay`](/api/month-day/) before this date. When already on that weekday or annual date, it steps back to the prior occurrence.
 
 **Parameters**
 
 ```params
-- name: weekday
-  type: Weekday
+- name: target
+  type: Weekday | MonthDay
   required: true
-  description: Weekday name, three-letter prefix, or ISO number (1–7).
+  description: Weekday name, three-letter prefix, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
 
 **Returns**
 
 ```returns
 type: CalendarDate
-description: A new `CalendarDate` 1 to 7 days earlier.
+description: A new `CalendarDate` on the previous matching day.
 ```
 
 ```js
 date('2026-11-16').previous('friday').toString(); // '2026-11-13'
+date('2026-11-16').previous(monthDay('10-31')).toString(); // '2026-10-31'
 ```
 :::
 
@@ -512,6 +518,155 @@ date('2026-11-16').since('2026-11-02', 'weeks'); // 2
 ```
 :::
 
+:::entry
+### `to()` :kind[method]
+
+```js signature
+d.to(end): DateRange
+d.to(count, unit): DateRange
+```
+
+Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included.
+
+**Parameters**
+
+```params
+- name: end
+  type: CalendarDateInput | DurationInput | number
+  required: true
+  description: Final date to include, calendar duration, or numeric `count` paired with `unit`.
+- name: unit
+  type: DateUnit
+  description: Calendar unit name when the first argument is a numeric count, such as `'days'` or `'weeks'`.
+```
+
+**Returns**
+
+```returns
+type: DateRange
+description: An inclusive `DateRange` starting on this date.
+```
+
+```js
+date('2026-11-01').to('2026-11-07').duration.days; // 7
+date('2026-11-01').to(7, 'days').toString(); // '2026-11-01/2026-11-07'
+```
+:::
+
+:::entry
+### `range()` :kind[method]
+
+```js signature
+d.range(unit, firstDay?): DateRange
+```
+
+Returns an inclusive [`DateRange`](/api/ranges/) covering every day of the calendar unit containing this date, from its first day through its last.
+
+**Parameters**
+
+```params
+- name: unit
+  type: DateUnit
+  required: true
+  description: Calendar unit from `'year'` down to `'day'`.
+- name: firstDay
+  type: Weekday
+  description: First day of the week when `unit` is `'week'`.
+```
+
+**Returns**
+
+```returns
+type: DateRange
+description: An inclusive `DateRange` from the start through the end of `unit`.
+```
+
+```js
+date('2026-02-10').range('month').toString(); // '2026-02-01/2026-02-28'
+date('2026-11-18').range('week').toString(); // '2026-11-16/2026-11-22'
+```
+:::
+
+:::entry
+### `points()` :kind[method]
+
+```js signature
+d.points(step, zone?): DateTime[]
+d.points(count, unit, zone?): DateTime[]
+```
+
+Walks through this calendar day by a positive step in the given or configured time zone, returning an array of [`DateTime`](/api/date-time/) moments starting at midnight. Daylight saving transitions produce 23 or 25 hourly points automatically.
+
+**Parameters**
+
+```params
+- name: step
+  type: Unit | DurationInput | number
+  required: true
+  description: Unit name such as `'hour'`, duration such as `'30m'`, or numeric count paired with `unit`.
+- name: unit
+  type: Unit
+  description: Unit name when the first argument is a numeric count.
+- name: zone
+  type: Zone
+  description: Time zone for the day's boundaries, defaulting to the configured zone.
+```
+
+**Returns**
+
+```returns
+type: DateTime[]
+description: Moments across this calendar day in `zone`.
+```
+
+```js
+const slots = date('2026-11-16').points(6, 'hours', 'UTC');
+
+slots.length; // 4
+slots[1].toString(); // '2026-11-16T06:00:00.000Z'
+```
+:::
+
+:::entry
+### `split()` :kind[method]
+
+```js signature
+d.split(step, zone?): DateTimeRange[]
+d.split(count, unit, zone?): DateTimeRange[]
+```
+
+Divides this calendar day into contiguous half-open [`DateTimeRange`](/api/ranges/) intervals in the given or configured time zone.
+
+**Parameters**
+
+```params
+- name: step
+  type: Unit | DurationInput | number
+  required: true
+  description: Unit name, duration, or numeric count paired with `unit`.
+- name: unit
+  type: Unit
+  description: Unit name when the first argument is a numeric count.
+- name: zone
+  type: Zone
+  description: Time zone for the day's boundaries, defaulting to the configured zone.
+```
+
+**Returns**
+
+```returns
+type: DateTimeRange[]
+description: Contiguous `DateTimeRange` slices covering this day in `zone`.
+```
+
+```js
+const halves = date('2026-11-16').split(12, 'hours', 'UTC');
+
+halves.map(String);
+// ['2026-11-16T00:00:00.000Z/2026-11-16T12:00:00.000Z', '2026-11-16T12:00:00.000Z/2026-11-17T00:00:00.000Z']
+```
+:::
+
 ## Formatting and conversion
 
 :::entry
@@ -521,7 +676,9 @@ date('2026-11-16').since('2026-11-02', 'weeks'); // 2
 d.format(spec?, locale?): string
 ```
 
-Formats the date using `Intl.DateTimeFormat`. Accepts any preset name, an options object, or a token pattern when [`@native-dates/plugins/tokens`](/plugins/tokens/) is loaded. Options objects ignore clock and zone keys, so one shared options object can format moments, dates, and times alike.
+Formats the date using named presets, localized presets from `'L'` through `'LLLL'`, options objects, or token patterns.
+
+Options objects ignore clock and zone keys, so one shared options object can format moments, dates, and times alike. See [Formatting](/guides/formatting/) for the full preset and token reference.
 
 **Parameters**
 
@@ -529,7 +686,7 @@ Formats the date using `Intl.DateTimeFormat`. Accepts any preset name, an option
 - name: spec
   type: FormatSpec
   default: "'medium'"
-  description: Preset name such as `'medium'` or `'month'`, `Intl.DateTimeFormatOptions` object, or token pattern.
+  description: Preset name such as `'medium'` or `'LL'`, `Intl` options object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding the configured default for this call.
@@ -539,7 +696,7 @@ Formats the date using `Intl.DateTimeFormat`. Accepts any preset name, an option
 
 ```returns
 type: string
-description: Locale-formatted date string.
+description: Formatted date string.
 ```
 
 ```js
@@ -549,7 +706,9 @@ day.format('short', 'en-US'); // '11/16/26'
 day.format('medium', 'en-US'); // 'Nov 16, 2026'
 day.format('long', 'en-US'); // 'November 16, 2026'
 day.format('full', 'en-US'); // 'Monday, November 16, 2026'
-day.format('month', 'en-US'); // 'November 2026'
+day.format('L', 'en-US'); // '11/16/2026'
+day.format('YYYY-MM-DD'); // '2026-11-16'
+day.format('ddd, MMM D', 'en-US'); // 'Mon, Nov 16'
 day.format({ weekday: 'long' }, 'en-US'); // 'Monday'
 ```
 :::
@@ -560,26 +719,28 @@ day.format({ weekday: 'long' }, 'en-US'); // 'Monday'
 ```js signature
 d.as('date'): CalendarDate
 d.as('datetime', zone?): DateTime
+d.as('yearMonth'): YearMonth
+d.as('monthDay'): MonthDay
 ```
 
-Converts this date to another kind inside a method chain, reading `'datetime'` as midnight in the given or configured zone. Also converts to [year-month](/plugins/year-month/) and [month-day](/plugins/month-day/) values when those plugins are loaded, matching `.yearMonth` and `.monthDay`.
+Converts this date to another kind inside a method chain, including [`YearMonth`](/api/year-month/) and [`MonthDay`](/api/month-day/). Converting to a moment returns midnight at the start of this date in the given or configured zone.
 
 **Parameters**
 
 ```params
 - name: kind
-  type: "'date' | 'datetime'"
+  type: "'date' | 'datetime' | 'yearMonth' | 'monthDay'"
   required: true
   description: Target kind to read this calendar date as.
 - name: zone
   type: Zone
-  description: Time zone used when converting to a `'datetime'`, defaulting to the configured zone.
+  description: Time zone used when converting to `'datetime'`, defaulting to the configured zone.
 ```
 
 **Returns**
 
 ```returns
-type: CalendarDate | DateTime
+type: CalendarDate | DateTime | YearMonth | MonthDay
 description: Converted value.
 ```
 
@@ -587,7 +748,8 @@ description: Converted value.
 const due = date('2026-11-16');
 
 due.as('datetime', 'UTC').toString(); // '2026-11-16T00:00:00.000Z'
-due.as('date').toString(); // '2026-11-16'
+due.as('yearMonth').toString(); // '2026-11'
+due.as('monthDay').toString(); // '11-16'
 ```
 :::
 

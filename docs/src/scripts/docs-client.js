@@ -28,15 +28,28 @@ function scrollspy() {
   if (!heads.length) { return; }
   // the on-this-page list, once in its column and once behind the bar on narrow screens
   const tocs = [...document.querySelectorAll('.toc-list')].map((ul) => [...ul.querySelectorAll('a')]);
+  const rail = document.querySelector('.docs-toc');
   const barCurrent = document.querySelector('[data-toc-current]');
+  let lastLit = null;
   const update = () => {
     const i = currentHeading(heads);
     // the last of its headings at or before the reader's, else its first
     const passed = new Set(heads.slice(0, i + 1).map((h) => h.id));
+    let active = null;
     tocs.forEach((toc) => {
       const lit = toc.findLast((a) => passed.has(idOf(a))) ?? toc[0];
       toc.forEach((a) => a.toggleAttribute('aria-current', a === lit));
+      if (rail?.contains(lit)) { active = lit; }
     });
+    if (active && active !== lastLit) {
+      lastLit = active;
+      if (rail.scrollHeight > rail.clientHeight) {
+        const item = active.getBoundingClientRect();
+        const box = rail.getBoundingClientRect();
+        if (item.top < box.top + 32) { rail.scrollTop += item.top - (box.top + 32); }
+        else if (item.bottom > box.bottom - 32) { rail.scrollTop += item.bottom - (box.bottom - 32); }
+      }
+    }
     // the bar names the section only once the reader is in one
     if (barCurrent) { barCurrent.textContent = i >= 0 ? heads[i].textContent.trim() : ''; }
   };

@@ -10,23 +10,25 @@ Temporal provides exact calendar and time-zone primitives with explicit option b
 
 ## How types map to Temporal
 
-Each class wraps one underlying `Temporal` type and hands it back whenever you need low-level control:
+Each core value class wraps one underlying `Temporal` type and hands it back whenever you need low-level control:
 
 | Type | Wraps | What Native Dates adds |
 |---|---|---|
 | [`DateTime`](/api/date-time/) | `Temporal.ZonedDateTime` | Reads ISO instants, offsets, `Date`, and epoch numbers into one zoned type and serializes to UTC |
-| [`CalendarDate`](/api/calendar-date/) | `Temporal.PlainDate` | Pairs with `at(time, zone)` and formats locale presets directly through `Intl` |
+| [`CalendarDate`](/api/calendar-date/) | `Temporal.PlainDate` | Pairs with `at(time, zone)` and formats presets and token patterns directly |
 | [`Time`](/api/time/) | `Temporal.PlainTime` | Reads 12-hour strings like `'9:30am'` alongside 24-hour ISO clock times |
 | [`Duration`](/api/duration/) | `Temporal.Duration` | Parses `'1h 30m'` phrases, spills fractional units, and remembers anchors from `until()` |
-| [`YearMonth`](/plugins/year-month/) | `Temporal.PlainYearMonth` | Opt-in plugin for billing months and card expiries with `monthYear()` and `on()` |
-| [`MonthDay`](/plugins/month-day/) | `Temporal.PlainMonthDay` | Opt-in plugin for birthdays and recurring dates with `dayMonth()`, `fallsOn()`, and `next()` |
+| [`YearMonth`](/api/year-month/) | `Temporal.PlainYearMonth` | Built-in class for billing months and card expiries with [`monthYear()`](/api/year-month-fn/) and `on()` |
+| [`MonthDay`](/api/month-day/) | `Temporal.PlainMonthDay` | Built-in class for birthdays and recurring dates with [`dayMonth()`](/api/month-day-fn/), `fallsOn()`, and `next()` |
+
+Temporal leaves ranges out of its specification. Core adds [`DateRange`, `DateTimeRange`, and `TimeRange`](/api/ranges/) on top of endpoint pairs for containment, overlap, and stepping.
 
 ## Passing Temporal objects in
 
 Every factory, arithmetic method, and comparison accepts raw `Temporal` values directly without manual conversion steps.
 
 ```js
-import { date, datetime, time } from 'native-dates';
+import { date, datetime, time, yearMonth } from 'native-dates';
 
 const instant = Temporal.Instant.from('2026-11-16T17:30:00Z');
 const standup = datetime(instant, 'America/Los_Angeles');
@@ -36,6 +38,9 @@ date(plainDate).plus(Temporal.Duration.from({ weeks: 2 }));
 
 const plainTime = Temporal.PlainTime.from('09:30');
 time(plainTime).format('short', 'en-US'); // '9:30 AM'
+
+const ym = yearMonth(Temporal.PlainYearMonth.from('2026-11'));
+ym.daysInMonth; // 30
 ```
 
 Passing a `Temporal.ZonedDateTime` to [`datetime()`](/api/datetime-fn/) preserves its time zone unless you pass a new one. Passing an instant or plain date-time places that value into the zone you specify or your configured default.

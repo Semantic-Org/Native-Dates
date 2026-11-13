@@ -1,6 +1,6 @@
 ---
 title: Types of time
-lede: Pick the right type for a calendar day, a time of day, a specific moment, or a length of time.
+lede: Pick the right type for a calendar day, a time of day, a specific moment, a partial date, a range, or a length of time.
 updated: 2026-11-12
 ---
 
@@ -12,6 +12,8 @@ Each concept gets its own type so you only work with the parts you actually have
 - **`Time`** for a time of day, like 9:30 AM
 - **`DateTime`** for a specific moment in a time zone
 - **`Duration`** for a length of time, like 2 hours or 3 weeks
+- **`YearMonth`** and **`MonthDay`** for a month without a day, or a recurring day without a year
+- **Ranges** for a span between two dates, times, or moments
 
 ## CalendarDate
 
@@ -29,7 +31,7 @@ birthday.month; // 5
 birthday.day; // 10
 ```
 
-Because a `CalendarDate` has no clock or time zone, May 10 stays May 10 for every user regardless of where they live.
+Because a calendar date has no clock or time zone, May 10 stays May 10 for every user regardless of where they live.
 
 ## Time
 
@@ -42,7 +44,7 @@ const opens = time('9:00am');
 const closes = opens.plus(8, 'hours');
 
 closes.hour; // 17
-closes.format('short'); // '5:00 PM'
+closes.format('short', 'en-US'); // '5:00 PM'
 ```
 
 Adding hours past midnight wraps around the 24-hour clock cleanly, since there is no date to advance.
@@ -61,10 +63,10 @@ const created = datetime('2026-11-16T17:30:00Z');
 const standup = date('2026-11-16').at('9:30am', 'America/Los_Angeles');
 ```
 
-A `DateTime` knows both when something happens and which time zone you're viewing it in. Call `in()` to see that same moment in another city:
+Each moment knows both when something happens and which time zone you're viewing it in. Call `in()` to see that same moment in another city:
 
 ```js
-standup.in('Europe/Berlin').format('time'); // '6:30 PM'
+standup.in('Europe/Berlin').format('time', 'en-US'); // '6:30 PM'
 ```
 
 ## Duration
@@ -79,47 +81,76 @@ const trial = days(14);
 const turnaround = duration('2 weeks, 3 days');
 ```
 
-Measuring the gap between two values returns a `Duration` too:
+Measuring the gap between two values returns a duration too:
 
 ```js
 const opens = time('9:00am');
 const lunch = time('12:30pm');
 
-opens.until(lunch).format('long'); // '3 hours, 30 minutes'
+opens.until(lunch).format('long', 'en-US'); // '3 hours, 30 minutes'
 ```
+
+## YearMonth
+
+Use [`YearMonth`](/api/year-month/) when a value has a year and a month with no day, such as a billing period, a card expiry, or a month input.
+
+```js
+import { monthYear, yearMonth } from 'native-dates';
+
+const billing = yearMonth('2026-11');
+const expiry = monthYear('11/28');
+
+billing.daysInMonth; // 30
+billing.on(15); // CalendarDate for 2026-11-15
+```
+
+It counts in months and years, and `on()` picks any day inside that month as a calendar date.
+
+## MonthDay
+
+Use [`MonthDay`](/api/month-day/) for a recurring date without a year, such as a birthday or an annual holiday.
+
+```js
+import { monthDay } from 'native-dates';
+
+const birthday = monthDay('10/17');
+
+birthday.in(2026); // CalendarDate for 2026-10-17
+birthday.fallsOn('2026-10-17'); // true
+```
+
+February 29 lands on February 28 in non-leap years automatically when you call `fallsOn()` or `in()`.
+
+## Ranges
+
+Use [Ranges](/api/ranges/) for a span between two dates, times, or moments. Build one from any starting point with `to()`, or call [`dateRange()`](/api/range-fn/) directly:
+
+```js
+const sprint = date('2026-11-02').to(2, 'weeks');
+const shift = time('9:00am').to('5:00pm');
+
+sprint.contains('2026-11-10'); // true
+shift.duration.hours; // 8
+```
+
+Date ranges include their final day, while moment and time ranges exclude their end boundary so back-to-back slots never overlap.
 
 ## Moving between them
 
-These types connect directly when you add or drop parts. Attach a time to a `CalendarDate` with `at()` to get a `DateTime`:
+These types connect directly when you add or drop parts. Attach a time to a calendar date with `at()` to get a moment in a time zone:
 
 ```js
 const reminder = today().plus(1, 'day').at('9:00am');
 ```
 
-Going the other way, read the date or time off any `DateTime`, or call `as()` to convert inside a method chain:
+Going the other way, read part properties directly off any moment or date, or call `as()` inside a method chain:
 
 ```js
 reminder.date; // CalendarDate for tomorrow
 reminder.time; // Time for 09:00:00
+reminder.yearMonth; // YearMonth
+reminder.monthDay; // MonthDay
 reminder.in('Asia/Tokyo').as('time'); // Time in Tokyo
-```
-
-## Partial dates and ranges
-
-When a value deliberately omits a year or day, or spans between two endpoints, import the matching plugin instead of inventing placeholder fields:
-
-- [`YearMonth`](/plugins/year-month/) for a billing period or card expiry like November 2026
-- [`MonthDay`](/plugins/month-day/) for a recurring birthday or annual holiday like October 17
-- [Ranges](/plugins/ranges/) for a span between two dates, times, or moments
-
-```js
-import { monthDay } from '@native-dates/plugins/month-day';
-import '@native-dates/plugins/ranges';
-import { yearMonth } from '@native-dates/plugins/year-month';
-
-const billing = yearMonth('2026-11');
-const birthday = monthDay('10/17');
-const sprint = today().to(2, 'weeks');
 ```
 
 :::tip[DateTime or CalendarDate?]

@@ -29,8 +29,8 @@ const group = section.groups.find((g) => g.items.some((it) => it.slug === entry.
 const { prev, next } = pagerFor(ids, entry.id);
 const { title, lede, kind, import: importLine, size, updated } = page.data;
 const sizeLabel = size ? formatSize(await sizeOf(size)) : null;
-// a heading that is a symbol on its own (navigate()), not prose that mentions one
-const isSymbol = (t) => /^[\w.$-]+\(\)$/.test(t) || (kind === 'plugin' && t === title);
+// a heading that is a symbol on its own (navigate(), DateRange), not prose that mentions one
+const isSymbol = (t) => /^[\w.$-]+\(\)$|^[A-Z][a-z]+[A-Z]\w*$/.test(t) || (kind === 'plugin' && t === title);
 const toc = headings.filter((h) => h.depth === 2 || h.depth === 3)
   .map((h) => ({ depth: h.depth, slug: h.slug, text: h.text.trim(), symbol: isSymbol(h.text.trim()) }));
 const minutes = Math.max(1, Math.round(page.body.split(/\s+/).length / 220));
