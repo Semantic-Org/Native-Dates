@@ -1,17 +1,19 @@
 import type {
   CalendarDate,
   CalendarDateInput,
+  DateRange,
   DateTime,
   DateTimeInput,
+  DateTimeRange,
   Duration,
   DurationInput,
   ReadOptions,
   TemporalValue,
   Time,
   TimeInput,
+  TimeRange,
   Zone,
 } from 'native-dates';
-import type { DateRange, DateTimeRange, TimeRange } from './ranges';
 
 export function looseZoned(text: string, zone?: Zone, dayFirst?: boolean): TemporalValue | undefined;
 
@@ -32,9 +34,7 @@ declare module 'native-dates' {
   export function date(input: unknown, options: ReadOptions & { loose: true; }): CalendarDate | null;
   export function time(input: unknown, options: ReadOptions & { loose: true; }): Time | null;
   export function duration(input: unknown, options: { loose: true; }): Duration | null;
-}
 
-declare module '@native-dates/plugins/ranges' {
   type Loose = ReadOptions & { loose: true; };
 
   export function dateRange(

@@ -1,21 +1,13 @@
-import {
-  CalendarDate,
-  DateTime,
-  days,
-  duration,
-  hours,
-  IS_DATE_RANGE,
-  IS_DATE_TIME_RANGE,
-  IS_DURATION,
-  IS_RANGE,
-  IS_TIME_RANGE,
-  Time,
-} from 'native-dates';
-import { isUnreadable, loosely, readAs, refuse, refuseType, unreadable } from 'native-dates/helpers/errors';
-import { isDurationFields } from 'native-dates/helpers/fields';
-import { epochOf, formatter, intlOptions } from 'native-dates/helpers/format';
-import { isDevelopment, isNumber, isPlainObject, isString } from 'native-dates/helpers/types';
-import { inspect, isDigits, isTemporalDuration, stepOf, unit, zoneOptions } from 'native-dates/helpers/units';
+import { CalendarDate } from './calendar-date.js';
+import { DateTime } from './date-time.js';
+import { days, duration, hours } from './duration.js';
+import { isUnreadable, loosely, readAs, refuse, refuseType, unreadable } from './helpers/errors.js';
+import { isDurationFields } from './helpers/fields.js';
+import { epochOf, formatter, intlOptions } from './helpers/format.js';
+import { IS_DATE_RANGE, IS_DATE_TIME_RANGE, IS_DURATION, IS_RANGE, IS_TIME_RANGE } from './helpers/identity.js';
+import { isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
+import { inspect, isDigits, isTemporalDuration, stepOf, unit, zoneOptions } from './helpers/units.js';
+import { Time } from './time.js';
 
 /*
   a span between two points, named by what it holds. a date range runs through its end, both days
@@ -441,36 +433,3 @@ export const timeRange = (start, end, options) => build(TimeRange, start, end, o
 export const isDateRange = (value) => value instanceof DateRange;
 export const isDateTimeRange = (value) => value instanceof DateTimeRange;
 export const isTimeRange = (value) => value instanceof TimeRange;
-
-// points('hour', zone), or points(30, 'minutes', zone): a count brings its unit before the zone
-const stepArguments = (step, [second, third]) =>
-  isNumber(step) || isDigits(step) ? [second, third] : [undefined, second];
-
-DateTime.prototype.to = function to(end, name) {
-  return new DateTimeRange(this, name === undefined ? end : duration(end, name));
-};
-DateTime.prototype.range = function range(name, firstDay) {
-  const start = this.startOf(name, firstDay);
-  return new DateTimeRange(start, start.plus(stepOf(unit(name))));
-};
-
-CalendarDate.prototype.to = function to(end, name) {
-  return new DateRange(this, name === undefined ? end : duration(end, name));
-};
-CalendarDate.prototype.range = function range(name, firstDay) {
-  return new DateRange(this.startOf(name, firstDay), this.endOf(name, firstDay));
-};
-// a day is a range of time, so it walks and splits like one: today().split('hour') is the day's hours
-// in the zone, 23 or 25 of them on a transition day, which only the zone knows
-CalendarDate.prototype.points = function points(step, ...rest) {
-  const [name, zone] = stepArguments(step, rest);
-  return this.at('00:00', zone).range('day').points(step, name);
-};
-CalendarDate.prototype.split = function split(step, ...rest) {
-  const [name, zone] = stepArguments(step, rest);
-  return this.at('00:00', zone).range('day').split(step, name);
-};
-
-Time.prototype.to = function to(end, name) {
-  return new TimeRange(this, name === undefined ? end : duration(end, name));
-};

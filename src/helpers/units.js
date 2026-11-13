@@ -162,3 +162,7 @@ export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(
 
 // the second argument of a factory is a zone, or an options bag { zone, loose }
 export const zoneOptions = (value) => (isPlainObject(value) ? value : { zone: value });
+
+// points('hour', zone), or points(30, 'minutes', zone): a count brings its unit before the zone
+export const stepArguments = (step, [second, third]) =>
+  isNumber(step) || isDigits(step) ? [second, third] : [undefined, second];
