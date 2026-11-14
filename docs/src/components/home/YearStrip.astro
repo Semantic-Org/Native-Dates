@@ -6,9 +6,10 @@
 import { date, today } from 'native-dates';
 
 import { HOME_LOCALES } from '../../data/home-locales.js';
-import { hasStrings, plural, t } from '../../lib/i18n.js';
+import { DEFAULT_LOCALE, hasStrings, plural, t } from '../../lib/i18n.js';
 
-const locale = Astro.currentLocale;
+const pageLocale = Astro.props.locale ?? Astro.currentLocale;
+const locale = Astro.props.locale ?? (hasStrings(pageLocale, 'home.') ? pageLocale : DEFAULT_LOCALE);
 const pair = HOME_LOCALES[locale]?.year;
 const FROM = pair?.fromZone ?? 'America/Los_Angeles';
 const TO = pair?.toZone ?? 'Europe/Berlin';
@@ -47,10 +48,11 @@ const data = JSON.stringify(days.map((d) => [d.label, d.berlin, d.gap])).replace
 const fill = (template, vars) => template.replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? '');
 const changesText = plural(locale, 'home.year.changes', changes.length, { count: changes.length });
 const daysText = plural(locale, 'home.year.days', shiftedDays, { count: shiftedDays });
-const usePairCopy = pair && !hasStrings(locale, 'home.year.');
-const lede = usePairCopy ? fill(pair.lede, { changes: changesText }) : t(locale, 'home.year.lede', { changes: changesText });
-const caption = usePairCopy
-  ? fill(pair.caption, { days: daysText, year, near: shifted.gap, far: usual, time: shifted.berlin })
+const lede = pair?.lede
+  ? fill(pair.lede, { changes: changesText, changeCount: changes.length })
+  : t(locale, 'home.year.lede', { changes: changesText });
+const caption = pair?.caption
+  ? fill(pair.caption, { days: daysText, dayCount: shiftedDays, year, near: shifted.gap, far: usual, time: shifted.berlin })
   : t(locale, 'home.year.caption', { days: daysText, year, near: shifted.gap, far: usual, time: shifted.berlin });
 ---
 <div class="ribbon-head">

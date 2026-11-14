@@ -224,15 +224,10 @@
   "plugins.empty.clear": "Clear filter",
   "plugins.callout.title": "Need something else?",
   "plugins.callout.body": "Plugins are self-attaching subpath modules that extend the core classes. See <a href=\"{href}\">Writing a plugin</a>.",
-  "plugins.category.dates": "Dates",
-  "plugins.category.spans": "Ranges",
   "plugins.category.formatting": "Formatting",
   "plugins.category.zones": "Time zones",
   "plugins.category.reading": "Parsing",
   "plugins.category.migration": "Migration",
-  "plugins.preset.full.description": "Every plugin enabled.",
-  "plugins.preset.scheduling.description": "City and abbreviation zone lookups for scheduling apps.",
-  "plugins.preset.compat.description": "Relative time, lenient parsing, and legacy `Date` getters for migrating from Moment or Day.js.",
   "plugins.relative.description": "Relative time formatting (`formatRelative()`) via `Intl.RelativeTimeFormat`.",
   "plugins.zones.description": "Time zone lookups by city (`'Berlin'`), abbreviation (`'PST'`), or custom alias.",
   "plugins.loose.description": "Lenient fallback parsing for human-written strings like `'March 5, 2026'`, returning `null` when unparseable.",
@@ -252,7 +247,6 @@
   "playground.built": "Built in {ms} ms",
   "playground.buildError": "Build error: {message}",
   "playground.runtimeError": "Runtime error: {message}",
-  "playground.noTemporal": "Your browser does not support Temporal yet. Import @native-dates/polyfill or open this page in a browser with native Temporal support.",
   "playground.split.tall": "Editor {height} pixels tall",
   "playground.split.wide": "Editor {percent}% of the width"
 }

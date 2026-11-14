@@ -537,13 +537,7 @@ pre.astro-code .line.highlighted {
 :where(pre, code, kbd, .keys, .code, .pg, .say-code, .console, .year-strip, .xr) { direction: ltr; }
 :where(code, kbd) { unicode-bidi: isolate; }
 /* inside those graphics, a sentence and a mock app's own interface still read as the page does */
-:dir(rtl) :is(.xr-count, .pg-status) { direction: rtl; }
-/* the slots graphic keeps its regions in place, so its wires stay clear of them; what's in a region
-   reads as the page does */
-:dir(rtl) .pj-r { direction: rtl; }
-/* a slot's tag sits in the corner its region's text leaves free, which is now the left one */
-:dir(rtl) .pj-r .pj-tag { direction: ltr; inset-inline: 2px auto; }
-:dir(rtl) .pj-ctl svg { scale: -1 1; }
+:dir(rtl) :is(.xr-count, .pg-status, .console-miss) { direction: rtl; }
 /* a number with its unit, or anything else that must keep its order inside a sentence */
 .ltr { direction: ltr; unicode-bidi: isolate; }
 
