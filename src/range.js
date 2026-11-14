@@ -361,16 +361,20 @@ class Range {
 
   // Intl adds the date to a range once its ends fall on different days, whatever the options say, so a
   // time range across midnight prints each end on its own. the text that joins them is read off a
-  // sample range inside one day, midnight until 1am, so it is the locale's own: ' – ' or '～'
+  // sample range inside one day, midnight until 3pm so each end keeps its own am and pm, and it is the
+  // locale's own: ' – ' or '～'
   static #formatIntl(kind, start, end, options, locale, zone, wraps = false) {
     const format = formatter(kind, options, locale, zone);
     if (!wraps) {
       return format.formatRange(epochOf(kind, start), epochOf(kind, end));
     }
-    const joint = format.formatRangeToParts(0, 36e5).find((part) =>
-      part.source === 'shared' && part.type === 'literal'
-    );
-    return `${format.format(epochOf(kind, start))}${joint?.value ?? ' – '}${format.format(epochOf(kind, end))}`;
+    const joint =
+      format.formatRangeToParts(0, 54e6).find((part) => part.source === 'shared' && part.type === 'literal')?.value
+        ?? ' – ';
+    // a locale's range form can close the first clock with a unit of its own, 分 in japanese, which
+    // a clock printed alone does not carry. the letters go and the mark stays, unless the joiner is a word
+    const mark = joint.replace(/\p{L}/gu, '');
+    return `${format.format(epochOf(kind, start))}${mark.trim() ? mark : joint}${format.format(epochOf(kind, end))}`;
   }
 
   toString() {
