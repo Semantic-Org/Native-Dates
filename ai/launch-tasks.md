@@ -84,7 +84,7 @@ The repo has had no tests on purpose, so nothing pinned the API while it moved. 
 
 Everything so far ran on Node 26 with native Temporal and was bundled with esbuild.
 
-- [ ] **Browsers.** Chrome and Firefox on native Temporal, Safari through `@native-dates/polyfill`.
+- [ ] **Browsers.** Chrome and Firefox on native Temporal. Safari through `@native-dates/polyfill` was checked on 2026-11-14, Safari 27.2 on iOS, which has no Temporal of its own: ranges, token patterns, durations, month-days and year-months all printed correctly. The docs playground in Safari is still to check.
 - [ ] **Bundlers.** One small app each on Vite, Rollup and webpack, checking the size and that nothing is dropped.
 - [ ] **Types in a consumer project** under both `nodenext` and `bundler` resolution, and through the `@native-dates/core` alias. The type files re-export each other with `.js` specifiers.
 - [ ] **Performance.** No benchmark exists. Measure parsing, arithmetic and formatting in a loop against Day.js before someone else does.
