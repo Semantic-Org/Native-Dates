@@ -84,6 +84,17 @@ day.format({ weekday: 'long' }, 'en-US'); // 'Monday'
 day.format({ month: 'short', day: 'numeric' }, 'en-US'); // 'Nov 16'
 ```
 
+Because each type carries only its own fields, presets adapt to local grammar, plurals, scripts, and calendars without locale files. See the [language examples](/examples/) to check specific edge cases in your target language:
+
+```js
+import { date, days, yearMonth } from 'native-dates';
+
+date('2019-05-01').format('long', 'ja-u-ca-japanese'); // '令和元年5月1日'
+yearMonth('2026-05').format('long', 'ru'); // 'май 2026 г.'
+date('2026-05-01').format('long', 'ru'); // '1 мая 2026 г.'
+days(2).format('long', 'ar'); // 'يومان'
+```
+
 :::tip[Human display vs wire strings]
 Reserve `format()` for text shown to people. When storing values or sending them over the network, call `toString()` or serialize to JSON so payloads stay in stable ISO 8601 format. See [Storing and sending](/guides/storing-and-sending/).
 :::

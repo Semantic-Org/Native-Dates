@@ -352,6 +352,35 @@
 .year-months span { position: absolute; inset-inline-start: calc(var(--at) / var(--days) * 100%); padding-inline-start: 4px; border-inline-start: 1px solid var(--line-2); color: var(--text-4); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); }
 .year-caption { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
 
+/* ---------- localized proof: bespoke edge cases for a non-English reader's own language ---------- */
+
+.locale-proofs {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
+  margin: 0; padding: 0; list-style: none;
+}
+.locale-proof {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 18px; min-width: 0;
+  padding: 22px 24px; border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1);
+}
+.locale-proof-copy h3 { margin: 0; color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); font-weight: 600; }
+.locale-proof-copy p { margin: 6px 0 0; color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-sm); }
+.locale-proof-sample {
+  display: flex; flex-direction: column; gap: 10px;
+  padding-top: 14px; border-top: 1px solid var(--line);
+}
+.locale-proof-code {
+  padding: 0; margin: 0; border-radius: 0; background: none; box-shadow: none;
+  color: var(--text-2); font: 400 var(--code-sm-fs)/var(--code-sm-lh) var(--font-mono);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.locale-proof-out {
+  display: block; color: var(--tip); font-size: var(--fs-lg); line-height: var(--lh-lg); font-weight: 600;
+}
+@media (max-width: 900px) {
+  .locale-proofs { grid-template-columns: minmax(0, 1fr); }
+  .locale-proof { padding: 18px 16px; }
+}
+
 /* ---------- what it weighs: core as a bar, and what the plugins switched on add to it ---------- */
 
 .bytes { padding: 28px 32px; border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); }

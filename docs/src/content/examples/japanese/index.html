@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <h1>Japanese eras, dates, and shifts</h1>
+  <div class="controls">
+    <label>Date <input id="day" type="date" value="2019-05-01"></label>
+    <label>Shift <input id="start" type="time" value="22:00"></label>
+    <label>to <input id="end" type="time" value="06:00"></label>
+  </div>
+  <div class="presets">
+    <button type="button" data-date="2019-04-30">平成最後の日 · 2019-04-30</button>
+    <button type="button" data-date="2019-05-01">令和初日 · 2019-05-01</button>
+    <button type="button" data-date="2026-05-01">2026-05-01</button>
+  </div>
+  <ul id="output"></ul>
+</body>
+</html>

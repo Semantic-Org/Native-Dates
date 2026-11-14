@@ -1,15 +1,19 @@
 ---
-// one standup, every day of a year: 9:30 in Los Angeles, read on a Berlin clock. the two cities
-// change their clocks on different weekends, so the Berlin time moves and moves back, and the
+// one standup, every day of a year: 9:30 in the first city, read on the second city's clock. when the
+// cities change their clocks on different schedules, the second clock moves and moves back, and the
 // strip shows when. every day is worked out by the library at build, for the year the build runs
 // in; the browser only moves the playhead (scripts/home/year.js)
 import { date, today } from 'native-dates';
 
-import { plural, t } from '../../lib/i18n.js';
+import { HOME_LOCALES } from '../../data/home-locales.js';
+import { hasStrings, plural, t } from '../../lib/i18n.js';
 
 const locale = Astro.currentLocale;
-const FROM = 'America/Los_Angeles';
-const TO = 'Europe/Berlin';
+const pair = HOME_LOCALES[locale]?.year;
+const FROM = pair?.fromZone ?? 'America/Los_Angeles';
+const TO = pair?.toZone ?? 'Europe/Berlin';
+const fromCity = pair?.fromCity ?? 'Los Angeles';
+const toCity = pair?.toCity ?? 'Berlin';
 const year = today().year;
 
 const days = [];
@@ -39,20 +43,29 @@ const months = days.reduce((all, d, i) => (all.at(-1)?.month === d.month ? all :
 const total = days.length;
 const first = days[0];
 const data = JSON.stringify(days.map((d) => [d.label, d.berlin, d.gap])).replace(/</g, '\\u003c');
+
+const fill = (template, vars) => template.replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? '');
+const changesText = plural(locale, 'home.year.changes', changes.length, { count: changes.length });
+const daysText = plural(locale, 'home.year.days', shiftedDays, { count: shiftedDays });
+const usePairCopy = pair && !hasStrings(locale, 'home.year.');
+const lede = usePairCopy ? fill(pair.lede, { changes: changesText }) : t(locale, 'home.year.lede', { changes: changesText });
+const caption = usePairCopy
+  ? fill(pair.caption, { days: daysText, year, near: shifted.gap, far: usual, time: shifted.berlin })
+  : t(locale, 'home.year.caption', { days: daysText, year, near: shifted.gap, far: usual, time: shifted.berlin });
 ---
 <div class="ribbon-head">
   <h2>{t(locale, 'home.year.title')}</h2>
-  <p set:html={t(locale, 'home.year.lede', { changes: plural(locale, 'home.year.changes', changes.length, { count: changes.length }) })} />
+  <p set:html={lede} />
 </div>
 <figure class="year" data-year aria-labelledby="year-caption">
   <div class="year-clocks">
     <div class="year-clock">
-      <span class="year-city">Los Angeles</span>
+      <span class="year-city">{fromCity}</span>
       <span class="year-time">{date(year, 1, 1).at('9:30am', FROM).format('time', locale)}</span>
     </div>
     <div class="year-gap" aria-live="off"><span data-year-gap>{t(locale, 'home.year.gap', { hours: first.gap })}</span></div>
     <div class="year-clock is-there">
-      <span class="year-city">Berlin</span>
+      <span class="year-city">{toCity}</span>
       <span class="year-time" data-year-berlin>{first.berlin}</span>
     </div>
   </div>
@@ -67,12 +80,6 @@ const data = JSON.stringify(days.map((d) => [d.label, d.berlin, d.gap])).replace
       {months.map((m) => <span style={`--at: ${m.at}`}>{m.label}</span>)}
     </div>
   </div>
-  <figcaption id="year-caption" class="year-caption" set:html={t(locale, 'home.year.caption', {
-    days: plural(locale, 'home.year.days', shiftedDays, { count: shiftedDays }),
-    year,
-    near: shifted.gap,
-    far: usual,
-    time: shifted.berlin,
-  })} />
+  <figcaption id="year-caption" class="year-caption" set:html={caption} />
   <script is:inline type="application/json" data-year-days set:html={data}></script>
 </figure>

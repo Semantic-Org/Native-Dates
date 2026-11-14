@@ -6,6 +6,7 @@ import { getCollection } from 'astro:content';
 
 import Bytes from '../components/home/Bytes.astro';
 import Consoles from '../components/home/Consoles.astro';
+import LocaleProof from '../components/home/LocaleProof.astro';
 import Primitives from '../components/home/Primitives.astro';
 import Say from '../components/home/Say.astro';
 import Verdict from '../components/home/Verdict.astro';
@@ -104,6 +105,8 @@ const INSTALL = 'npm i native-dates';
         <YearStrip />
       </div>
     </section>
+
+    <LocaleProof />
 
     <section class="ribbon">
       <div class="container">
