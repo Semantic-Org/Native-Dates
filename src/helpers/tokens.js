@@ -9,7 +9,7 @@ const nameCache = new Map();
 // month and weekday names come from Intl for the locale, so tokens stay legible outside English. the
 // tokens print the ISO calendar's numbers, so the names are the Gregorian ones even where the locale
 // keeps another calendar: a Persian locale would otherwise name November's 6th as Aban's
-const names = (locale) => {
+export const names = (locale) => {
   const key = locale ?? '';
   if (!nameCache.has(key)) {
     const month = (style) =>
@@ -36,10 +36,14 @@ const names = (locale) => {
     const dayPeriod = (hour) =>
       clock.formatToParts(hour * 36e5).find((part) => part.type === 'dayPeriod')?.value ?? (hour < 12 ? 'AM' : 'PM');
     const [MMM, MMMM] = [month('short'), month('long')];
+    // two letters of the short name where they tell the seven days apart, as they do in most
+    // alphabets. in arabic they are the article on every day, so the locale's narrow form stands in
+    const cut = weekday('short').map((name) => name.slice(0, 2));
     nameCache.set(key, {
       MMM,
       MMMM,
       besideDay: { MMM: monthBesideDay('short', MMM), MMMM: monthBesideDay('long', MMMM) },
+      dd: new Set(cut).size === 7 ? cut : weekday('narrow'),
       ddd: weekday('short'),
       dddd: weekday('long'),
       dayPeriods: [dayPeriod(9), dayPeriod(15)],
@@ -87,7 +91,7 @@ const tokenReaders = {
   DDD: ['dayOfYear', (subject) => String(subject.dayOfYear)],
   DDDD: ['dayOfYear', (subject) => pad(subject.dayOfYear, 3)],
   d: ['weekday', (subject) => String(subject.weekday % 7)],
-  dd: ['weekday', (subject, locale) => names(locale).ddd[subject.weekday - 1].slice(0, 2)],
+  dd: ['weekday', (subject, locale) => names(locale).dd[subject.weekday - 1]],
   ddd: ['weekday', (subject, locale) => names(locale).ddd[subject.weekday - 1]],
   dddd: ['weekday', (subject, locale) => names(locale).dddd[subject.weekday - 1]],
   H: ['hour', (subject) => String(subject.hour)],
