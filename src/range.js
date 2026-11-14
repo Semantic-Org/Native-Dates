@@ -352,7 +352,8 @@ class Range {
       : [this.start.toTemporal(), this.end.toTemporal()];
     const format = formatter(this.kind, options, locale, this.start.zone);
     const [from, until] = [epochOf(this.kind, start), epochOf(this.kind, end)];
-    // an engine from before 2022 refuses a range whose end reads earlier, so there each end prints alone
+    // an engine from before 2022 refuses a range whose end reads earlier, so there each end prints
+    // alone. only a browser on the polyfill can be that old, so this goes when the polyfill does
     try {
       return format.formatRange(from, until);
     }
