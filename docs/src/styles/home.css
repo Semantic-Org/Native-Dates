@@ -366,7 +366,7 @@
   color: var(--text); font: 400 var(--fs-md)/var(--lh-md) var(--font-mono); white-space: nowrap;
 }
 .locale-setup-note {
-  color: var(--text-3); font-size: var(--fs-xs); line-height: var(--lh-xs);
+  margin: 0; color: var(--text-3); font-size: var(--fs-xs); line-height: var(--lh-xs);
 }
 .locale-proofs {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px;

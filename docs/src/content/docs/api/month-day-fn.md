@@ -4,7 +4,7 @@ kind: function
 lede: Read a month-and-day string, numbers, fields, or date into a MonthDay.
 import: import { monthDay, dayMonth } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Reading month-days
@@ -100,7 +100,7 @@ Two-digit ISO strings across a dash such as `'10-17'` still read month-first und
   description: Day-first string like `'17/10'`, any `MonthDayInput`, or whole `day` from 1 to 31.
 - name: options
   type: Zone | MonthDayOptions | number | string
-  description: Time zone or options object, or 1-indexed `month` from 1 to 12 when passing two numbers.
+  description: Time zone, read options including `locale`, or a 1-indexed `month` from 1 to 12 when passing two numbers.
 ```
 
 **Returns**

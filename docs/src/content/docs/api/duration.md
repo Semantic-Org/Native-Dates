@@ -4,7 +4,7 @@ kind: class
 lede: A length of time across calendar and clock units.
 import: import { Duration } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating a Duration
@@ -413,7 +413,6 @@ span.format('digital', 'en-US'); // '2:30:00'
 ```js signature
 dur.locale(): Locale | undefined
 dur.locale(tag): Duration
-dur.lang(tag?): Duration | Locale | undefined
 ```
 
 Reads the locale carried on this duration, or returns a copy formatted in another locale across text previews, presets, and arithmetic chains. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
@@ -441,6 +440,17 @@ const wait = days(2).locale('ar');
 wait.locale(); // 'ar'
 wait.text; // 'يومان'
 ```
+:::
+
+:::entry
+### `lang()` :kind[method]
+
+```js signature
+dur.lang(): Locale | undefined
+dur.lang(tag): Duration
+```
+
+Shorthand alias for [`locale()`](#locale) that reads or attaches a BCP 47 locale tag on this duration.
 :::
 
 :::entry

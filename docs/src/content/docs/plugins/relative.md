@@ -4,7 +4,7 @@ kind: plugin
 lede: Human-readable relative phrases like `'3 hours ago'`, `'yesterday'`, and `'in 2 weeks'` via `Intl.RelativeTimeFormat`.
 import: import '@native-dates/plugins/relative'
 size: relative
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Relative formatting

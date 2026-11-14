@@ -57,10 +57,10 @@ Everything derived from that value keeps the same locale. Arithmetic, time zone 
 ```js
 import { date, datetime } from 'native-dates';
 
-const arrival = datetime('2026-05-01T14:30:00Z', 'Europe/Paris').locale('fr-FR');
+const arrival = datetime('2026-05-15T14:30:00Z', 'Europe/Paris').locale('fr-FR');
 
-arrival.text; // '1 mai 2026, 16:30 UTC+2'
-arrival.plus(3, 'days').date.format('long'); // '4 mai 2026'
+arrival.text; // '15 mai 2026, 16:30 UTC+2'
+arrival.plus(3, 'days').date.format('long'); // '18 mai 2026'
 
 const stay = date('2026-09-01', { locale: 'de-DE' }).to('2026-09-07');
 stay.format('medium'); // '01.–07.09.2026'
@@ -84,6 +84,8 @@ formatOrder({ placedAt: '2026-05-01T14:30:00Z' }, { zone: 'Asia/Tokyo', locale: 
 
 Calling `locale()` with no arguments reads back the active tag, or returns `undefined` when none was set. Passing an empty tag clears it so `locale(user.locale)` chains cleanly even without a saved preference.
 
+Pass a single BCP 47 tag rather than a raw HTTP `Accept-Language` header with quality weights, which throws an [`unknownLocale`](/api/errors/#units-zones-and-formats) error immediately.
+
 :::warning[Avoid per-request configure on servers]
 Global configuration updates shared state across the entire JavaScript process. On a multi-user server, another request can overwrite a `configure()` call across an async boundary. Attach `locale()` to the value instead.
 :::
@@ -93,11 +95,11 @@ A carried locale only affects how a value formats for people. Comparisons, sorti
 ```js
 import { date } from 'native-dates';
 
-const french = date('2026-05-01').locale('fr');
-const japanese = date('2026-05-01').locale('ja');
+const french = date('2026-05-15').locale('fr');
+const japanese = date('2026-05-15').locale('ja');
 
 french.equals(japanese); // true
-french.toString(); // '2026-05-01'
+french.toString(); // '2026-05-15'
 french.to(japanese).locale(); // 'fr'
 ```
 

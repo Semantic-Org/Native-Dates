@@ -1,7 +1,7 @@
 ---
 title: Errors
 lede: Every invalid input or unsupported operation throws a standard Error carrying a machine-readable code.
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Error shape
@@ -103,7 +103,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `unknownUnit` | Arithmetic, rounding, `set()`, `duration()` | Unrecognized unit name or abbreviation. |
 | `unknownWeekday` | `weekday()`, `next()`, `previous()`, `configure()` | Weekday string is not recognized or weekday number is outside 1 to 7. |
 | `unknownZone` | Factories, `in()`, `configure()` | Unknown IANA time zone ID, malformed UTC offset, or non-object `zoneAliases`. |
-| `unknownLocale` | `format()`, `monthNames()`, `weekdayNames()`, `configure()` | Invalid BCP 47 locale tag rejected by `Intl.getCanonicalLocales()`. |
+| `unknownLocale` | `locale()`, factories, `format()`, `monthNames()`, `weekdayNames()`, `configure()` | Invalid BCP 47 locale tag rejected by `Intl.getCanonicalLocales()`. |
 | `unknownFormat` | `format()` | Non-string format spec, unsupported duration style, or unrecognized letters in a token pattern outside `[brackets]`. |
 | `noField` | `format()` | Token pattern asks for a field the value lacks, such as `HH` on a `CalendarDate` or `YYYY` on a `Time`. |
 | `unknownKind` | `as()` | Target kind is not supported by the receiver. |

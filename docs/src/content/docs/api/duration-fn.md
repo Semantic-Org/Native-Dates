@@ -4,7 +4,7 @@ kind: function
 lede: Create a Duration from a human phrase, an ISO 8601 duration, a count and unit, or unit helpers.
 import: import { duration, hours } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating durations

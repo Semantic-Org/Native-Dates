@@ -4,7 +4,7 @@ kind: class
 lede: A specific moment in time, viewed in a time zone.
 import: import { DateTime } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating a DateTime
@@ -755,7 +755,6 @@ standup.format(
 ```js signature
 dt.locale(): Locale | undefined
 dt.locale(tag): DateTime
-dt.lang(tag?): DateTime | Locale | undefined
 ```
 
 Reads the locale carried on this moment, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
@@ -782,6 +781,17 @@ standup.locale(); // 'es-ES'
 standup.plus(1, 'week').date.format('long'); // '23 de noviembre de 2026'
 standup.locale(null).locale(); // undefined
 ```
+:::
+
+:::entry
+### `lang()` :kind[method]
+
+```js signature
+dt.lang(): Locale | undefined
+dt.lang(tag): DateTime
+```
+
+Shorthand alias for [`locale()`](#locale) that reads or attaches a BCP 47 locale tag on this moment.
 :::
 
 :::entry

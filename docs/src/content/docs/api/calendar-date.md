@@ -4,7 +4,7 @@ kind: class
 lede: A calendar date with no time of day and no time zone.
 import: import { CalendarDate } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating a CalendarDate
@@ -719,7 +719,6 @@ day.format({ weekday: 'long' }, 'en-US'); // 'Monday'
 ```js signature
 d.locale(): Locale | undefined
 d.locale(tag): CalendarDate
-d.lang(tag?): CalendarDate | Locale | undefined
 ```
 
 Reads the locale carried on this date, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
@@ -740,12 +739,23 @@ description: The active tag when called with no arguments, or a new `CalendarDat
 ```
 
 ```js
-const holiday = date('2026-05-01').locale('fr-FR');
+const trip = date('2026-05-15').locale('fr-FR');
 
-holiday.locale(); // 'fr-FR'
-holiday.format('long'); // '1 mai 2026'
-holiday.to('2026-05-05').format('long'); // '1–5 mai 2026'
+trip.locale(); // 'fr-FR'
+trip.format('long'); // '15 mai 2026'
+trip.to('2026-05-19').format('long'); // '15–19 mai 2026'
 ```
+:::
+
+:::entry
+### `lang()` :kind[method]
+
+```js signature
+d.lang(): Locale | undefined
+d.lang(tag): CalendarDate
+```
+
+Shorthand alias for [`locale()`](#locale) that reads or attaches a BCP 47 locale tag on this date.
 :::
 
 :::entry

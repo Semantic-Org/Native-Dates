@@ -4,7 +4,7 @@ kind: function
 lede: Create a CalendarDate from an ISO date string, year-month-day numbers, fields, or the current day.
 import: import { date, today } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Reading calendar dates

@@ -1,7 +1,7 @@
 ---
 title: Formatting
 lede: Format dates, times, ranges, and durations with Intl presets, locale tags, token patterns, and relative phrases.
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 Native Dates uses the platform's built-in `Intl` formatters and caches them automatically. You get localized output across languages and regions without adding locale files to your bundle.

@@ -4,7 +4,7 @@ kind: class
 lede: A calendar year and month with no day, for billing periods, card expiries, and month pickers.
 import: import { YearMonth } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating a YearMonth
@@ -448,7 +448,6 @@ nov.format('MM/YY'); // '11/26'
 ```js signature
 ym.locale(): Locale | undefined
 ym.locale(tag): YearMonth
-ym.lang(tag?): YearMonth | Locale | undefined
 ```
 
 Reads the locale carried on this month, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
@@ -475,6 +474,17 @@ may.locale(); // 'ru'
 may.format('long'); // 'май 2026 г.'
 may.on(1).format('long'); // '1 мая 2026 г.'
 ```
+:::
+
+:::entry
+### `lang()` :kind[method]
+
+```js signature
+ym.lang(): Locale | undefined
+ym.lang(tag): YearMonth
+```
+
+Shorthand alias for [`locale()`](#locale) that reads or attaches a BCP 47 locale tag on this month.
 :::
 
 :::entry

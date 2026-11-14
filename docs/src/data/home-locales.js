@@ -5,9 +5,9 @@ export const HOME_LOCALES = {
   ja: {
     exampleSlug: 'examples/japanese',
     configuredLocale: 'ja',
-    setupNote: '起動時に一度設定すれば、すべての .text と .format() に反映（未指定ならブラウザの言語）',
+    setupNote: 'アプリ起動時に一度設定（未指定ならブラウザの言語）、サーバーのリクエスト単位は <code>.locale(tag)</code>',
     title: '日本語の暦と表記の落とし穴まで、追加ロケールなしで対応',
-    lede: '改元初年の「令和元年」が「令和1年」になってしまう不具合や、深夜をまたぐシフトで日付や不要な「分」が混ざる問題も、一度の設定（またはブラウザの言語）だけでブラウザ標準の Intl と Temporal が解決します。追加ロケールは 0 kB です。',
+    lede: '改元初年の「令和元年」が「令和1年」になってしまう不具合や、深夜をまたぐシフトに不要な日付が混ざる問題も、一度の設定（またはブラウザの言語）だけでブラウザ標準の Intl と Temporal が解決します。追加ロケールは 0 kB です。',
     linkLabel: '日本語のインタラクティブ例を開く',
     proofs: [
       {
@@ -60,9 +60,9 @@ export const HOME_LOCALES = {
   'zh-CN': {
     exampleSlug: 'examples/chinese',
     configuredLocale: 'zh-CN',
-    setupNote: '启动时配置一次，所有 .text 与 .format() 全局生效（省略则跟随浏览器语言）',
-    title: '原生支持中文公历、农历、民国纪年与时段格式',
-    lede: '一次配置（或直接使用浏览器默认语言），“上午/下午”前置、不补零的年月日与纪念日都在全局自动生效；需要农历干支或民国纪年时再按需传入日历标签，语言包体积为 0 kB。',
+    setupNote: '客户端启动时配置一次（省略则跟随浏览器语言），服务端按请求调用 <code>.locale(tag)</code>',
+    title: '原生支持中文公历、农历干支、周表头与时段格式',
+    lede: '一次配置（或直接使用浏览器默认语言），“上午/下午”前置、不补零的年月日、纪念日与周一至周日表头都在全局自动生效；需要传统农历与干支纪年时再按需传入日历标签，语言包体积为 0 kB。',
     linkLabel: '查看中文交互式示例',
     proofs: [
       {
@@ -84,10 +84,10 @@ export const HOME_LOCALES = {
         run: ({ date }) => date('2026-02-17').format('long', 'zh-CN-u-ca-chinese'),
       },
       {
-        label: '民国纪年换算',
-        note: '同一日期在台湾地区日历下自动换算为民国纪年。',
-        code: "date('2026-05-01').format('long', 'zh-TW-u-ca-roc')",
-        run: ({ date }) => date('2026-05-01').format('long', 'zh-TW-u-ca-roc'),
+        label: '周一至周日表头',
+        note: '默认以周一起始并正确输出“周日”，告别手写映射表或拼接出“周七”的隐患。',
+        code: "weekdayNames('short').join(' · ')",
+        run: ({ weekdayNames }) => weekdayNames('short').join(' · '),
       },
     ],
     consoles: {
@@ -115,7 +115,7 @@ export const HOME_LOCALES = {
   ko: {
     exampleSlug: 'examples/korean',
     configuredLocale: 'ko',
-    setupNote: '시작할 때 한 번 설정하면 모든 .text와 .format()에 적용 (생략 시 브라우저 언어 사용)',
+    setupNote: '앱 시작 시 한 번 설정(생략 시 브라우저 언어), 서버 요청별로는 <code>.locale(tag)</code>',
     title: '한국어 띄어쓰기와 날짜 범위 축약까지 기본 내장',
     lede: '한 번의 로케일 설정(또는 브라우저 기본 언어)만으로 년·월·일 뒤의 띄어쓰기, 양쪽 ‘일’을 유지하는 범위 표기, ‘오전/오후’ 위치까지 별도 로케일 파일 없이 0 kB로 처리합니다.',
     linkLabel: '한국어 대화형 예제 보기',
@@ -170,7 +170,7 @@ export const HOME_LOCALES = {
   ar: {
     exampleSlug: 'examples/arabic',
     configuredLocale: 'ar-EG',
-    setupNote: 'اضبطه مرّة واحدة عند البدء ليسري على كل القيم والتنسيقات تلقائيًا (أو اتركه ليتبع لغة المتصفح)',
+    setupNote: 'اضبطه مرّة عند بدء التطبيق (أو اتركه للغة المتصفح)، أو مرّر <code>.locale(tag)</code> لكل طلب على الخادم',
     title: 'دعم أصيل للمثنى والجموع الستة والأرقام العربية والتقويم الهجري',
     lede: 'بضبط الإعداد مرّة واحدة (أو تركه للغة المتصفح)، تعمل صيغة المثنى «يومان» والجموع الستة والأرقام العربية والنطاقات في كل مكان تلقائيًا، مع تمرير رمز إضافي فقط عند التحويل إلى التقويم الهجري أو لهجة أخرى بحجم إضافي 0 كيلوبايت.',
     linkLabel: 'جرّب مثال اللغة العربية المباشر',
@@ -189,9 +189,9 @@ export const HOME_LOCALES = {
       },
       {
         label: 'الأرقام المشرقية مقابل التخصيص المغاربي',
-        note: 'يسري الإعداد الافتراضي تلقائيًا، مع إمكانية تمرير ar-MA عند الحاجة إلى الأرقام المغاربية و«ماي».',
-        code: "date('2026-05-01').format('long') + ' · ' + date('2026-05-01').format('long', 'ar-MA')",
-        run: ({ date }) => `${date('2026-05-01').format('long')} · ${date('2026-05-01').format('long', 'ar-MA')}`,
+        note: 'يسري الإعداد الافتراضي تلقائيًا، مع إمكانية إرفاق ar-MA بالقيمة عند الحاجة إلى الأرقام المغاربية و«ماي».',
+        code: "date('2026-05-01').format('long') + ' · ' + date('2026-05-01').locale('ar-MA').format('long')",
+        run: ({ date }) => `${date('2026-05-01').format('long')} · ${date('2026-05-01').locale('ar-MA').format('long')}`,
       },
       {
         label: 'تقويم أم القرى الهجري',
@@ -225,7 +225,7 @@ export const HOME_LOCALES = {
   ru: {
     exampleSlug: 'examples/russian',
     configuredLocale: 'ru',
-    setupNote: 'Один вызов при запуске, и все .text и .format() форматируют по-русски (без вызова берётся язык браузера)',
+    setupNote: 'Один вызов при запуске (или язык браузера), а на сервере по запросу — <code>.locale(tag)</code>',
     title: 'Падежи месяцев и русское склонение числительных без локаль-пакетов',
     lede: 'Достаточно один раз указать локаль (или положиться на язык браузера), и именительный падеж в заголовках («май 2026 г.»), родительный в датах («1 мая 2026 г.») и склонение числительных работают в каждом .text за 0 кБ.',
     linkLabel: 'Открыть интерактивный пример для русского языка',
@@ -280,7 +280,7 @@ export const HOME_LOCALES = {
   es: {
     exampleSlug: 'examples/spanish',
     configuredLocale: 'es',
-    setupNote: 'Configúralo una vez al iniciar y cada .text y .format() lo usará en toda la app (o déjalo vacío para el idioma del navegador)',
+    setupNote: 'Una vez al iniciar la app (o el idioma del navegador), o <code>.locale(tag)</code> por petición en el servidor',
     title: 'Meses en minúscula, conectores «de» y rangos naturales con una sola línea',
     lede: 'Las plantillas pensadas para inglés suelen escribir «Mayo 1, 2026» con mayúscula indebida o repetir el mes completo en los rangos. Configura el idioma una sola vez (o usa el del navegador) y toda la gramática española funciona en 0 kB extra.',
     linkLabel: 'Ver el ejemplo interactivo en español',
@@ -335,7 +335,7 @@ export const HOME_LOCALES = {
   'pt-BR': {
     exampleSlug: 'examples/portuguese',
     configuredLocale: 'pt-BR',
-    setupNote: 'Configure uma vez ao iniciar e todo .text e .format() seguirá o idioma (ou omita para usar o do navegador)',
+    setupNote: 'Uma vez ao iniciar o app (ou o idioma do navegador), ou <code>.locale(tag)</code> por requisição no servidor',
     title: 'Crase em «às 09:30», meses em minúscula e intervalos naturais em português',
     lede: 'Bibliotecas centradas no inglês costumam capitalizar «Maio» ou esquecer a crase antes do horário. Defina o idioma uma única vez (ou use o do navegador) e todas as chamadas entregam a grafia correta do português com 0 kB de pacotes extras.',
     linkLabel: 'Abrir o exemplo interativo em português',
@@ -343,14 +343,14 @@ export const HOME_LOCALES = {
       {
         label: 'Crase antes do horário e dias com hífen',
         note: 'Une data e hora com «às» e preserva «sexta-feira» e «maio» em minúsculas sem repetir pt-BR.',
-        code: "datetime('2026-05-01T09:30', 'America/Sao_Paulo').format('full')",
-        run: ({ datetime }) => datetime('2026-05-01T09:30', 'America/Sao_Paulo').format('full'),
+        code: "datetime('2026-05-15T09:30', 'America/Sao_Paulo').format('full')",
+        run: ({ datetime }) => datetime('2026-05-15T09:30', 'America/Sao_Paulo').format('full'),
       },
       {
         label: 'Intervalo de datas enxuto',
         note: 'Agrupa os dias no início e mantém «de maio de 2026» apenas uma vez.',
-        code: "dateRange('2026-05-01', '2026-05-05').format('long')",
-        run: ({ dateRange }) => dateRange('2026-05-01', '2026-05-05').format('long'),
+        code: "dateRange('2026-05-15', '2026-05-19').format('long')",
+        run: ({ dateRange }) => dateRange('2026-05-15', '2026-05-19').format('long'),
       },
       {
         label: 'Cabeçalho de mês sem dia artificial',
@@ -390,22 +390,22 @@ export const HOME_LOCALES = {
   fr: {
     exampleSlug: 'examples/french',
     configuredLocale: 'fr',
-    setupNote: 'Configurez-le une fois au démarrage : chaque .text et .format() suit partout (ou omettez-le pour la langue du navigateur)',
+    setupNote: 'Une fois au démarrage (ou la langue du navigateur), ou <code>.locale(tag)</code> par requête côté serveur',
     title: 'Mois en minuscules, plages abrégées et variantes francophones sans fichiers de langue',
     lede: 'Une seule configuration au démarrage (ou la langue du navigateur) suffit pour écrire les jours et les mois en minuscules sans virgule et fusionner les plages, tout en permettant de passer « fr-CA » ponctuellement pour 0 ko supplémentaire.',
     linkLabel: 'Ouvrir l’exemple interactif en français',
     proofs: [
       {
         label: 'Jour et mois en minuscules, sans virgule',
-        note: 'Respecte la typographie française (« vendredi 1 mai 2026 ») sans repasser la locale à chaque appel.',
-        code: "date('2026-05-01').format('full')",
-        run: ({ date }) => date('2026-05-01').format('full'),
+        note: 'Écrit le jour et le mois en minuscules sans virgule (« vendredi 15 mai 2026 ») sans repasser la locale à chaque appel.',
+        code: "date('2026-05-15').format('full')",
+        run: ({ date }) => date('2026-05-15').format('full'),
       },
       {
         label: 'Fusion des plages de dates',
         note: 'La propriété .text évite déjà de répéter le mois et l’année lorsque les deux bornes tombent le même mois.',
-        code: "dateRange('2026-05-01', '2026-05-05').text",
-        run: ({ dateRange }) => dateRange('2026-05-01', '2026-05-05').text,
+        code: "dateRange('2026-05-15', '2026-05-19').text",
+        run: ({ dateRange }) => dateRange('2026-05-15', '2026-05-19').text,
       },
       {
         label: 'En-tête de mois dédié',
@@ -415,9 +415,9 @@ export const HOME_LOCALES = {
       },
       {
         label: 'Variante ponctuelle pour le Québec',
-        note: 'Passez une locale uniquement pour changer de région : de « à 09:30 » en France à « à 09 h 30 » au Québec.',
-        code: "datetime('2026-05-01T09:30', 'America/Montreal').format('long', 'fr-CA')",
-        run: ({ datetime }) => datetime('2026-05-01T09:30', 'America/Montreal').format('long', 'fr-CA'),
+        note: 'Attachez une locale sur une valeur pour passer de « à 09:30 » en France à « à 09 h 30 » au Québec.',
+        code: "datetime('2026-05-15T09:30', 'America/Montreal').locale('fr-CA').format('long')",
+        run: ({ datetime }) => datetime('2026-05-15T09:30', 'America/Montreal').locale('fr-CA').format('long'),
       },
     ],
     consoles: {

@@ -4,7 +4,7 @@ kind: function
 lede: Read an existing timestamp, string, or clock reading into a DateTime, or read the current moment.
 import: import { datetime, now } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Reading moments
