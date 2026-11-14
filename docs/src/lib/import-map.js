@@ -13,8 +13,8 @@ export const IMPORT_MAP = {
     'native-dates': '/libs/native-dates/index.js',
     ...Object.fromEntries(helpers.map((name) => [`native-dates/helpers/${name}`, `/libs/native-dates/helpers/${name}.js`])),
     ...Object.fromEntries(shippedPlugins().map((name) => [`@native-dates/plugins/${name}`, `/libs/plugins/${name}.js`])),
-    // the sandbox's hidden setup imports the polyfill loader, which imports temporal-polyfill on demand
-    '@native-dates/polyfill': '/libs/polyfill/index.js',
+    // the sandbox's hidden setup imports the polyfill loader, which imports temporal-polyfill
+    '@native-dates/polyfill/sync': '/libs/polyfill/sync.js',
     'temporal-polyfill': '/libs/temporal-polyfill.js',
   },
 };
