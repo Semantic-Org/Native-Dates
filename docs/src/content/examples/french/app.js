@@ -2,7 +2,9 @@
 // the zone picked in the preview's bar becomes the default zone before the app runs
 import './sandbox.js';
 /* playground-hide-end */
-import { date } from 'native-dates';
+import { configure, date } from 'native-dates';
+
+configure({ locale: 'fr' });
 
 const day = document.querySelector('#day');
 const clock = document.querySelector('#clock');
@@ -19,14 +21,14 @@ function render() {
   const range = start.to(start.plus(Number(span.value), 'days'));
 
   output.innerHTML = `
-    <dt>Full date <code>fr</code></dt>
-    <dd>${start.format('full', 'fr')}</dd>
-    <dt>France clock <code>fr</code></dt>
-    <dd>${paris.format('long', 'fr')}</dd>
-    <dt>Québec clock <code>fr-CA</code></dt>
+    <dt>Full date <code>.format('full')</code></dt>
+    <dd>${start.format('full')}</dd>
+    <dt>France clock <code>.format('long')</code></dt>
+    <dd>${paris.format('long')}</dd>
+    <dt>Québec override <code>fr-CA</code></dt>
     <dd>${montreal.format('long', 'fr-CA')}</dd>
-    <dt>Collapsed range <code>fr</code></dt>
-    <dd>${range.format('long', 'fr')}</dd>`;
+    <dt>Collapsed range <code>.text</code></dt>
+    <dd>${range.text}</dd>`;
 }
 
 for (const control of [day, clock, span]) {

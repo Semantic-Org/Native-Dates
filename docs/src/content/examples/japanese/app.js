@@ -2,7 +2,9 @@
 // the zone picked in the preview's bar becomes the default zone before the app runs
 import './sandbox.js';
 /* playground-hide-end */
-import { date, timeRange } from 'native-dates';
+import { configure, date, timeRange } from 'native-dates';
+
+configure({ locale: 'ja' });
 
 const dayInput = document.querySelector('#day');
 const start = document.querySelector('#start');
@@ -16,11 +18,11 @@ function render() {
   const shift = timeRange(start.value, end.value);
 
   const rows = [
+    ['Full date', ".format('full')", day.format('full')],
+    ['Month heading', '.yearMonth.text', day.yearMonth.text],
+    ['Date span', '.text', span.text],
+    ['Overnight shift', '.text', shift.text],
     ['Imperial era', 'ja-u-ca-japanese', day.format('long', 'ja-u-ca-japanese')],
-    ['Full date', 'ja', day.format('full', 'ja')],
-    ['Month heading', 'ja', day.yearMonth.format('long', 'ja')],
-    ['Date span', 'ja', span.format('long', 'ja')],
-    ['Overnight shift', 'ja', shift.format('short', 'ja')],
   ];
 
   output.innerHTML = rows.map(([label, locale, value]) => `

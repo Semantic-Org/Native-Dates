@@ -7,13 +7,13 @@ try:
   - 'Click **+4 days** to see `format()` collapse the shared year and month into `2026년 5월 1일~5일`.'
   - 'Switch the clock to **09:30** so the Korean day period flips from `오후` to `오전` ahead of the hour.'
 related:
+  - { title: Configure, href: /api/configure/ }
   - { title: Formatting, href: /guides/formatting/ }
   - { title: Ranges, href: /api/ranges/ }
-  - { title: YearMonth, href: /api/year-month/ }
 ---
 
-Unlike Chinese and Japanese, Korean orthography requires a space after each year, month, and day counter. Passing `'ko'` inserts every required space between counters and the weekday automatically.
+Unlike Chinese and Japanese, Korean orthography requires a space after each year, month, and day counter. Calling `configure({ locale: 'ko' })` once applies that spacing across every `.text` property and `format()` call.
 
-Calling `format('long', 'ko')` on a date range collapses the shared year and month across a tilde while keeping `일` on both day numbers. Crossing into a new month brings the end month counter back automatically.
+Calling `range.format('long')` collapses the shared year and month across a tilde while keeping `일` on both day numbers. Crossing into a new month brings the end month counter back automatically.
 
-Twelve-hour clocks place Korea's morning or afternoon marker before the hour. Reading `day.yearMonth` formats clean monthly headings without a trailing day counter.
+Twelve-hour clocks place Korea's morning or afternoon marker before the hour. Reading `day.yearMonth.text` formats clean monthly headings without a trailing day counter.

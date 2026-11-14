@@ -2,7 +2,9 @@
 // the zone picked in the preview's bar becomes the default zone before the app runs
 import './sandbox.js';
 /* playground-hide-end */
-import { date, days } from 'native-dates';
+import { configure, date, days } from 'native-dates';
+
+configure({ locale: 'ar-EG' });
 
 const dayInput = document.querySelector('#day');
 const count = document.querySelector('#count');
@@ -18,17 +20,17 @@ function render() {
   const span = day.to(day.plus(4, 'days'));
 
   const rows = [
-    ['Six-way plural', 'ar', rtl(days(total).format('long', 'ar'))],
+    ['Six-way plural', '.text', rtl(days(total).text)],
     [
       'Eastern digits',
-      'ar-EG',
-      `${rtl(day.format('long', 'ar-EG'))} <span class="muted">·</span> ${rtl(span.format('long', 'ar-EG'))}`,
+      ".format('long')",
+      `${rtl(day.format('long'))} <span class="muted">·</span> ${rtl(span.format('long'))}`,
     ],
-    ['Maghrebi form', 'ar-MA', rtl(day.format('long', 'ar-MA'))],
+    ['Maghrebi override', 'ar-MA', rtl(day.format('long', 'ar-MA'))],
     [
       'Umm al-Qura Hijri',
       'ar-SA-u-ca-islamic-umalqura',
-      `${rtl(day.format('long', 'ar-SA-u-ca-islamic-umalqura'))} <span class="muted">·</span> ${rtl(day.monthDay.format('long', 'ar-EG'))}`,
+      `${rtl(day.format('long', 'ar-SA-u-ca-islamic-umalqura'))} <span class="muted">·</span> ${rtl(day.monthDay.format('long'))}`,
     ],
   ];
 

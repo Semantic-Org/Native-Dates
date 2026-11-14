@@ -7,15 +7,15 @@ try:
   - 'Compare `ar-EG` and `ar-MA` on the same date to see Eastern Arabic digits beside Western digits and Moroccan month names.'
   - 'Pick different dates to watch `ar-SA-u-ca-islamic-umalqura` convert ISO dates into the Umm al-Qura Hijri calendar.'
 related:
+  - { title: Configure, href: /api/configure/ }
   - { title: Formatting, href: /guides/formatting/ }
   - { title: Duration, href: /api/duration/ }
-  - { title: Ranges, href: /api/ranges/ }
 ---
 
-Arabic grammar distinguishes six plural categories across zero, one, two, three to ten, eleven to ninety-nine, and hundreds. Formatting `days(2)` in Arabic outputs a true dual noun with no digit at all.
+Calling `configure({ locale: 'ar-EG' })` once enables Arabic plurals and Eastern Arabic digits across every value. Reading `days(2).text` outputs a true dual noun with no digit at all.
 
-Regional tags select both the numeral script and the local vocabulary. Egyptian `'ar-EG'` renders Eastern Arabic digits across dates and ranges, whereas Moroccan `'ar-MA'` uses Western digits and regional month names.
+Pass an explicit locale tag only when switching regional dialects or calendars. Passing `'ar-MA'` switches to Western digits and Moroccan month names while the rest of the app stays on the configured default.
 
-The locale tag `ar-SA-u-ca-islamic-umalqura` converts any civil date into Saudi Arabia's Umm al-Qura Hijri calendar. Reading the month-day alongside it keeps a short Gregorian reference on the same row.
+Passing `'ar-SA-u-ca-islamic-umalqura'` converts any civil date into Saudi Arabia's Umm al-Qura Hijri calendar, while `day.monthDay` keeps a Gregorian reference beside it.
 
 When embedding Arabic text inside a left-to-right page, wrap each formatted value in `<bdi>` so digits and range dashes keep right-to-left order.
