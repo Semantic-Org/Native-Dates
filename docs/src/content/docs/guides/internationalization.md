@@ -128,6 +128,17 @@ Pass an explicit weekday to override one call, or set `weekStart` in [`configure
 
 A value keeps the locale of the value it was made from, so pin `weekStart` or pass the day wherever a week is a key in stored data, such as a weekly report or a billing period, and should not shift with the reader's language.
 
+Every date and datetime reports the day its own weeks start on as `weekStart`, from 1 for Monday through 7 for Sunday. Check it where code depends on one kind of week:
+
+```js title="reports.js"
+function weekKey(day) {
+  if (day.weekStart !== 1) {
+    throw new Error('weekly reports are keyed by Monday weeks');
+  }
+  return day.startOf('week').toString();
+}
+```
+
 ISO week numbers read from `weekOfYear` and the `'W'` token always count weeks from Monday.
 
 ## One-off calendar and dialect overrides
