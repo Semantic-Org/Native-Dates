@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-14 after the locale work (`npm run size`, Brotli): 12.75 kB for everything in `native-dates`, 11.32 kB for `import { now }`, four plugins on top (`relative`, `zones`, `loose`, `legacy-date`).
+Sizes on 2026-11-14 after the locale work (`npm run size`, Brotli): 12.82 kB for everything in `native-dates`, 11.39 kB for `import { now }`, four plugins on top (`relative`, `zones`, `loose`, `legacy-date`).
 
 ## How to decide
 
@@ -26,7 +26,7 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 - It is how a value is written and nothing else. Equality, order and JSON ignore it, and it has no tie to the zone.
 - `format(spec, locale)` still wins for one call, then the value's own, then `configure({ locale })`, then the runtime's.
 - When two values meet, the one the method was called on keeps its locale: `spanish.to(german)` is Spanish.
-- If week start comes to follow the locale, this stops being presentation only, since `startOf('week')` would then differ by locale. Decide the two together.
+- One thing it does beyond writing: it sets where a week starts, below.
 
 Cost: 0.32 kB with the fixes from its review.
 
@@ -36,6 +36,16 @@ Left as the contract does not say, for a decision if anyone asks:
 - `text` is in the value's locale, so two values that are `equals()` can differ under a deep-equality assertion.
 - A range written by a token pattern prints each end in its own locale.
 
+### Decided: a week starts where the locale starts it
+
+`startOf('week')`, `endOf('week')`, `range('week')`, `isSame(other, 'week')` and `weekdayNames()` take the first day of the week from, in order: the argument a call passes, `configure({ weekStart })`, then the locale, which is the value's own, else the configured one, else the runtime's. The platform says which day that is: Sunday in the United States, Japan and Brazil, Saturday in Egypt and Iran, Monday in most of Europe. Where a browser cannot say, it is Monday. `configure({ weekStart: null })` goes back to following the locale.
+
+- This changes a default: with nothing configured, a reader in the United States now gets weeks from Sunday, where every reader got Monday.
+- A value's locale now moves a calculation, so `day.locale('en-US').startOf('week')` and `day.locale('de').startOf('week')` are different days. The internationalization guide still says a carried locale only affects formatting, and needs that sentence changed.
+- Week numbers do not follow it. `weekOfYear` and the `W` token count ISO weeks, from Monday.
+
+Cost: 0.07 kB.
+
 ## 2. Locale sweep
 
 The docs will carry examples for each language, and may show a homepage section only to a reader who has picked that language. Those pages put every English-shaped corner on display, so find them first. The method that found the last two bugs is cheap: print one value in twenty locales and read the column.
@@ -44,7 +54,7 @@ The docs will carry examples for each language, and may show a homepage section 
 - [x] **Token `Do` prints English.** `format('Do', 'de')` gives `17th`. This is wrong output, so fix it if `Intl` can supply the ordinal cheaply, and otherwise decide what `Do` means outside English.
 - [x] **Tokens `a` and `A` always print `am` and `pm`.** The presets print the locale's own. Same call as `Do`.
 - [x] **Token `dd` is the first two letters of the short weekday name**, which is right in English and arbitrary elsewhere.
-- [ ] **Week start does not follow the locale.** It is Monday unless `configure({ weekStart })` says otherwise, so a calendar grid in a locale that starts on Sunday or Saturday is wrong by default. The platform knows each locale's first day.
+- [x] **Week start follows the locale.** See the decision above.
 - [x] **Loose parsing reads month names in English only.** `monthDay('17 octobre', { loose: true })` is `null`. Decide whether that is a gap or the meaning of loose.
 - [ ] **Calendars.** A Persian or Hebrew locale prints a full date in its own calendar, while `MonthDay` and `YearMonth` always print Gregorian months. That was chosen, and the example for such a language should show it on purpose.
 
@@ -78,7 +88,6 @@ A review of that work, run across every locale ICU has, then found and fixed:
 
 Open, each a decision more than a bug:
 
-- [ ] **Week start.** `Intl.Locale` reports each locale's first day (Sunday for `en-US`, `ja`, `pt-BR` and `he`, Saturday for `fa`, Monday for most of Europe). The library says Monday unless configured, so `startOf('week')`, `range('week')` and `weekdayNames()` are wrong by default for those readers. Following the locale changes what `today().startOf('week')` returns in the US.
 - [ ] **`YearMonth` short is `11/26`**, a two-digit year, which reads as November 26th in most of these locales and as year 26 month 11 in Japanese. A four-digit year would not be mistaken for a day.
 - [ ] **A Persian reader sees two calendars.** Dates print in the Persian calendar (`۱۵ آبان ۱۴۰۵`) and a month-day prints Gregorian (`۶ نوامبر`). Chosen, and the Persian page should say so.
 - [ ] **Greek names a month alone in the form it takes beside a day.** `format('MMMM YYYY', 'el')` gives `Νοεμβρίου 2026` where `Νοέμβριος 2026` is right, and `monthNames('long', 'el')` is twelve genitives. `Intl` only gives the plain Greek form beside a year, and taking it from there puts an ezafe on four Persian months, so no rule read off the platform fixes one without breaking the other.
