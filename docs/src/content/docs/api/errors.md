@@ -134,10 +134,9 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `twoPieces` | `TimeRange.intersection()` | Two overnight time ranges overlap in two separate intervals across midnight. |
 | `noZone` | `TimeRange.in()` | Calling `in()` on a `TimeRange`, which has no calendar date to place in a zone. |
 
-### Environment and plugins
+### Plugins
 
 | Code | Thrown by | Cause |
 |---|---|---|
-| `noTemporal` | Module load | `globalThis.Temporal` is missing and `@native-dates/polyfill` has not been imported yet. |
 | `missingPlugin` | Factories, `configure()` | Using `loose`, `dayFirst`, or `zoneAliases` before importing the matching plugin. |
 | `immutable` | `DateTime` legacy setters | Calling a mutating `Date` setter such as `setHours()` when `@native-dates/plugins/legacy-date` is loaded. |

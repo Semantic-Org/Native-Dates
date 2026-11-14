@@ -6,10 +6,11 @@
 import * as library from 'native-dates';
 
 import { HOME_LOCALES } from '../../data/home-locales.js';
-import { t } from '../../lib/i18n.js';
+import { DEFAULT_LOCALE, hasStrings, t } from '../../lib/i18n.js';
 import { consolesFor, preview } from '../../scripts/home/consoles.js';
 
-const locale = Astro.currentLocale;
+const pageLocale = Astro.props.locale ?? Astro.currentLocale;
+const locale = Astro.props.locale ?? (hasStrings(pageLocale, 'home.') ? pageLocale : DEFAULT_LOCALE);
 const localCopy = HOME_LOCALES[locale]?.consoles ?? {};
 const copy = (id, field) => localCopy[id]?.[field] ?? t(locale, `home.consoles.${id}.${field}`);
 const cases = consolesFor(locale).map((c) => ({

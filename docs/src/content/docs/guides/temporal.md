@@ -92,4 +92,4 @@ import { today } from 'native-dates';
 today().plus(1, 'week');
 ```
 
-The default entry checks `globalThis.Temporal` first and dynamically imports the polyfill only when needed, so modern browsers skip downloading it. In environments without top-level await, import `'@native-dates/polyfill/sync'` instead.
+The default entry checks `globalThis.Temporal` first and dynamically imports the polyfill only when needed, so modern browsers skip downloading it. If another module computes a date at load time (such as `export const start = today()`), or your environment lacks top-level await, import `'@native-dates/polyfill/sync'` instead.

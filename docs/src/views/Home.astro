@@ -15,7 +15,7 @@ import YearStrip from '../components/home/YearStrip.astro';
 import Playground from '../components/Playground.astro';
 import Base from '../layouts/Base.astro';
 import { filesFor } from '../lib/examples.js';
-import { draftStrings, languageMenu, languageSelect, languagesWith, localeOf, localePath, t } from '../lib/i18n.js';
+import { DEFAULT_LOCALE, draftStrings, englishIn, languageMenu, languageSelect, languagesWith, localeOf, localePath, t } from '../lib/i18n.js';
 import { ICON, MARK } from '../lib/icons.js';
 import { formatSize, sizeOf } from '../lib/sizes.js';
 import { REPO_URL, versionMenu } from '../lib/versions.js';
@@ -26,10 +26,15 @@ const to = (path) => localePath(path, locale);
 // the core's size wherever the page's words quote it ({size}), measured like every other size here
 const size = formatSize(await sizeOf('core')).replace(' ', '&nbsp;');
 // the page's words are keys (t() here and in its components, ui() in its scripts) from
-// content/strings.json; a language that has translated them is one the page is written in
+// content/strings.json, and a language that has translated them is one the page is written in
 const translatedIn = languagesWith('home.', { reviewed: true });
 const writtenIn = languagesWith('home.');
-const draft = writtenIn.includes(locale) && draftStrings(locale);
+const translated = writtenIn.includes(locale);
+const draft = translated && draftStrings(locale);
+const english = translated ? {} : englishIn(locale);
+const notice = locale === DEFAULT_LOCALE ? null
+  : !translated ? t(locale, 'language.untranslated', { language: localeOf(locale).name })
+  : draft ? t(locale, 'language.draft') : null;
 const tryEntry = (await getCollection('examples')).find((e) => e.id === 'meeting-planner');
 const SECTIONS = [['nav.guides', '/guides/installation/'], ['nav.api', '/api/date-time/'], ['nav.examples', '/examples/'], ['nav.plugins', '/plugins/']];
 const INSTALL = 'npm i native-dates';
@@ -55,10 +60,10 @@ const INSTALL = 'npm i native-dates';
       <Fragment set:html={languageSelect(Astro.url.pathname, locale)} />
     </nav>
   </header>
-  {/* a machine translation nobody has reviewed says so under the topbar, with the way to english */}
-  {draft && <p class="archive-banner" lang={locale} dir={localeOf(locale).dir}>{t(locale, 'language.draft')} <a href="/" hreflang="en" lang="en" data-language-pick="en">{t(locale, 'language.readEnglish')}</a></p>}
+  {/* an untranslated homepage or an unreviewed machine translation says so under the topbar */}
+  {notice && <p class="archive-banner" lang={locale} dir={localeOf(locale).dir}>{notice} <a href="/" hreflang="en" lang="en" data-language-pick="en">{t(locale, 'language.readEnglish')}</a></p>}
 
-  <main id="content">
+  <main id="content" {...english}>
     <section class="hero">
       <div class="container">
         <div class="hero-copy">
@@ -151,7 +156,7 @@ const INSTALL = 'npm i native-dates';
     </section>
   </main>
 
-  <footer class="footer">
+  <footer class="footer" {...english}>
     <div class="container footer-inner">
       <div class="footer-brand">
         <a class="wordmark" href={to('/')}><Fragment set:html={MARK} />native-dates</a>
