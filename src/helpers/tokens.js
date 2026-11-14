@@ -6,27 +6,59 @@ import { locale as pickLocale, weekStart } from './zones.js';
 
 const nameCache = new Map();
 
-// month and weekday names come from Intl for the locale, so tokens stay legible outside English
+// month and weekday names come from Intl for the locale, so tokens stay legible outside English. the
+// tokens print the ISO calendar's numbers, so the names are the Gregorian ones even where the locale
+// keeps another calendar: a Persian locale would otherwise name November's 6th as Aban's
 const names = (locale) => {
   const key = locale ?? '';
   if (!nameCache.has(key)) {
     const month = (style) =>
       Array.from(
         { length: 12 },
-        (_, i) => plainDateTimeFormat(locale, { month: style }).format(Date.UTC(2000, i, 1)),
+        (_, i) => plainDateTimeFormat(locale, { month: style, calendar: 'gregory' }).format(Date.UTC(2000, i, 1)),
       );
+    // many languages write a month differently beside a day: 6 ноября where the month alone is
+    // ноябрь. a locale that writes the month as a number there keeps its name
+    const monthBesideDay = (style, alone) =>
+      alone.map((name, i) => {
+        const beside = plainDateTimeFormat(locale, { day: 'numeric', month: style, calendar: 'gregory' })
+          .formatToParts(Date.UTC(2000, i, 1))
+          .find((part) => part.type === 'month').value;
+        return /\d/.test(beside) ? name : beside;
+      });
     // 2024-01-01 fell on a monday, so index 0 is monday to match ISO weekday numbering
     const weekday = (style) =>
       Array.from(
         { length: 7 },
         (_, i) => plainDateTimeFormat(locale, { weekday: style }).format(Date.UTC(2024, 0, 1 + i)),
       );
-    nameCache.set(key, { MMM: month('short'), MMMM: month('long'), ddd: weekday('short'), dddd: weekday('long') });
+    const clock = plainDateTimeFormat(locale, { hour: 'numeric', hour12: true });
+    const dayPeriod = (hour) =>
+      clock.formatToParts(hour * 36e5).find((part) => part.type === 'dayPeriod')?.value ?? (hour < 12 ? 'AM' : 'PM');
+    const [MMM, MMMM] = [month('short'), month('long')];
+    nameCache.set(key, {
+      MMM,
+      MMMM,
+      besideDay: { MMM: monthBesideDay('short', MMM), MMMM: monthBesideDay('long', MMMM) },
+      ddd: weekday('short'),
+      dddd: weekday('long'),
+      dayPeriods: [dayPeriod(9), dayPeriod(15)],
+      // 6th is English. any other language gets the day as a number
+      english: clock.resolvedOptions().locale.startsWith('en'),
+    });
   }
   return nameCache.get(key);
 };
 
-const ordinal = (number) => {
+const month = (subject, locale, token, besideDay) =>
+  (besideDay ? names(locale).besideDay : names(locale))[token][subject.month - 1];
+
+const dayPeriod = (subject, locale) => names(locale).dayPeriods[subject.hour < 12 ? 0 : 1];
+
+const ordinal = (number, locale) => {
+  if (!names(locale).english) {
+    return String(number);
+  }
   const tens = number % 100;
   const suffix = tens >= 11 && tens <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][number % 10] ?? 'th';
   return `${number}${suffix}`;
@@ -47,11 +79,11 @@ const tokenReaders = {
   YY: ['year', (subject) => pad(subject.year % 100)],
   M: ['month', (subject) => String(subject.month)],
   MM: ['month', (subject) => pad(subject.month)],
-  MMM: ['month', (subject, locale) => names(locale).MMM[subject.month - 1]],
-  MMMM: ['month', (subject, locale) => names(locale).MMMM[subject.month - 1]],
+  MMM: ['month', (subject, locale, besideDay) => month(subject, locale, 'MMM', besideDay)],
+  MMMM: ['month', (subject, locale, besideDay) => month(subject, locale, 'MMMM', besideDay)],
   D: ['day', (subject) => String(subject.day)],
   DD: ['day', (subject) => pad(subject.day)],
-  Do: ['day', (subject) => ordinal(subject.day)],
+  Do: ['day', (subject, locale) => ordinal(subject.day, locale)],
   DDD: ['dayOfYear', (subject) => String(subject.dayOfYear)],
   DDDD: ['dayOfYear', (subject) => pad(subject.dayOfYear, 3)],
   d: ['weekday', (subject) => String(subject.weekday % 7)],
@@ -69,8 +101,8 @@ const tokenReaders = {
   S: ['millisecond', (subject) => String(Math.floor(subject.millisecond / 100))],
   SS: ['millisecond', (subject) => pad(Math.floor(subject.millisecond / 10))],
   SSS: ['millisecond', (subject) => pad(subject.millisecond, 3)],
-  A: ['hour', (subject) => (subject.hour < 12 ? 'AM' : 'PM')],
-  a: ['hour', (subject) => (subject.hour < 12 ? 'am' : 'pm')],
+  A: ['hour', (subject, locale) => dayPeriod(subject, locale).toUpperCase()],
+  a: ['hour', (subject, locale) => dayPeriod(subject, locale).toLowerCase()],
   Z: ['offset', (subject) => subject.offset],
   ZZ: ['offset', (subject) => subject.offset.replace(':', '')],
   z: ['zone', (subject, locale) => zoneName(subject, locale, 'short')],
@@ -107,6 +139,8 @@ export const monthNames = (
 
 export const formatTokens = (subject, kind, pattern, locale) => {
   const resolved = pickLocale(locale);
+  // a day anywhere in the pattern puts the month in the form it takes beside one
+  const besideDay = /D/.test(pattern);
   return pattern.replace(tokenPattern, (token, literal, stray) => {
     if (literal !== undefined) {
       return literal;
@@ -124,6 +158,6 @@ export const formatTokens = (subject, kind, pattern, locale) => {
         explanation: isDevelopment ? `a ${kind} has no ${field}` : 0,
       });
     }
-    return read(subject, resolved);
+    return read(subject, resolved, besideDay);
   });
 };
