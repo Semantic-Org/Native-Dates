@@ -4,7 +4,8 @@ import { isPlainObject } from './types.js';
 // an Intl constructor costs about a hundred format calls, so each formatter is built once per argument
 // list and reused. the arguments key nested maps, a string by value and a frozen options object by
 // identity, so a preset costs no serialization on a format call. a caller's own object may change
-// between calls, so it keys by its fields. every call of one formatter passes the same number of arguments
+// between calls, so it keys by its fields, and a list of locales is a new array on each call, so it
+// keys by its text. every call of one formatter passes the same number of arguments
 export const cached = (make) => {
   const root = new Map();
   return (...args) => {
@@ -12,7 +13,11 @@ export const cached = (make) => {
     const last = args.length - 1;
     for (let index = 0; index <= last; index++) {
       const arg = args[index];
-      const key = isPlainObject(arg) && !Object.isFrozen(arg) ? JSON.stringify(arg) : arg;
+      const key = isPlainObject(arg) && !Object.isFrozen(arg)
+        ? JSON.stringify(arg)
+        : Array.isArray(arg)
+        ? String(arg)
+        : arg;
       let next = level.get(key);
       if (next === undefined) {
         next = index === last ? make(...args) : new Map();
