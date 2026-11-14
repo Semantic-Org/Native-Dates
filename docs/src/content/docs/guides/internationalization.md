@@ -36,9 +36,9 @@ Every value, range, duration, partial date, and name helper formats in that loca
 ```js title="main.js"
 import { configure, date, days, monthNames, yearMonth } from 'native-dates';
 
-configure({ locale: 'es-ES', weekStart: 'monday' });
+configure({ locale: 'es-ES' });
 
-date('2026-05-01').format('long'); // '1 de mayo de 2026'
+date('2026-05-15').format('long'); // '15 de mayo de 2026'
 yearMonth('2026-05').format('long'); // 'mayo de 2026'
 days(2).text; // '2 días'
 monthNames('short').slice(0, 3); // ['ene', 'feb', 'mar']
@@ -79,7 +79,7 @@ function formatOrder(order, user) {
   };
 }
 
-formatOrder({ placedAt: '2026-05-01T14:30:00Z' }, { zone: 'Asia/Tokyo', locale: 'ja-JP' });
+formatOrder({ placedAt: '2026-05-15T14:30:00Z' }, { zone: 'Asia/Tokyo', locale: 'ja-JP' });
 ```
 
 Calling `locale()` with no arguments reads back the active tag, or returns `undefined` when none was set. Passing an empty tag clears it so `locale(user.locale)` chains cleanly even without a saved preference.

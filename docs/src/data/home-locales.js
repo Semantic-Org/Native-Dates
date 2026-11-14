@@ -1,5 +1,8 @@
 // bespoke homepage sections and city choices for each non-English locale in lib/locales.js.
-// evaluated at build time only so localized copy never enters the client script bundle
+// evaluated at build time only so localized copy never enters the client script bundle.
+// all localized prose here is agent-authored draft copy pending native speaker review. sample dates
+// stay on 2026-05-01 where single-digit month/day unpadding or genitive day 1 is the point, and move
+// to 2026-05-15 in French and Brazilian Portuguese where the 1st of a month takes 1er / 1º
 
 export const HOME_LOCALES = {
   ja: {
@@ -105,7 +108,7 @@ export const HOME_LOCALES = {
       },
       {
         label: '周一至周日表头',
-        note: '默认以周一起始并正确输出“周日”，告别手写映射表或拼接出“周七”的隐患。',
+        note: '生成周一至周日表头并正确输出“周日”，告别手写映射表或拼接出“周七”的隐患。',
         code: "weekdayNames('short').join(' · ')",
         run: ({ weekdayNames }) => weekdayNames('short').join(' · '),
       },
