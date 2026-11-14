@@ -33,6 +33,26 @@ The docs will carry examples for each language, and may show a homepage section 
 
 For the examples themselves: lead with presets and options bags, where the library is strongest in every locale, before token patterns.
 
+### Sweep results, 2026-11-14
+
+Twenty-four locales, every output path: presets on each noun, the `L` names, month-days, year-months, ranges of each kind, durations, relative phrases, token patterns and the name tables. Presets, ranges, durations and relative phrases read correctly everywhere, since `Intl` writes them. Everything wrong was in token patterns.
+
+Fixed, at 0.22 kB for all four:
+
+- **Month names in a Persian locale came from the Persian calendar** while the numbers beside them were Gregorian, so November 6 printed as the 6th of Aban. Token month names and `monthNames()` are Gregorian now.
+- **A month beside a day takes the form the language uses there**: `6 ноября` and `6 listopada`, where the month alone stays `ноябрь` and `listopad`. Russian, Polish, Czech, Croatian, Finnish, Greek and Catalan were checked.
+- **`a` and `A` print the locale's own**: `午後`, `오후`, `م`, where they printed `pm` everywhere.
+- **`Do` prints a plain number outside English**, where it printed `6th` inside German and Japanese text.
+
+Open, each a decision more than a bug:
+
+- [ ] **Week start.** `Intl.Locale` reports each locale's first day (Sunday for `en-US`, `ja`, `pt-BR` and `he`, Saturday for `fa`, Monday for most of Europe). The library says Monday unless configured, so `startOf('week')`, `range('week')` and `weekdayNames()` are wrong by default for those readers. Following the locale changes what `today().startOf('week')` returns in the US.
+- [ ] **`dd`** is two letters cut from the short weekday name. In Arabic that is the article, `ال`, for every day of the week. `Intl` has a narrow form (`F`, `金`) that is right everywhere and one letter in English.
+- [ ] **`YearMonth` short is `11/26`**, a two-digit year, which reads as November 26th in most of these locales and as year 26 month 11 in Japanese. A four-digit year would not be mistaken for a day.
+- [ ] **A Persian reader sees two calendars.** Dates print in the Persian calendar (`۱۵ آبان ۱۴۰۵`) and a month-day prints Gregorian (`۶ نوامبر`). Chosen, and the Persian page should say so.
+- [ ] **A time range across midnight is written a little differently from one that is not** in locales whose range form adds a word: German `09:00–17:00 Uhr` against `22:00–06:00`, Japanese `9時00分～17時00分` against `22:00～6:00`.
+- [ ] **Token patterns print ASCII digits** in locales with their own (`ar-EG`, `fa`), where presets print the locale's. Right for `YYYY-MM-DD`, arguable for `D MMMM`.
+
 ## 3. Tests
 
 The repo has had no tests on purpose, so nothing pinned the API while it moved. Once sections 1 and 2 are settled that reason is gone, and this is the largest piece of work left.
