@@ -10,16 +10,18 @@ import { DEFAULT_LOCALE, hasStrings, t } from '../../lib/i18n.js';
 import { consolesFor, preview } from '../../scripts/home/consoles.js';
 
 const pageLocale = Astro.props.locale ?? Astro.currentLocale;
-const locale = Astro.props.locale ?? (hasStrings(pageLocale, 'home.') ? pageLocale : DEFAULT_LOCALE);
-const localCopy = HOME_LOCALES[locale]?.consoles ?? {};
-const copy = (id, field) => localCopy[id]?.[field] ?? t(locale, `home.consoles.${id}.${field}`);
-const cases = consolesFor(locale).map((c) => ({
+const translated = Astro.props.locale ? true : hasStrings(pageLocale, 'home.');
+const uiLocale = translated ? pageLocale : DEFAULT_LOCALE;
+const entry = HOME_LOCALES[pageLocale];
+const localCopy = (translated ? entry?.consoles : entry?.consolesEn) ?? {};
+const copy = (id, field) => localCopy[id]?.[field] ?? t(uiLocale, `home.consoles.${id}.${field}`);
+const cases = consolesFor(pageLocale).map((c) => ({
   ...c,
   dateOut: preview(c.date.run(), library),
   nativeOut: preview(c.native.run(library), library),
 }));
 ---
-<div class="ask" data-consoles={locale}>
+<div class="ask" data-consoles={pageLocale}>
   {/* a rubber stamp's ink: worn through in specks, and ragged at its edges. the stamps name it as their filter */}
   <svg class="stamp-ink" width="0" height="0" aria-hidden="true">
     <filter id="stamp-ink" x="-10%" y="-20%" width="120%" height="140%" color-interpolation-filters="sRGB">
@@ -30,7 +32,7 @@ const cases = consolesFor(locale).map((c) => ({
       <feDisplacementMap in="worn" in2="warp" scale="2.6" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
-  <div class="ask-list" role="tablist" aria-orientation="vertical" aria-label={t(locale, 'home.consoles.pick')}>
+  <div class="ask-list" role="tablist" aria-orientation="vertical" aria-label={t(uiLocale, 'home.consoles.pick')}>
     {cases.map((c, i) => (
       <button class="ask-tab" type="button" role="tab" id={`ask-tab-${c.id}`} aria-controls={`ask-${c.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>
         <span class="console-number" aria-hidden="true">{i + 1}</span>
@@ -43,19 +45,19 @@ const cases = consolesFor(locale).map((c) => ({
       <div class="ask-panel" role="tabpanel" id={`ask-${c.id}`} aria-labelledby={`ask-tab-${c.id}`} data-case={c.id} hidden={i > 0}>
         <div class="ask-consoles">
           <div class="console is-date" data-name="Date">
-            <p class="console-head"><b>Date</b> {t(locale, 'home.consoles.date.since')}</p>
+            <p class="console-head"><b>Date</b> {t(uiLocale, 'home.consoles.date.since')}</p>
             {c.date.lines.map((line) => <pre class="console-in" data-hl set:text={line} />)}
             <p class="console-out"><code data-date-out>{c.dateOut}</code> <span class="console-miss">{copy(c.id, 'miss')}</span></p>
-            <span class="stamp is-wrong">{t(locale, 'home.consoles.stamp.wrong')}</span>
+            <span class="stamp is-wrong">{t(uiLocale, 'home.consoles.stamp.wrong')}</span>
           </div>
           <div class="console is-native" data-name="native-dates">
-            <p class="console-head"><b>native-dates</b> {t(locale, 'home.consoles.native.on')}</p>
+            <p class="console-head"><b>native-dates</b> {t(uiLocale, 'home.consoles.native.on')}</p>
             {c.native.lines.map((line) => <pre class="console-in" data-hl set:text={line} />)}
             <p class="console-out"><code data-native-out>{c.nativeOut}</code></p>
-            <span class="stamp is-right">{t(locale, 'home.consoles.stamp.right')}</span>
+            <span class="stamp is-right">{t(uiLocale, 'home.consoles.stamp.right')}</span>
           </div>
         </div>
-        <p class="ask-why"><strong>{t(locale, 'home.consoles.why')}</strong> <Fragment set:html={copy(c.id, 'why')} /></p>
+        <p class="ask-why"><strong>{t(uiLocale, 'home.consoles.why')}</strong> <Fragment set:html={copy(c.id, 'why')} /></p>
       </div>
     ))}
   </div>

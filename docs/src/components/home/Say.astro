@@ -5,15 +5,17 @@
 // sentences again for the reader's day, zone and locale (scripts/home/say.js)
 import * as library from 'native-dates';
 
-import { t } from '../../lib/i18n.js';
-import { read, SENTENCES } from '../../scripts/home/sentences.js';
+import { localeOf, t } from '../../lib/i18n.js';
+import { read, sentencesFor } from '../../scripts/home/sentences.js';
 import { highlight } from '../../scripts/site.js';
 
 const locale = Astro.currentLocale;
+const textLang = locale !== 'en' ? locale : undefined;
+const textDir = locale !== 'en' ? localeOf(locale).dir : undefined;
 const TURN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg>';
-const sentences = SENTENCES.map((sentence) => ({ ...sentence, values: read(sentence, [], library) }));
+const sentences = sentencesFor(locale).map((sentence) => ({ ...sentence, values: read(sentence, [], library, locale) }));
 ---
-<figure class="say" data-say>
+<figure class="say" data-say={locale}>
   <div class="say-head">
     <div class="say-tabs" role="tablist" aria-label={t(locale, 'home.say.tabs')}>
       {sentences.map((s, i) => (
@@ -44,7 +46,7 @@ const sentences = SENTENCES.map((sentence) => ({ ...sentence, values: read(sente
           </code>
           <span class="say-cell say-value" style={`--col: ${step}; --row: 3`} data-step={step} data-value>
             <span class="say-noun" data-noun>{s.values[step].noun}</span>
-            <span class="say-text" data-text>{s.values[step].text}</span>
+            <span class="say-text" data-text lang={textLang} dir={textDir}>{s.values[step].text}</span>
           </span>
         </>
       ))}
