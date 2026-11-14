@@ -227,10 +227,6 @@ export class MonthDay {
     return readAs(kind, { monthDay: () => this });
   }
 
-  locale(tag) {
-    return tag === undefined ? this.#locale : new MonthDay(this.#plain, { locale: tag });
-  }
-
   /*******************************
             Comparison
   *******************************/
@@ -272,6 +268,11 @@ export class MonthDay {
   /*******************************
               Output
   *******************************/
+
+  // the locale this value is written in, or the same value written in another. an unset tag clears it
+  locale(...tag) {
+    return tag.length ? new MonthDay(this.#plain, { locale: tag[0] }) : this.#locale;
+  }
 
   format(spec = 'medium', locale = this.#locale) {
     const options = partOptions(spec, ['month', 'day'], MonthDay.presets);

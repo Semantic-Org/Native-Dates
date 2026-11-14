@@ -172,8 +172,9 @@ export class CalendarDate {
     );
   }
 
-  locale(tag) {
-    return tag === undefined ? this.#locale : new CalendarDate(this.#plain, { locale: tag });
+  // the locale this value is written in, or the same value written in another. an unset tag clears it
+  locale(...tag) {
+    return tag.length ? new CalendarDate(this.#plain, { locale: tag[0] }) : this.#locale;
   }
 
   #next(plain) {
@@ -277,7 +278,7 @@ export class CalendarDate {
   // around each year and finds its own occurrence. either way this day itself never counts
   next(target) {
     if (target?.[IS_MONTH_DAY]) {
-      return target.after(this);
+      return this.#next(target.after(this).toTemporal());
     }
     const delta = (weekdayNumber(target) - this.weekday + 7) % 7 || 7;
     return this.plus({ days: delta });
@@ -285,7 +286,7 @@ export class CalendarDate {
 
   previous(target) {
     if (target?.[IS_MONTH_DAY]) {
-      return target.before(this);
+      return this.#next(target.before(this).toTemporal());
     }
     const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
@@ -370,7 +371,7 @@ export class CalendarDate {
   }
 
   since(other, name) {
-    return new CalendarDate(other).until(this, name);
+    return new CalendarDate(other, { locale: this.#locale }).until(this, name);
   }
 
   at(when, zone) {
@@ -399,11 +400,9 @@ export class CalendarDate {
               Output
   *******************************/
 
-  format(spec, locale) {
+  format(spec, locale = this.#locale) {
     const options = intlOptions('date', spec);
-    return options
-      ? formatIntl('date', this.#plain, options, locale ?? this.#locale)
-      : formatTokens(this, 'date', spec, locale ?? this.#locale);
+    return options ? formatIntl('date', this.#plain, options, locale) : formatTokens(this, 'date', spec, locale);
   }
 
   toString() {

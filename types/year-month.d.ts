@@ -92,11 +92,11 @@ export class YearMonth {
   format(spec?: YearMonthFormat, locale?: Locale): string;
   /** The locale this value is written in, when one was set on it or on the value it came from */
   locale(): Locale | undefined;
-  /** The same value written in another locale, which every value made from it keeps */
-  locale(tag: Locale): this;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
   /** Alias for `locale` */
   lang(): Locale | undefined;
-  lang(tag: Locale): this;
+  lang(tag: Locale | null | undefined): this;
   /** ISO 8601, `'2026-11'` */
   toString(): string;
   toJSON(): string;

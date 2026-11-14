@@ -182,8 +182,9 @@ export class Time {
     );
   }
 
-  locale(tag) {
-    return tag === undefined ? this.#locale : new Time(this.#plain, { locale: tag });
+  // the locale this value is written in, or the same value written in another. an unset tag clears it
+  locale(...tag) {
+    return tag.length ? new Time(this.#plain, { locale: tag[0] }) : this.#locale;
   }
 
   #next(plain) {
@@ -324,7 +325,7 @@ export class Time {
   }
 
   since(other, name) {
-    return new Time(other).until(this, name);
+    return new Time(other, { locale: this.#locale }).until(this, name);
   }
 
   on(day, zone) {
@@ -339,11 +340,9 @@ export class Time {
               Output
   *******************************/
 
-  format(spec, locale) {
+  format(spec, locale = this.#locale) {
     const options = intlOptions('time', spec);
-    return options
-      ? formatIntl('time', this.#plain, options, locale ?? this.#locale)
-      : formatTokens(this, 'time', spec, locale ?? this.#locale);
+    return options ? formatIntl('time', this.#plain, options, locale) : formatTokens(this, 'time', spec, locale);
   }
 
   // a fraction prints in groups of three, the width its precision needs, so one precision is one width

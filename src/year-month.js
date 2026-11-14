@@ -289,16 +289,11 @@ export class YearMonth {
   }
 
   since(other, name) {
-    const rival = other instanceof YearMonth ? other : new YearMonth(other);
-    return rival.until(this, name);
+    return new YearMonth(other, { locale: this.#locale }).until(this, name);
   }
 
   as(kind) {
     return readAs(kind, { yearMonth: () => this });
-  }
-
-  locale(tag) {
-    return tag === undefined ? this.#locale : new YearMonth(this.#plain, { locale: tag });
   }
 
   #next(plain) {
@@ -308,6 +303,11 @@ export class YearMonth {
   /*******************************
               Output
   *******************************/
+
+  // the locale this value is written in, or the same value written in another. an unset tag clears it
+  locale(...tag) {
+    return tag.length ? new YearMonth(this.#plain, { locale: tag[0] }) : this.#locale;
+  }
 
   format(spec = 'medium', locale = this.#locale) {
     const options = partOptions(spec, ['year', 'month', 'era'], YearMonth.presets);

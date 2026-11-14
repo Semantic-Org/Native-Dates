@@ -73,7 +73,7 @@ class Range {
   // unit keys, and this has only the option keys, so the two never read as each other
   static isOptions(value) {
     return isPlainObject(value) && Object.keys(value).length > 0
-      && Object.keys(value).every((key) => key === 'loose' || key === 'zone' || key === 'dayFirst');
+      && Object.keys(value).every((key) => ['loose', 'zone', 'dayFirst', 'locale'].includes(key));
   }
 
   // an interval string splits on its slash, never on the one inside a bracketed zone, and a text field's
@@ -90,8 +90,9 @@ class Range {
 
   // an end reads through the kind's own factory with the range's options, and a datetime end reads in
   // the start's zone
-  static #read(kind, value, start, { zone, loose, dayFirst } = {}) {
-    const readOptions = {};
+  static #read(kind, value, start, { zone, loose, dayFirst, locale } = {}) {
+    // an end is written in the start's locale, so a range has one
+    const readOptions = { locale: locale ?? start?.locale() };
     const targetZone = kind === 'datetime' ? (start?.zone ?? zone) : zone;
     if (targetZone !== undefined) {
       readOptions.zone = targetZone;
@@ -151,7 +152,7 @@ class Range {
     if (this.kind === 'date') {
       return this.start.until(this.end.plus(days(1)));
     }
-    return this.#wraps() ? hours(24).plus(this.start.until(this.end)) : this.start.until(this.end);
+    return this.#wraps() ? this.start.until(this.end).plus(hours(24)) : this.start.until(this.end);
   }
 
   #wraps() {
@@ -206,12 +207,7 @@ class Range {
   }
 
   #make(kind, start, end) {
-    return new byKind[kind](start, end);
-  }
-
-  // a range is written in its start's locale
-  locale(tag) {
-    return tag === undefined ? this.start.locale() : this.#make(this.kind, this.start.locale(tag), this.end);
+    return new byKind[kind](start, end, { locale: this.start.locale() });
   }
 
   equals(other) {
@@ -343,6 +339,11 @@ class Range {
   /*******************************
               Output
   *******************************/
+
+  // a range is written in one locale, its start's. an unset tag clears it
+  locale(...tag) {
+    return tag.length ? new byKind[this.kind](this.start, this.end, { locale: tag[0] }) : this.start.locale();
+  }
 
   format(spec, locale = this.start.locale()) {
     const options = intlOptions(this.kind, spec);
