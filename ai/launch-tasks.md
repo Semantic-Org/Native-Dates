@@ -96,6 +96,15 @@ Everything so far ran on Node 26 with native Temporal and was bundled with esbui
 - [ ] **When the polyfill is needed.** Node 26 is the first Node with Temporal and `engines` says so. The install page has to say plainly which browsers need `@native-dates/polyfill`.
 - [ ] **`configure()` on a server.** Zone and locale defaults are process-wide, which suits a browser and is a trap for a server answering many users. The docs should say to pass them per call there.
 
+## When the polyfill is dropped
+
+Safari is the last browser without Temporal. Once it ships, `@native-dates/polyfill` has nothing left to do, and these go with it.
+
+- [ ] **The fallback in `Range.format()`** that prints each end of a range alone when `formatRange` throws on a start later than its end. Every engine with Temporal formats that range. Whether Safari on the polyfill needs it today is unchecked.
+- [ ] **The polyfill in the docs playground**: the hidden import in `docs/src/lib/examples.js`, its two import map entries, and the bundling step in `docs/scripts/sync-sandbox.mjs`.
+- [ ] **The epoch stand-ins for dates and times.** `epochOf()` turns a date or a time into a UTC timestamp so `Intl` can print it on any engine, and `ownOptions()` strips the parts that stand-in would leak. `Intl` takes a Temporal date or time directly and does both itself, but only where Temporal is native, since the polyfill loader does not patch `Intl`.
+- [ ] **`@native-dates/polyfill` itself**, and the install page's note on which browsers need it.
+
 ## Left as they are, on purpose
 
 Known, weighed, and not worth their bytes or their churn. Reopen one only with a report from a user.
