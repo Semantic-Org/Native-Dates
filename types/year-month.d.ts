@@ -101,7 +101,7 @@ export class YearMonth {
 /**
  * Reads `'2026-11'`, two numbers, a fields object, or anything a date reads with its day dropped. A
  * missing value refuses, `today().yearMonth` reads the current one. With `{ loose: true }` it also
- * reads a month by its English name and a year, `'Nov 2026'`, and gives null for what it cannot read.
+ * reads a month by its name and a year, in English or the configured locale, `'Nov 2026'`, and gives null for what it cannot read.
  * It never puts text to `Date`, which makes up the parts text leaves out: a date written loosely is
  * `date(text, { loose: true })?.yearMonth`
  */

@@ -21,8 +21,9 @@ const isoParts = /^(\d{2})-(\d{2})$/;
 // which part leads is for the word that reads it to say
 const twoParts = /^(\d{1,2})[-/.](\d{1,2})$/;
 
-// a month by its English name and a day, in either order: 'Oct 17', '17th October', 'Oct. 17,'
-const nameAndDay = /^(?:([a-z]{3,9})\.?,?\s+(\d{1,2})(?:st|nd|rd|th)?|(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]{3,9})\.?),?$/i;
+// a month by its name and a day, in either order: 'Oct 17', '17th October', 'Oct. 17,', '17. Oktober'
+const nameAndDay =
+  /^(?:(\p{L}{3,})\.?,?\s+(\d{1,2})(?:st|nd|rd|th|\.)?|(\d{1,2})(?:st|nd|rd|th|\.)?\s+(\p{L}{3,})\.?),?$/iu;
 
 // a leap year to stand on, so Feb 29 has a day in it. Temporal keeps 1972 for the same reason
 const leapYear = 1972;
