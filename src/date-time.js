@@ -381,7 +381,9 @@ export class DateTime {
     if (name === undefined) {
       return this.equals(other);
     }
-    return this.startOf(name, firstDay).equals(new DateTime(other, this.zone).startOf(name, firstDay));
+    // one first day for both sides, this value's, so the question is asked of one week
+    const first = weekStart(firstDay, this.#locale);
+    return this.startOf(name, first).equals(new DateTime(other, this.zone).startOf(name, first));
   }
 
   isPast() {
