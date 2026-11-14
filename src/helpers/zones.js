@@ -3,7 +3,7 @@ import { isDevelopment, isPlainObject, isString } from './types.js';
 import { weekdayNumber } from './units.js';
 
 // process-wide defaults, zoneAliases being the names a zone answers to when plugins/zones is loaded
-const settings = { zone: undefined, locale: undefined, weekStart: 1, dayFirst: false, zoneAliases: {} };
+const settings = { zone: undefined, locale: undefined, weekStart: undefined, dayFirst: false, zoneAliases: {} };
 const resolved = new Map([['UTC', 'UTC']]);
 
 export const canonicalZone = (id) => {
@@ -90,7 +90,7 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases } = {
     settings.locale = locale === null ? undefined : checkedLocale(locale);
   }
   if (weekStart !== undefined) {
-    settings.weekStart = weekdayNumber(weekStart);
+    settings.weekStart = weekStart === null ? undefined : weekdayNumber(weekStart);
   }
   if (dayFirst !== undefined) {
     requireLoose('dayFirst');
@@ -119,4 +119,21 @@ const checkedLocale = (tag) => {
 
 export const locale = (override) => (override === undefined ? settings.locale : checkedLocale(override));
 export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);
-export const weekStart = (override) => (override === undefined ? settings.weekStart : weekdayNumber(override));
+// the day a week starts on: the one a call names, then the one configured, then the locale's own,
+// sunday in the United States and saturday in Egypt, read from the value's locale, the configured
+// one or the runtime's. monday where the platform cannot say
+const firstDays = new Map();
+export const weekStart = (override, tag = settings.locale) => {
+  if (override !== undefined) {
+    return weekdayNumber(override);
+  }
+  if (settings.weekStart) {
+    return settings.weekStart;
+  }
+  const key = String(tag);
+  if (!firstDays.has(key)) {
+    const resolved = new Intl.DateTimeFormat(tag).resolvedOptions().locale;
+    firstDays.set(key, new Intl.Locale(resolved).getWeekInfo?.().firstDay ?? 1);
+  }
+  return firstDays.get(key);
+};
