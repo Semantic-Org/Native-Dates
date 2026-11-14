@@ -165,6 +165,8 @@ export class DateTime {
   readonly year: number;
   /** ISO, 1 for monday through 7 for sunday */
   readonly weekday: number;
+  /** The day this value's weeks start on, 1 for monday through 7 for sunday: the configured `weekStart`, else its locale's own */
+  readonly weekStart: number;
   readonly hour: number;
   readonly minute: number;
   readonly second: number;
@@ -312,6 +314,8 @@ export class CalendarDate {
   readonly year: number;
   /** ISO, 1 for monday through 7 for sunday */
   readonly weekday: number;
+  /** The day this value's weeks start on, 1 for monday through 7 for sunday: the configured `weekStart`, else its locale's own */
+  readonly weekStart: number;
   readonly quarter: number;
   readonly dayOfYear: number;
   /** ISO week number */
