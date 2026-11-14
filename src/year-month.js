@@ -31,7 +31,7 @@ const noDay = /^[+-]?\d{4,6}-\d{2}$/;
 const monthFirst = /^(\d{1,2})[-/.](\d{2}|\d{4})$/;
 
 // a month by its name and a year, in either order: 'Nov 2026', '2026 November', 'novembre 2026'
-const nameAndYear = /^(?:(\p{L}{3,})\.?,?\s+(\d{4})|(\d{4})\s+(\p{L}{3,})\.?)$/iu;
+const nameAndYear = /^(?:([\p{L}\p{M}]{3,})\.?,?\s+(?:de\s+)?(\d{4})|(\d{4})\s+([\p{L}\p{M}]{3,})\.?)$/iu;
 
 // the units below a month, which a year-month has no room for
 const smaller = units.slice(2);
