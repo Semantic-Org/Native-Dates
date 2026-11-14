@@ -266,11 +266,11 @@ export class DateTime {
   format(spec?: FormatSpec, locale?: Locale): string;
   /** The locale this value is written in, when one was set on it or on the value it came from */
   locale(): Locale | undefined;
-  /** The same value written in another locale, which every value made from it keeps */
-  locale(tag: Locale): this;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
   /** Alias for `locale` */
   lang(): Locale | undefined;
-  lang(tag: Locale): this;
+  lang(tag: Locale | null | undefined): this;
   /** The instant in UTC, `'2026-09-06T14:30:00.000Z'` */
   toString(): string;
   toJSON(): string;
@@ -388,11 +388,11 @@ export class CalendarDate {
   format(spec?: FormatSpec, locale?: Locale): string;
   /** The locale this value is written in, when one was set on it or on the value it came from */
   locale(): Locale | undefined;
-  /** The same value written in another locale, which every value made from it keeps */
-  locale(tag: Locale): this;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
   /** Alias for `locale` */
   lang(): Locale | undefined;
-  lang(tag: Locale): this;
+  lang(tag: Locale | null | undefined): this;
   /** ISO 8601, `'2026-09-06'` */
   toString(): string;
   toJSON(): string;
@@ -474,11 +474,11 @@ export class Time {
   format(spec?: FormatSpec, locale?: Locale): string;
   /** The locale this value is written in, when one was set on it or on the value it came from */
   locale(): Locale | undefined;
-  /** The same value written in another locale, which every value made from it keeps */
-  locale(tag: Locale): this;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
   /** Alias for `locale` */
   lang(): Locale | undefined;
-  lang(tag: Locale): this;
+  lang(tag: Locale | null | undefined): this;
   /** ISO 8601, `'17:30:00'` */
   toString(): string;
   toJSON(): string;
@@ -552,11 +552,11 @@ export class Duration {
   format(style?: 'long' | 'short' | 'narrow' | 'digital', locale?: Locale): string;
   /** The locale this value is written in, when one was set on it or on the value it came from */
   locale(): Locale | undefined;
-  /** The same value written in another locale, which every value made from it keeps */
-  locale(tag: Locale): this;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
   /** Alias for `locale` */
   lang(): Locale | undefined;
-  lang(tag: Locale): this;
+  lang(tag: Locale | null | undefined): this;
   /** ISO 8601, `'PT1H30M'` */
   toString(): string;
   toJSON(): string;
@@ -568,6 +568,7 @@ export class Duration {
 
 /** Reads a phrase, an ISO string, a fields object, or a number with a unit. A bare number is milliseconds */
 export function duration(input: DurationInput, unit?: Unit): Duration;
+export function duration(input: DurationInput, options: { locale?: Locale; }): Duration;
 
 export function years(count: number | string): Duration;
 export function months(count: number | string): Duration;

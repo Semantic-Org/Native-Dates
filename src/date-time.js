@@ -170,9 +170,10 @@ export class DateTime {
   }
 
   // the locale this value is written in, or the same value written in another. it rides along through
-  // every method, so a chain names its language once: now().locale('es').plus(1, 'week').format('long')
-  locale(tag) {
-    return tag === undefined ? this.#locale : new DateTime(this.#zoned, { locale: tag });
+  // every method, so a chain names its language once: now().locale('es').plus(1, 'week').format('long').
+  // an unset tag clears it, so locale(preferences.language) chains whether or not there is one
+  locale(...tag) {
+    return tag.length ? new DateTime(this.#zoned, { locale: tag[0] }) : this.#locale;
   }
 
   #next(zoned) {
@@ -328,7 +329,7 @@ export class DateTime {
   // steps to a weekday, or to a month-day's occurrence, at this time of day in this zone
   next(target) {
     if (target?.[IS_MONTH_DAY]) {
-      return target.after(this.date).at(this.time, this.zone);
+      return this.date.next(target).at(this.time, this.zone);
     }
     const delta = (weekdayNumber(target) - this.weekday + 7) % 7 || 7;
     return this.plus({ days: delta });
@@ -336,7 +337,7 @@ export class DateTime {
 
   previous(target) {
     if (target?.[IS_MONTH_DAY]) {
-      return target.before(this.date).at(this.time, this.zone);
+      return this.date.previous(target).at(this.time, this.zone);
     }
     const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
@@ -414,18 +415,18 @@ export class DateTime {
   }
 
   since(other, name) {
-    return new DateTime(other, this.zone).until(this, name);
+    return new DateTime(other, { zone: this.zone, locale: this.#locale }).until(this, name);
   }
 
   /*******************************
               Output
   *******************************/
 
-  format(spec, locale) {
+  format(spec, locale = this.#locale) {
     const options = intlOptions('datetime', spec);
     return options
-      ? formatIntl('datetime', this.epoch, options, locale ?? this.#locale, this.zone)
-      : formatTokens(this, 'datetime', spec, locale ?? this.#locale);
+      ? formatIntl('datetime', this.epoch, options, locale, this.zone)
+      : formatTokens(this, 'datetime', spec, locale);
   }
 
   // the instant in UTC, the form every database and API reads. the zone is a view and does not travel
@@ -471,6 +472,7 @@ export const datetime = (input, options) => {
   const settings = zoneOptions(options);
   const build = () =>
     input instanceof DateTime && settings.zone === undefined && settings.dayFirst === undefined
+      && settings.locale === undefined
       ? input
       : new DateTime(input, settings);
   return settings.loose ? loosely(build) : build();

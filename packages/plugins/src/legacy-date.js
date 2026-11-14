@@ -65,13 +65,13 @@ const reads = {
   toISOString() {
     return this.toJSDate().toISOString();
   },
-  toLocaleString(locales, options) {
+  toLocaleString(locales = this.locale(), options) {
     return this.toJSDate().toLocaleString(locales, { timeZone: this.zone, ...options });
   },
-  toLocaleDateString(locales, options) {
+  toLocaleDateString(locales = this.locale(), options) {
     return this.toJSDate().toLocaleDateString(locales, { timeZone: this.zone, ...options });
   },
-  toLocaleTimeString(locales, options) {
+  toLocaleTimeString(locales = this.locale(), options) {
     return this.toJSDate().toLocaleTimeString(locales, { timeZone: this.zone, ...options });
   },
 };

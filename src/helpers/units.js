@@ -1,4 +1,13 @@
 import { refuse } from './errors.js';
+import {
+  IS_CALENDAR_DATE,
+  IS_DATE_TIME,
+  IS_DURATION,
+  IS_MONTH_DAY,
+  IS_RANGE,
+  IS_TIME,
+  IS_YEAR_MONTH,
+} from './identity.js';
 import { isDevelopment, isNumber, isPlainObject, isString } from './types.js';
 
 export const inspect = Symbol.for('nodejs.util.inspect.custom');
@@ -154,8 +163,9 @@ export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(
 
 // the locale a new value is written in: the one its options name, or else the one carried by the
 // value it is made from, so a date taken from a Spanish datetime is Spanish too
+const nouns = [IS_DATE_TIME, IS_CALENDAR_DATE, IS_TIME, IS_DURATION, IS_MONTH_DAY, IS_YEAR_MONTH, IS_RANGE];
 export const localeOf = (options, input) =>
-  options?.locale ?? (typeof input?.locale === 'function' ? input.locale() : undefined);
+  options?.locale ?? (nouns.some((brand) => input?.[brand]) ? input.locale() : undefined);
 
 // the second argument of a factory is a zone, or an options bag { zone, loose }
 export const zoneOptions = (value) => (isPlainObject(value) ? value : { zone: value });
