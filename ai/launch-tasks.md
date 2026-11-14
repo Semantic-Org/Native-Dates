@@ -44,13 +44,17 @@ Fixed, at 0.22 kB for all four:
 - **`a` and `A` print the locale's own**: `午後`, `오후`, `م`, where they printed `pm` everywhere.
 - **`Do` prints a plain number outside English**, where it printed `6th` inside German and Japanese text.
 
+Then three pieces of our own guessing were handed to the platform, which took 0.09 kB back off:
+
+- **A time range across midnight is one `formatRange` call.** `Intl` formats a range whose end reads earlier on the same day, so the sample range and the joiner read off it are gone, and a night shift is written exactly as a day shift is: `22:00–06:00 Uhr`, `22時00分～6時00分`.
+- **`dd` is two letters of the short name where they tell the seven days apart, and `Intl`'s narrow form where they do not**: Arabic, Hebrew and Vietnamese.
+- **Loose reading matches month names against `Intl`'s tables** for the configured locale as well as English, so `17 octobre`, `17. Oktober` and `17 октября` read. The typed English list is gone.
+
 Open, each a decision more than a bug:
 
 - [ ] **Week start.** `Intl.Locale` reports each locale's first day (Sunday for `en-US`, `ja`, `pt-BR` and `he`, Saturday for `fa`, Monday for most of Europe). The library says Monday unless configured, so `startOf('week')`, `range('week')` and `weekdayNames()` are wrong by default for those readers. Following the locale changes what `today().startOf('week')` returns in the US.
-- [ ] **`dd`** is two letters cut from the short weekday name. In Arabic that is the article, `ال`, for every day of the week. `Intl` has a narrow form (`F`, `金`) that is right everywhere and one letter in English.
 - [ ] **`YearMonth` short is `11/26`**, a two-digit year, which reads as November 26th in most of these locales and as year 26 month 11 in Japanese. A four-digit year would not be mistaken for a day.
 - [ ] **A Persian reader sees two calendars.** Dates print in the Persian calendar (`۱۵ آبان ۱۴۰۵`) and a month-day prints Gregorian (`۶ نوامبر`). Chosen, and the Persian page should say so.
-- [ ] **A time range across midnight is written a little differently from one that is not** in locales whose range form adds a word: German `09:00–17:00 Uhr` against `22:00–06:00`, Japanese `9時00分～17時00分` against `22:00～6:00`.
 - [ ] **Token patterns print ASCII digits** in locales with their own (`ar-EG`, `fa`), where presets print the locale's. Right for `YYYY-MM-DD`, arguable for `D MMMM`.
 
 ## 3. Tests
