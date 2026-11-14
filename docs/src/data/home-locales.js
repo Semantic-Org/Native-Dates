@@ -108,7 +108,7 @@ export const HOME_LOCALES = {
       },
       {
         label: '周一至周日表头',
-        note: '生成周一至周日表头并正确输出“周日”，告别手写映射表或拼接出“周七”的隐患。',
+        note: '按中文地区习惯从周一开始并正确输出“周日”，告别手写映射表或拼接出“周七”的隐患。',
         code: "weekdayNames('short').join(' · ')",
         run: ({ weekdayNames }) => weekdayNames('short').join(' · '),
       },

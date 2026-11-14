@@ -76,14 +76,14 @@ Browse the [Plugins overview](/plugins/) to see every subpath and its size.
 
 ## App-wide defaults
 
-By default, Native Dates uses the runtime's local time zone and locale, and starts weeks on Monday. Call [`configure()`](/api/configure/) once at startup to set defaults across your app:
+By default, Native Dates uses the runtime's local time zone and locale, including that locale's first day of the week. Call [`configure()`](/api/configure/) once at startup to set defaults across your app, or pass `weekStart` when you want a fixed first day regardless of locale:
 
 ```js title="main.js"
 import { configure } from 'native-dates';
 
 configure({
-  zone: 'Europe/Berlin',
-  locale: 'en-GB',
+  zone: 'America/New_York',
+  locale: 'en-US',
   weekStart: 'monday',
 });
 ```
