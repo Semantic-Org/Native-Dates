@@ -126,6 +126,8 @@ weekdayNames('short', undefined, 'de-DE')[0]; // 'Mo'
 
 Pass an explicit weekday to override one call, or set `weekStart` in [`configure()`](/api/configure/) to pin a start day across every locale. Passing `null` returns to following the locale, and runtimes without week data fall back to Monday.
 
+A value keeps the locale of the value it was made from, so pin `weekStart` or pass the day wherever a week is a key in stored data, such as a weekly report or a billing period, and should not shift with the reader's language.
+
 ISO week numbers read from `weekOfYear` and the `'W'` token always count weeks from Monday.
 
 ## One-off calendar and dialect overrides
