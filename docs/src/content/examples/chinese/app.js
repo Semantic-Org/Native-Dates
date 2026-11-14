@@ -2,7 +2,9 @@
 // the zone picked in the preview's bar becomes the default zone before the app runs
 import './sandbox.js';
 /* playground-hide-end */
-import { date } from 'native-dates';
+import { configure, date } from 'native-dates';
+
+configure({ locale: 'zh-CN' });
 
 const dayInput = document.querySelector('#day');
 const clock = document.querySelector('#clock');
@@ -12,14 +14,14 @@ function render() {
   if (!dayInput.value || !clock.value) { return; }
   const day = date(dayInput.value);
   const moment = day.at(clock.value, 'Asia/Shanghai');
-  const periodClock = moment.format({ hour: 'numeric', minute: '2-digit', hour12: true }, 'zh-CN');
+  const periodClock = moment.format({ hour: 'numeric', minute: '2-digit', hour12: true });
 
   const rows = [
-    ['Gregorian', 'zh-CN', day.format('full', 'zh-CN')],
-    ['Day period', 'zh-CN', periodClock],
+    ['Gregorian', ".format('full')", day.format('full')],
+    ['Day period', 'hour12: true', periodClock],
+    ['Civil anniversary', '.monthDay', day.monthDay.format('long')],
     ['Lunar calendar', 'zh-CN-u-ca-chinese', day.format('long', 'zh-CN-u-ca-chinese')],
     ['Minguo era', 'zh-TW-u-ca-roc', day.format('long', 'zh-TW-u-ca-roc')],
-    ['Civil anniversary', 'zh-CN', day.monthDay.format('long', 'zh-CN')],
   ];
 
   output.innerHTML = rows.map(([label, locale, value]) => `

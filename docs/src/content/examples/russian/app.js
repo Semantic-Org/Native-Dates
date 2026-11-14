@@ -2,7 +2,9 @@
 // the zone picked in the preview's bar becomes the default zone before the app runs
 import './sandbox.js';
 /* playground-hide-end */
-import { date, days } from 'native-dates';
+import { configure, date, days } from 'native-dates';
+
+configure({ locale: 'ru' });
 
 const dayInput = document.querySelector('#day');
 const count = document.querySelector('#count');
@@ -15,10 +17,10 @@ function render() {
   const span = day.to(day.plus(4, 'days'));
 
   const rows = [
-    ['Month heading', 'ru', day.yearMonth.format('long', 'ru')],
-    ['Full date', 'ru', day.format('long', 'ru')],
-    ['Date range', 'ru', span.format('long', 'ru')],
-    ['Plural count', 'ru', days(total).format('long', 'ru')],
+    ['Month heading', '.yearMonth.text', day.yearMonth.text],
+    ['Full date', '.text', day.text],
+    ['Date range', '.text', span.text],
+    ['Plural count', '.text', days(total).text],
   ];
 
   output.innerHTML = rows.map(([label, locale, value]) => `

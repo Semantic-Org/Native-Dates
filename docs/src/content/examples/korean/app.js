@@ -2,7 +2,9 @@
 // the zone picked in the preview's bar becomes the default zone before the app runs
 import './sandbox.js';
 /* playground-hide-end */
-import { date, time } from 'native-dates';
+import { configure, date, time } from 'native-dates';
+
+configure({ locale: 'ko' });
 
 const dayInput = document.querySelector('#day');
 const span = document.querySelector('#span');
@@ -14,13 +16,13 @@ function render() {
   if (!dayInput.value || !clock.value || !(length >= 1)) { return; }
   const day = date(dayInput.value);
   const range = day.to(day.plus(length, 'days'));
-  const periodClock = time(clock.value).format({ hour: 'numeric', minute: '2-digit', hour12: true }, 'ko');
+  const periodClock = time(clock.value).format({ hour: 'numeric', minute: '2-digit', hour12: true });
 
   const rows = [
-    ['Full date', 'ko', day.format('full', 'ko')],
-    ['Collapsed range', 'ko', range.format('long', 'ko')],
-    ['Clock with period', 'ko', periodClock],
-    ['Month heading', 'ko', day.yearMonth.format('long', 'ko')],
+    ['Full date', ".format('full')", day.format('full')],
+    ['Collapsed range', ".format('long')", range.format('long')],
+    ['Clock with period', 'hour12: true', periodClock],
+    ['Month heading', '.yearMonth.text', day.yearMonth.text],
   ];
 
   output.innerHTML = rows.map(([label, locale, value]) => `
