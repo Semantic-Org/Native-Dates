@@ -337,7 +337,9 @@ export class CalendarDate {
     if (name === undefined) {
       return this.equals(other);
     }
-    return this.startOf(name, firstDay).equals(new CalendarDate(other).startOf(name, firstDay));
+    // one first day for both sides, this value's, so the question is asked of one week
+    const first = weekStart(firstDay, this.#locale);
+    return this.startOf(name, first).equals(new CalendarDate(other).startOf(name, first));
   }
 
   isPast(zone) {

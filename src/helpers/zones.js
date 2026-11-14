@@ -127,13 +127,15 @@ export const weekStart = (override, tag = settings.locale) => {
   if (override !== undefined) {
     return weekdayNumber(override);
   }
-  if (settings.weekStart) {
+  if (settings.weekStart !== undefined) {
     return settings.weekStart;
   }
   const key = String(tag);
   if (!firstDays.has(key)) {
-    const resolved = new Intl.DateTimeFormat(tag).resolvedOptions().locale;
-    firstDays.set(key, new Intl.Locale(resolved).getWeekInfo?.().firstDay ?? 1);
+    // a tag is asked as written, so its region and its own -u-fw- choice count. the runtime's
+    // locale, or a list of them, is first resolved to one tag
+    const asked = isString(tag) ? tag : new Intl.DateTimeFormat(tag).resolvedOptions().locale;
+    firstDays.set(key, new Intl.Locale(asked).getWeekInfo?.().firstDay ?? 1);
   }
   return firstDays.get(key);
 };

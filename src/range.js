@@ -342,7 +342,9 @@ class Range {
 
   // a range is written in one locale, its start's. an unset tag clears it
   locale(...tag) {
-    return tag.length ? new byKind[this.kind](this.start, this.end, { locale: tag[0] }) : this.start.locale();
+    return tag.length
+      ? new byKind[this.kind](this.start.locale(tag[0]), this.end.locale(tag[0]))
+      : this.start.locale();
   }
 
   format(spec, locale = this.start.locale()) {
