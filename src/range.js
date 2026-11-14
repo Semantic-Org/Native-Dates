@@ -345,36 +345,13 @@ class Range {
     if (!options) {
       return `${this.start.format(spec, locale)} – ${this.end.format(spec, locale)}`;
     }
-    if (this.kind === 'datetime') {
-      return Range.#formatIntl('datetime', this.start.epoch, this.end.epoch, options, locale, this.start.zone);
-    }
-    return Range.#formatIntl(
-      this.kind,
-      this.start.toTemporal(),
-      this.end.toTemporal(),
-      options,
-      locale,
-      undefined,
-      this.#wraps(),
-    );
-  }
-
-  // Intl adds the date to a range once its ends fall on different days, whatever the options say, so a
-  // time range across midnight prints each end on its own. the text that joins them is read off a
-  // sample range inside one day, midnight until 3pm so each end keeps its own am and pm, and it is the
-  // locale's own: ' – ' or '～'
-  static #formatIntl(kind, start, end, options, locale, zone, wraps = false) {
-    const format = formatter(kind, options, locale, zone);
-    if (!wraps) {
-      return format.formatRange(epochOf(kind, start), epochOf(kind, end));
-    }
-    const joint =
-      format.formatRangeToParts(0, 54e6).find((part) => part.source === 'shared' && part.type === 'literal')?.value
-        ?? ' – ';
-    // a locale's range form can close the first clock with a unit of its own, 分 in japanese, which
-    // a clock printed alone does not carry. the letters go and the mark stays, unless the joiner is a word
-    const mark = joint.replace(/\p{L}/gu, '');
-    return `${format.format(epochOf(kind, start))}${mark.trim() ? mark : joint}${format.format(epochOf(kind, end))}`;
+    // a time range across midnight is one whose end reads earlier on the same day, and Intl formats
+    // that as it stands, in the locale's own range form
+    const [start, end] = this.kind === 'datetime'
+      ? [this.start.epoch, this.end.epoch]
+      : [this.start.toTemporal(), this.end.toTemporal()];
+    return formatter(this.kind, options, locale, this.start.zone)
+      .formatRange(epochOf(this.kind, start), epochOf(this.kind, end));
   }
 
   toString() {
