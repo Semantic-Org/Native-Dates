@@ -260,7 +260,7 @@ export class CalendarDate {
       case 'month':
         return this.#next(this.#plain.with({ day: 1 }));
       case 'week':
-        return this.#next(this.#plain.subtract({ days: (this.weekday - weekStart(firstDay) + 7) % 7 }));
+        return this.#next(this.#plain.subtract({ days: (this.weekday - weekStart(firstDay, this.#locale) + 7) % 7 }));
       case 'day':
         return this;
       default:

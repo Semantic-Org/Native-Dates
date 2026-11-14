@@ -289,7 +289,9 @@ export class DateTime {
       case 'month':
         return this.#next(this.#zoned.with({ day: 1 }).startOfDay());
       case 'week':
-        return this.#next(this.#zoned.subtract({ days: (this.weekday - weekStart(firstDay) + 7) % 7 }).startOfDay());
+        return this.#next(
+          this.#zoned.subtract({ days: (this.weekday - weekStart(firstDay, this.#locale) + 7) % 7 }).startOfDay(),
+        );
       case 'day':
         return this.#next(this.#zoned.startOfDay());
       default:

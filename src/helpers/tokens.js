@@ -141,7 +141,7 @@ const tokenPattern = new RegExp(
 // week does, so the header row matches the grid
 export const weekdayNames = (style = 'short', firstDay, locale) => {
   const table = names(pickLocale(locale))[style === 'long' ? 'dddd' : 'ddd'];
-  const first = weekStart(firstDay) - 1;
+  const first = weekStart(firstDay, locale) - 1;
   return [...table.slice(first), ...table.slice(0, first)];
 };
 

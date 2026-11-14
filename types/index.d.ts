@@ -634,15 +634,18 @@ export interface Settings {
   zone?: Zone | null;
   /** The default locale for formatting. Null resets to the runtime's */
   locale?: Locale | null;
-  /** The first day of the week for `startOf('week')` (default: monday) */
-  weekStart?: Weekday;
+  /**
+   * The first day of the week for `startOf('week')`, `range('week')` and `weekdayNames()`. Unset, it is the
+   * locale's own: sunday in the United States, monday in most of Europe. Null goes back to following the locale
+   */
+  weekStart?: Weekday | null;
 }
 
 /** Sets package-wide defaults once at app boot. Returns the settings in effect */
 export function configure(settings?: Settings): {
   zone: string | undefined;
   locale: string | undefined;
-  weekStart: number;
+  weekStart: number | undefined;
   dayFirst: boolean;
   zoneAliases: Record<string, string>;
 };
