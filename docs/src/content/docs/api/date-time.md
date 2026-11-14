@@ -250,7 +250,7 @@ deadline.minus({ weeks: 1, days: 2 });
 dt.startOf(unit, firstDay?): DateTime
 ```
 
-Moves back to the start of a calendar or clock unit in this time zone. Week boundaries begin on Monday unless configured otherwise or overridden with `firstDay`.
+Moves back to the start of a calendar or clock unit in this time zone. Week boundaries start on `firstDay`, the configured `weekStart` from [`configure()`](/api/configure/), or this moment's active locale.
 
 **Parameters**
 
@@ -272,11 +272,11 @@ description: A new `DateTime` at the start of `unit`.
 ```
 
 ```js
-const wed = datetime('2026-11-18T14:45:12', 'America/New_York');
+const wed = datetime('2026-11-18T14:45:12', 'America/New_York').locale('en-US');
 
-wed.startOf('day').format('time', 'en-US'); // '12:00 AM'
-wed.startOf('week').day; // 16
-wed.startOf('week', 'sunday').day; // 15
+wed.startOf('day').format('time'); // '12:00 AM'
+wed.startOf('week').day; // 15
+wed.startOf('week', 'monday').day; // 16
 ```
 :::
 
@@ -757,7 +757,7 @@ dt.locale(): Locale | undefined
 dt.locale(tag): DateTime
 ```
 
-Reads the locale carried on this moment, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+Reads the locale carried on this moment, or returns a copy that formats and starts weeks in another locale across text previews, presets, week boundaries, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
 
 **Parameters**
 

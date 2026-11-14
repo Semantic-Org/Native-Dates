@@ -78,13 +78,14 @@ const stamp = datetime('2026-11-18T14:20', 'UTC');
 stamp.endOf('day').toString(); // '2026-11-18T23:59:59.999Z'
 ```
 
-Weeks start on Monday by default. Pass a weekday as the second argument for one call, or set a global default with [`configure()`](/api/configure/):
+Weeks start on the active locale's first day, such as Sunday in `'en-US'` or Monday in `'de-DE'`. Pass a weekday as the second argument for one call, or set a global override with [`configure()`](/api/configure/):
 
 ```js
 const wednesday = date('2026-11-18');
 
-wednesday.startOf('week').toString(); // '2026-11-16'
-wednesday.startOf('week', 'sunday').toString(); // '2026-11-15'
+wednesday.locale('en-US').startOf('week').toString(); // '2026-11-15'
+wednesday.locale('de-DE').startOf('week').toString(); // '2026-11-16'
+wednesday.startOf('week', 'monday').toString(); // '2026-11-16'
 ```
 
 ## Rounding clock times

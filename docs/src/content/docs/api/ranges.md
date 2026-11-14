@@ -151,7 +151,7 @@ Returns the full calendar or clock unit enclosing a date or moment. Date ranges 
   description: Enclosing unit such as `'week'`, `'month'`, or `'day'`.
 - name: firstDay
   type: Weekday
-  description: First day of the week when `unit` is `'week'`, overriding `configure()`.
+  description: First day of the week when `unit` is `'week'`, overriding `configure()` and the active locale.
 ```
 
 **Returns**
@@ -164,7 +164,8 @@ description: Enclosing range for `unit`.
 ```js
 import { date, datetime } from 'native-dates';
 
-date('2026-11-18').range('week').toString(); // '2026-11-16/2026-11-22'
+date('2026-11-18', { locale: 'en-US' }).range('week').toString(); // '2026-11-15/2026-11-21'
+date('2026-11-18').range('week', 'monday').toString(); // '2026-11-16/2026-11-22'
 date('2026-02-10').range('month').toString(); // '2026-02-01/2026-02-28'
 datetime('2026-11-16T14:20Z', 'UTC').range('hour').toString(); // '2026-11-16T14:00:00.000Z/2026-11-16T15:00:00.000Z'
 ```

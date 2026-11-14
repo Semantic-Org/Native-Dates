@@ -211,7 +211,7 @@ launch.minus({ weeks: 2, days: 1 }).toString(); // '2026-02-14'
 d.startOf(unit, firstDay?): CalendarDate
 ```
 
-Returns the first day of the calendar unit containing this date. Week boundaries begin on Monday unless configured otherwise with [`configure()`](/api/configure/) or overridden with `firstDay`.
+Returns the first day of the calendar unit containing this date. Week boundaries start on `firstDay`, the configured `weekStart` from [`configure()`](/api/configure/), or this date's active locale.
 
 **Parameters**
 
@@ -233,12 +233,12 @@ description: The first calendar day of `unit`.
 ```
 
 ```js
-const wed = date('2026-11-18');
+const wed = date('2026-11-18', { locale: 'en-US' });
 
 wed.startOf('month').toString(); // '2026-11-01'
 wed.startOf('quarter').toString(); // '2026-10-01'
-wed.startOf('week').toString(); // '2026-11-16'
-wed.startOf('week', 'sunday').toString(); // '2026-11-15'
+wed.startOf('week').toString(); // '2026-11-15'
+wed.startOf('week', 'monday').toString(); // '2026-11-16'
 ```
 :::
 
@@ -444,11 +444,11 @@ description: '`true` when both dates fall in the same `unit`.'
 ```
 
 ```js
-const wed = date('2026-09-09');
+const wed = date('2026-09-09', { locale: 'en-US' });
 
 wed.isSame('2026-09-30', 'month'); // true
-wed.isSame('2026-09-06', 'week'); // false
-wed.isSame('2026-09-06', 'week', 'sunday'); // true
+wed.isSame('2026-09-06', 'week'); // true
+wed.isSame('2026-09-06', 'week', 'monday'); // false
 ```
 :::
 
@@ -583,7 +583,8 @@ description: An inclusive `DateRange` from the start through the end of `unit`.
 
 ```js
 date('2026-02-10').range('month').toString(); // '2026-02-01/2026-02-28'
-date('2026-11-18').range('week').toString(); // '2026-11-16/2026-11-22'
+date('2026-11-18', { locale: 'en-US' }).range('week').toString(); // '2026-11-15/2026-11-21'
+date('2026-11-18').range('week', 'monday').toString(); // '2026-11-16/2026-11-22'
 ```
 :::
 
@@ -721,7 +722,7 @@ d.locale(): Locale | undefined
 d.locale(tag): CalendarDate
 ```
 
-Reads the locale carried on this date, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+Reads the locale carried on this date, or returns a copy that formats and starts weeks in another locale across text previews, presets, week boundaries, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
 
 **Parameters**
 

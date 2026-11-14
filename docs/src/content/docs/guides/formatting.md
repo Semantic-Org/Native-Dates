@@ -154,6 +154,7 @@ Core also exports [`monthNames()`](/api/month-names/) and its weekday counterpar
 import { monthNames, weekdayNames } from 'native-dates';
 
 monthNames('short', 'en-US'); // ['Jan', 'Feb', 'Mar', ...]
+weekdayNames('short', undefined, 'en-US'); // ['Sun', 'Mon', 'Tue', ...]
 weekdayNames('short', 'monday', 'en-US'); // ['Mon', 'Tue', 'Wed', ...]
 ```
 

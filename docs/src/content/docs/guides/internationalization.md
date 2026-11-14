@@ -90,7 +90,7 @@ Pass a single BCP 47 tag rather than a raw HTTP `Accept-Language` header with qu
 Global configuration updates shared state across the entire JavaScript process. On a multi-user server, another request can overwrite a `configure()` call across an async boundary. Attach `locale()` to the value instead.
 :::
 
-A carried locale only affects how a value formats for people. Comparisons, sorting, `equals()`, and ISO serialization with `toString()` or `toJSON()` ignore it completely:
+A carried locale governs localized text and where a week begins. Exact comparisons, sorting, `equals()`, and ISO serialization with `toString()` or `toJSON()` ignore it:
 
 ```js
 import { date } from 'native-dates';
@@ -104,6 +104,29 @@ french.to(japanese).locale(); // 'fr'
 ```
 
 When a method combines two values with different locales, the value the method was called on keeps its own locale.
+
+## First day of the week
+
+Week boundaries and weekday headers follow the active locale automatically. The runtime reports Sunday in the United States, Japan, Korea, and Brazil, Saturday in Egypt, and Monday across most of Europe and China.
+
+Because `startOf('week')`, `range('week')`, and [`weekdayNames()`](/api/month-names/#weekdaynames) share the same first-day rule, calendar headers always line up with week grids:
+
+```js
+import { date, weekdayNames } from 'native-dates';
+
+const wed = date('2026-11-18');
+
+wed.locale('en-US').startOf('week').toString(); // '2026-11-15'
+wed.locale('de-DE').startOf('week').toString(); // '2026-11-16'
+wed.locale('ar-EG').startOf('week').toString(); // '2026-11-14'
+
+weekdayNames('short', undefined, 'en-US')[0]; // 'Sun'
+weekdayNames('short', undefined, 'de-DE')[0]; // 'Mo'
+```
+
+Pass an explicit weekday to override one call, or set `weekStart` in [`configure()`](/api/configure/) to pin a start day across every locale. Passing `null` returns to following the locale, and runtimes without week data fall back to Monday.
+
+ISO week numbers read from `weekOfYear` and the `'W'` token always count weeks from Monday.
 
 ## One-off calendar and dialect overrides
 
