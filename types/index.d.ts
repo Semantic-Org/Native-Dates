@@ -70,6 +70,8 @@ export type Zone = string;
 export interface ReadOptions {
   /** The zone to read the value in (default: the configured zone, else the machine's) */
   zone?: Zone;
+  /** The locale the value is written in (default: the configured locale, else the runtime's) */
+  locale?: Locale;
 }
 
 /** Duration fields, plural, as Temporal spells them */
@@ -262,6 +264,13 @@ export class DateTime {
 
   /** A preset ('short', 'medium', 'long', 'full', 'date', 'time', 'month', 'text') or an Intl options bag */
   format(spec?: FormatSpec, locale?: Locale): string;
+  /** The locale this value is written in, when one was set on it or on the value it came from */
+  locale(): Locale | undefined;
+  /** The same value written in another locale, which every value made from it keeps */
+  locale(tag: Locale): this;
+  /** Alias for `locale` */
+  lang(): Locale | undefined;
+  lang(tag: Locale): this;
   /** The instant in UTC, `'2026-09-06T14:30:00.000Z'` */
   toString(): string;
   toJSON(): string;
@@ -377,6 +386,13 @@ export class CalendarDate {
   readonly yearMonth: YearMonth;
 
   format(spec?: FormatSpec, locale?: Locale): string;
+  /** The locale this value is written in, when one was set on it or on the value it came from */
+  locale(): Locale | undefined;
+  /** The same value written in another locale, which every value made from it keeps */
+  locale(tag: Locale): this;
+  /** Alias for `locale` */
+  lang(): Locale | undefined;
+  lang(tag: Locale): this;
   /** ISO 8601, `'2026-09-06'` */
   toString(): string;
   toJSON(): string;
@@ -456,6 +472,13 @@ export class Time {
   as(kind: 'time'): Time;
 
   format(spec?: FormatSpec, locale?: Locale): string;
+  /** The locale this value is written in, when one was set on it or on the value it came from */
+  locale(): Locale | undefined;
+  /** The same value written in another locale, which every value made from it keeps */
+  locale(tag: Locale): this;
+  /** Alias for `locale` */
+  lang(): Locale | undefined;
+  lang(tag: Locale): this;
   /** ISO 8601, `'17:30:00'` */
   toString(): string;
   toJSON(): string;
@@ -527,6 +550,13 @@ export class Duration {
 
   /** Words in the locale: `'2 hours, 30 minutes'`, `'2 hr, 30 min'`, `'2h 30m'`, `'2:30:00'` */
   format(style?: 'long' | 'short' | 'narrow' | 'digital', locale?: Locale): string;
+  /** The locale this value is written in, when one was set on it or on the value it came from */
+  locale(): Locale | undefined;
+  /** The same value written in another locale, which every value made from it keeps */
+  locale(tag: Locale): this;
+  /** Alias for `locale` */
+  lang(): Locale | undefined;
+  lang(tag: Locale): this;
   /** ISO 8601, `'PT1H30M'` */
   toString(): string;
   toJSON(): string;

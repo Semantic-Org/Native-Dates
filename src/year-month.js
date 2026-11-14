@@ -11,6 +11,7 @@ import {
   isCount,
   isDigits,
   isPlainDate,
+  localeOf,
   plural,
   singularKeys,
   unit,
@@ -56,10 +57,12 @@ export class YearMonth {
   static century = 2000;
 
   #plain;
+  #locale;
 
   // yearMonth(2026, 11), yearMonth(input, zone), or yearMonth(input, { zone, loose })
   constructor(input, monthOrOptions) {
     this.#plain = YearMonth.#read(input, monthOrOptions);
+    this.#locale = localeOf(monthOrOptions, input);
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it, and filled once the parts it reads are in
     this.text = undefined;
@@ -184,13 +187,13 @@ export class YearMonth {
   *******************************/
 
   plus(amount, name) {
-    return new YearMonth(
+    return this.#next(
       guard(() => this.#plain.add(YearMonth.#monthFields(amount, name)), 'cannotAdd', `${amount} ${name ?? ''}`),
     );
   }
 
   minus(amount, name) {
-    return new YearMonth(
+    return this.#next(
       guard(
         () => this.#plain.subtract(YearMonth.#monthFields(amount, name)),
         'cannotSubtract',
@@ -221,7 +224,7 @@ export class YearMonth {
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
     YearMonth.#refuseSmaller(smaller.find((part) => part in changes));
-    return new YearMonth(
+    return this.#next(
       guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
     );
   }
@@ -234,7 +237,7 @@ export class YearMonth {
         explanation: isDevelopment ? 'a day is a whole number from 1 through 31: yearMonth.on(15)' : 0,
       });
     }
-    return new CalendarDate(this.#plain.toPlainDate({ day: count }));
+    return new CalendarDate(this.#plain.toPlainDate({ day: count }), { locale: this.#locale });
   }
 
   /*******************************
@@ -294,11 +297,19 @@ export class YearMonth {
     return readAs(kind, { yearMonth: () => this });
   }
 
+  locale(tag) {
+    return tag === undefined ? this.#locale : new YearMonth(this.#plain, { locale: tag });
+  }
+
+  #next(plain) {
+    return new YearMonth(plain, { locale: this.#locale });
+  }
+
   /*******************************
               Output
   *******************************/
 
-  format(spec = 'medium', locale) {
+  format(spec = 'medium', locale = this.#locale) {
     const options = partOptions(spec, ['year', 'month', 'era'], YearMonth.presets);
     return options
       ? partFormatter(options, locale).format(epochOf('date', { year: this.year, month: this.month, day: 1 }))
@@ -338,6 +349,7 @@ export class YearMonth {
 YearMonth.prototype.add = YearMonth.prototype.plus;
 YearMonth.prototype.subtract = YearMonth.prototype.minus;
 YearMonth.prototype.remove = YearMonth.prototype.minus;
+YearMonth.prototype.lang = YearMonth.prototype.locale;
 
 const unread = new Set([...unreadable.point, 'unreadableYearMonth', 'notAYearMonth']);
 

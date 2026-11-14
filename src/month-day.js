@@ -5,7 +5,7 @@ import { IS_MONTH_DAY } from './helpers/identity.js';
 import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
 import { formatTokens } from './helpers/tokens.js';
 import { isDevelopment, isObject, isPlainObject, isString } from './helpers/types.js';
-import { inspect, isCount, isDigits, isPlainDate, singularKeys, zoneOptions } from './helpers/units.js';
+import { inspect, isCount, isDigits, isPlainDate, localeOf, singularKeys, zoneOptions } from './helpers/units.js';
 import { zoneId } from './helpers/zones.js';
 
 /*
@@ -45,10 +45,12 @@ export class MonthDay {
   };
 
   #plain;
+  #locale;
 
   // monthDay(10, 17), monthDay(input, zone), or monthDay(input, { zone, loose, dayFirst })
   constructor(input, dayOrOptions) {
     this.#plain = MonthDay.#read(input, dayOrOptions);
+    this.#locale = localeOf(dayOrOptions, input);
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it, and filled once the parts it reads are in
     this.text = undefined;
@@ -190,6 +192,7 @@ export class MonthDay {
     }
     return new CalendarDate(
       guard(() => this.#plain.toPlainDate({ year: count }), 'unreadableDate', `${count}-${this}`),
+      { locale: this.#locale },
     );
   }
 
@@ -199,7 +202,7 @@ export class MonthDay {
     const from = MonthDay.#dayOf(day);
     const thisYear = MonthDay.#placed(this.#plain, from.year);
     return thisYear && Temporal.PlainDate.compare(thisYear, from) > 0
-      ? new CalendarDate(thisYear)
+      ? new CalendarDate(thisYear, { locale: this.#locale })
       : this.in(from.year + 1);
   }
 
@@ -207,7 +210,7 @@ export class MonthDay {
     const from = MonthDay.#dayOf(day);
     const thisYear = MonthDay.#placed(this.#plain, from.year);
     return thisYear && Temporal.PlainDate.compare(thisYear, from) < 0
-      ? new CalendarDate(thisYear)
+      ? new CalendarDate(thisYear, { locale: this.#locale })
       : this.in(from.year - 1);
   }
 
@@ -222,6 +225,10 @@ export class MonthDay {
 
   as(kind) {
     return readAs(kind, { monthDay: () => this });
+  }
+
+  locale(tag) {
+    return tag === undefined ? this.#locale : new MonthDay(this.#plain, { locale: tag });
   }
 
   /*******************************
@@ -266,7 +273,7 @@ export class MonthDay {
               Output
   *******************************/
 
-  format(spec = 'medium', locale) {
+  format(spec = 'medium', locale = this.#locale) {
     const options = partOptions(spec, ['month', 'day'], MonthDay.presets);
     return options
       ? partFormatter(options, locale).format(epochOf('date', { year: leapYear, month: this.month, day: this.day }))
@@ -302,6 +309,8 @@ export class MonthDay {
     return `MonthDay(${this.#plain})`;
   }
 }
+
+MonthDay.prototype.lang = MonthDay.prototype.locale;
 
 const unread = new Set([...unreadable.point, 'unreadableMonthDay', 'notAMonthDay']);
 

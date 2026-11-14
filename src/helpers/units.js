@@ -152,6 +152,11 @@ export const endPrecision = (name) =>
 
 export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(name)]: 1 });
 
+// the locale a new value is written in: the one its options name, or else the one carried by the
+// value it is made from, so a date taken from a Spanish datetime is Spanish too
+export const localeOf = (options, input) =>
+  options?.locale ?? (typeof input?.locale === 'function' ? input.locale() : undefined);
+
 // the second argument of a factory is a zone, or an options bag { zone, loose }
 export const zoneOptions = (value) => (isPlainObject(value) ? value : { zone: value });
 
