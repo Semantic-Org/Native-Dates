@@ -82,11 +82,6 @@ export function mountPlayground(root) {
     status.textContent = text;
     status.classList.toggle('is-error', error);
   };
-  // the examples run on the browser's own Temporal, as an app does
-  if (!globalThis.Temporal) {
-    say(ui('playground.noTemporal'), true);
-    return;
-  }
 
   // the frame is made here, not parsed with the page: the browser restores a parsed frame's last
   // url on reload and back/forward, which would be a dead session's path
