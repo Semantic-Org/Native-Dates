@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes when this was written (`npm run size`, Brotli): 12.13 kB for everything in `native-dates`, 10.69 kB for `import { now }`, four plugins on top (`relative`, `zones`, `loose`, `legacy-date`).
+Sizes on 2026-11-14 after the locale work (`npm run size`, Brotli): 12.47 kB for everything in `native-dates`, 11.05 kB for `import { now }`, four plugins on top (`relative`, `zones`, `loose`, `legacy-date`).
 
 ## How to decide
 
@@ -24,11 +24,11 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 The docs will carry examples for each language, and may show a homepage section only to a reader who has picked that language. Those pages put every English-shaped corner on display, so find them first. The method that found the last two bugs is cheap: print one value in twenty locales and read the column.
 
 - [ ] **Sweep every output path across locales**: each preset on each noun, ranges of each kind, durations in each style, `text`, and token patterns. Include a right-to-left locale, one with its own digits, and one with its own calendar.
-- [ ] **Token `Do` prints English.** `format('Do', 'de')` gives `17th`. This is wrong output, so fix it if `Intl` can supply the ordinal cheaply, and otherwise decide what `Do` means outside English.
-- [ ] **Tokens `a` and `A` always print `am` and `pm`.** The presets print the locale's own. Same call as `Do`.
-- [ ] **Token `dd` is the first two letters of the short weekday name**, which is right in English and arbitrary elsewhere.
+- [x] **Token `Do` prints English.** `format('Do', 'de')` gives `17th`. This is wrong output, so fix it if `Intl` can supply the ordinal cheaply, and otherwise decide what `Do` means outside English.
+- [x] **Tokens `a` and `A` always print `am` and `pm`.** The presets print the locale's own. Same call as `Do`.
+- [x] **Token `dd` is the first two letters of the short weekday name**, which is right in English and arbitrary elsewhere.
 - [ ] **Week start does not follow the locale.** It is Monday unless `configure({ weekStart })` says otherwise, so a calendar grid in a locale that starts on Sunday or Saturday is wrong by default. The platform knows each locale's first day.
-- [ ] **Loose parsing reads month names in English only.** `monthDay('17 octobre', { loose: true })` is `null`. Decide whether that is a gap or the meaning of loose.
+- [x] **Loose parsing reads month names in English only.** `monthDay('17 octobre', { loose: true })` is `null`. Decide whether that is a gap or the meaning of loose.
 - [ ] **Calendars.** A Persian or Hebrew locale prints a full date in its own calendar, while `MonthDay` and `YearMonth` always print Gregorian months. That was chosen, and the example for such a language should show it on purpose.
 
 For the examples themselves: lead with presets and options bags, where the library is strongest in every locale, before token patterns.
@@ -50,11 +50,26 @@ Then three pieces of our own guessing were handed to the platform, which took 0.
 - **`dd` is two letters of the short name where they tell the seven days apart, and `Intl`'s narrow form where they do not**: Arabic, Hebrew and Vietnamese.
 - **Loose reading matches month names against `Intl`'s tables** for the configured locale as well as English, so `17 octobre`, `17. Oktober` and `17 октября` read. The typed English list is gone.
 
+A review of that work, run across every locale ICU has, then found and fixed:
+
+- **A month took its beside-a-day form whenever the pattern had a `D` anywhere.** It takes it only straight after a day now, moment's rule, and not when text is bracketed onto it, so the stock Finnish `D. MMMM[ta]` no longer doubles its ending.
+- **`Do` outside English writes what the locale writes after a day in a date**: `6.` in German, Danish, Finnish, Czech and Hungarian, `6日` in Japanese.
+- **`a` and `A` keep the locale's own case** outside English.
+- **Loose month names**: English is tried first, so `Mar 17` is March in a Finnish locale and not `marraskuu`. Names with combining marks read (`17 अक्टूबर`, `17 ตุลาคม`), as do `17 de octubre`, `noviembre de 2026` and shortened names like `5 mrt`.
+- **A list of locales** passed as an array built a new formatter on every call.
+- **An engine from before 2022 refuses a range that runs backwards**, so a time range across midnight falls back to printing each end.
+
 Open, each a decision more than a bug:
 
 - [ ] **Week start.** `Intl.Locale` reports each locale's first day (Sunday for `en-US`, `ja`, `pt-BR` and `he`, Saturday for `fa`, Monday for most of Europe). The library says Monday unless configured, so `startOf('week')`, `range('week')` and `weekdayNames()` are wrong by default for those readers. Following the locale changes what `today().startOf('week')` returns in the US.
 - [ ] **`YearMonth` short is `11/26`**, a two-digit year, which reads as November 26th in most of these locales and as year 26 month 11 in Japanese. A four-digit year would not be mistaken for a day.
 - [ ] **A Persian reader sees two calendars.** Dates print in the Persian calendar (`۱۵ آبان ۱۴۰۵`) and a month-day prints Gregorian (`۶ نوامبر`). Chosen, and the Persian page should say so.
+- [ ] **Greek names a month alone in the form it takes beside a day.** `format('MMMM YYYY', 'el')` gives `Νοεμβρίου 2026` where `Νοέμβριος 2026` is right, and `monthNames('long', 'el')` is twelve genitives. `Intl` only gives the plain Greek form beside a year, and taking it from there puts an ezafe on four Persian months, so no rule read off the platform fixes one without breaking the other.
+- [ ] **`dd` is still a guess in some languages.** Turkish gets `Pz` for Monday, which a Turkish reader takes for Sunday. Urdu and Swahili get Latin letters, since that is the narrow form ICU has for them. Persian gets two arbitrary letters where one is the custom.
+- [ ] **Loose reading cannot read back everything the library prints**: `17 באוקטובר`, `۱۷ اکتبر`, `10月17日`, `ноябрь 2026 г.`, and Greek months in the plain form. It also takes `14 jui` as June in French, where it could as well be July.
+- [ ] **A range formatted by a token pattern always joins with ` – `**, where a preset uses the locale's own, `تا` or `～`.
+- [ ] **Thai token patterns print the Gregorian year beside Thai month names**, `6 พฤศจิกายน 2026`, where the preset says `2569`.
+- [ ] **A time range of nearly a day reads as an hour backwards in English**: `time('10:00').to('09:00')` prints `10:00 – 9:00 AM`.
 - [ ] **Token patterns print ASCII digits** in locales with their own (`ar-EG`, `fa`), where presets print the locale's. Right for `YYYY-MM-DD`, arguable for `D MMMM`.
 
 ## 3. Tests
