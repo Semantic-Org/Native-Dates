@@ -723,7 +723,7 @@ Localized presets from `'LT'` through `'llll'` are built in alongside `[brackets
   description: Preset name such as `'medium'` or `'LLL'`, `Intl` options object, or token pattern.
 - name: locale
   type: string
-  description: BCP 47 locale tag overriding the configured default for this call.
+  description: BCP 47 locale tag overriding this moment's or the configured locale for one call.
 ```
 
 **Returns**
@@ -746,6 +746,41 @@ standup.format(
   { weekday: 'short', hour: '2-digit', minute: '2-digit' },
   'de-DE',
 ); // 'Mo., 09:30'
+```
+:::
+
+:::entry
+### `locale()` :kind[method]
+
+```js signature
+dt.locale(): Locale | undefined
+dt.locale(tag): DateTime
+dt.lang(tag?): DateTime | Locale | undefined
+```
+
+Reads the locale carried on this moment, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+
+**Parameters**
+
+```params
+- name: tag
+  type: Locale | null | undefined
+  description: BCP 47 locale tag to carry forward, or `null` to clear an existing tag.
+```
+
+**Returns**
+
+```returns
+type: DateTime | Locale | undefined
+description: The active tag when called with no arguments, or a new `DateTime` carrying `tag`.
+```
+
+```js
+const standup = datetime('2026-11-16T09:30', 'Europe/Berlin').locale('es-ES');
+
+standup.locale(); // 'es-ES'
+standup.plus(1, 'week').date.format('long'); // '23 de noviembre de 2026'
+standup.locale(null).locale(); // undefined
 ```
 :::
 

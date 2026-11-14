@@ -61,16 +61,17 @@ span.format('digital', 'en-US'); // '2:15:00'
 
 ## Locales and Intl options
 
-Pass a BCP 47 locale tag as the second argument to format a single call in another language. To change the default across your app, call [`configure()`](/api/configure/) at startup:
+Set a default once with [`configure()`](/api/configure/), attach a language to a value and everything derived from it with [`locale()`](/api/date-time/#locale), or pass a BCP 47 tag to `format()` for a single call. Read [Internationalization](/guides/internationalization/) for guidance on client apps versus multi-user servers:
 
 ```js
 import { configure, datetime } from 'native-dates';
 
 const standup = datetime('2026-11-16T09:30', 'Europe/Berlin');
-standup.format('long', 'de-DE'); // '16. November 2026 um 09:30'
+standup.locale('de-DE').plus(1, 'week').format('long'); // '23. November 2026 um 09:30'
 standup.format('long', 'ja-JP'); // '2026年11月16日 9:30'
 
 configure({ locale: 'en-GB' });
+configure({ locale: null });
 ```
 
 When none of the presets fit your layout, pass an options object directly to the underlying formatter:

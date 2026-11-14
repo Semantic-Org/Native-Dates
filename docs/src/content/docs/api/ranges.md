@@ -415,7 +415,7 @@ See [Formatting](/guides/formatting/) for preset and token details.
   description: Preset name, `Intl.DateTimeFormatOptions` object, or token pattern.
 - name: locale
   type: Locale
-  description: BCP 47 locale tag overriding the configured default for this call.
+  description: BCP 47 locale tag overriding this range's or the configured locale for one call.
 ```
 
 **Returns**
@@ -431,6 +431,41 @@ const trip = dateRange('2026-09-01', '2026-09-07');
 trip.format('medium', 'en-US'); // 'Sep 1 – 7, 2026'
 trip.format('YYYY-MM-DD'); // '2026-09-01 – 2026-09-07'
 timeRange('22:00', '06:00').format('HH:mm'); // '22:00 – 06:00'
+```
+:::
+
+:::entry
+### `locale()` :kind[method]
+
+```js signature
+range.locale(): Locale | undefined
+range.locale(tag): Range
+range.lang(tag?): Range | Locale | undefined
+```
+
+Reads the locale carried on this range, or returns a copy formatted in another locale across text previews, presets, endpoints, and sub-ranges. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+
+**Parameters**
+
+```params
+- name: tag
+  type: Locale | null | undefined
+  description: BCP 47 locale tag to carry forward, or `null` to clear an existing tag.
+```
+
+**Returns**
+
+```returns
+type: Range | Locale | undefined
+description: The active tag when called with no arguments, or a new range of the same kind carrying `tag`.
+```
+
+```js
+const stay = dateRange('2026-09-01', '2026-09-07').locale('de-DE');
+
+stay.locale(); // 'de-DE'
+stay.format('medium'); // '01.–07.09.2026'
+stay.duration.text; // '7 Tage'
 ```
 :::
 

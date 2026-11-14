@@ -689,7 +689,7 @@ Options objects ignore clock and zone keys, so one shared options object can for
   description: Preset name such as `'medium'` or `'LL'`, `Intl` options object, or token pattern.
 - name: locale
   type: string
-  description: BCP 47 locale tag overriding the configured default for this call.
+  description: BCP 47 locale tag overriding this date's or the configured locale for one call.
 ```
 
 **Returns**
@@ -710,6 +710,41 @@ day.format('L', 'en-US'); // '11/16/2026'
 day.format('YYYY-MM-DD'); // '2026-11-16'
 day.format('ddd, MMM D', 'en-US'); // 'Mon, Nov 16'
 day.format({ weekday: 'long' }, 'en-US'); // 'Monday'
+```
+:::
+
+:::entry
+### `locale()` :kind[method]
+
+```js signature
+d.locale(): Locale | undefined
+d.locale(tag): CalendarDate
+d.lang(tag?): CalendarDate | Locale | undefined
+```
+
+Reads the locale carried on this date, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+
+**Parameters**
+
+```params
+- name: tag
+  type: Locale | null | undefined
+  description: BCP 47 locale tag to carry forward, or `null` to clear an existing tag.
+```
+
+**Returns**
+
+```returns
+type: CalendarDate | Locale | undefined
+description: The active tag when called with no arguments, or a new `CalendarDate` carrying `tag`.
+```
+
+```js
+const holiday = date('2026-05-01').locale('fr-FR');
+
+holiday.locale(); // 'fr-FR'
+holiday.format('long'); // '1 mai 2026'
+holiday.to('2026-05-05').format('long'); // '1–5 mai 2026'
 ```
 :::
 

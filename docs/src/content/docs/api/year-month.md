@@ -421,7 +421,7 @@ Standard and localized presets print only the year and month, and custom styles 
   description: Preset name such as `'medium'` or `'long'`, `Intl` options object, or token pattern.
 - name: locale
   type: Locale
-  description: BCP 47 locale tag overriding the configured default for this call.
+  description: BCP 47 locale tag overriding this month's or the configured locale for one call.
 ```
 
 **Returns**
@@ -439,6 +439,41 @@ nov.format('medium', 'en-US'); // 'Nov 2026'
 nov.format('long', 'en-US'); // 'November 2026'
 nov.format('L', 'en-US'); // '11/2026'
 nov.format('MM/YY'); // '11/26'
+```
+:::
+
+:::entry
+### `locale()` :kind[method]
+
+```js signature
+ym.locale(): Locale | undefined
+ym.locale(tag): YearMonth
+ym.lang(tag?): YearMonth | Locale | undefined
+```
+
+Reads the locale carried on this month, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+
+**Parameters**
+
+```params
+- name: tag
+  type: Locale | null | undefined
+  description: BCP 47 locale tag to carry forward, or `null` to clear an existing tag.
+```
+
+**Returns**
+
+```returns
+type: YearMonth | Locale | undefined
+description: The active tag when called with no arguments, or a new `YearMonth` carrying `tag`.
+```
+
+```js
+const may = yearMonth('2026-05').locale('ru');
+
+may.locale(); // 'ru'
+may.format('long'); // 'май 2026 г.'
+may.on(1).format('long'); // '1 мая 2026 г.'
 ```
 :::
 

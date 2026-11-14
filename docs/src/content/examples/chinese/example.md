@@ -7,7 +7,7 @@ try:
   - 'Change the clock from **09:30** to **14:30** to watch the day period switch from `上午9:30` to `下午2:30` before the digits.'
   - 'Compare the `zh-TW-u-ca-roc` row, which counts the same date as year 115 of the Minguo calendar.'
 related:
-  - { title: Configure, href: /api/configure/ }
+  - { title: Internationalization, href: /guides/internationalization/ }
   - { title: Formatting, href: /guides/formatting/ }
   - { title: MonthDay, href: /api/month-day/ }
 ---

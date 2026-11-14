@@ -51,6 +51,9 @@ fromMoment.toString(); // '18:30:00'
     - name: zone
       type: Zone
       description: Time zone used to extract the time of day from an instant string, `DateTime`, or `Date`.
+    - name: locale
+      type: Locale
+      description: BCP 47 locale tag carried on the returned `Time` and every value derived from it.
     - name: loose
       type: boolean
       default: 'false'

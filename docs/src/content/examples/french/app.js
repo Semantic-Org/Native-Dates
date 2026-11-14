@@ -17,7 +17,7 @@ function render() {
   }
   const start = date(day.value);
   const paris = start.at(clock.value, 'Europe/Paris');
-  const montreal = start.at(clock.value, 'America/Montreal');
+  const montreal = start.at(clock.value, 'America/Montreal').locale('fr-CA');
   const range = start.to(start.plus(Number(span.value), 'days'));
 
   output.innerHTML = `
@@ -25,8 +25,8 @@ function render() {
     <dd>${start.format('full')}</dd>
     <dt>France clock <code>.format('long')</code></dt>
     <dd>${paris.format('long')}</dd>
-    <dt>Québec override <code>fr-CA</code></dt>
-    <dd>${montreal.format('long', 'fr-CA')}</dd>
+    <dt>Québec clock <code>.locale('fr-CA')</code></dt>
+    <dd>${montreal.format('long')}</dd>
     <dt>Collapsed range <code>.text</code></dt>
     <dd>${range.text}</dd>`;
 }

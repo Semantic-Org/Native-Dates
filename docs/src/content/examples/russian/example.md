@@ -7,7 +7,7 @@ try:
   - 'Click **1**, **2**, **5**, **11**, and **21** to watch `days()` cycle through `день`, `дня`, and `дней`, including the teen exception at `11`.'
   - 'Pick a March or August date to watch other Russian month endings inflect between heading and date forms.'
 related:
-  - { title: Configure, href: /api/configure/ }
+  - { title: Internationalization, href: /guides/internationalization/ }
   - { title: YearMonth, href: /api/year-month/ }
   - { title: Duration, href: /api/duration/ }
 ---

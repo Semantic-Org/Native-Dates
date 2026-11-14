@@ -47,6 +47,9 @@ fromInstant.toString(); // '10-17'
     - name: zone
       type: Zone
       description: Time zone used to read the month and day of an instant string, `DateTime`, or `Date`.
+    - name: locale
+      type: Locale
+      description: BCP 47 locale tag carried on the returned `MonthDay` and every value derived from it.
     - name: dayFirst
       type: boolean
       default: 'false'

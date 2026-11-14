@@ -7,7 +7,7 @@ try:
   - 'Type `15/08/2026` into **Typed date** to read the day before the month and format **15 de agosto de 2026**.'
   - 'Type `32/05/2026` or `pendiente` into **Typed date** to see loose mode return `null` and show **Unreadable**.'
 related:
-  - { title: Configure, href: /api/configure/ }
+  - { title: Internationalization, href: /guides/internationalization/ }
   - { title: Ranges, href: /api/ranges/ }
   - { title: loose, href: /plugins/loose/ }
 ---

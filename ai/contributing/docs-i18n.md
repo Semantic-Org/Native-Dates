@@ -63,7 +63,7 @@ Translation is its own job, not the site builder's.
 - **A change to code alone needs no translator.** A twin carries its own copy of the page's code blocks. When only those change in English (an import path, a renamed option), carry the same edit into each twin and update its `source`.
 - **Translate only once a library's docs are final.** Until then, a few sample pages in a few languages (one right-to-left) are enough to prove the shape.
 - **The reader is offered their language, never moved to it.** A page offers itself in the first language the browser asks for that it is written in, in that language's own words. After a reader switches, it asks once whether to always open the docs in that language; only a yes sends later visits there, and picking another language takes it back.
-- **A language names itself.** Don't drop a language's menu name into a sentence template; cases and articles break. Each language writes its own name in its own sentence.
+- **A language names itself.** Don't drop a language's menu name into a sentence template; cases and articles break. Each language writes its own name in its own sentence. Where English copy says "in plain English" (`home.hero.title` and prose), adapt the phrase to the target language's own idiomatic equivalent ("in plain Japanese", "en español claro") while keeping JavaScript method names in English.
 - **Plural forms are the language's own.** English has two, Japanese one, Arabic six; a translator writes the ones its language tells apart.
 - **The assistant prompt asks for answers in the reader's language.**
 
