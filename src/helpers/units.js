@@ -1,14 +1,6 @@
 import { refuse } from './errors.js';
 import { isDevelopment, isNumber, isPlainObject, isString } from './types.js';
 
-if (!globalThis.Temporal) {
-  refuse('noTemporal', 'globalThis.Temporal', {
-    explanation: isDevelopment
-      ? 'this library wraps the Temporal API. import @native-dates/polyfill first on a runtime without one'
-      : 0,
-  });
-}
-
 export const inspect = Symbol.for('nodejs.util.inspect.custom');
 
 // every common unit spelling plus the calendar units duration arithmetic refuses to guess at
