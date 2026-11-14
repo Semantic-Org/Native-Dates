@@ -47,13 +47,33 @@ export const HOME_LOCALES = {
         why: '日本には夏時間がありませんが、ロンドンは3月最終日曜に1時間進みます。24時間を足すと現地で10時になりますが、<code>plus(1, \'day\')</code> なら翌朝9時のままです。',
       },
     },
+    consolesEn: {
+      day: {
+        ask: 'What ISO date is midnight <code>2026-09-01</code> in Tokyo?',
+        why: 'Midnight in Tokyo (UTC+9) is 3 PM the previous afternoon in UTC, so <code>toISOString()</code> slices out <code>2026-08-31</code>. <code>CalendarDate</code> has no time zone offset to shift.',
+      },
+      clocks: {
+        ask: 'What time is one day after 9 AM on March 28 in London?',
+        why: 'Japan has no DST, while London springs forward on the last Sunday of March, making that day 23 hours long. Adding 24 hours shifts the clock to 10 AM, whereas <code>plus(1, \'day\')</code> keeps 9 AM.',
+      },
+    },
     year: {
       fromZone: 'Europe/London',
       fromCity: 'ロンドン',
+      fromCityEn: 'London',
       toZone: 'Asia/Tokyo',
       toCity: '東京',
+      toCityEn: 'Tokyo',
       lede: '日本には夏時間がありませんが、欧州や北米との定例会議は年に {changeCount} 回、時差が変わります。Temporal の IANA データベースにより、追加バンドル 0 バイトで正確な現地時刻を追跡できます。',
+      ledeEn: 'Japan never changes its clocks, while London switches DST twice a year, shifting their offset {changes} a year. Temporal’s IANA database tracks every transition with zero bytes shipped in your bundle.',
       caption: '{year}年のロンドン 9:30 の定例を東京時間で表示。冬時間の {dayCount} 日間は時差が {far} 時間から {near} 時間に広がり、開始が {time} に変わります。',
+      captionEn: 'A 9:30 AM London standup converted to Tokyo time across {year}. For {days} in winter, the offset widens from {far} hours to {near}, moving the meeting to {time}.',
+    },
+    xray: { inviteCity: 'シドニー', inviteCityEn: 'Sydney' },
+    try: {
+      city: 'ロンドン',
+      cityEn: 'London',
+      zones: ['Asia/Tokyo', 'Europe/London', 'Asia/Seoul', 'Asia/Singapore', 'Europe/Paris', 'Australia/Sydney'],
     },
   },
 
@@ -102,13 +122,33 @@ export const HOME_LOCALES = {
         why: '中国不实行夏令时，但欧美团队每年切换两次时钟。直接加 24 小时会在切换日变成 10 点，而 <code>plus(1, \'day\')</code> 始终保持当地时间 9 点。',
       },
     },
+    consolesEn: {
+      day: {
+        ask: 'What ISO date is midnight <code>2026-09-01</code> in Beijing?',
+        why: 'Midnight in China Standard Time (UTC+8) is 4 PM the previous afternoon in UTC, so <code>toISOString()</code> slices out <code>2026-08-31</code>. <code>CalendarDate</code> has no time zone offset to shift.',
+      },
+      clocks: {
+        ask: 'What time is one day after 9 AM on March 28 in London?',
+        why: 'China stays on UTC+8 all year, while London springs forward on the last Sunday of March. Adding 24 hours lands on 10 AM, whereas <code>plus(1, \'day\')</code> keeps 9 AM.',
+      },
+    },
     year: {
       fromZone: 'Europe/London',
       fromCity: '伦敦',
+      fromCityEn: 'London',
       toZone: 'Asia/Shanghai',
       toCity: '上海',
+      toCityEn: 'Shanghai',
       lede: '中国全年固定 UTC+8，但与欧美团队协作时每年会遇到 {changeCount} 次夏令时切换。借助浏览器内置 IANA 时区库，无需打包任何时区数据即可自动换算。',
+      ledeEn: 'China stays on UTC+8 year-round while Europe and North America switch DST, changing the offset {changes} a year. Temporal’s IANA database gives you that for free with zero bytes shipped in your bundle.',
       caption: '{year} 年伦敦 9:30 例会换算为上海时间。在冬令时的 {dayCount} 天里，时差由 {far} 小时扩大到 {near} 小时，会议时间变为 {time}。',
+      captionEn: 'A 9:30 AM London standup converted to Shanghai time across {year}. For {days} in winter, the offset widens from {far} hours to {near}, moving the meeting to {time}.',
+    },
+    xray: { inviteCity: '悉尼', inviteCityEn: 'Sydney' },
+    try: {
+      city: '伦敦',
+      cityEn: 'London',
+      zones: ['Asia/Shanghai', 'Europe/London', 'Asia/Tokyo', 'Asia/Singapore', 'Europe/Paris', 'Australia/Sydney'],
     },
   },
 
@@ -157,13 +197,33 @@ export const HOME_LOCALES = {
         why: '한국은 서머타임을 쓰지 않지만 유럽·북미 지사와 일할 때는 시차가 바뀝니다. 24시간을 더하면 10시가 되지만 <code>plus(1, \'day\')</code>는 현지 오전 9시를 지킵니다.',
       },
     },
+    consolesEn: {
+      day: {
+        ask: 'What ISO date is midnight <code>2026-09-01</code> in Seoul?',
+        why: 'Midnight in Korea Standard Time (UTC+9) is 3 PM the previous afternoon in UTC, so <code>toISOString()</code> slices out <code>2026-08-31</code>. <code>CalendarDate</code> has no time zone offset to shift.',
+      },
+      clocks: {
+        ask: 'What time is one day after 9 AM on March 28 in London?',
+        why: 'Korea does not observe DST, while London springs forward on the last Sunday of March. Adding 24 hours lands on 10 AM, whereas <code>plus(1, \'day\')</code> keeps 9 AM.',
+      },
+    },
     year: {
       fromZone: 'Europe/London',
       fromCity: '런던',
+      fromCityEn: 'London',
       toZone: 'Asia/Seoul',
       toCity: '서울',
+      toCityEn: 'Seoul',
       lede: '한국은 서머타임이 없지만 유럽·북미와 협업할 때 일 년에 {changeCount}번 시차가 달라집니다. Temporal의 IANA 데이터베이스로 번들 추가 없이 정확히 계산합니다.',
+      ledeEn: 'Korea never switches clocks, while Europe and North America observe DST, changing their offset {changes} a year. Temporal’s IANA database tracks every shift with zero bytes shipped in your bundle.',
       caption: '{year}년 런던 오전 9:30 회의를 서울 시간으로 변환한 결과입니다. 동절기 {dayCount}일 동안 시차가 {far}시간에서 {near}시간으로 벌어져 {time}에 열립니다.',
+      captionEn: 'A 9:30 AM London standup converted to Seoul time across {year}. For {days} in winter, the offset widens from {far} hours to {near}, moving the meeting to {time}.',
+    },
+    xray: { inviteCity: '시드니', inviteCityEn: 'Sydney' },
+    try: {
+      city: '런던',
+      cityEn: 'London',
+      zones: ['Asia/Seoul', 'Europe/London', 'Asia/Tokyo', 'Asia/Singapore', 'Europe/Paris', 'Australia/Sydney'],
     },
   },
 
@@ -212,13 +272,33 @@ export const HOME_LOCALES = {
         why: 'تبدأ مصر التوقيت الصيفي في الجمعة الأخيرة من أبريل فيصبح اليوم ٢٣ ساعة. إضافة ٢٤ ساعة تقفز بالساعة إلى ١٠ صباحًا، بينما تحافظ <code>plus(1, \'day\')</code> على ٩ صباحًا.',
       },
     },
+    consolesEn: {
+      day: {
+        ask: 'What ISO date is midnight <code>2026-09-01</code> in Cairo?',
+        why: 'Summer midnight in Cairo (UTC+3) is 9 PM the previous evening in UTC, so <code>toISOString()</code> slices out <code>2026-08-31</code>. <code>CalendarDate</code> has no time zone offset to shift.',
+      },
+      clocks: {
+        ask: 'What time is one day after 9 AM on April 23 in Cairo?',
+        why: 'Egypt springs forward on the last Friday of April, making that day 23 hours long. Adding 24 hours shifts the clock to 10 AM, whereas <code>plus(1, \'day\')</code> keeps 9 AM.',
+      },
+    },
     year: {
       fromZone: 'Europe/London',
       fromCity: 'لندن',
+      fromCityEn: 'London',
       toZone: 'Africa/Cairo',
       toCity: 'القاهرة',
+      toCityEn: 'Cairo',
       lede: 'تُغيّر لندن والقاهرة التوقيت الصيفي في عطلات نهاية أسبوع مختلفة، فيتبدّل الفارق الزمني {changeCount} مرات في السنة دون بايت واحد إضافي في حزمتك.',
+      ledeEn: 'London and Cairo switch DST on different weekends in spring and autumn, changing their offset {changes} a year. Temporal’s IANA database gives you that for free with zero bytes shipped in your bundle.',
       caption: 'اجتماع 9:30 صباحًا بتوقيت لندن محوّلًا إلى توقيت القاهرة خلال عام {year}. لمدة {dayCount} يومًا يتقلّص الفارق من {far} إلى {near} ساعة لينتقل الموعد إلى {time}.',
+      captionEn: 'A 9:30 AM London standup converted to Cairo time across {year}. For {days}, the offset narrows from {far} hours to {near}, moving the meeting to {time}.',
+    },
+    xray: { inviteCity: 'دبي', inviteCityEn: 'Dubai' },
+    try: {
+      city: 'لندن',
+      cityEn: 'London',
+      zones: ['Africa/Cairo', 'Asia/Riyadh', 'Asia/Dubai', 'Africa/Casablanca', 'Europe/London', 'Europe/Paris'],
     },
   },
 
@@ -267,13 +347,33 @@ export const HOME_LOCALES = {
         why: 'В России нет сезонного перевода стрелок, но в Лондоне в последнее воскресенье марта сутки длятся 23 часа. Прибавление 24 часов сдвинет встречу на 10:00, а <code>plus(1, \'day\')</code> сохранит 9:00.',
       },
     },
+    consolesEn: {
+      day: {
+        ask: 'What ISO date is midnight <code>2026-09-01</code> in Moscow?',
+        why: 'Midnight in Moscow (UTC+3) is 9 PM the previous evening in UTC, so <code>toISOString()</code> slices out <code>2026-08-31</code>. <code>CalendarDate</code> has no time zone offset to shift.',
+      },
+      clocks: {
+        ask: 'What time is one day after 9 AM on March 28 in London?',
+        why: 'Moscow stays on UTC+3 year-round, while London springs forward on the last Sunday of March. Adding 24 hours shifts the clock to 10 AM, whereas <code>plus(1, \'day\')</code> keeps 9 AM.',
+      },
+    },
     year: {
       fromZone: 'Europe/London',
       fromCity: 'Лондон',
+      fromCityEn: 'London',
       toZone: 'Europe/Moscow',
       toCity: 'Москва',
+      toCityEn: 'Moscow',
       lede: 'В Москве часы не переводят, а в Европе и США переводят дважды в год, поэтому разница во времени меняется {changeCount} раза в год. База IANA в Temporal учитывает это бесплатно и без лишних байтов.',
+      ledeEn: 'Moscow stays on UTC+3 all year while Europe and North America switch DST, changing their offset {changes} a year. Temporal’s IANA database handles every transition with zero bytes shipped in your bundle.',
       caption: 'Ежедневный созвон в 9:30 по Лондону в московском времени за {year} год. На протяжении {dayCount} дней зимнего времени разница увеличивается с {far} до {near} ч, сдвигая встречу на {time}.',
+      captionEn: 'A 9:30 AM London standup converted to Moscow time across {year}. For {days} in winter, the offset widens from {far} hours to {near}, moving the meeting to {time}.',
+    },
+    xray: { inviteCity: 'Токио', inviteCityEn: 'Tokyo' },
+    try: {
+      city: 'Лондоне',
+      cityEn: 'London',
+      zones: ['Europe/Moscow', 'Asia/Almaty', 'Europe/London', 'Europe/Paris', 'Asia/Dubai', 'Asia/Tokyo'],
     },
   },
 
@@ -322,13 +422,33 @@ export const HOME_LOCALES = {
         why: 'Esa noche España adelanta el reloj y el domingo dura 23 horas. Sumar 24 horas mueve la cita a las 10:00, mientras que <code>plus(1, \'day\')</code> mantiene las 9:00.',
       },
     },
+    consolesEn: {
+      day: {
+        ask: 'What day is <code>2026-09-01</code> in Mexico City?',
+        why: '<code>Date</code> parses ISO date strings as UTC midnight, which is 6 PM on August 31 in Mexico City (UTC-6). <code>CalendarDate</code> has no time zone offset to shift.',
+      },
+      clocks: {
+        ask: 'What time is one day after 9 AM on March 28 in Madrid?',
+        why: 'Spain springs forward that night, making the day 23 hours long. Adding 24 hours shifts the clock to 10 AM, whereas <code>plus(1, \'day\')</code> keeps 9 AM.',
+      },
+    },
     year: {
       fromZone: 'America/Mexico_City',
       fromCity: 'Ciudad de México',
+      fromCityEn: 'Mexico City',
       toZone: 'Europe/Madrid',
       toCity: 'Madrid',
+      toCityEn: 'Madrid',
       lede: 'Ciudad de México abolió el horario de verano en 2022 mientras España sigue cambiando el reloj, moviendo la diferencia horaria {changeCount} veces al año sin añadir un solo byte a tu bundle.',
+      ledeEn: 'Mexico City abolished DST in 2022 while Spain still switches clocks twice a year, changing their offset {changes} a year. Temporal’s IANA database gives you that for free with zero bytes shipped in your bundle.',
       caption: 'Una reunión diaria a las 9:30 en Ciudad de México vista en Madrid durante {year}. Durante {dayCount} días, la diferencia pasa de {far} a {near} horas y cambia la hora local a las {time}.',
+      captionEn: 'A 9:30 AM Mexico City standup converted to Madrid time across {year}. For {days} in winter, the offset narrows from {far} hours to {near}, moving the meeting to {time}.',
+    },
+    xray: { inviteCity: 'Madrid', inviteCityEn: 'Madrid' },
+    try: {
+      city: 'Madrid',
+      cityEn: 'Madrid',
+      zones: ['America/Mexico_City', 'Europe/Madrid', 'America/Bogota', 'America/Lima', 'America/Santiago', 'Europe/London'],
     },
   },
 
@@ -377,13 +497,33 @@ export const HOME_LOCALES = {
         why: 'O Brasil não tem mais horário de verão, mas Portugal adianta o relógio no último domingo de março. Somar 24 horas muda a reunião para 10h; <code>plus(1, \'day\')</code> mantém 9h.',
       },
     },
+    consolesEn: {
+      day: {
+        ask: 'What day is <code>2026-09-01</code> in São Paulo?',
+        why: '<code>Date</code> parses ISO date strings as UTC midnight, which is 9 PM on August 31 in São Paulo (UTC-3). <code>CalendarDate</code> has no time zone offset to shift.',
+      },
+      clocks: {
+        ask: 'What time is one day after 9 AM on March 28 in Lisbon?',
+        why: 'Brazil ended DST, while Portugal springs forward on the last Sunday of March. Adding 24 hours shifts the clock to 10 AM, whereas <code>plus(1, \'day\')</code> keeps 9 AM.',
+      },
+    },
     year: {
       fromZone: 'America/Sao_Paulo',
       fromCity: 'São Paulo',
+      fromCityEn: 'São Paulo',
       toZone: 'Europe/Lisbon',
       toCity: 'Lisboa',
+      toCityEn: 'Lisbon',
       lede: 'O Brasil encerrou o horário de verão, mas Portugal e o resto da Europa mudam o relógio {changeCount} vezes por ano. A base IANA do Temporal calcula cada virada com zero bytes extras no bundle.',
+      ledeEn: 'Brazil ended DST while Portugal and the rest of Europe still switch clocks, changing their offset {changes} a year. Temporal’s IANA database tracks every shift with zero bytes shipped in your bundle.',
       caption: 'Uma daily às 9:30 em São Paulo convertida para o horário de Lisboa ao longo de {year}. Por {dayCount} dias, a diferença muda de {far} para {near} horas, levando a reunião para {time}.',
+      captionEn: 'A 9:30 AM São Paulo standup converted to Lisbon time across {year}. For {days} in winter, the offset narrows from {far} hours to {near}, moving the meeting to {time}.',
+    },
+    xray: { inviteCity: 'Lisboa', inviteCityEn: 'Lisbon' },
+    try: {
+      city: 'Lisboa',
+      cityEn: 'Lisbon',
+      zones: ['America/Sao_Paulo', 'Europe/Lisbon', 'America/Manaus', 'Africa/Luanda', 'Europe/Paris', 'Asia/Tokyo'],
     },
   },
 
@@ -432,13 +572,33 @@ export const HOME_LOCALES = {
         why: 'Dans la nuit du dernier dimanche de mars, la journée ne dure que 23 heures en France. Ajouter 24 heures décale le rendez-vous à 10 h, alors que <code>plus(1, \'day\')</code> garde 9 h.',
       },
     },
+    consolesEn: {
+      day: {
+        ask: 'What ISO date is midnight <code>2026-09-01</code> in Paris?',
+        why: 'Summer midnight in Paris (UTC+2) is 10 PM the previous evening in UTC, so <code>toISOString()</code> slices out <code>2026-08-31</code>. <code>CalendarDate</code> has no time zone offset to shift.',
+      },
+      clocks: {
+        ask: 'What time is one day after 9 AM on March 28 in Paris?',
+        why: 'France springs forward on the last Sunday of March, making that day 23 hours long. Adding 24 hours shifts the clock to 10 AM, whereas <code>plus(1, \'day\')</code> keeps 9 AM.',
+      },
+    },
     year: {
-      fromZone: 'America/New_York',
-      fromCity: 'New York',
+      fromZone: 'America/Montreal',
+      fromCity: 'Montréal',
+      fromCityEn: 'Montréal',
       toZone: 'Europe/Paris',
       toCity: 'Paris',
-      lede: 'New York et Paris changent d’heure avec trois semaines d’écart au printemps et une semaine à l’automne, modifiant leur décalage {changeCount} fois par an. Temporal le gère nativement avec zéro octet ajouté.',
-      caption: 'Un point quotidien à 9 h 30 à New York lu à l’heure de Paris sur l’année {year}. Pendant {dayCount} jours, l’écart passe de {far} h à {near} h et déplace la réunion à {time}.',
+      toCityEn: 'Paris',
+      lede: 'Montréal et Paris changent d’heure avec trois semaines d’écart au printemps et une semaine à l’automne, modifiant leur décalage {changeCount} fois par an. Temporal le gère nativement avec zéro octet ajouté.',
+      ledeEn: 'Montréal and Paris switch DST three weeks apart in spring and one week apart in autumn, changing their offset {changes} a year. Temporal’s IANA database gives you that for free with zero bytes shipped in your bundle.',
+      caption: 'Un point quotidien à 9 h 30 à Montréal lu à l’heure de Paris sur l’année {year}. Pendant {dayCount} jours, l’écart passe de {far} h à {near} h et déplace la réunion à {time}.',
+      captionEn: 'A 9:30 AM Montréal standup converted to Paris time across {year}. For {days}, the offset narrows from {far} hours to {near}, moving the meeting to {time}.',
+    },
+    xray: { inviteCity: 'Tokyo', inviteCityEn: 'Tokyo' },
+    try: {
+      city: 'Montréal',
+      cityEn: 'Montréal',
+      zones: ['Europe/Paris', 'America/Montreal', 'Europe/Brussels', 'Europe/Zurich', 'Africa/Abidjan', 'Asia/Tokyo'],
     },
   },
 };

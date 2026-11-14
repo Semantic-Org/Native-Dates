@@ -3,22 +3,24 @@
 // the page arrives with the build's answers in place, so nothing here is needed to read it
 
 import { ui } from '../strings.js';
-import { read, SENTENCES } from './sentences.js';
+import { read, sentencesFor } from './sentences.js';
 
 const still = matchMedia('(prefers-reduced-motion: reduce)');
 
 export function mountSay(root, library) {
+  const locale = root.dataset.say || 'en';
+  const sentences = sentencesFor(locale);
   const panels = [...root.querySelectorAll('[data-sentence]')];
   const tabs = [...root.querySelectorAll('[role=tab]')];
 
   panels.forEach((panel) => {
-    const sentence = SENTENCES.find((s) => s.id === panel.dataset.sentence);
+    const sentence = sentences.find((s) => s.id === panel.dataset.sentence);
     const picks = sentence.steps.map(() => 0);
     const cells = (step) => [...panel.querySelectorAll(`[data-step="${step}"]`)];
 
     // every value from a link on is read again; the ones that changed say so with a flash
     const fill = (from = 0, flash = false) => {
-      read(sentence, picks, library).forEach((value, step) => {
+      read(sentence, picks, library, locale).forEach((value, step) => {
         const cell = panel.querySelector(`[data-value][data-step="${step}"]`);
         const text = cell.querySelector('[data-text]');
         if (text.textContent === value.text && cell.querySelector('[data-noun]').textContent === value.noun) { return; }

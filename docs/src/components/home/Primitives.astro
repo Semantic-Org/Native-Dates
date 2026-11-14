@@ -7,10 +7,11 @@
 import * as library from 'native-dates';
 
 import { localePath, t } from '../../lib/i18n.js';
-import { PRIMITIVES } from '../../scripts/home/primitives.js';
+import { primitivesFor } from '../../scripts/home/primitives.js';
 import { highlight } from '../../scripts/site.js';
 
 const locale = Astro.currentLocale;
+const rows = primitivesFor(locale);
 const { date, datetime, duration, IS_RANGE, monthDay, now, time, yearMonth } = library;
 const made = (row) => new Function('date', 'datetime', 'duration', 'monthDay', 'now', 'time', 'yearMonth', `return (${row.ours});`)(date, datetime, duration, monthDay, now, time, yearMonth);
 // a value as Temporal would print it: a range is its two ends, and the current moment is only
@@ -34,7 +35,7 @@ const HOLDS = {
   monthDay: (legacy, ours) => legacy.getMonth() + 1 === ours.month && legacy.getDate() === ours.day,
   range: (legacy, ours) => legacy.map(day).join() === [ours.start, ours.end].map(String).join(),
 };
-for (const row of PRIMITIVES) {
+for (const row of rows) {
   const ours = made(row);
   // more than one line is more than one value
   const lines = row.temporal.split('\n');
@@ -54,7 +55,7 @@ const MODES = [['ours', 'native-dates'], ['temporal', 'Temporal'], ['legacy', t(
     </div>
   </div>
   <ul class="prims-list" role="list">
-    {PRIMITIVES.map((row) => (
+    {rows.map((row) => (
       <li class="prim">
         <span class="prim-what">{t(locale, `home.prims.${row.id}`)}</span>
         <span class="prim-code swap">

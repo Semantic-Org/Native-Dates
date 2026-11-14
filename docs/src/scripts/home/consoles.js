@@ -16,7 +16,8 @@ const ZONES = {
 
 export function consolesFor(locale = 'en') {
   const local = ZONES[locale];
-  const tag = local ? locale : 'en-US';
+  const tag = locale === 'ar' ? 'ar-EG' : local ? locale : 'en-US';
+  const localize = (value) => (local ? value.locale(tag) : value);
   const westZone = local?.westZone ?? 'America/New_York';
   const dstStamp = local?.dstStamp ?? '2026-03-07T09:00-05:00';
   const dstPlain = local?.dstPlain ?? '2026-03-07T09:00';
@@ -29,7 +30,7 @@ export function consolesFor(locale = 'en') {
         lines: [`const day = new Date('2026-09-01T00:00${local.eastOffset}');`, 'day.toISOString().slice(0, 10);'],
         run: () => new Date(`2026-09-01T00:00${local.eastOffset}`).toISOString().slice(0, 10),
       },
-      native: { lines: ["date('2026-09-01');"], run: ({ date }) => date('2026-09-01') },
+      native: { lines: ["date('2026-09-01');"], run: ({ date }) => localize(date('2026-09-01')) },
     }
     : {
       id: 'day',
@@ -37,7 +38,7 @@ export function consolesFor(locale = 'en') {
         lines: ["const day = new Date('2026-09-01');", `day.toLocaleDateString('${tag}', { timeZone: '${westZone}' });`],
         run: () => new Date('2026-09-01').toLocaleDateString(tag, { timeZone: westZone }),
       },
-      native: { lines: ["date('2026-09-01');"], run: ({ date }) => date('2026-09-01') },
+      native: { lines: ["date('2026-09-01');"], run: ({ date }) => localize(date('2026-09-01')) },
     };
 
   return [
@@ -52,7 +53,7 @@ export function consolesFor(locale = 'en') {
           return end.toDateString();
         },
       },
-      native: { lines: ["date('2026-01-31').plus(1, 'month');"], run: ({ date }) => date('2026-01-31').plus(1, 'month') },
+      native: { lines: ["date('2026-01-31').plus(1, 'month');"], run: ({ date }) => localize(date('2026-01-31').plus(1, 'month')) },
     },
     {
       id: 'clocks',
@@ -70,7 +71,7 @@ export function consolesFor(locale = 'en') {
       },
       native: {
         lines: [`datetime('${dstPlain}', '${dstZone}').plus(1, 'day');`],
-        run: ({ datetime }) => datetime(dstPlain, dstZone).plus(1, 'day'),
+        run: ({ datetime }) => localize(datetime(dstPlain, dstZone).plus(1, 'day')),
       },
     },
     {
@@ -87,7 +88,7 @@ export function consolesFor(locale = 'en') {
       native: {
         lines: ["const start = date('2026-09-01');", "const due = start.plus(30, 'days');", 'start;'],
         run: ({ date }) => {
-          const start = date('2026-09-01');
+          const start = localize(date('2026-09-01'));
           start.plus(30, 'days');
           return start;
         },

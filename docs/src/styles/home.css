@@ -172,6 +172,7 @@
 .say-value { min-height: calc(1px + 12px + var(--lh-3xs) + 2px + 2 * var(--lh-sm)); padding-block: 12px 0; padding-inline: 8px; margin-inline: -8px; border-top: 1px solid var(--line-2); border-radius: 0 0 var(--r-2) var(--r-2); max-width: max(116px, 100%); }
 .say-noun { display: block; color: var(--c-green); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); }
 .say-text { display: block; margin-top: 2px; color: var(--text); font-size: var(--fs-sm); line-height: var(--lh-sm); text-wrap: balance; }
+[dir='ltr'] .say-text[dir='rtl'] { text-align: left; }
 
 /* ---------- the primitives Temporal ships, and the call for each ----------
    a plain list: what it is, the call, and the Temporal type underneath. the switch turns every

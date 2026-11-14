@@ -10,12 +10,12 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { TRANSLATED } from '../src/lib/locales.js';
+import { ENABLED, TRANSLATED } from '../src/lib/locales.js';
 import { PLUGINS, PRESETS } from '../src/lib/plugins.js';
 import { CASES } from '../src/scripts/home/consoles.js';
 import { PRIMITIVES } from '../src/scripts/home/primitives.js';
 import { SAMPLES } from '../src/scripts/home/samples.js';
-import { SENTENCES } from '../src/scripts/home/sentences.js';
+import { sentencesFor } from '../src/scripts/home/sentences.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
@@ -76,11 +76,13 @@ for (const { name, category } of PLUGINS) {
 for (const { name } of PRESETS) {
   literalKeys.add(`plugins.preset.${name}.description`);
 }
-for (const sentence of SENTENCES) {
-  literalKeys.add(`home.say.tab.${sentence.id}`);
-  for (const options of sentence.steps) {
-    for (const option of options) {
-      literalKeys.add(`home.say.${option.say}`);
+for (const { code } of ENABLED) {
+  for (const sentence of sentencesFor(code)) {
+    literalKeys.add(`home.say.tab.${sentence.id}`);
+    for (const options of sentence.steps) {
+      for (const option of options) {
+        literalKeys.add(`home.say.${option.say}`);
+      }
     }
   }
 }
@@ -160,6 +162,7 @@ for (const dir of localeDirs) {
       // in languages like Arabic spell the count in the noun itself without {count} / {kept}
       const optionalVars = new Set([
         ...(key === 'language.untranslated' ? ['language'] : []),
+        ...(key === 'home.xray.invite' || key === 'home.try.title' ? ['city'] : []),
         ...(base && /\.(?:zero|one|two)$/.test(key) ? ['count', 'kept'] : []),
       ]);
       const missingVars = expectedVars.filter((variable) =>
