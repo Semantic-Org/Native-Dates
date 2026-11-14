@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-14 after the locale work (`npm run size`, Brotli): 12.67 kB for everything in `native-dates`, 11.23 kB for `import { now }`, four plugins on top (`relative`, `zones`, `loose`, `legacy-date`).
+Sizes on 2026-11-14 after the locale work (`npm run size`, Brotli): 12.75 kB for everything in `native-dates`, 11.32 kB for `import { now }`, four plugins on top (`relative`, `zones`, `loose`, `legacy-date`).
 
 ## How to decide
 
@@ -28,7 +28,13 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 - When two values meet, the one the method was called on keeps its locale: `spanish.to(german)` is Spanish.
 - If week start comes to follow the locale, this stops being presentation only, since `startOf('week')` would then differ by locale. Decide the two together.
 
-Cost: 0.24 kB.
+Cost: 0.32 kB with the fixes from its review.
+
+Left as the contract does not say, for a decision if anyone asks:
+
+- A value with no locale takes one from the value it is combined with in some places and not others: `time('18:00').on(frenchDate)` is French, `hours(1).plus(spanishDuration)` is not Spanish.
+- `text` is in the value's locale, so two values that are `equals()` can differ under a deep-equality assertion.
+- A range written by a token pattern prints each end in its own locale.
 
 ## 2. Locale sweep
 
