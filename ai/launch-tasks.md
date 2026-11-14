@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-14 after the locale work (`npm run size`, Brotli): 12.47 kB for everything in `native-dates`, 11.05 kB for `import { now }`, four plugins on top (`relative`, `zones`, `loose`, `legacy-date`).
+Sizes on 2026-11-14 after the locale work (`npm run size`, Brotli): 12.67 kB for everything in `native-dates`, 11.23 kB for `import { now }`, four plugins on top (`relative`, `zones`, `loose`, `legacy-date`).
 
 ## How to decide
 
@@ -18,6 +18,17 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 - [ ] **Error codes.** Apps will route on `error.code`, so the codes freeze at 1.0. Read all of them once for naming. The reference is the sync repo: `../sync/ai/skills/author-error-messages.md` for the register and the six condition words (`missing`, `unknown`, `invalid`, `unsupported`, `duplicate`, `conflicting`), and `../sync/ai/reference/error-corpus.md` for worked lines. Take the register and the vocabulary. Leave whatever in it adds production bytes, since explanations here already fold out when `isDevelopment` is false and nothing more should ship.
 - [ ] **Relative time.** `formatRelative()` is a plugin at about 0.3 kB, and the cohort calls it `fromNow()` and `from()`. Decide the name, and whether it belongs in core by the same test that brought tokens in.
 - [ ] **Names worth one last read.** `monthDay.in(2027)` beside `datetime.in(zone)`. `after()` and `before()` beside `next()` and `previous()`. `as()` reaches five kinds where `kindOf()` reports more, so there is no `as('dateRange')`.
+
+### Decided: a locale rides on the value
+
+`value.locale('es')`, with `lang()` as a second spelling, returns the same value written in Spanish, and everything made from it stays Spanish: arithmetic, `.date` and `.time`, ranges, durations from `until()`, month-days and year-months. `locale()` with no argument reads it back. A factory takes it too, `date(input, { locale })`.
+
+- It is how a value is written and nothing else. Equality, order and JSON ignore it, and it has no tie to the zone.
+- `format(spec, locale)` still wins for one call, then the value's own, then `configure({ locale })`, then the runtime's.
+- When two values meet, the one the method was called on keeps its locale: `spanish.to(german)` is Spanish.
+- If week start comes to follow the locale, this stops being presentation only, since `startOf('week')` would then differ by locale. Decide the two together.
+
+Cost: 0.24 kB.
 
 ## 2. Locale sweep
 
@@ -95,7 +106,7 @@ Everything so far ran on Node 26 with native Temporal and was bundled with esbui
 - [ ] **Docs.** The site has to say 12 kB and four plugins everywhere, and show one import for ranges, tokens and the two date nouns. The root README is written by the maintainer by hand.
 - [ ] **`@see` links in the type files.** An editor shows a declaration's doc comment in autocomplete and on hover, so each public class, factory and method in `types/*.d.ts` and `packages/plugins/types/*.d.ts` gets a doc comment ending in a `@see {@link ...}` to its page on the live site, `https://nativedates.dev`, never the staging domain. None has one today. The conventions are in `../next/ai/skills/contributing/types.md`: the URL is the docs page's path (`docs/src/content/docs/api/calendar-date.md` is `https://nativedates.dev/api/calendar-date/`, with the trailing slash the site serves), a method links to its heading's anchor, and internal types are marked `@internal` and get no link. Do this after the docs pages for ranges, month-days and year-months have settled, since the links follow those paths, and check every anchor against the built page.
 - [ ] **When the polyfill is needed.** Node 26 is the first Node with Temporal and `engines` says so. The install page has to say plainly which browsers need `@native-dates/polyfill`.
-- [ ] **`configure()` on a server.** Zone and locale defaults are process-wide, which suits a browser and is a trap for a server answering many users. The docs should say to pass them per call there.
+- [ ] **Locales on a server.** `configure({ locale })` is process-wide, which suits a browser and is a trap for a server answering many users. A value now carries its own: `datetime(row.at, zone).locale(request.locale)` sets it once, and every value made from it keeps it. The docs should teach that for servers, and `configure()` for an app with one reader.
 
 ## When the polyfill is dropped
 
