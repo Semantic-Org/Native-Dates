@@ -209,6 +209,11 @@ class Range {
     return new byKind[kind](start, end);
   }
 
+  // a range is written in its start's locale
+  locale(tag) {
+    return tag === undefined ? this.start.locale() : this.#make(this.kind, this.start.locale(tag), this.end);
+  }
+
   equals(other) {
     const rival = this.#make(this.kind, other);
     return this.start.equals(rival.start) && this.end.equals(rival.end);
@@ -339,7 +344,7 @@ class Range {
               Output
   *******************************/
 
-  format(spec, locale) {
+  format(spec, locale = this.start.locale()) {
     const options = intlOptions(this.kind, spec);
     // a token pattern has no range form in Intl, so each end prints by it
     if (!options) {
@@ -410,6 +415,8 @@ export class TimeRange extends Range {
   }
   static kind = 'time';
 }
+
+Range.prototype.lang = Range.prototype.locale;
 
 const byKind = { date: DateRange, datetime: DateTimeRange, time: TimeRange };
 

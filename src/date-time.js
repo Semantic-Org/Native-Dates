@@ -17,6 +17,7 @@ import {
   isPlainDate,
   isPlainDateTime,
   isZonedDateTime,
+  localeOf,
   quarterStart,
   singularKeys,
   stepOf,
@@ -48,9 +49,11 @@ export class DateTime {
   }
 
   #zoned;
+  #locale;
 
   constructor(input, options) {
     const settings = zoneOptions(options);
+    this.#locale = localeOf(settings, input);
     this.#zoned =
       isZonedDateTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
@@ -166,6 +169,16 @@ export class DateTime {
     }
   }
 
+  // the locale this value is written in, or the same value written in another. it rides along through
+  // every method, so a chain names its language once: now().locale('es').plus(1, 'week').format('long')
+  locale(tag) {
+    return tag === undefined ? this.#locale : new DateTime(this.#zoned, { locale: tag });
+  }
+
+  #next(zoned) {
+    return new DateTime(zoned, { locale: this.#locale });
+  }
+
   /*******************************
               Reads
   *******************************/
@@ -208,10 +221,10 @@ export class DateTime {
     return this.#zoned.dayOfWeek < 6;
   }
   get date() {
-    return new CalendarDate(this.#zoned.toPlainDate());
+    return new CalendarDate(this.#zoned.toPlainDate(), { locale: this.#locale });
   }
   get time() {
-    return new Time(this.#zoned.toPlainTime());
+    return new Time(this.#zoned.toPlainTime(), { locale: this.#locale });
   }
   get monthDay() {
     return new MonthDay(this);
@@ -234,13 +247,13 @@ export class DateTime {
   *******************************/
 
   plus(amount, name) {
-    return new DateTime(
+    return this.#next(
       guard(() => this.#zoned.add(temporalDurationFrom(amount, name)), 'cannotAdd', `${amount} ${name ?? ''}`),
     );
   }
 
   minus(amount, name) {
-    return new DateTime(
+    return this.#next(
       guard(
         () => this.#zoned.subtract(temporalDurationFrom(amount, name)),
         'cannotSubtract',
@@ -251,7 +264,7 @@ export class DateTime {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return new DateTime(
+    return this.#next(
       guard(() => withParts(this.#zoned, changes), 'cannotSet', JSON.stringify(changes)),
     );
   }
@@ -261,7 +274,7 @@ export class DateTime {
   }
 
   in(zone) {
-    return new DateTime(this.#zoned.withTimeZone(zoneId(zone)));
+    return this.#next(this.#zoned.withTimeZone(zoneId(zone)));
   }
 
   // a week starts on the configured first day, or on the one given: a picker's first day is a prop
@@ -269,17 +282,17 @@ export class DateTime {
     const target = unit(name);
     switch (target) {
       case 'year':
-        return new DateTime(this.#zoned.with({ month: 1, day: 1 }).startOfDay());
+        return this.#next(this.#zoned.with({ month: 1, day: 1 }).startOfDay());
       case 'quarter':
-        return new DateTime(this.#zoned.with({ month: quarterStart(this.month), day: 1 }).startOfDay());
+        return this.#next(this.#zoned.with({ month: quarterStart(this.month), day: 1 }).startOfDay());
       case 'month':
-        return new DateTime(this.#zoned.with({ day: 1 }).startOfDay());
+        return this.#next(this.#zoned.with({ day: 1 }).startOfDay());
       case 'week':
-        return new DateTime(this.#zoned.subtract({ days: (this.weekday - weekStart(firstDay) + 7) % 7 }).startOfDay());
+        return this.#next(this.#zoned.subtract({ days: (this.weekday - weekStart(firstDay) + 7) % 7 }).startOfDay());
       case 'day':
-        return new DateTime(this.#zoned.startOfDay());
+        return this.#next(this.#zoned.startOfDay());
       default:
-        return new DateTime(this.#zoned.round({ smallestUnit: target, roundingMode: 'floor' }));
+        return this.#next(this.#zoned.round({ smallestUnit: target, roundingMode: 'floor' }));
     }
   }
 
@@ -303,7 +316,7 @@ export class DateTime {
 
   #round(increment, name, mode) {
     const [count, target] = isString(increment) && !isDigits(increment) ? [1, increment] : [Number(increment), name];
-    return new DateTime(
+    return this.#next(
       guard(
         () => this.#zoned.round({ smallestUnit: unit(target), roundingIncrement: count, roundingMode: mode }),
         'cannotRound',
@@ -396,7 +409,7 @@ export class DateTime {
   // with a unit, the total as a number
   until(other, name) {
     const end = new DateTime(other, this.zone);
-    const span = anchored(this.#zoned.until(end.toTemporal(), { largestUnit: 'year' }), this.#zoned);
+    const span = anchored(this.#zoned.until(end.toTemporal(), { largestUnit: 'year' }), this.#zoned, this.#locale);
     return name === undefined ? span : span.total(name);
   }
 
@@ -411,8 +424,8 @@ export class DateTime {
   format(spec, locale) {
     const options = intlOptions('datetime', spec);
     return options
-      ? formatIntl('datetime', this.epoch, options, locale, this.zone)
-      : formatTokens(this, 'datetime', spec, locale);
+      ? formatIntl('datetime', this.epoch, options, locale ?? this.#locale, this.zone)
+      : formatTokens(this, 'datetime', spec, locale ?? this.#locale);
   }
 
   // the instant in UTC, the form every database and API reads. the zone is a view and does not travel
@@ -451,6 +464,7 @@ export class DateTime {
 DateTime.prototype.add = DateTime.prototype.plus;
 DateTime.prototype.subtract = DateTime.prototype.minus;
 DateTime.prototype.remove = DateTime.prototype.minus;
+DateTime.prototype.lang = DateTime.prototype.locale;
 
 // with { loose: true } (via plugins/loose) an unreadable input is null, never a throw
 export const datetime = (input, options) => {

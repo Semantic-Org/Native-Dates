@@ -14,6 +14,7 @@ import {
   isPlainDate,
   isPlainDateTime,
   isZonedDateTime,
+  localeOf,
   namesInstant,
   plural,
   quarterStart,
@@ -47,6 +48,7 @@ export class CalendarDate {
   }
 
   #plain;
+  #locale;
 
   // date(2026, 9, 6), date(input, zone), or date(input, { zone, loose })
   constructor(input, monthOrOptions, day) {
@@ -58,6 +60,7 @@ export class CalendarDate {
       : isString(monthOrOptions)
       ? { zone: monthOrOptions }
       : {};
+    this.#locale = localeOf(settings, input);
     this.#plain =
       isPlainDate(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
@@ -169,6 +172,14 @@ export class CalendarDate {
     );
   }
 
+  locale(tag) {
+    return tag === undefined ? this.#locale : new CalendarDate(this.#plain, { locale: tag });
+  }
+
+  #next(plain) {
+    return new CalendarDate(plain, { locale: this.#locale });
+  }
+
   /*******************************
               Reads
   *******************************/
@@ -203,13 +214,13 @@ export class CalendarDate {
   *******************************/
 
   plus(amount, name) {
-    return new CalendarDate(
+    return this.#next(
       guard(() => this.#plain.add(CalendarDate.#dateFields(amount, name)), 'cannotAdd', `${amount} ${name ?? ''}`),
     );
   }
 
   minus(amount, name) {
-    return new CalendarDate(
+    return this.#next(
       guard(
         () => this.#plain.subtract(CalendarDate.#dateFields(amount, name)),
         'cannotSubtract',
@@ -233,7 +244,7 @@ export class CalendarDate {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return new CalendarDate(
+    return this.#next(
       guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
     );
   }
@@ -242,13 +253,13 @@ export class CalendarDate {
   startOf(name, firstDay) {
     switch (unit(name)) {
       case 'year':
-        return new CalendarDate(this.#plain.with({ month: 1, day: 1 }));
+        return this.#next(this.#plain.with({ month: 1, day: 1 }));
       case 'quarter':
-        return new CalendarDate(this.#plain.with({ month: quarterStart(this.month), day: 1 }));
+        return this.#next(this.#plain.with({ month: quarterStart(this.month), day: 1 }));
       case 'month':
-        return new CalendarDate(this.#plain.with({ day: 1 }));
+        return this.#next(this.#plain.with({ day: 1 }));
       case 'week':
-        return new CalendarDate(this.#plain.subtract({ days: (this.weekday - weekStart(firstDay) + 7) % 7 }));
+        return this.#next(this.#plain.subtract({ days: (this.weekday - weekStart(firstDay) + 7) % 7 }));
       case 'day':
         return this;
       default:
@@ -354,7 +365,7 @@ export class CalendarDate {
 
   until(other, name) {
     const end = new CalendarDate(other);
-    const span = anchored(this.#plain.until(end.toTemporal(), { largestUnit: 'year' }), this.#plain);
+    const span = anchored(this.#plain.until(end.toTemporal(), { largestUnit: 'year' }), this.#plain, this.#locale);
     return name === undefined ? span : span.total(name);
   }
 
@@ -364,7 +375,7 @@ export class CalendarDate {
 
   at(when, zone) {
     const plainTime = new Time(when ?? '00:00').toTemporal();
-    return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }));
+    return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }), { locale: this.#locale });
   }
 
   get monthDay() {
@@ -390,7 +401,9 @@ export class CalendarDate {
 
   format(spec, locale) {
     const options = intlOptions('date', spec);
-    return options ? formatIntl('date', this.#plain, options, locale) : formatTokens(this, 'date', spec, locale);
+    return options
+      ? formatIntl('date', this.#plain, options, locale ?? this.#locale)
+      : formatTokens(this, 'date', spec, locale ?? this.#locale);
   }
 
   toString() {
@@ -430,6 +443,7 @@ export class CalendarDate {
 CalendarDate.prototype.add = CalendarDate.prototype.plus;
 CalendarDate.prototype.subtract = CalendarDate.prototype.minus;
 CalendarDate.prototype.remove = CalendarDate.prototype.minus;
+CalendarDate.prototype.lang = CalendarDate.prototype.locale;
 
 export const date = (input, monthOrOptions, day) => {
   const build = () =>
