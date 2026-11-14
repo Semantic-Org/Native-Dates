@@ -1,6 +1,6 @@
 # 1.0 Launch Tasks
 
-What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: section 1 decides the surface, and everything after it tests, documents or measures that surface.
+What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
 Sizes when this was written (`npm run size`, Brotli): 12.13 kB for everything in `native-dates`, 10.69 kB for `import { now }`, four plugins on top (`relative`, `zones`, `loose`, `legacy-date`).
 
@@ -19,15 +19,29 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 - [ ] **Relative time.** `formatRelative()` is a plugin at about 0.3 kB, and the cohort calls it `fromNow()` and `from()`. Decide the name, and whether it belongs in core by the same test that brought tokens in.
 - [ ] **Names worth one last read.** `monthDay.in(2027)` beside `datetime.in(zone)`. `after()` and `before()` beside `next()` and `previous()`. `as()` reaches five kinds where `kindOf()` reports more, so there is no `as('dateRange')`.
 
-## 2. Tests
+## 2. Locale sweep
 
-The repo has had no tests on purpose, so nothing pinned the API while it moved. Once section 1 is settled that reason is gone, and this is the largest piece of work left.
+The docs will carry examples for each language, and may show a homepage section only to a reader who has picked that language. Those pages put every English-shaped corner on display, so find them first. The method that found the last two bugs is cheap: print one value in twenty locales and read the column.
+
+- [ ] **Sweep every output path across locales**: each preset on each noun, ranges of each kind, durations in each style, `text`, and token patterns. Include a right-to-left locale, one with its own digits, and one with its own calendar.
+- [ ] **Token `Do` prints English.** `format('Do', 'de')` gives `17th`. This is wrong output, so fix it if `Intl` can supply the ordinal cheaply, and otherwise decide what `Do` means outside English.
+- [ ] **Tokens `a` and `A` always print `am` and `pm`.** The presets print the locale's own. Same call as `Do`.
+- [ ] **Token `dd` is the first two letters of the short weekday name**, which is right in English and arbitrary elsewhere.
+- [ ] **Week start does not follow the locale.** It is Monday unless `configure({ weekStart })` says otherwise, so a calendar grid in a locale that starts on Sunday or Saturday is wrong by default. The platform knows each locale's first day.
+- [ ] **Loose parsing reads month names in English only.** `monthDay('17 octobre', { loose: true })` is `null`. Decide whether that is a gap or the meaning of loose.
+- [ ] **Calendars.** A Persian or Hebrew locale prints a full date in its own calendar, while `MonthDay` and `YearMonth` always print Gregorian months. That was chosen, and the example for such a language should show it on purpose.
+
+For the examples themselves: lead with presets and options bags, where the library is strongest in every locale, before token patterns.
+
+## 3. Tests
+
+The repo has had no tests on purpose, so nothing pinned the API while it moved. Once sections 1 and 2 are settled that reason is gone, and this is the largest piece of work left.
 
 - [ ] Write the suite against the settled surface, through the public factories and methods only.
 - [ ] Cover what was fixed by hand this month, since each was a real report: formatting a date or a time with a datetime's options, `date(datetime, zone)`, ISO strings with `Z`, loose rollover in every written shape, duration anchors, token patterns with a stray letter, a time range across midnight in a locale that is not English.
 - [ ] Run the same suite on `temporal-polyfill` and on a minified bundle, the two places behaviour could differ from source.
 
-## 3. Unverified
+## 4. Unverified
 
 Everything so far ran on Node 26 with native Temporal and was bundled with esbuild.
 
@@ -36,7 +50,7 @@ Everything so far ran on Node 26 with native Temporal and was bundled with esbui
 - [ ] **Types in a consumer project** under both `nodenext` and `bundler` resolution, and through the `@native-dates/core` alias. The type files re-export each other with `.js` specifiers.
 - [ ] **Performance.** No benchmark exists. Measure parsing, arithmetic and formatting in a loop against Day.js before someone else does.
 
-## 4. Release mechanics
+## 5. Release mechanics
 
 - [ ] **Versions.** All four packages say `0.0.6`. Nobody depends on the published ones, so there is nothing to migrate, but core, plugins, polyfill and the `@native-dates/core` alias need one number and matching peer ranges.
 - [ ] **Docs.** The site has to say 12 kB and four plugins everywhere, and show one import for ranges, tokens and the two date nouns. The root README is written by the maintainer by hand.
