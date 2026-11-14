@@ -185,6 +185,10 @@ export class CalendarDate {
               Reads
   *******************************/
 
+  // the day this value's weeks start on, 1 for monday through 7 for sunday
+  get weekStart() {
+    return weekStart(undefined, this.#locale);
+  }
   get quarter() {
     return Math.ceil(this.#plain.month / 3);
   }
