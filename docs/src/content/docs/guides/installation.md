@@ -88,4 +88,4 @@ configure({
 });
 ```
 
-Any individual call can still pass its own time zone, locale, or week start when needed. Next, read [Types of time](/guides/types-of-time/) to pick the right type for each value you work with.
+Any individual value or call can still carry its own time zone, [`locale()`](/api/date-time/#locale), or week start when needed. Next, read [Internationalization](/guides/internationalization/) to choose how your app localizes dates across browsers and servers.

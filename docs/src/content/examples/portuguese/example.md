@@ -7,7 +7,7 @@ try:
   - 'Set **Days** to **35** so the range crosses from May into June and prints both `de maio` and `de junho`.'
   - 'Edit **Typed date** to `25/12/2026` or `em breve` to compare day-first parsing against **Unreadable** input.'
 related:
-  - { title: Configure, href: /api/configure/ }
+  - { title: Internationalization, href: /guides/internationalization/ }
   - { title: DateTime, href: /api/date-time/ }
   - { title: loose, href: /plugins/loose/ }
 ---

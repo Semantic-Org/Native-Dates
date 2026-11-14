@@ -43,6 +43,9 @@ const fromDate = datetime(date('2026-11-16'), 'America/New_York');
     - name: zone
       type: Zone
       description: Time zone to view the moment in, overriding any bracketed zone in `input`.
+    - name: locale
+      type: Locale
+      description: BCP 47 locale tag carried on the returned `DateTime` and every value derived from it.
     - name: loose
       type: boolean
       default: 'false'

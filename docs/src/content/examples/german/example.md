@@ -7,7 +7,7 @@ try:
   - 'Pick **2027-01-04** in **Date** to watch the first Monday of January start `KW 1`.'
   - 'Set **Days** to **35** on **2026-05-01** so `range.format(''long'')` keeps ordinal periods across May and June.'
 related:
-  - { title: Configure, href: /api/configure/ }
+  - { title: Internationalization, href: /guides/internationalization/ }
   - { title: CalendarDate, href: /api/calendar-date/ }
   - { title: Ranges, href: /api/ranges/ }
 ---

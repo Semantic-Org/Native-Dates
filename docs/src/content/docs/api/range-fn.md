@@ -50,6 +50,9 @@ fromInterval.equals(fromEnds); // true
     - name: zone
       type: Zone
       description: Time zone used to extract calendar days from instant strings or `Date` objects.
+    - name: locale
+      type: Locale
+      description: BCP 47 locale tag carried on the returned range and its endpoints.
     - name: loose
       type: boolean
       default: 'false'

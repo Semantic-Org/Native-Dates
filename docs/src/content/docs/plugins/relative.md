@@ -66,7 +66,7 @@ Formats the distance from a reference point to this value. Omitting the referenc
   description: Reference moment or date to measure from, defaulting to now or today.
 - name: locale
   type: string
-  description: BCP 47 locale tag overriding the configured default for this call.
+  description: BCP 47 locale tag overriding this value's or the configured locale for one call.
 ```
 
 **Returns**

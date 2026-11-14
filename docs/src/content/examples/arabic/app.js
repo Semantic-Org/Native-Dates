@@ -18,6 +18,7 @@ function render() {
   if (!dayInput.value || !(total >= 1)) { return; }
   const day = date(dayInput.value);
   const span = day.to(day.plus(4, 'days'));
+  const maghreb = day.locale('ar-MA');
 
   const rows = [
     ['Six-way plural', '.text', rtl(days(total).text)],
@@ -26,7 +27,11 @@ function render() {
       ".format('long')",
       `${rtl(day.format('long'))} <span class="muted">·</span> ${rtl(span.format('long'))}`,
     ],
-    ['Maghrebi override', 'ar-MA', rtl(day.format('long', 'ar-MA'))],
+    [
+      'Maghrebi locale',
+      ".locale('ar-MA')",
+      `${rtl(maghreb.format('long'))} <span class="muted">·</span> ${rtl(maghreb.to(5, 'days').format('long'))}`,
+    ],
     [
       'Umm al-Qura Hijri',
       'ar-SA-u-ca-islamic-umalqura',
