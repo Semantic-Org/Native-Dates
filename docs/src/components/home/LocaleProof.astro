@@ -36,7 +36,7 @@ if (config) {
       <div class="locale-frame">
         <div class="locale-setup">
           <code class="locale-setup-code" set:html={setupCode} />
-          <span class="locale-setup-note">{config.setupNote}</span>
+          <p class="locale-setup-note" set:html={config.setupNote} />
         </div>
         <ul class="locale-proofs" role="list">
           {rows.map((row) => (

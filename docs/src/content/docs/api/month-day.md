@@ -4,7 +4,7 @@ kind: class
 lede: A calendar month and day with no year, for birthdays, anniversaries, and annual holidays.
 import: import { MonthDay } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating a MonthDay
@@ -370,7 +370,6 @@ oct17.format('MMM Do', 'en-US'); // 'Oct 17th'
 ```js signature
 md.locale(): Locale | undefined
 md.locale(tag): MonthDay
-md.lang(tag?): MonthDay | Locale | undefined
 ```
 
 Reads the locale carried on this month-day, or returns a copy formatted in another locale across text previews, presets, and every date derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
@@ -397,6 +396,17 @@ labourDay.locale(); // 'ru'
 labourDay.format('long'); // '1 мая'
 labourDay.in(2026).format('long'); // '1 мая 2026 г.'
 ```
+:::
+
+:::entry
+### `lang()` :kind[method]
+
+```js signature
+md.lang(): Locale | undefined
+md.lang(tag): MonthDay
+```
+
+Shorthand alias for [`locale()`](#locale) that reads or attaches a BCP 47 locale tag on this month-day.
 :::
 
 :::entry

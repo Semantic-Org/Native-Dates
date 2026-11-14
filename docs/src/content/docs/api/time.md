@@ -4,7 +4,7 @@ kind: class
 lede: A time of day with no calendar date and no time zone.
 import: import { Time } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating a Time
@@ -557,7 +557,6 @@ afternoon.format({ hour12: false }, 'en-US'); // '17:30'
 ```js signature
 t.locale(): Locale | undefined
 t.locale(tag): Time
-t.lang(tag?): Time | Locale | undefined
 ```
 
 Reads the locale carried on this time, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
@@ -584,6 +583,17 @@ closing.locale(); // 'ko-KR'
 closing.text; // '오후 5:30'
 closing.on('2026-05-01', 'Asia/Seoul').locale(); // 'ko-KR'
 ```
+:::
+
+:::entry
+### `lang()` :kind[method]
+
+```js signature
+t.lang(): Locale | undefined
+t.lang(tag): Time
+```
+
+Shorthand alias for [`locale()`](#locale) that reads or attaches a BCP 47 locale tag on this time.
 :::
 
 :::entry

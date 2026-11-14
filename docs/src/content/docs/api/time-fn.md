@@ -4,7 +4,7 @@ kind: function
 lede: Create a Time from a 12-hour or 24-hour clock string, numbers, fields, or a timestamp.
 import: import { time } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Reading clock times

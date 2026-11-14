@@ -4,7 +4,7 @@ kind: function
 lede: Create a DateRange, DateTimeRange, or TimeRange from endpoints, durations, or interval strings.
 import: import { dateRange, datetimeRange, timeRange } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating ranges
@@ -92,7 +92,7 @@ Creates a half-open [`DateTimeRange`](/api/ranges/#datetimerange) that includes 
   description: Exclusive end moment, duration length, or options object for an interval string.
 - name: options
   type: Zone | ReadOptions
-  description: Time zone or read options for both endpoints.
+  description: Time zone or read options such as `zone`, `locale`, or `loose` for both endpoints.
 ```
 
 **Returns**
@@ -135,7 +135,7 @@ Creates a half-open [`TimeRange`](/api/ranges/#timerange) between two times of d
   description: Exclusive end time, clock duration, or options object for an interval string.
 - name: options
   type: Zone | ReadOptions
-  description: Time zone or read options when extracting times from timestamps.
+  description: Time zone or read options such as `zone`, `locale`, or `loose` when extracting times from timestamps.
 ```
 
 **Returns**

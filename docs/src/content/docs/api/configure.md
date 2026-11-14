@@ -4,7 +4,7 @@ kind: function
 lede: Read or update process-wide defaults for time zone, locale, week start, and plugins.
 import: import { configure } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Global defaults

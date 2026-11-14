@@ -3,7 +3,7 @@ title: Ranges
 lede: Spans between two dates, moments, or times of day, with containment, overlap, and stepping.
 import: import { DateRange, DateTimeRange, TimeRange } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Range classes
@@ -440,7 +440,6 @@ timeRange('22:00', '06:00').format('HH:mm'); // '22:00 – 06:00'
 ```js signature
 range.locale(): Locale | undefined
 range.locale(tag): Range
-range.lang(tag?): Range | Locale | undefined
 ```
 
 Reads the locale carried on this range, or returns a copy formatted in another locale across text previews, presets, endpoints, and sub-ranges. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
@@ -467,6 +466,17 @@ stay.locale(); // 'de-DE'
 stay.format('medium'); // '01.–07.09.2026'
 stay.duration.text; // '7 Tage'
 ```
+:::
+
+:::entry
+### `lang()` :kind[method]
+
+```js signature
+range.lang(): Locale | undefined
+range.lang(tag): Range
+```
+
+Shorthand alias for [`locale()`](#locale) that reads or attaches a BCP 47 locale tag on this range.
 :::
 
 :::entry

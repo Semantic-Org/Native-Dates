@@ -4,7 +4,7 @@ kind: function
 lede: Read an ISO year-month string, card expiry, numbers, or date into a YearMonth.
 import: import { yearMonth, monthYear } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Reading year-months
@@ -96,7 +96,7 @@ ISO strings written as `'2026-11'` still read year-first under both functions, s
   description: Card-expiry string like `'11/26'`, any `YearMonthInput`, or 1-indexed `month` from 1 to 12.
 - name: options
   type: Zone | ReadOptions | number | string
-  description: Time zone or options object, or two-digit or four-digit `year` when `input` is the month.
+  description: Time zone, read options including `locale`, or a two-digit or four-digit `year` when passing two numbers.
 ```
 
 **Returns**

@@ -4,7 +4,7 @@ kind: plugin
 lede: Read-only `Date.prototype` getters and formatters on `DateTime` for incremental migration.
 import: import '@native-dates/plugins/legacy-date'
 size: legacy-date
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Migrating Date callers incrementally
