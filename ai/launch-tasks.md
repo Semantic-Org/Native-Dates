@@ -57,7 +57,7 @@ A review of that work, run across every locale ICU has, then found and fixed:
 - **`a` and `A` keep the locale's own case** outside English.
 - **Loose month names**: English is tried first, so `Mar 17` is March in a Finnish locale and not `marraskuu`. Names with combining marks read (`17 अक्टूबर`, `17 ตุลาคม`), as do `17 de octubre`, `noviembre de 2026` and shortened names like `5 mrt`.
 - **A list of locales** passed as an array built a new formatter on every call.
-- **An engine from before 2022 refuses a range that runs backwards**, so a time range across midnight falls back to printing each end.
+- **A range that runs backwards needs no fallback.** An engine from before 2022 refuses one, and no browser the library runs on is that old: Safari 27 on the polyfill was checked on a phone and formats it.
 
 Open, each a decision more than a bug:
 
@@ -100,7 +100,6 @@ Everything so far ran on Node 26 with native Temporal and was bundled with esbui
 
 Safari is the last browser without Temporal. Once it ships, `@native-dates/polyfill` has nothing left to do, and these go with it.
 
-- [ ] **The fallback in `Range.format()`** that prints each end of a range alone when `formatRange` throws on a start later than its end. Every engine with Temporal formats that range. Whether Safari on the polyfill needs it today is unchecked.
 - [ ] **The polyfill in the docs playground**: the hidden import in `docs/src/lib/examples.js`, its two import map entries, and the bundling step in `docs/scripts/sync-sandbox.mjs`.
 - [ ] **The epoch stand-ins for dates and times.** `epochOf()` turns a date or a time into a UTC timestamp so `Intl` can print it on any engine, and `ownOptions()` strips the parts that stand-in would leak. `Intl` takes a Temporal date or time directly and does both itself, but only where Temporal is native, since the polyfill loader does not patch `Intl`.
 - [ ] **`@native-dates/polyfill` itself**, and the install page's note on which browsers need it.
