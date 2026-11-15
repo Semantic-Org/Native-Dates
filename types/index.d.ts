@@ -70,6 +70,8 @@ export type Zone = string;
 export interface ReadOptions {
   /** The zone to read the value in (default: the configured zone, else the machine's) */
   zone?: Zone;
+  /** The locale the value is written in (default: the configured locale, else the runtime's) */
+  locale?: Locale;
 }
 
 /** Duration fields, plural, as Temporal spells them */
@@ -163,6 +165,8 @@ export class DateTime {
   readonly year: number;
   /** ISO, 1 for monday through 7 for sunday */
   readonly weekday: number;
+  /** The day this value's weeks start on, 1 for monday through 7 for sunday: the configured `weekStart`, else its locale's own */
+  readonly weekStart: number;
   readonly hour: number;
   readonly minute: number;
   readonly second: number;
@@ -262,6 +266,13 @@ export class DateTime {
 
   /** A preset ('short', 'medium', 'long', 'full', 'date', 'time', 'month', 'text') or an Intl options bag */
   format(spec?: FormatSpec, locale?: Locale): string;
+  /** The locale this value is written in, when one was set on it or on the value it came from */
+  locale(): Locale | undefined;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
+  /** Alias for `locale` */
+  lang(): Locale | undefined;
+  lang(tag: Locale | null | undefined): this;
   /** The instant in UTC, `'2026-09-06T14:30:00.000Z'` */
   toString(): string;
   toJSON(): string;
@@ -303,6 +314,8 @@ export class CalendarDate {
   readonly year: number;
   /** ISO, 1 for monday through 7 for sunday */
   readonly weekday: number;
+  /** The day this value's weeks start on, 1 for monday through 7 for sunday: the configured `weekStart`, else its locale's own */
+  readonly weekStart: number;
   readonly quarter: number;
   readonly dayOfYear: number;
   /** ISO week number */
@@ -377,6 +390,13 @@ export class CalendarDate {
   readonly yearMonth: YearMonth;
 
   format(spec?: FormatSpec, locale?: Locale): string;
+  /** The locale this value is written in, when one was set on it or on the value it came from */
+  locale(): Locale | undefined;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
+  /** Alias for `locale` */
+  lang(): Locale | undefined;
+  lang(tag: Locale | null | undefined): this;
   /** ISO 8601, `'2026-09-06'` */
   toString(): string;
   toJSON(): string;
@@ -456,6 +476,13 @@ export class Time {
   as(kind: 'time'): Time;
 
   format(spec?: FormatSpec, locale?: Locale): string;
+  /** The locale this value is written in, when one was set on it or on the value it came from */
+  locale(): Locale | undefined;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
+  /** Alias for `locale` */
+  lang(): Locale | undefined;
+  lang(tag: Locale | null | undefined): this;
   /** ISO 8601, `'17:30:00'` */
   toString(): string;
   toJSON(): string;
@@ -527,6 +554,13 @@ export class Duration {
 
   /** Words in the locale: `'2 hours, 30 minutes'`, `'2 hr, 30 min'`, `'2h 30m'`, `'2:30:00'` */
   format(style?: 'long' | 'short' | 'narrow' | 'digital', locale?: Locale): string;
+  /** The locale this value is written in, when one was set on it or on the value it came from */
+  locale(): Locale | undefined;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
+  /** Alias for `locale` */
+  lang(): Locale | undefined;
+  lang(tag: Locale | null | undefined): this;
   /** ISO 8601, `'PT1H30M'` */
   toString(): string;
   toJSON(): string;
@@ -538,6 +572,7 @@ export class Duration {
 
 /** Reads a phrase, an ISO string, a fields object, or a number with a unit. A bare number is milliseconds */
 export function duration(input: DurationInput, unit?: Unit): Duration;
+export function duration(input: DurationInput, options: { locale?: Locale; }): Duration;
 
 export function years(count: number | string): Duration;
 export function months(count: number | string): Duration;
@@ -603,15 +638,18 @@ export interface Settings {
   zone?: Zone | null;
   /** The default locale for formatting. Null resets to the runtime's */
   locale?: Locale | null;
-  /** The first day of the week for `startOf('week')` (default: monday) */
-  weekStart?: Weekday;
+  /**
+   * The first day of the week for `startOf('week')`, `range('week')` and `weekdayNames()`. Unset, it is the
+   * locale's own: sunday in the United States, monday in most of Europe. Null goes back to following the locale
+   */
+  weekStart?: Weekday | null;
 }
 
 /** Sets package-wide defaults once at app boot. Returns the settings in effect */
 export function configure(settings?: Settings): {
   zone: string | undefined;
   locale: string | undefined;
-  weekStart: number;
+  weekStart: number | undefined;
   dayFirst: boolean;
   zoneAliases: Record<string, string>;
 };

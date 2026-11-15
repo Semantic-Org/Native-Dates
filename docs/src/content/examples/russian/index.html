@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <h1>Russian month cases and plural counts</h1>
+  <div class="controls">
+    <label>Date <input id="day" type="date" value="2026-05-01"></label>
+    <label>Days <input id="count" type="number" min="1" max="100" value="21"></label>
+  </div>
+  <div class="presets">
+    <button type="button" data-count="1">1</button>
+    <button type="button" data-count="2">2</button>
+    <button type="button" data-count="5">5</button>
+    <button type="button" data-count="11">11</button>
+    <button type="button" data-count="21">21</button>
+  </div>
+  <ul id="output"></ul>
+</body>
+</html>

@@ -72,7 +72,7 @@ const normalize = (text) =>
 let index;
 const cities = () => {
   if (!index) {
-    const ids = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [];
+    const ids = Intl.supportedValuesOf('timeZone');
     index = {
       full: new Map(ids.map((id) => [normalize(id), id])),
       city: new Map(ids.map((id) => [normalize(id.split('/').pop()), id])),

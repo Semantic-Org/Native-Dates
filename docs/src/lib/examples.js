@@ -3,8 +3,10 @@ const RAW = import.meta.glob('../content/examples/*/*', { query: '?raw', import:
 
 // the zone picked in the preview's bar reaches an example as ?zone=, a sandbox detail the example's
 // code shouldn't carry: this module, imported first and folded away in app.js, makes it the default
-// zone before the app's own code runs
-const SANDBOX = `import { configure } from 'native-dates';
+// zone before the app's own code runs. it loads the polyfill first, which only downloads Temporal in
+// a browser that lacks it, so an example runs in Safari without saying so in its own code
+const SANDBOX = `import '@native-dates/polyfill';
+import { configure } from 'native-dates';
 
 const zone = new URLSearchParams(location.search).get('zone');
 if (zone) { configure({ zone }); }

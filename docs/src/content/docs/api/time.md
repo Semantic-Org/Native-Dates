@@ -4,7 +4,7 @@ kind: class
 lede: A time of day with no calendar date and no time zone.
 import: import { Time } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating a Time
@@ -530,7 +530,7 @@ Options objects ignore date and zone keys, so one shared options object can form
   description: Preset name such as `'short'` or `'LTS'`, `Intl` options object, or token pattern.
 - name: locale
   type: string
-  description: BCP 47 locale tag overriding the configured default for this call.
+  description: BCP 47 locale tag overriding this time's or the configured locale for one call.
 ```
 
 **Returns**
@@ -549,6 +549,51 @@ afternoon.format('HH:mm:ss'); // '17:30:15'
 afternoon.format('h:mm a'); // '5:30 pm'
 afternoon.format({ hour12: false }, 'en-US'); // '17:30'
 ```
+:::
+
+:::entry
+### `locale()` :kind[method]
+
+```js signature
+t.locale(): Locale | undefined
+t.locale(tag): Time
+```
+
+Reads the locale carried on this time, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+
+**Parameters**
+
+```params
+- name: tag
+  type: Locale | null | undefined
+  description: BCP 47 locale tag to carry forward, or `null` to clear an existing tag.
+```
+
+**Returns**
+
+```returns
+type: Time | Locale | undefined
+description: The active tag when called with no arguments, or a new `Time` carrying `tag`.
+```
+
+```js
+const closing = time('17:30').locale('ko-KR');
+
+closing.locale(); // 'ko-KR'
+closing.text; // '오후 5:30'
+closing.on('2026-05-01', 'Asia/Seoul').locale(); // 'ko-KR'
+```
+:::
+
+:::entry
+### `lang()` :kind[method]
+
+```js signature
+t.lang(): Locale | undefined
+t.lang(tag): Time
+```
+
+Shorthand alias for [`locale()`](#locale) that reads or attaches a BCP 47 locale tag on this time.
 :::
 
 :::entry

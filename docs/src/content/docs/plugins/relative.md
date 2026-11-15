@@ -4,7 +4,7 @@ kind: plugin
 lede: Human-readable relative phrases like `'3 hours ago'`, `'yesterday'`, and `'in 2 weeks'` via `Intl.RelativeTimeFormat`.
 import: import '@native-dates/plugins/relative'
 size: relative
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Relative formatting
@@ -66,7 +66,7 @@ Formats the distance from a reference point to this value. Omitting the referenc
   description: Reference moment or date to measure from, defaulting to now or today.
 - name: locale
   type: string
-  description: BCP 47 locale tag overriding the configured default for this call.
+  description: BCP 47 locale tag overriding this value's or the configured locale for one call.
 ```
 
 **Returns**

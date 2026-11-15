@@ -1,7 +1,7 @@
 ---
 title: Formatting
 lede: Format dates, times, ranges, and durations with Intl presets, locale tags, token patterns, and relative phrases.
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 Native Dates uses the platform's built-in `Intl` formatters and caches them automatically. You get localized output across languages and regions without adding locale files to your bundle.
@@ -61,16 +61,17 @@ span.format('digital', 'en-US'); // '2:15:00'
 
 ## Locales and Intl options
 
-Pass a BCP 47 locale tag as the second argument to format a single call in another language. To change the default across your app, call [`configure()`](/api/configure/) at startup:
+Set a default once with [`configure()`](/api/configure/), attach a language to a value and everything derived from it with [`locale()`](/api/date-time/#locale), or pass a BCP 47 tag to `format()` for a single call. Read [Internationalization](/guides/internationalization/) for guidance on client apps versus multi-user servers:
 
 ```js
 import { configure, datetime } from 'native-dates';
 
 const standup = datetime('2026-11-16T09:30', 'Europe/Berlin');
-standup.format('long', 'de-DE'); // '16. November 2026 um 09:30'
+standup.locale('de-DE').plus(1, 'week').format('long'); // '23. November 2026 um 09:30'
 standup.format('long', 'ja-JP'); // '2026年11月16日 9:30'
 
 configure({ locale: 'en-GB' });
+configure({ locale: null });
 ```
 
 When none of the presets fit your layout, pass an options object directly to the underlying formatter:
@@ -82,6 +83,17 @@ const day = date('2026-11-16');
 
 day.format({ weekday: 'long' }, 'en-US'); // 'Monday'
 day.format({ month: 'short', day: 'numeric' }, 'en-US'); // 'Nov 16'
+```
+
+Because each type carries only its own fields, presets adapt to local grammar, plurals, scripts, and calendars without locale files. See the [language examples](/examples/) to check specific edge cases in your target language:
+
+```js
+import { date, days, yearMonth } from 'native-dates';
+
+date('2019-05-01').format('long', 'ja-u-ca-japanese'); // '令和元年5月1日'
+yearMonth('2026-05').format('long', 'ru'); // 'май 2026 г.'
+date('2026-05-01').format('long', 'ru'); // '1 мая 2026 г.'
+days(2).format('long', 'ar'); // 'يومان'
 ```
 
 :::tip[Human display vs wire strings]
@@ -142,6 +154,7 @@ Core also exports [`monthNames()`](/api/month-names/) and its weekday counterpar
 import { monthNames, weekdayNames } from 'native-dates';
 
 monthNames('short', 'en-US'); // ['Jan', 'Feb', 'Mar', ...]
+weekdayNames('short', undefined, 'en-US'); // ['Sun', 'Mon', 'Tue', ...]
 weekdayNames('short', 'monday', 'en-US'); // ['Mon', 'Tue', 'Wed', ...]
 ```
 

@@ -32,7 +32,7 @@ const lede = t(locale, 'examples.lede');
     <p class="doc-lede">{lede}</p>
 
     {groups.map((g) => (
-      <section class="example-group">
+      <section class="example-group" id={g.name.split('.').at(-1)}>
         <h2 class="example-group-label">{t(locale, g.name)}</h2>
         <ul class="example-cards" role="list">
           {g.items.map((it) => (

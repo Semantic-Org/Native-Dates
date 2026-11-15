@@ -1,0 +1,59 @@
+---
+// bespoke section shown on localized homepages: names the date and grammar traps native speakers of
+// that language look for first, prints the library's own output at build, and links to the live example
+import * as library from 'native-dates';
+
+import { HOME_LOCALES } from '../../data/home-locales.js';
+import { localeOf, localePath } from '../../lib/i18n.js';
+import { highlight } from '../../scripts/site.js';
+
+const locale = Astro.props.locale ?? Astro.currentLocale;
+const config = HOME_LOCALES[locale];
+const dir = localeOf(locale).dir;
+const setupCode = config ? highlight(`configure({ locale: '${config.configuredLocale}' });`) : '';
+let rows = [];
+if (config) {
+  try {
+    library.configure({ locale: config.configuredLocale });
+    rows = config.proofs.map((proof) => ({
+      ...proof,
+      highlighted: highlight(proof.code),
+      output: proof.run(library),
+    }));
+  }
+  finally {
+    library.configure({ locale: null });
+  }
+}
+---
+{config && (
+  <section class="ribbon" lang={locale} dir={dir}>
+    <div class="container">
+      <div class="ribbon-head">
+        <h2>{config.title}</h2>
+        <p>{config.lede}</p>
+      </div>
+      <div class="locale-frame">
+        <div class="locale-setup">
+          <code class="locale-setup-code" set:html={setupCode} />
+          <p class="locale-setup-note" set:html={config.setupNote} />
+        </div>
+        <ul class="locale-proofs" role="list">
+          {rows.map((row) => (
+            <li class="locale-proof">
+              <div class="locale-proof-copy">
+                <h3>{row.label}</h3>
+                <p>{row.note}</p>
+              </div>
+              <div class="locale-proof-sample">
+                <code class="locale-proof-code" set:html={row.highlighted} />
+                <output class="locale-proof-out"><bdi dir={dir}>{row.output}</bdi></output>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <a class="text-link" href={localePath(`/${config.exampleSlug}/`, locale)}>{config.linkLabel}</a>
+    </div>
+  </section>
+)}

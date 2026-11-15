@@ -4,7 +4,7 @@ kind: function
 lede: Create a Duration from a human phrase, an ISO 8601 duration, a count and unit, or unit helpers.
 import: import { duration, hours } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating durations
@@ -44,8 +44,16 @@ ms.milliseconds; // 1500
   required: true
   description: Number paired with `unit`, duration phrase, ISO 8601 string, fields object, `Duration`, or milliseconds.
 - name: unitOrOptions
-  type: "Unit | { loose?: boolean }"
-  description: "Unit name when `input` is a numeric count, or loose options with `@native-dates/plugins/loose`."
+  type: "Unit | { locale?: Locale, loose?: boolean }"
+  description: Unit name when `input` is a numeric count, or an options object.
+  options:
+    - name: locale
+      type: Locale
+      description: BCP 47 locale tag carried on the returned `Duration` and every value derived from it.
+    - name: loose
+      type: boolean
+      default: 'false'
+      description: "Return `null` on unreadable input with `@native-dates/plugins/loose`."
 ```
 
 **Returns**

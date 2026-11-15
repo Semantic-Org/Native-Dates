@@ -21,6 +21,7 @@ export const SECTIONS = [
         items: [
           { title: 'Overview', slug: 'guides/overview' },
           { title: 'Installation', slug: 'guides/installation' },
+          { title: 'Internationalization', slug: 'guides/internationalization' },
         ],
       },
       {
@@ -116,6 +117,20 @@ export const SECTIONS = [
         ...named('nav.group.calendars'),
         items: [
           { title: 'A month grid', slug: 'examples/month-grid' },
+        ],
+      },
+      {
+        ...named('nav.group.languages'),
+        items: [
+          { title: 'Japanese', slug: 'examples/japanese' },
+          { title: 'Chinese', slug: 'examples/chinese' },
+          { title: 'Korean', slug: 'examples/korean' },
+          { title: 'Arabic', slug: 'examples/arabic' },
+          { title: 'Russian', slug: 'examples/russian' },
+          { title: 'Spanish', slug: 'examples/spanish' },
+          { title: 'Portuguese', slug: 'examples/portuguese' },
+          { title: 'French', slug: 'examples/french' },
+          { title: 'German', slug: 'examples/german' },
         ],
       },
     ],

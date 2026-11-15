@@ -1,0 +1,14 @@
+{
+  "$reviewed": false,
+  "language.label": "语言",
+  "language.untranslated": "本页尚未翻译成简体中文，因此以英文显示。",
+  "language.stale": "英文原文在本页翻译之后有过改动，译文可能已落后。",
+  "language.draft": "本页为机器翻译，尚未经过审校。",
+  "language.readEnglish": "阅读英文版",
+  "language.offer": "本页提供简体中文版。",
+  "language.go": "阅读简体中文版",
+  "language.dismiss": "关闭",
+  "language.remember": "以后始终用简体中文打开本文档？",
+  "language.remember.yes": "始终",
+  "language.remember.no": "暂不"
+}

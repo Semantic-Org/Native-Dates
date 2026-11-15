@@ -5,7 +5,7 @@ import { IS_MONTH_DAY } from './helpers/identity.js';
 import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
 import { formatTokens } from './helpers/tokens.js';
 import { isDevelopment, isObject, isPlainObject, isString } from './helpers/types.js';
-import { inspect, isCount, isDigits, isPlainDate, singularKeys, zoneOptions } from './helpers/units.js';
+import { inspect, isCount, isDigits, isPlainDate, localeOf, singularKeys, zoneOptions } from './helpers/units.js';
 import { zoneId } from './helpers/zones.js';
 
 /*
@@ -21,8 +21,9 @@ const isoParts = /^(\d{2})-(\d{2})$/;
 // which part leads is for the word that reads it to say
 const twoParts = /^(\d{1,2})[-/.](\d{1,2})$/;
 
-// a month by its English name and a day, in either order: 'Oct 17', '17th October', 'Oct. 17,'
-const nameAndDay = /^(?:([a-z]{3,9})\.?,?\s+(\d{1,2})(?:st|nd|rd|th)?|(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]{3,9})\.?),?$/i;
+// a month by its name and a day, in either order: 'Oct 17', '17th October', '17. Oktober', '17 de octubre'
+const nameAndDay =
+  /^(?:([\p{L}\p{M}]{3,})\.?,?\s+(\d{1,2})(?:st|nd|rd|th|\.)?|(\d{1,2})(?:st|nd|rd|th|\.)?\s+(?:de\s+)?([\p{L}\p{M}]{3,})\.?),?$/iu;
 
 // a leap year to stand on, so Feb 29 has a day in it. Temporal keeps 1972 for the same reason
 const leapYear = 1972;
@@ -44,10 +45,12 @@ export class MonthDay {
   };
 
   #plain;
+  #locale;
 
   // monthDay(10, 17), monthDay(input, zone), or monthDay(input, { zone, loose, dayFirst })
   constructor(input, dayOrOptions) {
     this.#plain = MonthDay.#read(input, dayOrOptions);
+    this.#locale = localeOf(dayOrOptions, input);
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it, and filled once the parts it reads are in
     this.text = undefined;
@@ -189,6 +192,7 @@ export class MonthDay {
     }
     return new CalendarDate(
       guard(() => this.#plain.toPlainDate({ year: count }), 'unreadableDate', `${count}-${this}`),
+      { locale: this.#locale },
     );
   }
 
@@ -198,7 +202,7 @@ export class MonthDay {
     const from = MonthDay.#dayOf(day);
     const thisYear = MonthDay.#placed(this.#plain, from.year);
     return thisYear && Temporal.PlainDate.compare(thisYear, from) > 0
-      ? new CalendarDate(thisYear)
+      ? new CalendarDate(thisYear, { locale: this.#locale })
       : this.in(from.year + 1);
   }
 
@@ -206,7 +210,7 @@ export class MonthDay {
     const from = MonthDay.#dayOf(day);
     const thisYear = MonthDay.#placed(this.#plain, from.year);
     return thisYear && Temporal.PlainDate.compare(thisYear, from) < 0
-      ? new CalendarDate(thisYear)
+      ? new CalendarDate(thisYear, { locale: this.#locale })
       : this.in(from.year - 1);
   }
 
@@ -265,7 +269,12 @@ export class MonthDay {
               Output
   *******************************/
 
-  format(spec = 'medium', locale) {
+  // the locale this value is written in, or the same value written in another. an unset tag clears it
+  locale(...tag) {
+    return tag.length ? new MonthDay(this.#plain, { locale: tag[0] }) : this.#locale;
+  }
+
+  format(spec = 'medium', locale = this.#locale) {
     const options = partOptions(spec, ['month', 'day'], MonthDay.presets);
     return options
       ? partFormatter(options, locale).format(epochOf('date', { year: leapYear, month: this.month, day: this.day }))
@@ -301,6 +310,8 @@ export class MonthDay {
     return `MonthDay(${this.#plain})`;
   }
 }
+
+MonthDay.prototype.lang = MonthDay.prototype.locale;
 
 const unread = new Set([...unreadable.point, 'unreadableMonthDay', 'notAMonthDay']);
 

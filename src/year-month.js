@@ -11,6 +11,7 @@ import {
   isCount,
   isDigits,
   isPlainDate,
+  localeOf,
   plural,
   singularKeys,
   unit,
@@ -30,8 +31,8 @@ const noDay = /^[+-]?\d{4,6}-\d{2}$/;
 // a month and a year in the order a card prints them, '11/26' or '11/2026'
 const monthFirst = /^(\d{1,2})[-/.](\d{2}|\d{4})$/;
 
-// a month by its English name and a year, in either order: 'Nov 2026', '2026 November'
-const nameAndYear = /^(?:([a-z]{3,9})\.?,?\s+(\d{4})|(\d{4})\s+([a-z]{3,9})\.?)$/i;
+// a month by its name and a year, in either order: 'Nov 2026', '2026 November', 'novembre 2026'
+const nameAndYear = /^(?:([\p{L}\p{M}]{3,})\.?,?\s+(?:de\s+)?(\d{4})|(\d{4})\s+([\p{L}\p{M}]{3,})\.?)$/iu;
 
 // the units below a month, which a year-month has no room for
 const smaller = units.slice(2);
@@ -56,10 +57,12 @@ export class YearMonth {
   static century = 2000;
 
   #plain;
+  #locale;
 
   // yearMonth(2026, 11), yearMonth(input, zone), or yearMonth(input, { zone, loose })
   constructor(input, monthOrOptions) {
     this.#plain = YearMonth.#read(input, monthOrOptions);
+    this.#locale = localeOf(monthOrOptions, input);
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it, and filled once the parts it reads are in
     this.text = undefined;
@@ -184,13 +187,13 @@ export class YearMonth {
   *******************************/
 
   plus(amount, name) {
-    return new YearMonth(
+    return this.#next(
       guard(() => this.#plain.add(YearMonth.#monthFields(amount, name)), 'cannotAdd', `${amount} ${name ?? ''}`),
     );
   }
 
   minus(amount, name) {
-    return new YearMonth(
+    return this.#next(
       guard(
         () => this.#plain.subtract(YearMonth.#monthFields(amount, name)),
         'cannotSubtract',
@@ -221,7 +224,7 @@ export class YearMonth {
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
     YearMonth.#refuseSmaller(smaller.find((part) => part in changes));
-    return new YearMonth(
+    return this.#next(
       guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
     );
   }
@@ -234,7 +237,7 @@ export class YearMonth {
         explanation: isDevelopment ? 'a day is a whole number from 1 through 31: yearMonth.on(15)' : 0,
       });
     }
-    return new CalendarDate(this.#plain.toPlainDate({ day: count }));
+    return new CalendarDate(this.#plain.toPlainDate({ day: count }), { locale: this.#locale });
   }
 
   /*******************************
@@ -286,19 +289,27 @@ export class YearMonth {
   }
 
   since(other, name) {
-    const rival = other instanceof YearMonth ? other : new YearMonth(other);
-    return rival.until(this, name);
+    return new YearMonth(other, { locale: this.#locale }).until(this, name);
   }
 
   as(kind) {
     return readAs(kind, { yearMonth: () => this });
   }
 
+  #next(plain) {
+    return new YearMonth(plain, { locale: this.#locale });
+  }
+
   /*******************************
               Output
   *******************************/
 
-  format(spec = 'medium', locale) {
+  // the locale this value is written in, or the same value written in another. an unset tag clears it
+  locale(...tag) {
+    return tag.length ? new YearMonth(this.#plain, { locale: tag[0] }) : this.#locale;
+  }
+
+  format(spec = 'medium', locale = this.#locale) {
     const options = partOptions(spec, ['year', 'month', 'era'], YearMonth.presets);
     return options
       ? partFormatter(options, locale).format(epochOf('date', { year: this.year, month: this.month, day: 1 }))
@@ -338,6 +349,7 @@ export class YearMonth {
 YearMonth.prototype.add = YearMonth.prototype.plus;
 YearMonth.prototype.subtract = YearMonth.prototype.minus;
 YearMonth.prototype.remove = YearMonth.prototype.minus;
+YearMonth.prototype.lang = YearMonth.prototype.locale;
 
 const unread = new Set([...unreadable.point, 'unreadableYearMonth', 'notAYearMonth']);
 

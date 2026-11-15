@@ -1,0 +1,14 @@
+{
+  "$reviewed": false,
+  "language.label": "言語",
+  "language.untranslated": "このページはまだ日本語に翻訳されていないため、英語で表示しています。",
+  "language.stale": "翻訳後に英語版のページが更新されたため、内容が古い可能性があります。",
+  "language.draft": "このページは機械翻訳で、まだレビューされていません。",
+  "language.readEnglish": "英語で読む",
+  "language.offer": "このページは日本語で読めます。",
+  "language.go": "日本語で読む",
+  "language.dismiss": "閉じる",
+  "language.remember": "今後もこのドキュメントを日本語で開きますか？",
+  "language.remember.yes": "常に開く",
+  "language.remember.no": "今はしない"
+}

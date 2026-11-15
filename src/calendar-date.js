@@ -14,6 +14,7 @@ import {
   isPlainDate,
   isPlainDateTime,
   isZonedDateTime,
+  localeOf,
   namesInstant,
   plural,
   quarterStart,
@@ -47,6 +48,7 @@ export class CalendarDate {
   }
 
   #plain;
+  #locale;
 
   // date(2026, 9, 6), date(input, zone), or date(input, { zone, loose })
   constructor(input, monthOrOptions, day) {
@@ -58,6 +60,7 @@ export class CalendarDate {
       : isString(monthOrOptions)
       ? { zone: monthOrOptions }
       : {};
+    this.#locale = localeOf(settings, input);
     this.#plain =
       isPlainDate(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
@@ -169,10 +172,23 @@ export class CalendarDate {
     );
   }
 
+  // the locale this value is written in, or the same value written in another. an unset tag clears it
+  locale(...tag) {
+    return tag.length ? new CalendarDate(this.#plain, { locale: tag[0] }) : this.#locale;
+  }
+
+  #next(plain) {
+    return new CalendarDate(plain, { locale: this.#locale });
+  }
+
   /*******************************
               Reads
   *******************************/
 
+  // the day this value's weeks start on, 1 for monday through 7 for sunday
+  get weekStart() {
+    return weekStart(undefined, this.#locale);
+  }
   get quarter() {
     return Math.ceil(this.#plain.month / 3);
   }
@@ -203,13 +219,13 @@ export class CalendarDate {
   *******************************/
 
   plus(amount, name) {
-    return new CalendarDate(
+    return this.#next(
       guard(() => this.#plain.add(CalendarDate.#dateFields(amount, name)), 'cannotAdd', `${amount} ${name ?? ''}`),
     );
   }
 
   minus(amount, name) {
-    return new CalendarDate(
+    return this.#next(
       guard(
         () => this.#plain.subtract(CalendarDate.#dateFields(amount, name)),
         'cannotSubtract',
@@ -233,7 +249,7 @@ export class CalendarDate {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return new CalendarDate(
+    return this.#next(
       guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
     );
   }
@@ -242,13 +258,13 @@ export class CalendarDate {
   startOf(name, firstDay) {
     switch (unit(name)) {
       case 'year':
-        return new CalendarDate(this.#plain.with({ month: 1, day: 1 }));
+        return this.#next(this.#plain.with({ month: 1, day: 1 }));
       case 'quarter':
-        return new CalendarDate(this.#plain.with({ month: quarterStart(this.month), day: 1 }));
+        return this.#next(this.#plain.with({ month: quarterStart(this.month), day: 1 }));
       case 'month':
-        return new CalendarDate(this.#plain.with({ day: 1 }));
+        return this.#next(this.#plain.with({ day: 1 }));
       case 'week':
-        return new CalendarDate(this.#plain.subtract({ days: (this.weekday - weekStart(firstDay) + 7) % 7 }));
+        return this.#next(this.#plain.subtract({ days: (this.weekday - weekStart(firstDay, this.#locale) + 7) % 7 }));
       case 'day':
         return this;
       default:
@@ -266,7 +282,7 @@ export class CalendarDate {
   // around each year and finds its own occurrence. either way this day itself never counts
   next(target) {
     if (target?.[IS_MONTH_DAY]) {
-      return target.after(this);
+      return this.#next(target.after(this).toTemporal());
     }
     const delta = (weekdayNumber(target) - this.weekday + 7) % 7 || 7;
     return this.plus({ days: delta });
@@ -274,7 +290,7 @@ export class CalendarDate {
 
   previous(target) {
     if (target?.[IS_MONTH_DAY]) {
-      return target.before(this);
+      return this.#next(target.before(this).toTemporal());
     }
     const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
@@ -325,7 +341,9 @@ export class CalendarDate {
     if (name === undefined) {
       return this.equals(other);
     }
-    return this.startOf(name, firstDay).equals(new CalendarDate(other).startOf(name, firstDay));
+    // one first day for both sides, this value's, so the question is asked of one week
+    const first = weekStart(firstDay, this.#locale);
+    return this.startOf(name, first).equals(new CalendarDate(other).startOf(name, first));
   }
 
   isPast(zone) {
@@ -354,17 +372,17 @@ export class CalendarDate {
 
   until(other, name) {
     const end = new CalendarDate(other);
-    const span = anchored(this.#plain.until(end.toTemporal(), { largestUnit: 'year' }), this.#plain);
+    const span = anchored(this.#plain.until(end.toTemporal(), { largestUnit: 'year' }), this.#plain, this.#locale);
     return name === undefined ? span : span.total(name);
   }
 
   since(other, name) {
-    return new CalendarDate(other).until(this, name);
+    return new CalendarDate(other, { locale: this.#locale }).until(this, name);
   }
 
   at(when, zone) {
     const plainTime = new Time(when ?? '00:00').toTemporal();
-    return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }));
+    return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }), { locale: this.#locale });
   }
 
   get monthDay() {
@@ -388,7 +406,7 @@ export class CalendarDate {
               Output
   *******************************/
 
-  format(spec, locale) {
+  format(spec, locale = this.#locale) {
     const options = intlOptions('date', spec);
     return options ? formatIntl('date', this.#plain, options, locale) : formatTokens(this, 'date', spec, locale);
   }
@@ -430,6 +448,7 @@ export class CalendarDate {
 CalendarDate.prototype.add = CalendarDate.prototype.plus;
 CalendarDate.prototype.subtract = CalendarDate.prototype.minus;
 CalendarDate.prototype.remove = CalendarDate.prototype.minus;
+CalendarDate.prototype.lang = CalendarDate.prototype.locale;
 
 export const date = (input, monthOrOptions, day) => {
   const build = () =>
