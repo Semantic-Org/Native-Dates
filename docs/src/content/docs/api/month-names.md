@@ -4,7 +4,7 @@ kind: function
 lede: Return localized month and weekday label arrays for calendar headers and menus.
 import: import { monthNames, weekdayNames } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Calendar labels
@@ -57,7 +57,7 @@ monthNames('long', 'fr-FR').slice(0, 3);
 weekdayNames(style?, firstDay?, locale?): string[]
 ```
 
-Returns an array of 7 localized weekday labels rotated to begin on `firstDay`, or on the configured week start from [`configure()`](/api/configure/).
+Returns an array of 7 localized weekday labels rotated to begin on `firstDay`, the configured `weekStart` from [`configure()`](/api/configure/), or the active locale's first day of the week.
 
 Week boundaries in `startOf('week')` and week ranges follow the same first-day rule, so calendar headers always match week grids.
 
@@ -80,19 +80,22 @@ Week boundaries in `startOf('week')` and week ranges follow the same first-day r
 
 ```returns
 type: string[]
-description: Seven weekday labels starting on `firstDay` or the configured `weekStart`.
+description: Seven weekday labels starting on `firstDay`, the configured `weekStart`, or the locale's first day.
 ```
 
 ```js
 import { date, weekdayNames } from 'native-dates';
 
+weekdayNames('short', undefined, 'en-US');
+// ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+weekdayNames('short', undefined, 'de-DE');
+// ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+
 weekdayNames('short', 'monday', 'en-US');
 // ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-weekdayNames('short', 'sunday', 'en-US');
-// ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-const daysInGrid = date('2026-11-18').range('week', 'sunday').points('day');
-daysInGrid[0].format({ weekday: 'short' }, 'en-US'); // 'Sun'
+const daysInGrid = date('2026-11-18', { locale: 'en-US' }).range('week').points('day');
+daysInGrid[0].format({ weekday: 'short' }); // 'Sun'
 ```
 :::

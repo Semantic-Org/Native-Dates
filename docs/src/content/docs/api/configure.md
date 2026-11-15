@@ -4,7 +4,7 @@ kind: function
 lede: Read or update process-wide defaults for time zone, locale, week start, and plugins.
 import: import { configure } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Global defaults
@@ -18,7 +18,7 @@ configure(settings?): ActiveSettings
 
 Updates one or more process-wide defaults and returns a snapshot of the active configuration. Calling it with no arguments reads the current settings without changing them.
 
-Omitted properties keep their current values. Pass `null` for the time zone or locale to restore the runtime's local defaults.
+Omitted properties keep their current values. Pass `null` for the time zone, locale, or week start to restore the runtime and locale defaults.
 
 ```js title="setup.js"
 import { configure, date, datetime } from 'native-dates';
@@ -26,15 +26,18 @@ import { configure, date, datetime } from 'native-dates';
 configure({
   zone: 'Europe/Berlin',
   locale: 'de-DE',
-  weekStart: 'sunday',
 });
 
 datetime('2026-11-16T17:30:00Z').zone; // 'Europe/Berlin'
+date('2026-11-18').startOf('week').toString(); // '2026-11-16'
+configure().weekStart; // undefined
+
+configure({ weekStart: 'sunday' });
 date('2026-11-18').startOf('week').toString(); // '2026-11-15'
 configure().weekStart; // 7
 
-// Reset back to the runtime time zone, runtime locale, and Monday
-configure({ zone: null, locale: null, weekStart: 'monday' });
+// reset back to the runtime zone, runtime locale, and locale week start
+configure({ zone: null, locale: null, weekStart: null });
 ```
 
 **Parameters**
@@ -49,11 +52,10 @@ configure({ zone: null, locale: null, weekStart: 'monday' });
       description: Default time zone for factories and `now()`. Pass `null` to reset to the runtime's local zone.
     - name: locale
       type: Locale | null
-      description: Default BCP 47 locale tag for `format()` and `text`. Pass `null` to reset to the runtime's locale.
+      description: Default BCP 47 locale tag for formatting and week boundaries. Pass `null` to reset to the runtime's locale.
     - name: weekStart
-      type: Weekday
-      default: '1'
-      description: First day of the week for week boundaries, from 1 for Monday through 7 for Sunday.
+      type: Weekday | null
+      description: First day of the week for week boundaries and `weekdayNames()`, from 1 for Monday through 7 for Sunday. Unset or `null` follows the active locale.
     - name: dayFirst
       type: boolean
       default: 'false'
@@ -67,7 +69,7 @@ configure({ zone: null, locale: null, weekStart: 'monday' });
 
 ```returns
 type: "{ zone, locale, weekStart, dayFirst, zoneAliases }"
-description: A shallow copy of the active settings after applying any updates.
+description: A shallow copy of the active settings after applying updates. Unset keys return `undefined`.
 ```
 
 Plugins extend `configure()` with their own options once imported. Setting a plugin option before importing its plugin throws a `RangeError`:
@@ -90,7 +92,7 @@ configure({ dayFirst: false });
 :::
 
 :::warning[Configure once at startup on servers]
-Global configuration updates shared state across the entire JavaScript process. Set defaults once when your server boots, and pass each user's time zone or locale directly to factories and `format()` inside request handlers.
+Global configuration updates shared state across the entire JavaScript process. Set defaults once when your server boots, and attach each user's zone and [`locale()`](/api/date-time/#locale) to the value inside request handlers. See [Internationalization](/guides/internationalization/).
 :::
 
 ## Weekday helper

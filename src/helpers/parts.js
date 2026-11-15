@@ -1,5 +1,7 @@
+import { names } from './tokens.js';
 import { isString } from './types.js';
 import { isCount } from './units.js';
+import { locale as pickLocale } from './zones.js';
 
 // reading for the nouns that are part of a date: a month and a day, a year and a month
 
@@ -22,21 +24,19 @@ export const wholeParts = (fields, names) => {
 // text that opens on a year, a month and a day is a date, whatever follows: '1990-10-17'
 export const opensOnDate = (value) => isString(value) && /^\s*[+-]?\d{4,6}-?\d{2}-?\d{2}/.test(value);
 
-const monthNames = [
-  'january',
-  'february',
-  'march',
-  'april',
-  'may',
-  'june',
-  'july',
-  'august',
-  'september',
-  'october',
-  'november',
-  'december',
-];
-
-// the month an English name stands for, whole or its first three letters and more: 'Oct', 'sept'.
-// zero when it stands for none
-export const monthNamed = (name) => monthNames.findIndex((full) => full.startsWith(name.toLowerCase())) + 1;
+// the month a name stands for, whole, shortened or its first three letters and more: 'Oct', 'sept',
+// 'octobre', 'октября'. English is tried first, so 'Mar' is March in a Finnish locale too, then the
+// names Intl has for the configured locale, alone and beside a day. zero when it stands for none
+export const monthNamed = (name) => {
+  const tag = pickLocale();
+  const written = name.toLocaleLowerCase(tag);
+  for (const table of [names('en'), names(tag)]) {
+    for (const months of [table.MMMM, table.besideDay.MMMM, table.MMM, table.besideDay.MMM]) {
+      const found = months.findIndex((full) => full.toLocaleLowerCase(tag).startsWith(written));
+      if (found !== -1) {
+        return found + 1;
+      }
+    }
+  }
+  return 0;
+};

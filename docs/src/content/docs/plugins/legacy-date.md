@@ -4,7 +4,7 @@ kind: plugin
 lede: Read-only `Date.prototype` getters and formatters on `DateTime` for incremental migration.
 import: import '@native-dates/plugins/legacy-date'
 size: legacy-date
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Migrating Date callers incrementally
@@ -61,9 +61,9 @@ Legacy string methods match native output while defaulting locale formatting to 
 | Method | Return | Behavior on DateTime |
 |---|---|---|
 | `toISOString()` | `string` | UTC timestamp at millisecond precision, even when the instance carries finer sub-millisecond digits. |
-| `toLocaleString(locales?, options?)` | `string` | Date and time formatted in `dt.zone` unless `options.timeZone` overrides it. |
-| `toLocaleDateString(locales?, options?)` | `string` | Date portion formatted in `dt.zone` unless overridden in `options`. |
-| `toLocaleTimeString(locales?, options?)` | `string` | Time portion formatted in `dt.zone` unless overridden in `options`. |
+| `toLocaleString(locales?, options?)` | `string` | Date and time formatted in `dt.zone` and `dt.locale()` unless overridden. |
+| `toLocaleDateString(locales?, options?)` | `string` | Date portion formatted in `dt.zone` and `dt.locale()` unless overridden. |
+| `toLocaleTimeString(locales?, options?)` | `string` | Time portion formatted in `dt.zone` and `dt.locale()` unless overridden. |
 
 ```js
 const flight = datetime('2026-09-06T14:30:15.250', 'America/New_York');

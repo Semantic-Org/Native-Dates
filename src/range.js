@@ -73,7 +73,7 @@ class Range {
   // unit keys, and this has only the option keys, so the two never read as each other
   static isOptions(value) {
     return isPlainObject(value) && Object.keys(value).length > 0
-      && Object.keys(value).every((key) => key === 'loose' || key === 'zone' || key === 'dayFirst');
+      && Object.keys(value).every((key) => ['loose', 'zone', 'dayFirst', 'locale'].includes(key));
   }
 
   // an interval string splits on its slash, never on the one inside a bracketed zone, and a text field's
@@ -90,8 +90,9 @@ class Range {
 
   // an end reads through the kind's own factory with the range's options, and a datetime end reads in
   // the start's zone
-  static #read(kind, value, start, { zone, loose, dayFirst } = {}) {
-    const readOptions = {};
+  static #read(kind, value, start, { zone, loose, dayFirst, locale } = {}) {
+    // an end is written in the start's locale, so a range has one
+    const readOptions = { locale: locale ?? start?.locale() };
     const targetZone = kind === 'datetime' ? (start?.zone ?? zone) : zone;
     if (targetZone !== undefined) {
       readOptions.zone = targetZone;
@@ -151,7 +152,7 @@ class Range {
     if (this.kind === 'date') {
       return this.start.until(this.end.plus(days(1)));
     }
-    return this.#wraps() ? hours(24).plus(this.start.until(this.end)) : this.start.until(this.end);
+    return this.#wraps() ? this.start.until(this.end).plus(hours(24)) : this.start.until(this.end);
   }
 
   #wraps() {
@@ -206,7 +207,7 @@ class Range {
   }
 
   #make(kind, start, end) {
-    return new byKind[kind](start, end);
+    return new byKind[kind](start, end, { locale: this.start.locale() });
   }
 
   equals(other) {
@@ -339,38 +340,26 @@ class Range {
               Output
   *******************************/
 
-  format(spec, locale) {
+  // a range is written in one locale, its start's. an unset tag clears it
+  locale(...tag) {
+    return tag.length
+      ? new byKind[this.kind](this.start.locale(tag[0]), this.end.locale(tag[0]))
+      : this.start.locale();
+  }
+
+  format(spec, locale = this.start.locale()) {
     const options = intlOptions(this.kind, spec);
     // a token pattern has no range form in Intl, so each end prints by it
     if (!options) {
       return `${this.start.format(spec, locale)} – ${this.end.format(spec, locale)}`;
     }
-    if (this.kind === 'datetime') {
-      return Range.#formatIntl('datetime', this.start.epoch, this.end.epoch, options, locale, this.start.zone);
-    }
-    return Range.#formatIntl(
-      this.kind,
-      this.start.toTemporal(),
-      this.end.toTemporal(),
-      options,
-      locale,
-      undefined,
-      this.#wraps(),
-    );
-  }
-
-  // Intl adds the date to a range once its ends fall on different days, whatever the options say, so a
-  // time range across midnight prints each end on its own. the text that joins them is read off a
-  // sample range inside one day, midnight until 1am, so it is the locale's own: ' – ' or '～'
-  static #formatIntl(kind, start, end, options, locale, zone, wraps = false) {
-    const format = formatter(kind, options, locale, zone);
-    if (!wraps) {
-      return format.formatRange(epochOf(kind, start), epochOf(kind, end));
-    }
-    const joint = format.formatRangeToParts(0, 36e5).find((part) =>
-      part.source === 'shared' && part.type === 'literal'
-    );
-    return `${format.format(epochOf(kind, start))}${joint?.value ?? ' – '}${format.format(epochOf(kind, end))}`;
+    // a time range across midnight is one whose end reads earlier on the same day, and Intl formats
+    // that as it stands, in the locale's own range form
+    const [start, end] = this.kind === 'datetime'
+      ? [this.start.epoch, this.end.epoch]
+      : [this.start.toTemporal(), this.end.toTemporal()];
+    return formatter(this.kind, options, locale, this.start.zone)
+      .formatRange(epochOf(this.kind, start), epochOf(this.kind, end));
   }
 
   toString() {
@@ -429,6 +418,8 @@ export class TimeRange extends Range {
   }
   static kind = 'time';
 }
+
+Range.prototype.lang = Range.prototype.locale;
 
 const byKind = { date: DateRange, datetime: DateTimeRange, time: TimeRange };
 

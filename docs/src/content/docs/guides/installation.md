@@ -1,7 +1,7 @@
 ---
 title: Installation
 lede: Install the core package, add a Temporal polyfill for older runtimes, and set app-wide defaults.
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 Native Dates ships as a small ES module package with TypeScript types included and zero runtime dependencies.
@@ -76,16 +76,16 @@ Browse the [Plugins overview](/plugins/) to see every subpath and its size.
 
 ## App-wide defaults
 
-By default, Native Dates uses the runtime's local time zone and locale, and starts weeks on Monday. Call [`configure()`](/api/configure/) once at startup to set defaults across your app:
+By default, Native Dates uses the runtime's local time zone and locale, including that locale's first day of the week. Call [`configure()`](/api/configure/) once at startup to set defaults across your app, or pass `weekStart` when you want a fixed first day regardless of locale:
 
 ```js title="main.js"
 import { configure } from 'native-dates';
 
 configure({
-  zone: 'Europe/Berlin',
-  locale: 'en-GB',
+  zone: 'America/New_York',
+  locale: 'en-US',
   weekStart: 'monday',
 });
 ```
 
-Any individual call can still pass its own time zone, locale, or week start when needed. Next, read [Types of time](/guides/types-of-time/) to pick the right type for each value you work with.
+Any individual value or call can still carry its own time zone, [`locale()`](/api/date-time/#locale), or week start when needed. Next, read [Internationalization](/guides/internationalization/) to choose how your app localizes dates across browsers and servers.

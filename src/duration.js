@@ -33,12 +33,14 @@ export class Duration {
 
   #temporal;
   #anchor;
+  #locale;
 
-  constructor(input, name, anchor) {
+  constructor(input, name, { anchor, locale } = {}) {
     this.#temporal = isTemporalDuration(input) && name === undefined
       ? input
       : temporalDurationOf(fieldsFrom(input, name));
     this.#anchor = anchor;
+    this.#locale = locale ?? undefined;
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it
     this.text = undefined;
@@ -55,6 +57,18 @@ export class Duration {
     this.anchor = anchor;
     this.text = this.format('long');
     Object.freeze(this);
+  }
+
+  // the locale this duration is written in, or the same duration written in another. an unset tag
+  // clears it
+  locale(...tag) {
+    return tag.length
+      ? new Duration(this.#temporal, undefined, { anchor: this.#anchor, locale: tag[0] })
+      : this.#locale;
+  }
+
+  #next(temporal, anchor) {
+    return new Duration(temporal, undefined, { anchor, locale: this.#locale });
   }
 
   /*******************************
@@ -83,17 +97,15 @@ export class Duration {
   *******************************/
 
   plus(other, name) {
-    return new Duration(
+    return this.#next(
       temporalDurationOf(addFields(this.toFields(), fieldsFrom(other, name), 1)),
-      undefined,
       this.#anchor ?? (other instanceof Duration ? other.anchor : undefined),
     );
   }
 
   minus(other, name) {
-    return new Duration(
+    return this.#next(
       temporalDurationOf(addFields(this.toFields(), fieldsFrom(other, name), -1)),
-      undefined,
       this.#anchor ?? (other instanceof Duration ? other.anchor : undefined),
     );
   }
@@ -103,15 +115,15 @@ export class Duration {
     for (const [field, value] of Object.entries(this.toFields())) {
       spill(fields, unit(field), value * factor);
     }
-    return new Duration(temporalDurationOf(fields), undefined, this.#anchor);
+    return this.#next(temporalDurationOf(fields), this.#anchor);
   }
 
   negated() {
-    return new Duration(this.#temporal.negated(), undefined, this.#anchor);
+    return this.#next(this.#temporal.negated(), this.#anchor);
   }
 
   abs() {
-    return new Duration(this.#temporal.abs(), undefined, this.#anchor);
+    return this.#next(this.#temporal.abs(), this.#anchor);
   }
 
   // carries overflow upward: 90 minutes balances to an hour and a half. a length stops at hours, since
@@ -135,30 +147,28 @@ export class Duration {
             : 0,
         });
       }
-      return new Duration(
+      return this.#next(
         guard(() => Duration.#fixed(this).round({ largestUnit: target }), 'cannotBalance', String(this)),
       );
     }
-    return new Duration(
+    return this.#next(
       guard(
         () => this.#temporal.round({ largestUnit: unit(largest ?? 'day'), relativeTo: this.#anchor }),
         'cannotBalance',
         String(this),
       ),
-      undefined,
       this.#anchor,
     );
   }
 
   round(smallest) {
     const target = unit(smallest);
-    return new Duration(
+    return this.#next(
       guard(
         () => Duration.#fixed(this).round({ smallestUnit: target, relativeTo: this.#anchor }),
         'cannotRound',
         String(this),
       ),
-      undefined,
       this.#anchor,
     );
   }
@@ -179,7 +189,11 @@ export class Duration {
     Duration.#requireAnchor(duration, 'balance');
     const { days, ...clock } = fieldsOf(Duration.#fixed(duration));
     const balanced = fieldsOf(temporalDurationOf(clock).round({ largestUnit: 'hour' }));
-    return new Duration(temporalDurationOf(days ? { days, ...balanced } : balanced));
+    return new Duration(
+      temporalDurationOf(days ? { days, ...balanced } : balanced),
+      undefined,
+      { locale: duration.locale() },
+    );
   }
 
   // a week is seven days in the ISO calendar, so it needs no anchor: the days fold in sevens
@@ -187,7 +201,11 @@ export class Duration {
     const { days = 0, ...clock } = fieldsOf(Duration.#fixed(duration).round({ largestUnit: 'day' }));
     const weeks = Math.trunc(days / 7);
     const rest = days - weeks * 7;
-    return new Duration(temporalDurationOf({ ...(weeks && { weeks }), ...(rest && { days: rest }), ...clock }));
+    return new Duration(
+      temporalDurationOf({ ...(weeks && { weeks }), ...(rest && { days: rest }), ...clock }),
+      undefined,
+      { locale: duration.locale() },
+    );
   }
 
   static #requireAnchor(duration, verb) {
@@ -259,7 +277,7 @@ export class Duration {
   // Intl.DurationFormat over the calendar fields as written and the clock balanced, so a stored count of
   // milliseconds reads as hours and minutes. the sub-second fields only show when nothing larger is set,
   // so a wall-clock difference reads as hours and minutes and a timer reads as milliseconds
-  format(style = 'long', locale) {
+  format(style = 'long', locale = this.#locale) {
     if (!styles.includes(style)) {
       refuse('unknownFormat', String(style), {
         explanation: isDevelopment ? "a duration formats as 'long', 'short', 'narrow' or 'digital'" : 0,
@@ -318,18 +336,23 @@ export class Duration {
 Duration.prototype.add = Duration.prototype.plus;
 Duration.prototype.subtract = Duration.prototype.minus;
 Duration.prototype.remove = Duration.prototype.minus;
+Duration.prototype.lang = Duration.prototype.locale;
 Duration.prototype.as = Duration.prototype.total;
 
-// duration(input, unit), or duration(input, { loose })
+// duration(input, unit), or duration(input, { loose, locale })
 export const duration = (input, unitOrOptions) => {
   const hasOptions = isPlainObject(unitOrOptions);
   const name = hasOptions ? undefined : unitOrOptions;
-  const build = () => (input instanceof Duration && name === undefined ? input : new Duration(input, name));
+  const locale = hasOptions ? unitOrOptions.locale : undefined;
+  const build = () =>
+    input instanceof Duration && name === undefined
+      ? (locale === undefined ? input : input.locale(locale))
+      : new Duration(input, name, { locale });
   return hasOptions && unitOrOptions.loose ? loosely(build, unreadable.length) : build();
 };
 
 // a duration that remembers the point it was measured from, so months and years can total
-export const anchored = (temporal, anchor) => new Duration(temporal, undefined, anchor);
+export const anchored = (temporal, anchor, locale) => new Duration(temporal, undefined, { anchor, locale });
 
 export const isDuration = (value) => value instanceof Duration;
 

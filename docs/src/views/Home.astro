@@ -6,15 +6,17 @@ import { getCollection } from 'astro:content';
 
 import Bytes from '../components/home/Bytes.astro';
 import Consoles from '../components/home/Consoles.astro';
+import LocaleProof from '../components/home/LocaleProof.astro';
 import Primitives from '../components/home/Primitives.astro';
 import Say from '../components/home/Say.astro';
 import Verdict from '../components/home/Verdict.astro';
 import Xray from '../components/home/Xray.astro';
 import YearStrip from '../components/home/YearStrip.astro';
 import Playground from '../components/Playground.astro';
+import { HOME_LOCALES } from '../data/home-locales.js';
 import Base from '../layouts/Base.astro';
 import { filesFor } from '../lib/examples.js';
-import { draftStrings, languageMenu, languageSelect, languagesWith, localeOf, localePath, t } from '../lib/i18n.js';
+import { DEFAULT_LOCALE, draftStrings, englishIn, languageMenu, languageSelect, languagesWith, localeOf, localePath, t } from '../lib/i18n.js';
 import { ICON, MARK } from '../lib/icons.js';
 import { formatSize, sizeOf } from '../lib/sizes.js';
 import { REPO_URL, versionMenu } from '../lib/versions.js';
@@ -25,11 +27,29 @@ const to = (path) => localePath(path, locale);
 // the core's size wherever the page's words quote it ({size}), measured like every other size here
 const size = formatSize(await sizeOf('core')).replace(' ', '&nbsp;');
 // the page's words are keys (t() here and in its components, ui() in its scripts) from
-// content/strings.json; a language that has translated them is one the page is written in
+// content/strings.json, and a language that has translated them is one the page is written in
 const translatedIn = languagesWith('home.', { reviewed: true });
 const writtenIn = languagesWith('home.');
-const draft = writtenIn.includes(locale) && draftStrings(locale);
+const translated = writtenIn.includes(locale);
+const draft = translated && draftStrings(locale);
+const english = translated ? {} : englishIn(locale);
+const notice = locale === DEFAULT_LOCALE ? null
+  : !translated ? t(locale, 'language.untranslated', { language: localeOf(locale).name })
+  : draft ? t(locale, 'language.draft') : null;
 const tryEntry = (await getCollection('examples')).find((e) => e.id === 'meeting-planner');
+const homeLocale = HOME_LOCALES[locale];
+const tryCity = (translated ? homeLocale?.try?.city : homeLocale?.try?.cityEn) ?? 'Tokyo';
+const tryZones = homeLocale?.try?.zones;
+const tryFiles = filesFor(tryEntry.id);
+if (tryZones) {
+  tryFiles['cities.js'] = [
+    "// IANA zone names. the platform knows each one's offset on any date",
+    'export const CITIES = [',
+    ...tryZones.map((zone) => `  '${zone}',`),
+    '];',
+    '',
+  ].join('\n');
+}
 const SECTIONS = [['nav.guides', '/guides/installation/'], ['nav.api', '/api/date-time/'], ['nav.examples', '/examples/'], ['nav.plugins', '/plugins/']];
 const INSTALL = 'npm i native-dates';
 ---
@@ -54,10 +74,10 @@ const INSTALL = 'npm i native-dates';
       <Fragment set:html={languageSelect(Astro.url.pathname, locale)} />
     </nav>
   </header>
-  {/* a machine translation nobody has reviewed says so under the topbar, with the way to english */}
-  {draft && <p class="archive-banner" lang={locale} dir={localeOf(locale).dir}>{t(locale, 'language.draft')} <a href="/" hreflang="en" lang="en" data-language-pick="en">{t(locale, 'language.readEnglish')}</a></p>}
+  {/* an untranslated homepage or an unreviewed machine translation says so under the topbar */}
+  {notice && <p class="archive-banner" lang={locale} dir={localeOf(locale).dir}>{notice} <a href="/" hreflang="en" lang="en" data-language-pick="en">{t(locale, 'language.readEnglish')}</a></p>}
 
-  <main id="content">
+  <main id="content" {...english}>
     <section class="hero">
       <div class="container">
         <div class="hero-copy">
@@ -78,6 +98,8 @@ const INSTALL = 'npm i native-dates';
         <Say />
       </div>
     </section>
+
+    <LocaleProof />
 
     <section class="ribbon">
       <div class="container">
@@ -118,10 +140,10 @@ const INSTALL = 'npm i native-dates';
     <section class="ribbon ribbon-try">
       <div class="container">
         <div class="ribbon-head">
-          <h2>{t(locale, 'home.try.title')}</h2>
+          <h2>{t(locale, 'home.try.title', { city: tryCity })}</h2>
           <p>{t(locale, 'home.try.lede')}</p>
         </div>
-        <Playground files={filesFor(tryEntry.id)} tabs={tryEntry.data.tabs} label={t(locale, 'home.try.label')} lineNumbers={false} />
+        <Playground files={tryFiles} zones={tryZones} tabs={tryEntry.data.tabs} label={t(locale, 'home.try.label')} lineNumbers={false} />
         <a class="text-link" href={to('/examples/')}>{t(locale, 'home.try.link')}</a>
       </div>
     </section>
@@ -148,7 +170,7 @@ const INSTALL = 'npm i native-dates';
     </section>
   </main>
 
-  <footer class="footer">
+  <footer class="footer" {...english}>
     <div class="container footer-inner">
       <div class="footer-brand">
         <a class="wordmark" href={to('/')}><Fragment set:html={MARK} />native-dates</a>

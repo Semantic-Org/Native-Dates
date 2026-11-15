@@ -40,6 +40,13 @@ declare abstract class BaseRange<Point, Input> {
   split(step: Unit | DurationInput): this[];
   split(count: number | string, unit: Unit): this[];
   format(spec?: FormatSpec, locale?: Locale): string;
+  /** The locale this value is written in, when one was set on it or on the value it came from */
+  locale(): Locale | undefined;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
+  /** Alias for `locale` */
+  lang(): Locale | undefined;
+  lang(tag: Locale | null | undefined): this;
   toString(): string;
   toJSON(): string;
   valueOf(): never;

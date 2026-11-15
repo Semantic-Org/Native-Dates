@@ -5,10 +5,14 @@
 // differ, so the page can't show code that isn't equivalent
 import * as library from 'native-dates';
 
-import { t } from '../../lib/i18n.js';
-import { SAMPLES } from '../../scripts/home/samples.js';
+import { HOME_LOCALES } from '../../data/home-locales.js';
+import { hasStrings, t } from '../../lib/i18n.js';
+import { samplesFor } from '../../scripts/home/samples.js';
 
 const locale = Astro.currentLocale;
+const samples = samplesFor(locale);
+const xray = HOME_LOCALES[locale]?.xray;
+const inviteCity = (hasStrings(locale, 'home.') ? xray?.inviteCity : xray?.inviteCityEn) ?? 'Berlin';
 const { kindOf, now, today } = library;
 const WAYS = [['ours', 'native-dates'], ['temporal', 'Temporal'], ['legacy', 'Date']];
 
@@ -16,7 +20,7 @@ const WAYS = [['ours', 'native-dates'], ['temporal', 'Temporal'], ['legacy', 'Da
 // of its own so it can declare any name, with the values the earlier ones made in scope, and the
 // library's calls where the code is ours
 const SCOPE = { ours: { now, today }, temporal: {}, legacy: {} };
-const made = (way) => SAMPLES.reduce((values, sample) => {
+const made = (way) => samples.reduce((values, sample) => {
   const scope = { ...SCOPE[way], ...values };
   const value = new Function(...Object.keys(scope), `{ ${sample[way]}\nreturn ${sample.id}; }`)(...Object.values(scope));
   return { ...values, [sample.id]: value };
@@ -34,7 +38,7 @@ const difference = () => {
   const ours = made('ours');
   for (const way of ['temporal', 'legacy']) {
     const theirs = made(way);
-    const sample = SAMPLES.find(({ id }) => !SAME[way](theirs[id], ours[id]));
+    const sample = samples.find(({ id }) => !SAME[way](theirs[id], ours[id]));
     if (sample) { return `the x-ray's \`${sample.id}\` differs: ${printed(ours[sample.id])} in native-dates, ${String(theirs[sample.id])} in its ${way} code`; }
   }
 };
@@ -43,9 +47,9 @@ const differs = difference() && difference();
 if (differs) { throw new Error(differs); }
 ---
 <div class="xrays">
-  {SAMPLES.map((sample) => (
+  {samples.map((sample) => (
     <div>
-      <h3>{t(locale, `home.xray.${sample.id}`)}</h3>
+      <h3>{t(locale, `home.xray.${sample.id}`, { city: inviteCity })}</h3>
       <div class="code xr" data-xray>
         <div class="code-head">
           <div class="xr-switch" role="radiogroup" aria-label={t(locale, 'home.xray.label')}>

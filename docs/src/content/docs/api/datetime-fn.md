@@ -4,7 +4,7 @@ kind: function
 lede: Read an existing timestamp, string, or clock reading into a DateTime, or read the current moment.
 import: import { datetime, now } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Reading moments
@@ -43,6 +43,9 @@ const fromDate = datetime(date('2026-11-16'), 'America/New_York');
     - name: zone
       type: Zone
       description: Time zone to view the moment in, overriding any bracketed zone in `input`.
+    - name: locale
+      type: Locale
+      description: BCP 47 locale tag carried on the returned `DateTime` and every value derived from it.
     - name: loose
       type: boolean
       default: 'false'

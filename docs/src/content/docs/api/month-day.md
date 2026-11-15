@@ -4,7 +4,7 @@ kind: class
 lede: A calendar month and day with no year, for birthdays, anniversaries, and annual holidays.
 import: import { MonthDay } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating a MonthDay
@@ -343,7 +343,7 @@ Custom named presets can be added on `MonthDay.presets`, and non-Gregorian local
   description: Preset name such as `'short'` or `'long'`, `Intl` options object, or token pattern.
 - name: locale
   type: Locale
-  description: BCP 47 locale tag overriding the configured default for this call.
+  description: BCP 47 locale tag overriding this value's or the configured locale for one call.
 ```
 
 **Returns**
@@ -362,6 +362,51 @@ oct17.format('medium', 'en-US'); // 'Oct 17'
 oct17.format('long', 'en-US'); // 'October 17'
 oct17.format('MMM Do', 'en-US'); // 'Oct 17th'
 ```
+:::
+
+:::entry
+### `locale()` :kind[method]
+
+```js signature
+md.locale(): Locale | undefined
+md.locale(tag): MonthDay
+```
+
+Reads the locale carried on this month-day, or returns a copy formatted in another locale across text previews, presets, and every date derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+
+**Parameters**
+
+```params
+- name: tag
+  type: Locale | null | undefined
+  description: BCP 47 locale tag to carry forward, or `null` to clear an existing tag.
+```
+
+**Returns**
+
+```returns
+type: MonthDay | Locale | undefined
+description: The active tag when called with no arguments, or a new `MonthDay` carrying `tag`.
+```
+
+```js
+const labourDay = monthDay(5, 1).locale('ru');
+
+labourDay.locale(); // 'ru'
+labourDay.format('long'); // '1 мая'
+labourDay.in(2026).format('long'); // '1 мая 2026 г.'
+```
+:::
+
+:::entry
+### `lang()` :kind[method]
+
+```js signature
+md.lang(): Locale | undefined
+md.lang(tag): MonthDay
+```
+
+Shorthand alias for [`locale()`](#locale) that reads or attaches a BCP 47 locale tag on this month-day.
 :::
 
 :::entry

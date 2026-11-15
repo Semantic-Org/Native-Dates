@@ -75,6 +75,13 @@ export class MonthDay {
    * prints the Gregorian ones
    */
   format(spec?: MonthDayFormat, locale?: Locale): string;
+  /** The locale this value is written in, when one was set on it or on the value it came from */
+  locale(): Locale | undefined;
+  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  locale(tag: Locale | null | undefined): this;
+  /** Alias for `locale` */
+  lang(): Locale | undefined;
+  lang(tag: Locale | null | undefined): this;
   /** ISO 8601, `'10-17'` */
   toString(): string;
   toJSON(): string;
@@ -86,7 +93,7 @@ export class MonthDay {
 /**
  * Reads `'10-17'`, `'10/17'` or `'10.17'` month first, two numbers, a fields object, or anything a date
  * reads with its year dropped. A missing value refuses, `today().monthDay` reads the current one.
- * With `{ loose: true }` it also reads a month by its English name and a day, `'Oct 17'` or
+ * With `{ loose: true }` it also reads a month by its name and a day, in English or the configured locale, `'Oct 17'` or
  * `'17th October'`, and gives null for what it cannot read. It never puts text to `Date`, which makes
  * up the parts text leaves out: a date written loosely is
  * `date(text, { loose: true })?.monthDay`, and an instant is `datetime(text, zone).monthDay`

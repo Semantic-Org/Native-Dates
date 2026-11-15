@@ -4,7 +4,7 @@ kind: class
 lede: A specific moment in time, viewed in a time zone.
 import: import { DateTime } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Creating a DateTime
@@ -250,7 +250,7 @@ deadline.minus({ weeks: 1, days: 2 });
 dt.startOf(unit, firstDay?): DateTime
 ```
 
-Moves back to the start of a calendar or clock unit in this time zone. Week boundaries begin on Monday unless configured otherwise or overridden with `firstDay`.
+Moves back to the start of a calendar or clock unit in this time zone. Week boundaries start on `firstDay`, the configured `weekStart` from [`configure()`](/api/configure/), or this moment's active locale.
 
 **Parameters**
 
@@ -272,11 +272,11 @@ description: A new `DateTime` at the start of `unit`.
 ```
 
 ```js
-const wed = datetime('2026-11-18T14:45:12', 'America/New_York');
+const wed = datetime('2026-11-18T14:45:12', 'America/New_York').locale('en-US');
 
-wed.startOf('day').format('time', 'en-US'); // '12:00 AM'
-wed.startOf('week').day; // 16
-wed.startOf('week', 'sunday').day; // 15
+wed.startOf('day').format('time'); // '12:00 AM'
+wed.startOf('week').day; // 15
+wed.startOf('week', 'monday').day; // 16
 ```
 :::
 
@@ -723,7 +723,7 @@ Localized presets from `'LT'` through `'llll'` are built in alongside `[brackets
   description: Preset name such as `'medium'` or `'LLL'`, `Intl` options object, or token pattern.
 - name: locale
   type: string
-  description: BCP 47 locale tag overriding the configured default for this call.
+  description: BCP 47 locale tag overriding this moment's or the configured locale for one call.
 ```
 
 **Returns**
@@ -747,6 +747,51 @@ standup.format(
   'de-DE',
 ); // 'Mo., 09:30'
 ```
+:::
+
+:::entry
+### `locale()` :kind[method]
+
+```js signature
+dt.locale(): Locale | undefined
+dt.locale(tag): DateTime
+```
+
+Reads the locale carried on this moment, or returns a copy that formats and starts weeks in another locale across text previews, presets, week boundaries, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+
+**Parameters**
+
+```params
+- name: tag
+  type: Locale | null | undefined
+  description: BCP 47 locale tag to carry forward, or `null` to clear an existing tag.
+```
+
+**Returns**
+
+```returns
+type: DateTime | Locale | undefined
+description: The active tag when called with no arguments, or a new `DateTime` carrying `tag`.
+```
+
+```js
+const standup = datetime('2026-11-16T09:30', 'Europe/Berlin').locale('es-ES');
+
+standup.locale(); // 'es-ES'
+standup.plus(1, 'week').date.format('long'); // '23 de noviembre de 2026'
+standup.locale(null).locale(); // undefined
+```
+:::
+
+:::entry
+### `lang()` :kind[method]
+
+```js signature
+dt.lang(): Locale | undefined
+dt.lang(tag): DateTime
+```
+
+Shorthand alias for [`locale()`](#locale) that reads or attaches a BCP 47 locale tag on this moment.
 :::
 
 :::entry

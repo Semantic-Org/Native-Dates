@@ -3,11 +3,12 @@
 // ribbon comes into view. every answer is also asked again here, of the reader's own Date and of the
 // library on their own Temporal, so what is printed is what this browser says
 
-import { CASES, preview } from './consoles.js';
+import { consolesFor, preview } from './consoles.js';
 
 export function mountConsoles(root, library) {
+  const cases = consolesFor(root.dataset.consoles || 'en');
   root.querySelectorAll('[data-case]').forEach((panel) => {
-    const { date, native } = CASES.find((c) => c.id === panel.dataset.case);
+    const { date, native } = cases.find((c) => c.id === panel.dataset.case);
     panel.querySelector('[data-date-out]').textContent = preview(date.run(), library);
     panel.querySelector('[data-native-out]').textContent = preview(native.run(library), library);
   });

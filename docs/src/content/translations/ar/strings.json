@@ -1,0 +1,14 @@
+{
+  "$reviewed": false,
+  "language.label": "اللغة",
+  "language.untranslated": "لم تُترجم هذه الصفحة إلى العربية بعد، لذلك تُعرض بالإنجليزية.",
+  "language.stale": "تغيّرت الصفحة الإنجليزية بعد هذه الترجمة، فقد لا تكون الترجمة محدَّثة.",
+  "language.draft": "تُرجمت هذه الصفحة آليًا ولم تُراجَع بعد.",
+  "language.readEnglish": "قراءة النسخة الإنجليزية",
+  "language.offer": "هذه الصفحة متوفرة بالعربية.",
+  "language.go": "اقرأها بالعربية",
+  "language.dismiss": "إغلاق",
+  "language.remember": "هل تريد فتح هذا التوثيق بالعربية دائمًا؟",
+  "language.remember.yes": "دائمًا",
+  "language.remember.no": "ليس الآن"
+}

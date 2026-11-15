@@ -4,7 +4,7 @@ kind: function
 lede: Create a CalendarDate from an ISO date string, year-month-day numbers, fields, or the current day.
 import: import { date, today } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 ## Reading calendar dates
@@ -46,6 +46,9 @@ fromMoment.toString(); // '2026-11-16'
     - name: zone
       type: Zone
       description: Time zone used to determine the calendar day of an instant string, `DateTime`, or `Date`.
+    - name: locale
+      type: Locale
+      description: BCP 47 locale tag carried on the returned `CalendarDate` and every value derived from it.
     - name: loose
       type: boolean
       default: 'false'

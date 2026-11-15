@@ -16,6 +16,7 @@ import {
   isPlainDateTime,
   isPlainTime,
   isZonedDateTime,
+  localeOf,
   namesInstant,
   singularKeys,
   stepOf,
@@ -38,6 +39,7 @@ export class Time {
   }
 
   #plain;
+  #locale;
 
   // time(9, 30), time(input, zone), or time(input, { zone, loose })
   constructor(input, minuteOrOptions, second) {
@@ -53,6 +55,7 @@ export class Time {
       : isString(minuteOrOptions)
       ? { zone: minuteOrOptions }
       : {};
+    this.#locale = localeOf(settings, input);
     this.#plain =
       isPlainTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
@@ -179,6 +182,15 @@ export class Time {
     );
   }
 
+  // the locale this value is written in, or the same value written in another. an unset tag clears it
+  locale(...tag) {
+    return tag.length ? new Time(this.#plain, { locale: tag[0] }) : this.#locale;
+  }
+
+  #next(plain) {
+    return new Time(plain, { locale: this.#locale });
+  }
+
   /*******************************
               Reads
   *******************************/
@@ -196,7 +208,7 @@ export class Time {
 
   // arithmetic wraps like a clock face: 23:00 plus two hours is 01:00
   plus(amount, name) {
-    return new Time(
+    return this.#next(
       guard(() => this.#plain.add(Time.#clockFields(amount, name)), 'cannotAdd', `${amount} ${name ?? ''}`),
     );
   }
@@ -216,7 +228,7 @@ export class Time {
   }
 
   minus(amount, name) {
-    return new Time(
+    return this.#next(
       guard(
         () => this.#plain.subtract(Time.#clockFields(amount, name)),
         'cannotSubtract',
@@ -227,13 +239,13 @@ export class Time {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return new Time(
+    return this.#next(
       guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
     );
   }
 
   startOf(name) {
-    return new Time(
+    return this.#next(
       guard(() => this.#plain.round({ smallestUnit: unit(name), roundingMode: 'floor' }), 'cannotRound', String(name)),
     );
   }
@@ -257,7 +269,7 @@ export class Time {
 
   #round(increment, name, mode) {
     const [count, target] = isString(increment) && !isDigits(increment) ? [1, increment] : [Number(increment), name];
-    return new Time(
+    return this.#next(
       guard(
         () => this.#plain.round({ smallestUnit: unit(target), roundingIncrement: count, roundingMode: mode }),
         'cannotRound',
@@ -304,16 +316,20 @@ export class Time {
 
   // within the day, signed: 22:00 until 02:00 is minus twenty hours, not four
   until(other, name) {
-    const span = anchored(this.#plain.until(new Time(other).toTemporal(), { largestUnit: 'hour' }), undefined);
+    const span = anchored(
+      this.#plain.until(new Time(other).toTemporal(), { largestUnit: 'hour' }),
+      undefined,
+      this.#locale,
+    );
     return name === undefined ? span : span.total(name);
   }
 
   since(other, name) {
-    return new Time(other).until(this, name);
+    return new Time(other, { locale: this.#locale }).until(this, name);
   }
 
   on(day, zone) {
-    return new CalendarDate(day).at(this, zone);
+    return new CalendarDate(day, { locale: this.#locale }).at(this, zone);
   }
 
   as(kind) {
@@ -324,7 +340,7 @@ export class Time {
               Output
   *******************************/
 
-  format(spec, locale) {
+  format(spec, locale = this.#locale) {
     const options = intlOptions('time', spec);
     return options ? formatIntl('time', this.#plain, options, locale) : formatTokens(this, 'time', spec, locale);
   }
@@ -364,6 +380,7 @@ export class Time {
 Time.prototype.add = Time.prototype.plus;
 Time.prototype.subtract = Time.prototype.minus;
 Time.prototype.remove = Time.prototype.minus;
+Time.prototype.lang = Time.prototype.locale;
 
 export const time = (input, minuteOrOptions, second) => {
   const build = () =>
