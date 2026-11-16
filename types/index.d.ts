@@ -556,7 +556,7 @@ export class Duration {
   /** Rounds to the nearest whole unit */
   round(smallest: Unit): Duration;
 
-  /** The whole duration in one unit, fractional. Months and years need the anchor */
+  /** The whole duration in one unit, fractional. Years and months total into each other, and need the anchor for anything smaller */
   total(unit: Unit): number;
   /** Alias of `total` */
   as(unit: Unit): number;

@@ -147,7 +147,7 @@ export class Duration {
       if (largest === undefined) {
         return Duration.#balancedClock(this);
       }
-      const target = unit(largest);
+      const target = into;
       if (target === 'week') {
         return Duration.#balancedWeeks(this);
       }
@@ -220,10 +220,10 @@ export class Duration {
   }
 
   // a year is twelve months in the ISO calendar, so a duration of only years and months counts in
-  // months with no anchor. undefined once it carries weeks, days or a clock, which a month cannot hold
+  // months, anchored or not. undefined once it carries weeks, days or a clock, which a month cannot hold
   static #wholeMonths(duration) {
     const fields = duration.toFields();
-    return duration.anchor || fieldNames.slice(2).some((name) => fields[name])
+    return fieldNames.slice(2).some((name) => fields[name])
       ? undefined
       : (fields.years ?? 0) * 12 + (fields.months ?? 0);
   }
@@ -233,7 +233,7 @@ export class Duration {
     if (!duration.anchor && (fields.years || fields.months)) {
       refuse('missingAnchor', `${verb} of ${duration}`, {
         explanation: isDevelopment
-          ? 'durations with months or years vary in length and require a starting date to convert or compare. measure between two dates with `a.until(b)`, or construct the duration in weeks or days'
+          ? 'months and years vary in length, so converting them to weeks, days or hours requires a starting date. measure between two dates with `a.until(b)`, or construct the duration in weeks or days. to order durations of months and years, use `.compare()`'
           : 0,
       });
     }
@@ -248,16 +248,18 @@ export class Duration {
     if (target === 'quarter') {
       return this.total('month') / 3;
     }
+    // years and months count in twelfths with or without an anchor, so 18 months is a year and a half
+    // however it was measured
+    const whole = Duration.#wholeMonths(this);
+    if (whole !== undefined && (target === 'year' || target === 'month')) {
+      return target === 'year' ? whole / 12 : whole;
+    }
     if (this.#anchor) {
       return guard(
         () => this.#temporal.total({ unit: target, relativeTo: this.#anchor }),
         'cannotTotal',
         `${this} in ${target}`,
       );
-    }
-    const whole = Duration.#wholeMonths(this);
-    if (whole !== undefined && (target === 'year' || target === 'month')) {
-      return target === 'year' ? whole / 12 : whole;
     }
     Duration.#requireAnchor(this, `total in ${target}`);
     if (target === 'year' || target === 'month') {
