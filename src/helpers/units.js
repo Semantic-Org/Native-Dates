@@ -1,4 +1,3 @@
-import { each } from '@semantic-ui/utils';
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import {
@@ -147,9 +146,9 @@ export const withParts = (temporal, changes) => {
 // singular keys, the shape Temporal's with() takes, from any spelling a caller wrote
 export const singularKeys = (fields) => {
   const out = {};
-  each(fields, (value, key) => {
+  for (const [key, value] of Object.entries(fields)) {
     out[unit(key)] = value;
-  });
+  }
   return out;
 };
 
