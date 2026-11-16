@@ -1,12 +1,13 @@
 import { DateTime } from './date-time.js';
 import { anchored, duration } from './duration.js';
+import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
 import { relativeDays } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
-import { isDate, isDevelopment, isNumber, isPlainObject, isString } from './helpers/types.js';
+import { isDate, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
   inspect,
   isCount,

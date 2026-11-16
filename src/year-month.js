@@ -1,11 +1,12 @@
 import { CalendarDate, today } from './calendar-date.js';
+import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, readAs, refuse, refuseType, requireLoose, unreadable } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_YEAR_MONTH } from './helpers/identity.js';
 import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
 import { formatTokens } from './helpers/tokens.js';
-import { isDevelopment, isObject, isPlainObject, isString } from './helpers/types.js';
+import { isObject, isPlainObject, isString } from './helpers/types.js';
 import {
   inspect,
   isCount,

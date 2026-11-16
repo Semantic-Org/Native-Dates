@@ -2,7 +2,7 @@
 
 ## What This Repo Ships
 
-`native-dates` (`src/`, also re-exported as `@native-dates/core`) wraps the browser's `Temporal` and `Intl` APIs in plain-English nouns and verbs with zero runtime dependencies. Core at the repo root holds every noun, range and format, and opt-in plugins in `@native-dates/plugins/*` (`packages/plugins/src/`) add leniency, alias tables and a `Date` shim when imported.
+`native-dates` (`src/`, also re-exported as `@native-dates/core`) wraps the browser's `Temporal` and `Intl` APIs in plain-English nouns and verbs. Its one runtime dependency is `@semantic-ui/utils`, for the coded errors, type guards and timezone table every Semantic UI package shares, so there is one of each across the organization. A helper stays local only where utils has none or the bytes say so: `cached` in `helpers/intl.js`, `isDevelopment` alone in `helpers/environment.js` so it folds out of production, and the `Intl` duration formatting. Core at the repo root holds every noun, range and format, and opt-in plugins in `@native-dates/plugins/*` (`packages/plugins/src/`) add leniency, alias tables, relative phrasing and a `Date` shim when imported.
 
 ## Core Nouns
 
