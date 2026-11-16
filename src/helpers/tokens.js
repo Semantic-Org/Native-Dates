@@ -1,6 +1,6 @@
+import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
-import { isDevelopment } from './types.js';
 import { pad } from './units.js';
 import { locale as pickLocale, weekStart } from './zones.js';
 
