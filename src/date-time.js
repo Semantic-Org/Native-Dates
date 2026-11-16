@@ -157,7 +157,7 @@ export class DateTime {
         text,
         // text in the right shape that still fails names a day or a clock that does not exist
         isDevelopment
-          ? /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}.*)?$/.test(trimmed)
+          ? /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?Z?)?$/.test(trimmed)
             ? 'this date or time does not exist. check the month, the day, and the clock'
             : "expected an ISO string like '2026-09-06T14:30:00Z', '2026-09-06T14:30', or '2026-09-06'. pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
           : 0,
