@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-14 after the locale work (`npm run size`, Brotli): 12.82 kB for everything in `native-dates`, 11.39 kB for `import { now }`, four plugins on top (`relative`, `zones`, `loose`, `legacy-date`).
+Sizes on 2026-11-16 (`npm run size`, Brotli): 13.13 kB for everything in `native-dates`, 11.70 kB for `import { now }`, three plugins on top (`zones`, `loose`, `legacy-date`).
 
 ## How to decide
 
@@ -16,7 +16,7 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 
 - [ ] **`native-dates/helpers/*` is a public entry.** The exports map serves every file in `src/helpers/` because the plugins import from it. Either say in writing that the path is unstable, or narrow it to what the four plugins use (`errors`, `intl`, `zones`, `types`).
 - [ ] **Error codes.** Apps will route on `error.code`, so the codes freeze at 1.0. Read all of them once for naming. The reference is the sync repo: `../sync/ai/skills/author-error-messages.md` for the register and the six condition words (`missing`, `unknown`, `invalid`, `unsupported`, `duplicate`, `conflicting`), and `../sync/ai/reference/error-corpus.md` for worked lines. Take the register and the vocabulary. Leave whatever in it adds production bytes, since explanations here already fold out when `isDevelopment` is false and nothing more should ship.
-- [ ] **Relative time.** `formatRelative()` is a plugin at about 0.3 kB, and the cohort calls it `fromNow()` and `from()`. Decide the name, and whether it belongs in core by the same test that brought tokens in.
+- [x] **Relative time** is in core as `from(other)` and `fromNow()`, the words moment and day.js use, with `formatRelative()` kept as a second spelling. It cost 0.29 kB of floor, the size the plugin was.
 - [ ] **Names worth one last read.** `monthDay.in(2027)` beside `datetime.in(zone)`. `after()` and `before()` beside `next()` and `previous()`. `as()` reaches five kinds where `kindOf()` reports more, so there is no `as('dateRange')`.
 
 ### Decided: a locale rides on the value
