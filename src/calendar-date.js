@@ -172,7 +172,7 @@ export class CalendarDate {
       // text in the right shape that still fails names a day the calendar lacks, February 30th
       isDevelopment
         ? /^\s*\d{4}-\d{2}-\d{2}\s*$/.test(text)
-          ? 'this date does not exist on the calendar. check the month and the day'
+          ? 'this calendar date does not exist. check the year, month, and day'
           : "expected an ISO date string like '2026-09-06'. use `yearMonth('2026-11')` for a year and month, or pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
         : 0,
     );
