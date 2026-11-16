@@ -162,14 +162,16 @@ export const formatTokens = (subject, kind, pattern, locale) => {
     if (stray) {
       refuse('unknownFormat', pattern, {
         explanation: isDevelopment
-          ? `a format is a preset like 'medium', an Intl options object, or a token pattern like 'YYYY-MM-DD'. '${stray}' is no token. text goes in brackets: [at]`
+          ? `'${stray}' is not a format token. wrap literal text in brackets like '[at]', or pass a preset like 'medium' or an \`Intl.DateTimeFormat\` options object`
           : 0,
       });
     }
     const [field, read] = tokenReaders[token];
     if (subject[field] === undefined) {
-      refuse('noField', `${token} in '${pattern}'`, {
-        explanation: isDevelopment ? `a ${kind} has no ${field}` : 0,
+      refuse('unsupportedToken', `${token} in '${pattern}'`, {
+        explanation: isDevelopment
+          ? `a ${kind} does not include ${field} information. remove that token from the format pattern`
+          : 0,
       });
     }
     return read(subject, resolved, besideDay);

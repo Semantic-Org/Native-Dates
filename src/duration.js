@@ -143,9 +143,9 @@ export class Duration {
         return Duration.#balancedWeeks(this);
       }
       if (target === 'month' || target === 'quarter' || target === 'year') {
-        refuse('needsAnchor', `balance to ${target}`, {
+        refuse('missingAnchor', `balance to ${target}`, {
           explanation: isDevelopment
-            ? 'a month has no fixed length. balance a duration taken from a.until(b), which knows its calendar'
+            ? "months, quarters, and years vary in length, so balancing to them requires a starting date. measure between two dates with `a.until(b)`, or balance up to 'week' or 'day'"
             : 0,
         });
       }
@@ -213,9 +213,9 @@ export class Duration {
   static #requireAnchor(duration, verb) {
     const fields = duration.toFields();
     if (!duration.anchor && (fields.years || fields.months)) {
-      refuse('needsAnchor', `${verb} of ${duration}`, {
+      refuse('missingAnchor', `${verb} of ${duration}`, {
         explanation: isDevelopment
-          ? 'months and years have no fixed length. take the duration from a.until(b), which remembers a, or write it in days'
+          ? 'durations with months or years vary in length and require a starting date to convert or compare. measure between two dates with `a.until(b)`, or construct the duration in weeks or days'
           : 0,
       });
     }
@@ -239,9 +239,9 @@ export class Duration {
     }
     Duration.#requireAnchor(this, `total in ${target}`);
     if (target === 'year' || target === 'month') {
-      refuse('needsAnchor', `total in ${target}`, {
+      refuse('missingAnchor', `total in ${target}`, {
         explanation: isDevelopment
-          ? 'a month has no fixed length. total a duration taken from a.until(b), which knows its calendar'
+          ? "months, quarters, and years vary in length, so totaling in them requires a starting date. measure between two dates with `a.until(b)`, or total in 'weeks' or 'days'"
           : 0,
       });
     }
@@ -282,7 +282,7 @@ export class Duration {
   format(style = 'long', locale = this.#locale) {
     if (!styles.includes(style)) {
       refuse('unknownFormat', String(style), {
-        explanation: isDevelopment ? "a duration formats as 'long', 'short', 'narrow' or 'digital'" : 0,
+        explanation: isDevelopment ? 'expected a duration format style in [long, short, narrow, digital]' : 0,
       });
     }
     const written = this.toFields();

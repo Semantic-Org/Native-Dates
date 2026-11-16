@@ -76,7 +76,7 @@ export const intlOptions = (kind, spec) => {
   if (!isString(spec)) {
     refuse('unknownFormat', String(spec), {
       explanation: isDevelopment
-        ? "a format is a preset like 'medium', an Intl options object, or a token pattern like 'YYYY-MM-DD'"
+        ? "expected a format preset like 'medium', a token pattern like 'YYYY-MM-DD', or an `Intl.DateTimeFormat` options object"
         : 0,
     });
   }

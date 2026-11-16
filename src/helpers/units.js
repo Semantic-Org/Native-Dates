@@ -92,7 +92,9 @@ export const unit = (input) => {
   const found = Object.hasOwn(spellings, key) && spellings[key];
   return found || refuse('unknownUnit', String(input), {
     explanation: isDevelopment
-      ? `units are ${units.join(', ')} or quarter, singular or plural, or an abbreviation like h, min, d`
+      ? `expected a time unit in [${
+        units.join(', ')
+      }, quarter]. singular, plural, and shorthand names like 'd', 'h', and 'min' are all accepted`
       : 0,
   });
 };
@@ -110,7 +112,11 @@ export const weekdayNumber = (input) => {
   const index = key.length === 3 ? weekdays.findIndex((name) => name.startsWith(key)) : -1;
   return index === -1
     ? refuse('unknownWeekday', String(input), {
-      explanation: isDevelopment ? `weekdays are ${weekdays.join(', ')} or 1 through 7 from monday` : 0,
+      explanation: isDevelopment
+        ? `expected a weekday in [${
+          weekdays.join(', ')
+        }] (or 3-letter shorthand like 'mon'), or an ISO weekday number from 1 (Monday) to 7 (Sunday)`
+        : 0,
     })
     : index + 1;
 };

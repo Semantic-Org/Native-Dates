@@ -48,9 +48,9 @@ class Range {
     const settings = zoneOptions(options);
     if (start instanceof Range && end === undefined) {
       if (start.kind !== kind) {
-        refuseType('mixedRange', `${Range.factoryNames[start.kind]} as ${Range.factoryNames[kind]}`, {
+        refuseType('conflictingRanges', `${Range.factoryNames[start.kind]} as ${Range.factoryNames[kind]}`, {
           explanation: isDevelopment
-            ? 'a range keeps its kind. convert the ends: datetime.date, date.at(time, zone), or dateRange.in(zone)'
+            ? 'cannot pass one range type directly into another range factory. convert a `DateRange` to a `DateTimeRange` with `.in(zone)`, or build a new range from converted `start` and `end` endpoints'
             : 0,
         });
       }
@@ -63,8 +63,10 @@ class Range {
     this.end = Range.#readEnd(kind, end, this.start, settings);
     // a time range whose end comes first crosses midnight. the other kinds run forward
     if (kind !== 'time' && this.end.isBefore(this.start)) {
-      refuse('backwards', `${this.start} to ${this.end}`, {
-        explanation: isDevelopment ? 'a range runs forward. swap the ends, or use earliest() and latest()' : 0,
+      refuse('invalidRange', `${this.start} to ${this.end}`, {
+        explanation: isDevelopment
+          ? 'range end cannot be earlier than its start. swap the start and end arguments, or order unknown endpoints with `earliest(a, b)` and `latest(a, b)`'
+          : 0,
       });
     }
     this.text = kind === 'datetime' ? this.format('text') : this.format();
@@ -245,8 +247,10 @@ class Range {
       return null;
     }
     if (pieces.length > 1) {
-      refuse('twoPieces', `${this} with ${rival}`, {
-        explanation: isDevelopment ? 'the overlap crosses midnight in two pieces. intersect each half of the range' : 0,
+      refuse('unsupportedIntersection', `${this} with ${rival}`, {
+        explanation: isDevelopment
+          ? 'these two time ranges wrap around midnight and overlap in two separate windows, which a single `TimeRange` cannot represent. split the overnight range at midnight and intersect each half separately'
+          : 0,
       });
     }
     return this.#make('time', Range.#timeAt(pieces[0][0]), Range.#timeAt(pieces[0][1]));
@@ -304,8 +308,8 @@ class Range {
       ? duration(1, step)
       : duration(step);
     if (size.isZero() || size.isNegative()) {
-      refuse('emptyStep', String(size), {
-        explanation: isDevelopment ? 'a range walks forward, the step must be positive' : 0,
+      refuse('invalidStep', String(size), {
+        explanation: isDevelopment ? 'step duration for `points()` and `split()` must be greater than zero' : 0,
       });
     }
     return size;
@@ -331,9 +335,9 @@ class Range {
     if (this.kind === 'datetime') {
       return this.#make('datetime', this.start.in(zone), this.end.in(zone));
     }
-    return refuse('noZone', String(this), {
+    return refuse('unsupportedZone', String(this), {
       explanation: isDevelopment
-        ? 'a time range has no date to place in a zone. use time.on(date, zone) for each end'
+        ? 'a `TimeRange` has no calendar date, so it cannot be placed in a time zone directly. anchor each end to a date with `.on(day, zone)` on `start` and `end`'
         : 0,
     });
   }
@@ -373,8 +377,10 @@ class Range {
   }
 
   valueOf() {
-    return refuse('notANumber', String(this), {
-      explanation: isDevelopment ? 'a range is not a number. read its duration, or compare its start and end' : 0,
+    return refuse('unsupportedComparison', String(this), {
+      explanation: isDevelopment
+        ? 'ranges cannot be converted to a number for `<`, `>`, or `-`. read `.duration` to measure length, or use `compare(a, b)` and `equals()` to compare ranges'
+        : 0,
     });
   }
 
