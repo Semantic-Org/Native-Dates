@@ -1,5 +1,6 @@
+import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
-import { isDevelopment, isPlainObject, isString } from './types.js';
+import { isPlainObject, isString } from './types.js';
 import { weekdayNumber } from './units.js';
 
 // process-wide defaults, zoneAliases being the names a zone answers to when plugins/zones is loaded
