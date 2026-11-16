@@ -147,19 +147,18 @@ export class Duration {
       if (largest === undefined) {
         return Duration.#balancedClock(this);
       }
-      const target = into;
-      if (target === 'week') {
+      if (into === 'week') {
         return Duration.#balancedWeeks(this);
       }
-      if (target === 'month' || target === 'quarter' || target === 'year') {
-        refuse('missingAnchor', `balance to ${target}`, {
+      if (into === 'month' || into === 'quarter' || into === 'year') {
+        refuse('missingAnchor', `balance to ${into}`, {
           explanation: isDevelopment
             ? "months, quarters, and years vary in length, so balancing to them requires a starting date. measure between two dates with `a.until(b)`, or balance up to 'week' or 'day'"
             : 0,
         });
       }
       return this.#next(
-        guard(() => Duration.#fixed(this).round({ largestUnit: target }), 'cannotBalance', String(this)),
+        guard(() => Duration.#fixed(this).round({ largestUnit: into }), 'cannotBalance', String(this)),
       );
     }
     return this.#next(
