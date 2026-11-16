@@ -76,7 +76,7 @@
   --code-sm-fs: var(--fs-2xs); --code-sm-lh: 20px;
 
   /* display sizes, stepped */
-  --display: 56px; --display-lh: 60px; --display-track: -2px;
+  --display: 52px; --display-lh: 56px; --display-track: -2px;
   --heading: var(--fs-3xl); --heading-lh: var(--lh-3xl); --heading-track: -1px;
 
   /* spacing, stepped */
@@ -99,14 +99,13 @@
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-/* the wide homepage container gives the hero headline room to grow */
-@media (min-width: 1280px) {
-  :root { --display: 64px; --display-lh: 68px; }
+/* the wide homepage container gives the hero headline room to step up */
+@media (min-width: 1360px) {
+  :root { --display: 56px; --display-lh: 60px; --display-track: -2px; }
 }
 
 @media (max-width: 1080px) {
   :root {
-    --display: 52px; --display-lh: 56px;
     --section-y: 96px; --hero-top: 64px; --hero-bottom: 80px;
     --gutter: 32px;
   }

@@ -53,7 +53,7 @@ The entry import checks `globalThis.Temporal` first and dynamically loads `tempo
 
 ## Adding plugins
 
-Optional additions like relative phrases, city and abbreviation lookups, loose parsing, and legacy `Date` getters live in [`@native-dates/plugins`](/plugins/):
+Optional additions like city and abbreviation lookups, loose parsing, and legacy `Date` getters live in [`@native-dates/plugins`](/plugins/):
 
 ```bash
 npm i @native-dates/plugins
@@ -63,11 +63,9 @@ Import each subpath once in your entry file. Loading a subpath attaches its beha
 
 ```js title="main.js"
 import '@native-dates/plugins/loose';
-import '@native-dates/plugins/relative';
 import '@native-dates/plugins/zones';
-import { date, datetime, today } from 'native-dates';
+import { date, datetime } from 'native-dates';
 
-today().minus(2, 'days').formatRelative(); // '2 days ago'
 datetime('2026-11-16T09:30', 'Berlin').zone; // 'Europe/Berlin'
 date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 ```
