@@ -134,6 +134,15 @@ export class Duration {
   // weeks, months or years, and an explicit unit is taken at its word either way
   balance(largest) {
     if (!this.#anchor) {
+      const whole = Duration.#wholeMonths(this);
+      const into = largest === undefined ? undefined : unit(largest);
+      if (whole !== undefined && (into === 'year' || into === 'quarter' || into === 'month')) {
+        return this.#next(
+          temporalDurationOf(
+            into === 'year' ? { years: Math.trunc(whole / 12), months: whole % 12 } : { months: whole },
+          ),
+        );
+      }
       Duration.#requireAnchor(this, 'balance');
       if (largest === undefined) {
         return Duration.#balancedClock(this);
@@ -210,6 +219,15 @@ export class Duration {
     );
   }
 
+  // a year is twelve months in the ISO calendar, so a duration of only years and months counts in
+  // months with no anchor. undefined once it carries weeks, days or a clock, which a month cannot hold
+  static #wholeMonths(duration) {
+    const fields = duration.toFields();
+    return duration.anchor || fieldNames.slice(2).some((name) => fields[name])
+      ? undefined
+      : (fields.years ?? 0) * 12 + (fields.months ?? 0);
+  }
+
   static #requireAnchor(duration, verb) {
     const fields = duration.toFields();
     if (!duration.anchor && (fields.years || fields.months)) {
@@ -237,6 +255,10 @@ export class Duration {
         `${this} in ${target}`,
       );
     }
+    const whole = Duration.#wholeMonths(this);
+    if (whole !== undefined && (target === 'year' || target === 'month')) {
+      return target === 'year' ? whole / 12 : whole;
+    }
     Duration.#requireAnchor(this, `total in ${target}`);
     if (target === 'year' || target === 'month') {
       refuse('missingAnchor', `total in ${target}`, {
@@ -259,6 +281,10 @@ export class Duration {
     // the same fields are the same length in any calendar, so a month equals a month without an anchor
     if (mine.toString() === theirs.toString()) {
       return 0;
+    }
+    const [myMonths, theirMonths] = [Duration.#wholeMonths(this), Duration.#wholeMonths(rival)];
+    if (myMonths !== undefined && theirMonths !== undefined) {
+      return Math.sign(myMonths - theirMonths);
     }
     const anchor = this.#anchor ?? rival.anchor;
     if (!anchor) {
