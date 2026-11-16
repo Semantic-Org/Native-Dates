@@ -750,6 +750,86 @@ standup.format(
 :::
 
 :::entry
+### `from()` :kind[method]
+
+```js signature
+dt.from(other?, locale?): string
+```
+
+Formats the elapsed distance from another moment to this one as a localized phrase via `Intl.RelativeTimeFormat`, such as `'3 hours ago'` or `'in 2 days'`.
+
+Omitting the first argument compares against the current moment, and `formatRelative()` works as an alias. Zero seconds prints `'now'`, while days, months, and years use numeric counts rather than calendar words like yesterday.
+
+**Parameters**
+
+```params
+- name: other
+  type: DateTimeInput
+  description: Reference moment to measure from, interpreted in this instance's time zone when unzoned. Defaults to the current moment.
+- name: locale
+  type: Locale
+  description: BCP 47 locale tag overriding this moment's or the configured locale for one call.
+```
+
+**Returns**
+
+```returns
+type: string
+description: Localized relative phrase.
+```
+
+```js
+const anchor = datetime('2026-11-16T12:00', 'UTC');
+
+anchor.from(anchor, 'en-US'); // 'now'
+anchor.minus(3, 'hours').from(anchor, 'en-US'); // '3 hours ago'
+anchor.minus(23, 'hours').from(anchor, 'en-US'); // '1 day ago'
+anchor.plus(45, 'minutes').from(anchor, 'en-US'); // 'in 1 hour'
+anchor.minus(3, 'hours').from(anchor, 'es'); // 'hace 3 horas'
+```
+:::
+
+:::entry
+### `fromNow()` :kind[method]
+
+```js signature
+dt.fromNow(locale?): string
+```
+
+Formats how far this moment is from right now as a localized phrase, equivalent to calling [`from()`](#from) with no reference moment.
+
+**Parameters**
+
+```params
+- name: locale
+  type: Locale
+  description: BCP 47 locale tag overriding this moment's or the configured locale for one call.
+```
+
+**Returns**
+
+```returns
+type: string
+description: Localized relative phrase measured from now.
+```
+
+```js
+now().minus(5, 'minutes').fromNow('en-US'); // '5 minutes ago'
+now().plus(2, 'hours').fromNow('en-US'); // 'in 2 hours'
+```
+:::
+
+:::entry
+### `formatRelative()` :kind[method]
+
+```js signature
+dt.formatRelative(other?, locale?): string
+```
+
+Alias for [`from()`](#from) that formats the elapsed distance from `other` (or now when omitted) as a localized phrase.
+:::
+
+:::entry
 ### `locale()` :kind[method]
 
 ```js signature

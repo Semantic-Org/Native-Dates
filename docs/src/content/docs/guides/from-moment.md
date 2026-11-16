@@ -64,7 +64,7 @@ kickoff.in('Asia/Tokyo').format('short', 'en-US'); // '11/17/26, 2:30 AM'
 
 ## Tokens, presets, and ranges in core
 
-Moment [token patterns](/guides/formatting/#token-patterns), localized presets from `'LT'` through `'llll'`, and [ranges](/api/ranges/) all work in core with zero plugins:
+Moment [token patterns](/guides/formatting/#token-patterns), localized presets from `'LT'` through `'llll'`, relative phrases, and [ranges](/api/ranges/) all work in core with zero plugins:
 
 ```js
 import { date, datetime } from 'native-dates';
@@ -72,6 +72,7 @@ import { date, datetime } from 'native-dates';
 const kickoff = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 kickoff.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
 kickoff.format('LLL', 'en-US'); // 'November 16, 2026 at 9:30 AM'
+kickoff.from('2026-11-16T07:30-08:00', 'en-US'); // 'in 2 hours'
 
 const quarter = date('2026-10-01').to('2026-12-31');
 quarter.contains('2026-11-16'); // true
@@ -92,7 +93,7 @@ quarter.overlaps(date('2026-12-15').to('2027-01-15')); // true
 | `m.format('LLL')` | `dt.format('LLL')` | Localized presets from `'LT'` to `'llll'` with zero locale files |
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) built directly into core |
 | `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) built into core with `to()` and `overlaps()` |
-| `m.fromNow()` | `dt.formatRelative()` | Load [`@native-dates/plugins/relative`](/plugins/relative/) for relative strings |
+| `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [Relative phrases](/guides/formatting/#relative-phrases) built into core |
 | Non-ISO string parsing | `{ loose: true }` | Load [`@native-dates/plugins/loose`](/plugins/loose/) for `Date.parse` fallback |
 
 ## Migrating incrementally
