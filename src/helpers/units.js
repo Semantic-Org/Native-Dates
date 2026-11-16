@@ -145,7 +145,7 @@ export const wholeNumbers = (values) => values.every((value) => !isNumber(value)
 // set() replaces parts as strictly as a factory reads them: whole numbers, in range
 export const withParts = (temporal, changes) => {
   if (!wholeNumbers(Object.values(changes))) {
-    throw new RangeError('a part is a whole number');
+    throw new RangeError(isDevelopment ? 'each value passed to `set()` must be a whole number' : '');
   }
   return temporal.with(changes, { overflow: 'reject' });
 };

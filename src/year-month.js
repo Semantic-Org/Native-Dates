@@ -111,7 +111,7 @@ export class YearMonth {
     if (input instanceof Temporal.PlainYearMonth) {
       return input.calendarId === 'iso8601' ? input : refuseType('unsupportedCalendar', String(input), {
         explanation: isDevelopment
-          ? 'a `YearMonth` only stores dates in the ISO 8601 calendar. convert to ISO first'
+          ? 'a `YearMonth` only stores dates in the ISO 8601 calendar. convert to ISO first. to display one in another calendar, pick a day with `.on(day)` and format that date'
           : 0,
       });
     }
