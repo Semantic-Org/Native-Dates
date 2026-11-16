@@ -27,8 +27,8 @@ import { zoneId } from './helpers/zones.js';
   counts in months and years, and hands over any one of its days as a date
 */
 
-// '2026-11', what <input type="month"> writes
-const noDay = /^[+-]?\d{4,6}-\d{2}$/;
+// '2026-11', '2026/11', '2026.11', or '2026-5': a four-digit (or signed six-digit) year first
+const noDay = /^([+-]\d{6}|\d{4})[-/.](\d{1,2})$/;
 
 // a month and a year in the order a card prints them, '11/26' or '11/2026'
 const monthFirst = /^(\d{1,2})[-/.](\d{2}|\d{4})$/;
@@ -117,12 +117,14 @@ export class YearMonth {
     }
     if (isString(input)) {
       const text = input.trim();
-      if (noDay.test(text)) {
+      const ym = noDay.exec(text);
+      if (ym) {
+        const badMonth = Number(ym[2]) < 1 || Number(ym[2]) > 12;
         return guard(
-          () => Temporal.PlainYearMonth.from(text),
+          () => Temporal.PlainYearMonth.from(`${ym[1]}-${ym[2].padStart(2, '0')}`),
           'invalidYearMonth',
           input,
-          isDevelopment ? "month must be between 01 and 12, such as '2026-11'" : 0,
+          badMonth && isDevelopment ? "month must be between 01 and 12, such as '2026-11'" : 0,
         );
       }
       // text that opens on a whole date is a date. no other text is ever put to Date, which makes up
@@ -135,7 +137,7 @@ export class YearMonth {
           ? YearMonth.#fromFields({ year: named[2] ?? named[3], month }, input)
           : refuse('invalidYearMonth', input, {
             explanation: isDevelopment
-              ? "expected an ISO string like '2026-11' or '2026-11-16'. use `monthYear('11/26')` for month-first strings, or pass `{ loose: true }` with '@native-dates/plugins/loose' for month names like 'Nov 2026'"
+              ? "expected a year-month string like '2026-11' or '2026/11', or an ISO date like '2026-11-16'. use `monthYear('11/26')` for month-first strings, or pass `{ loose: true }` with '@native-dates/plugins/loose' for month names like 'Nov 2026'"
               : 0,
           });
       }
