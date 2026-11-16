@@ -124,7 +124,8 @@ export class YearMonth {
           () => Temporal.PlainYearMonth.from(`${ym[1]}-${ym[2].padStart(2, '0')}`),
           'invalidYearMonth',
           input,
-          badMonth && isDevelopment ? "month must be between 01 and 12, such as '2026-11'" : 0,
+          // isDevelopment leads, so a production build folds the whole line away
+          isDevelopment && badMonth ? "month must be between 01 and 12, such as '2026-11'" : 0,
         );
       }
       // text that opens on a whole date is a date. no other text is ever put to Date, which makes up
