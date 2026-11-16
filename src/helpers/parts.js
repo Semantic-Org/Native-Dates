@@ -1,3 +1,4 @@
+import { each } from '@semantic-ui/utils';
 import { names } from './tokens.js';
 import { isString } from './types.js';
 import { isCount } from './units.js';
@@ -9,7 +10,7 @@ import { locale as pickLocale } from './zones.js';
 // 1 and drop a part it has no use for, so each of those is refused before it gets there
 export const wholeParts = (fields, names) => {
   const parts = {};
-  for (const [name, value] of Object.entries(fields)) {
+  each(fields, (value, name) => {
     if (!names.includes(name)) {
       throw new RangeError(`${name} is not a part here, only ${names.join(' and ')}`);
     }
@@ -17,7 +18,7 @@ export const wholeParts = (fields, names) => {
       throw new RangeError(`${name} is a whole number`);
     }
     parts[name] = Number(value);
-  }
+  });
   return parts;
 };
 
