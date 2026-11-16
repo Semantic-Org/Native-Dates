@@ -111,21 +111,21 @@ export class YearMonth {
     if (input instanceof Temporal.PlainYearMonth) {
       return input.calendarId === 'iso8601' ? input : refuseType('unsupportedCalendar', String(input), {
         explanation: isDevelopment
-          ? "a `YearMonth` only stores dates in the ISO 8601 calendar. convert to ISO first, or pass a calendar tag like 'he-u-ca-hebrew' to `format()` when displaying"
+          ? 'a `YearMonth` only stores dates in the ISO 8601 calendar. convert to ISO first'
           : 0,
       });
     }
     if (isString(input)) {
       const text = input.trim();
-      const ym = noDay.exec(text);
-      if (ym) {
-        const badMonth = Number(ym[2]) < 1 || Number(ym[2]) > 12;
+      const yearFirst = noDay.exec(text);
+      if (yearFirst) {
+        const [, year, month] = yearFirst;
         return guard(
-          () => Temporal.PlainYearMonth.from(`${ym[1]}-${ym[2].padStart(2, '0')}`),
+          () => Temporal.PlainYearMonth.from(`${year}-${month.padStart(2, '0')}`),
           'invalidYearMonth',
           input,
-          // isDevelopment leads, so a production build folds the whole line away
-          isDevelopment && badMonth ? "month must be between 01 and 12, such as '2026-11'" : 0,
+          // isDevelopment leads, so a production build folds the whole line away, test and all
+          isDevelopment && (month < 1 || month > 12) ? "month must be between 01 and 12, such as '2026-11'" : 0,
         );
       }
       // text that opens on a whole date is a date. no other text is ever put to Date, which makes up
