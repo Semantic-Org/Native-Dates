@@ -82,14 +82,14 @@ dt.format('YYYY-MM-DD HH:mm'); // '2026-11-16 12:30'
 
 ## Opt-in plugins
 
-Only relative phrases, non-ISO text parsing, city and abbreviation lookups, and legacy date getters live in [`@native-dates/plugins`](/plugins/). Import each subpath once with no global registration call needed:
+Only non-ISO text parsing, city and abbreviation lookups, and legacy date getters live in [`@native-dates/plugins`](/plugins/). Import each subpath once with no global registration call needed:
 
 ```js
 import '@native-dates/plugins/loose';
-import '@native-dates/plugins/relative';
-import { date, today } from 'native-dates';
+import '@native-dates/plugins/zones';
+import { date, datetime } from 'native-dates';
 
-today().minus(3, 'days').formatRelative(); // '3 days ago'
+datetime('2026-11-16T09:30', 'Berlin').zone; // 'Europe/Berlin'
 date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 ```
 
@@ -108,5 +108,5 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `d.format('LLL')` | `dt.format('LLL')` | Localized presets from `'LT'` to `'llll'` in core |
 | `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) built directly into core |
 | `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) built into core with `to()` and `overlaps()` |
-| `d.fromNow()`, `d.toNow()` | `d.formatRelative()` | Provided by [`@native-dates/plugins/relative`](/plugins/relative/) |
+| `d.fromNow()`, `d.from(other)` | `d.fromNow()`, `d.from(other)` | Built into core with no `relativeTime` plugin |
 | `customParseFormat` | `{ loose: true }` | Provided by [`@native-dates/plugins/loose`](/plugins/loose/) |
