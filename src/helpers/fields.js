@@ -56,15 +56,13 @@ export const spill = (fields, name, value) => {
 };
 
 // the nonzero fields of a Temporal.Duration as a plain object
-// the loops here and in Duration stay native: they run for every duration made, where each() would
-// put a closure and a hop into every trace
 export const fieldsOf = (temporal) => {
   const fields = {};
-  for (const field of fieldNames) {
+  each(fieldNames, (field) => {
     if (temporal[field]) {
       fields[field] = temporal[field];
     }
-  }
+  });
   return fields;
 };
 
@@ -159,11 +157,11 @@ export const fieldsFrom = (input, name) => {
 
 export const clockFields = (fields) => {
   const clock = {};
-  for (const field of fieldNames.slice(4)) {
+  each(fieldNames.slice(4), (field) => {
     if (fields[field]) {
       clock[field] = fields[field];
     }
-  }
+  });
   return clock;
 };
 
@@ -172,12 +170,12 @@ export const clockFields = (fields) => {
 // so a subtraction balances to one sign: 2h minus 30m is 1h 30m
 export const addFields = (a, b, sign) => {
   const fields = {};
-  for (const field of ['years', 'months', 'weeks', 'days']) {
+  each(['years', 'months', 'weeks', 'days'], (field) => {
     const sum = (a[field] ?? 0) + sign * (b[field] ?? 0);
     if (sum) {
       fields[field] = sum;
     }
-  }
+  });
   const clockA = temporalDurationOf(clockFields(a));
   const clockB = temporalDurationOf(clockFields(b));
   Object.assign(fields, fieldsOf(sign > 0 ? clockA.add(clockB) : clockA.subtract(clockB)));
