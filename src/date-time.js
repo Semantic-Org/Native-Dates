@@ -87,9 +87,9 @@ export class DateTime {
       requireLoose(loose ? 'loose' : 'dayFirst');
     }
     if (input === undefined || input === null) {
-      return refuseType('notADateTime', String(input), {
+      return refuseType('missingDateTime', String(input), {
         explanation: isDevelopment
-          ? 'now() is the current moment. a missing value is refused so an absent field never silently becomes now'
+          ? 'a datetime value is required. use `now()` for the current moment'
           : 0,
       });
     }
@@ -102,8 +102,8 @@ export class DateTime {
     if (isDate(input) || isNumber(input)) {
       const epoch = isNumber(input) ? input : input.getTime();
       if (!Number.isFinite(epoch)) {
-        refuse('notFinite', String(input), {
-          explanation: isDevelopment ? 'an invalid Date or a non-finite number has no moment to point at' : 0,
+        refuse('invalidNumber', String(input), {
+          explanation: isDevelopment ? 'expected a finite timestamp or a valid `Date` instance' : 0,
         });
       }
       return Temporal.Instant.fromEpochMilliseconds(epoch).toZonedDateTimeISO(timeZone);
@@ -126,13 +126,13 @@ export class DateTime {
     if (isPlainObject(input)) {
       return guard(
         () => Temporal.ZonedDateTime.from({ ...singularKeys(input), timeZone }, { overflow: 'reject' }),
-        'unreadableDateTime',
+        'invalidDateTime',
         JSON.stringify(input),
       );
     }
-    return refuseType('notADateTime', String(input), {
+    return refuseType('invalidDateTime', String(input), {
       explanation: isDevelopment
-        ? 'a datetime is an ISO string, a Date, epoch milliseconds, a fields object, or a Temporal value'
+        ? 'expected an ISO string, a `Date`, epoch milliseconds, a fields object, a `CalendarDate`, or a `Temporal` value'
         : 0,
     });
   }
@@ -153,15 +153,15 @@ export class DateTime {
           }
           return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone: zoneId(zone) });
         },
-        'unreadableDateTime',
+        'invalidDateTime',
         text,
         isDevelopment
-          ? "write ISO 8601: '2026-09-06T14:30:00Z', '2026-09-06T14:30' for a wall clock in the zone, or '2026-09-06'. plugins/loose adds { loose: true } for what Date reads"
+          ? "expected an ISO string like '2026-09-06T14:30:00Z', '2026-09-06T14:30', or '2026-09-06'. pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
           : 0,
       );
     }
     catch (error) {
-      if (!loose || error.code !== 'unreadableDateTime') {
+      if (!loose || error.code !== 'invalidDateTime') {
         throw error;
       }
       const zoned = parseLoose(trimmed, zone, dayFirst);
