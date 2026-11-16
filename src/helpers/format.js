@@ -1,7 +1,8 @@
+import { each, isPlainObject, isString } from '@semantic-ui/utils';
+
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import { cached, plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
-import { isPlainObject, isString } from './types.js';
 import { locale as pickLocale } from './zones.js';
 
 const presets = {
@@ -54,9 +55,9 @@ const otherParts = { date: [...timeParts, ...zoneParts], time: [...dateParts, ..
 // date and a time alike. a bag that names none of the noun's own parts prints the noun's default
 const ownOptions = (kind, bag) => {
   const options = { ...bag };
-  for (const part of otherParts[kind]) {
+  each(otherParts[kind], (part) => {
     delete options[part];
-  }
+  });
   if (options.timeStyle === 'long' || options.timeStyle === 'full') {
     options.timeStyle = 'medium';
   }
@@ -83,18 +84,18 @@ export const intlOptions = (kind, spec) => {
 };
 
 // every preset name formats every noun. a date and a time take their own parts of the datetime preset
-for (const kind of ['date', 'time']) {
-  for (const [name, options] of Object.entries(presets.datetime)) {
+each(['date', 'time'], (kind) => {
+  each(presets.datetime, (options, name) => {
     presets[kind][name] ??= ownOptions(kind, options);
-  }
-}
+  });
+});
 
 // frozen, so a preset keys its formatter by identity and a format call serializes nothing
-for (const kind of Object.values(presets)) {
-  for (const options of Object.values(kind)) {
+each(presets, (kind) => {
+  each(kind, (options) => {
     Object.freeze(options);
-  }
-}
+  });
+});
 
 // Intl gets epoch milliseconds and a zone on every engine. a date is its UTC midnight read in UTC, a
 // time is that clock on the epoch day, so the fields print unshifted whether Temporal is native or not
@@ -168,11 +169,11 @@ export const partOptions = (spec, names, styles) => {
     return styles[bag.dateStyle];
   }
   const options = { ...bag };
-  for (const part of parts) {
+  each(parts, (part) => {
     if (!names.includes(part)) {
       delete options[part];
     }
-  }
+  });
   // the first two names are the parts it always has, and an era prints only beside them
   return names.slice(0, 2).some((name) => options[name] !== undefined) ? options : { ...styles.medium, ...options };
 };

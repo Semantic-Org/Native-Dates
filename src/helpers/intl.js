@@ -1,5 +1,6 @@
+import { isPlainObject } from '@semantic-ui/utils';
+
 import { guard } from './errors.js';
-import { isPlainObject } from './types.js';
 
 // an Intl constructor costs about a hundred format calls, so each formatter is built once per argument
 // list and reused. the arguments key nested maps, a string by value and a frozen options object by

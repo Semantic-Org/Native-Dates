@@ -1,3 +1,5 @@
+import { each, isPlainObject } from '@semantic-ui/utils';
+
 import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, refuse, unreadable } from './helpers/errors.js';
 import {
@@ -11,7 +13,6 @@ import {
 } from './helpers/fields.js';
 import { IS_DURATION } from './helpers/identity.js';
 import { durationFormat, unitFormat } from './helpers/intl.js';
-import { isPlainObject } from './helpers/types.js';
 import { inspect, isTemporalDuration, unit } from './helpers/units.js';
 import { locale as pickLocale } from './helpers/zones.js';
 
@@ -113,9 +114,9 @@ export class Duration {
 
   times(factor) {
     const fields = {};
-    for (const [field, value] of Object.entries(this.toFields())) {
+    each(this.toFields(), (value, field) => {
       spill(fields, unit(field), value * factor);
-    }
+    });
     return this.#next(temporalDurationOf(fields), this.#anchor);
   }
 
@@ -289,11 +290,11 @@ export class Duration {
     const fields = { ...written, ...Object.fromEntries(fieldNames.slice(4).map((field) => [field, clock[field]])) };
     const large = fieldNames.slice(0, subsecond).some((field) => fields[field]);
     const shown = {};
-    for (const [index, field] of fieldNames.entries()) {
+    each(fieldNames, (field, index) => {
       if (fields[field] && (!large || index < subsecond)) {
         shown[field] = fields[field];
       }
-    }
+    });
     // Intl.DurationFormat prints nothing for a zero duration, so zero is spelled out as seconds
     if (this.isZero()) {
       const unitDisplay = style === 'long' ? 'long' : style === 'narrow' ? 'narrow' : 'short';
