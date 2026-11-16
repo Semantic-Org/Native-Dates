@@ -50,7 +50,9 @@ export const names = (locale) => {
     // those keep their own short names
     const cut = short.map((name) => name.slice(0, 2));
     const cuts = /\p{Lu}|\p{Ll}/u.test(short[0]) && new Set(cut).size === 7
-      && short.every((name, day) => name.length < 3 || long[day].toLowerCase().startsWith(cut[day].toLowerCase()));
+      && short.every((name, day) =>
+        name.replace('.', '').length < 3 || long[day].toLowerCase().startsWith(cut[day].toLowerCase())
+      );
     const isEnglish = language.startsWith('en');
     const shortest = cuts ? cut : !isEnglish && narrow.join('') === 'MTWTFSS' ? short : narrow;
     // what the locale writes straight after a day in a date: the dot in 6. November, 日 in 6日
