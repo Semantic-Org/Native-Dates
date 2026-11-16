@@ -5,6 +5,7 @@ import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } 
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
+import { relativeDays } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
 import { isDate, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
@@ -412,6 +413,16 @@ export class CalendarDate {
     return options ? formatIntl('date', this.#plain, options, locale) : formatTokens(this, 'date', spec, locale);
   }
 
+  // how far this day is from another, in words: 'yesterday', 'in 3 weeks'. from today when no other
+  // is given
+  from(other, locale = this.#locale) {
+    return relativeDays((other === undefined ? today() : new CalendarDate(other)).until(this, 'day'), locale);
+  }
+
+  fromNow(locale) {
+    return this.from(undefined, locale);
+  }
+
   toString() {
     return this.#plain.toString();
   }
@@ -450,6 +461,7 @@ CalendarDate.prototype.add = CalendarDate.prototype.plus;
 CalendarDate.prototype.subtract = CalendarDate.prototype.minus;
 CalendarDate.prototype.remove = CalendarDate.prototype.minus;
 CalendarDate.prototype.lang = CalendarDate.prototype.locale;
+CalendarDate.prototype.formatRelative = CalendarDate.prototype.from;
 
 export const date = (input, monthOrOptions, day) => {
   const build = () =>

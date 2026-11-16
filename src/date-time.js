@@ -5,6 +5,7 @@ import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } 
 import { temporalDurationFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
+import { relativeSeconds } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
 import { isDate, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
@@ -438,6 +439,17 @@ export class DateTime {
       : formatTokens(this, 'datetime', spec, locale);
   }
 
+  // how far this moment is from another, in words: '3 hours ago', 'in 2 days'. from now when no
+  // other is given
+  from(other, locale = this.#locale) {
+    const reference = other === undefined ? Date.now() : new DateTime(other, this.zone).epoch;
+    return relativeSeconds((this.epoch - reference) / 1000, locale);
+  }
+
+  fromNow(locale) {
+    return this.from(undefined, locale);
+  }
+
   // the instant in UTC, the form every database and API reads. the zone is a view and does not travel
   toString() {
     const nanos = this.#zoned.epochNanoseconds % 1_000_000n;
@@ -475,6 +487,7 @@ DateTime.prototype.add = DateTime.prototype.plus;
 DateTime.prototype.subtract = DateTime.prototype.minus;
 DateTime.prototype.remove = DateTime.prototype.minus;
 DateTime.prototype.lang = DateTime.prototype.locale;
+DateTime.prototype.formatRelative = DateTime.prototype.from;
 
 // with { loose: true } (via plugins/loose) an unreadable input is null, never a throw
 export const datetime = (input, options) => {
