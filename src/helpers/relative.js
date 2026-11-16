@@ -1,6 +1,5 @@
-import { CalendarDate, DateTime, now, today } from 'native-dates';
-import { cached } from 'native-dates/helpers/intl';
-import { locale as pickLocale } from 'native-dates/helpers/zones';
+import { cached } from './intl.js';
+import { locale as pickLocale } from './zones.js';
 
 const relativeTimeFormat = cached((locale) => new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }));
 
@@ -51,13 +50,4 @@ export const relativeDays = (days, locale) => {
     ? ['month', roundAway(days / 30.436875)]
     : ['year', roundAway(days / 365.2425)];
   return relativeTimeFormat(pickLocale(locale)).format(value, name);
-};
-
-DateTime.prototype.formatRelative = function formatRelative(to, locale = this.locale()) {
-  const reference = to === undefined ? now(this.zone) : new DateTime(to, this.zone);
-  return relativeSeconds((this.epoch - reference.epoch) / 1000, locale);
-};
-CalendarDate.prototype.formatRelative = function formatRelative(to, locale = this.locale()) {
-  const reference = to === undefined ? today() : new CalendarDate(to);
-  return relativeDays(reference.until(this, 'day'), locale);
 };
