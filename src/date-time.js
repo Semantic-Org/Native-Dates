@@ -1,3 +1,5 @@
+import { isDate, isNumber, isPlainObject, isString } from '@semantic-ui/utils';
+
 import { CalendarDate, today } from './calendar-date.js';
 import { anchored, duration } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
@@ -7,7 +9,6 @@ import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
 import { relativeSeconds } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
-import { isDate, isNumber, isPlainObject, isString } from './helpers/types.js';
 import {
   endPrecision,
   hasOffset,

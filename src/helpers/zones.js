@@ -1,6 +1,7 @@
+import { each, isPlainObject, isString } from '@semantic-ui/utils';
+
 import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
-import { isPlainObject, isString } from './types.js';
 import { weekdayNumber } from './units.js';
 
 // process-wide defaults, zoneAliases being the names a zone answers to when plugins/zones is loaded
@@ -73,14 +74,14 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases } = {
     if (zoneAliases === null) {
       settings.zoneAliases = {};
     }
-    for (const [name, target] of Object.entries(zoneAliases ?? {})) {
+    each(zoneAliases, (target, name) => {
       if (target == null) {
         delete settings.zoneAliases[name];
       }
       else {
         settings.zoneAliases[name] = zoneId(target);
       }
-    }
+    });
     resolved.clear();
     resolved.set('UTC', 'UTC');
   }

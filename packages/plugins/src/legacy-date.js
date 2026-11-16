@@ -1,3 +1,4 @@
+import { each } from '@semantic-ui/utils';
 import { DateTime } from 'native-dates';
 import { isDevelopment } from 'native-dates/helpers/environment';
 import { refuse } from 'native-dates/helpers/errors';
@@ -97,7 +98,7 @@ const setters = [
 const proto = DateTime.prototype;
 Object.assign(proto, reads);
 // a DateTime never changes in place, so every setter a Date has refuses and names the way
-for (const name of setters) {
+each(setters, (name) => {
   proto[name] = function refuseSetter() {
     return refuse('immutable', name, {
       explanation: isDevelopment
@@ -105,4 +106,4 @@ for (const name of setters) {
         : 0,
     });
   };
-}
+});

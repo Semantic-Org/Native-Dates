@@ -1,3 +1,5 @@
+import { isArray, isDate, isString } from '@semantic-ui/utils';
+
 import { CalendarDate } from '../calendar-date.js';
 import { DateTime } from '../date-time.js';
 import { Time } from '../time.js';
@@ -15,7 +17,6 @@ import {
   IS_TIME_RANGE,
   IS_YEAR_MONTH,
 } from './identity.js';
-import { isArray, isDate, isString } from './types.js';
 import { isInstant, isPlainDate, isPlainDateTime, isPlainTime, isZonedDateTime } from './units.js';
 
 const looksLikeTime = /^\d{1,2}(?::\d{2}){0,2}(?:\.\d+)?\s*(?:[ap]\.?m\.?)?$/i;

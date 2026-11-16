@@ -1,7 +1,8 @@
+import { each, isNumber, isPlainObject, isString } from '@semantic-ui/utils';
+
 import { isDevelopment } from './environment.js';
 import { guard, refuse, refuseType } from './errors.js';
 import { IS_DURATION } from './identity.js';
-import { isNumber, isPlainObject, isString } from './types.js';
 import { isDigits, isTemporalDuration, plural, unit } from './units.js';
 
 export const fieldNames = [
@@ -57,11 +58,11 @@ export const spill = (fields, name, value) => {
 // the nonzero fields of a Temporal.Duration as a plain object
 export const fieldsOf = (temporal) => {
   const fields = {};
-  for (const field of fieldNames) {
+  each(fieldNames, (field) => {
     if (temporal[field]) {
       fields[field] = temporal[field];
     }
-  }
+  });
   return fields;
 };
 
@@ -94,9 +95,9 @@ const parseWords = (text) => {
   }
   const negateAll = found[0]?.[0] === '-' && found.slice(1).every(([sign]) => sign === '');
   const fields = {};
-  for (const [sign, amount, name] of found) {
+  each(found, ([sign, amount, name]) => {
     spill(fields, name, negateAll || sign === '-' ? -amount : amount);
-  }
+  });
   return fields;
 };
 
@@ -142,9 +143,9 @@ export const fieldsFrom = (input, name) => {
   }
   if (isPlainObject(input)) {
     const fields = {};
-    for (const [key, value] of Object.entries(input)) {
+    each(input, (value, key) => {
       spill(fields, unit(key), value);
-    }
+    });
     return oneSign(fields, JSON.stringify(input));
   }
   return refuseType('notADuration', String(input), {
@@ -156,11 +157,11 @@ export const fieldsFrom = (input, name) => {
 
 export const clockFields = (fields) => {
   const clock = {};
-  for (const field of fieldNames.slice(4)) {
+  each(fieldNames.slice(4), (field) => {
     if (fields[field]) {
       clock[field] = fields[field];
     }
-  }
+  });
   return clock;
 };
 
@@ -169,12 +170,12 @@ export const clockFields = (fields) => {
 // so a subtraction balances to one sign: 2h minus 30m is 1h 30m
 export const addFields = (a, b, sign) => {
   const fields = {};
-  for (const field of ['years', 'months', 'weeks', 'days']) {
+  each(['years', 'months', 'weeks', 'days'], (field) => {
     const sum = (a[field] ?? 0) + sign * (b[field] ?? 0);
     if (sum) {
       fields[field] = sum;
     }
-  }
+  });
   const clockA = temporalDurationOf(clockFields(a));
   const clockB = temporalDurationOf(clockFields(b));
   Object.assign(fields, fieldsOf(sign > 0 ? clockA.add(clockB) : clockA.subtract(clockB)));
