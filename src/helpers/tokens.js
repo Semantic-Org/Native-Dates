@@ -16,8 +16,16 @@ export const names = (locale) => {
     const parts = (options, stamp) =>
       plainDateTimeFormat(locale, { ...options, calendar: 'gregory' }).formatToParts(stamp);
     const monthIn = (options, stamp) => parts(options, stamp).find((part) => part.type === 'month').value;
+    const clock = plainDateTimeFormat(locale, { hour: 'numeric', hour12: true });
+    const language = clock.resolvedOptions().locale;
+    // greek is the one language Intl hands the beside-a-day form when asked for a long month alone,
+    // Νοεμβρίου for Νοέμβριος. beside a year it gives the plain one, so that is where greek reads it
     const alone = (style) =>
-      stamps.map((stamp) => plainDateTimeFormat(locale, { month: style, calendar: 'gregory' }).format(stamp));
+      stamps.map((stamp) =>
+        language.startsWith('el') && style === 'long'
+          ? monthIn({ month: style, year: 'numeric' }, stamp)
+          : plainDateTimeFormat(locale, { month: style, calendar: 'gregory' }).format(stamp)
+      );
     // many languages write a month differently beside a day: 6 ноября where the month alone is
     // ноябрь. a locale that writes the month as a number there keeps its name
     const besideDay = (style, plain) =>
@@ -31,13 +39,20 @@ export const names = (locale) => {
         { length: 7 },
         (_, i) => plainDateTimeFormat(locale, { weekday: style }).format(Date.UTC(2024, 0, 1 + i)),
       );
-    const clock = plainDateTimeFormat(locale, { hour: 'numeric', hour12: true });
     const periodAt = (hour) =>
       clock.formatToParts(hour * 36e5).find((part) => part.type === 'dayPeriod')?.value ?? (hour < 12 ? 'AM' : 'PM');
     const [MMM, MMMM] = [alone('short'), alone('long')];
-    // two letters of the short name where they tell the seven days apart, as they do in most
-    // alphabets. in arabic they are the article on every day, so the locale's narrow form stands in
-    const cut = weekday('short').map((name) => name.slice(0, 2));
+    const [short, long, narrow] = [weekday('short'), weekday('long'), weekday('narrow')];
+    // the shortest weekday. two letters are a real abbreviation only in a script with letter case,
+    // and only where they open the full name and tell the seven days apart: Mo, lu, пн. cutting a
+    // thai or hindi name splits a syllable, and turkish Pz for Pazartesi reads as Pazar, so everything
+    // else takes the locale's narrow form. three locales hold english M T W T F S S as theirs, and
+    // those keep their own short names
+    const cut = short.map((name) => name.slice(0, 2));
+    const cuts = /\p{Lu}|\p{Ll}/u.test(short[0]) && new Set(cut).size === 7
+      && short.every((name, day) => name.length < 3 || long[day].toLowerCase().startsWith(cut[day].toLowerCase()));
+    const isEnglish = language.startsWith('en');
+    const shortest = cuts ? cut : !isEnglish && narrow.join('') === 'MTWTFSS' ? short : narrow;
     // what the locale writes straight after a day in a date: the dot in 6. November, 日 in 6日
     const written = parts({ day: 'numeric', month: 'long' }, stamps[10]);
     const afterDay = written[written.findIndex((part) => part.type === 'day') + 1];
@@ -45,12 +60,12 @@ export const names = (locale) => {
       MMM,
       MMMM,
       besideDay: { MMM: besideDay('short', MMM), MMMM: besideDay('long', MMMM) },
-      dd: new Set(cut).size === 7 ? cut : weekday('narrow'),
-      ddd: weekday('short'),
-      dddd: weekday('long'),
+      dd: shortest,
+      ddd: short,
+      dddd: long,
       dayPeriods: [periodAt(9), periodAt(15)],
       dayMark: afterDay?.type === 'literal' ? afterDay.value.match(/^[^\s,،]*/)[0] : '',
-      isEnglish: clock.resolvedOptions().locale.startsWith('en'),
+      isEnglish,
     });
   }
   return nameCache.get(key);
@@ -140,7 +155,8 @@ const tokenPattern = new RegExp(
 // the tables the tokens read, for a picker's headers and a month dropdown. weekdays start where the
 // week does, so the header row matches the grid
 export const weekdayNames = (style = 'short', firstDay, locale) => {
-  const table = names(pickLocale(locale))[style === 'long' ? 'dddd' : 'ddd'];
+  // 'narrow' is the shortest form, the one the dd token prints, for a compact calendar header
+  const table = names(pickLocale(locale))[{ long: 'dddd', narrow: 'dd' }[style] ?? 'ddd'];
   const first = weekStart(firstDay, locale) - 1;
   return [...table.slice(first), ...table.slice(0, first)];
 };
