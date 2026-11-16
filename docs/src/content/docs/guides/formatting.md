@@ -146,7 +146,7 @@ Month and weekday names inside token patterns come from `Intl` in your active or
 
 Unrecognized letters outside square brackets throw an `unknownFormat` error so a misspelled preset fails right away instead of printing raw letters. Only `'T'` passes through unescaped for ISO timestamps.
 
-Asking for a field a type does not carry throws a `noField` error instead of inventing midnight. Formatting clock tokens like `'HH:mm'` on a calendar date fails immediately.
+Asking for a field a type does not carry throws an `unsupportedToken` error instead of inventing midnight. Formatting clock tokens like `'HH:mm'` on a calendar date fails immediately.
 
 Core also exports [`monthNames()`](/api/month-names/) and its weekday counterpart for building localized calendar headers and month dropdowns:
 

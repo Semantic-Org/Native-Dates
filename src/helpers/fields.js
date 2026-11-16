@@ -36,7 +36,9 @@ export const spill = (fields, name, value) => {
     return spill(fields, 'month', value * 3);
   }
   if (!Number.isFinite(value)) {
-    refuse('notFinite', `${value} ${name}`);
+    refuse('invalidNumber', `${value} ${name}`, {
+      explanation: isDevelopment ? 'duration amounts must be finite numbers' : 0,
+    });
   }
   const whole = Math.trunc(value);
   const fraction = Number((value - whole).toFixed(9));
@@ -44,9 +46,9 @@ export const spill = (fields, name, value) => {
   if (fraction) {
     const next = spillsInto[name];
     if (!next) {
-      refuse('fractionalMonth', `${value} ${name}`, {
+      refuse('invalidFraction', `${value} ${name}`, {
         explanation: isDevelopment
-          ? 'months and nanoseconds have no smaller unit to spill into. write whole months, or days'
+          ? 'months and nanoseconds must be whole numbers because months vary in length and nanoseconds are the smallest unit. use whole months, or specify days instead'
           : 0,
       });
     }
@@ -74,8 +76,8 @@ const quantity = /([-+]?)(\d+(?:\.\d+)?)\s*([a-zµ]+)/gi;
 const parseWords = (text) => {
   const phrase = text.trim().replace(/,|\band\b/gi, ' ');
   if (!phrase) {
-    refuse('unreadableDuration', text, {
-      explanation: isDevelopment ? 'an empty string is not a length. duration(0) is zero' : 0,
+    refuse('invalidDuration', text, {
+      explanation: isDevelopment ? 'duration string cannot be empty. use `duration(0)` for a zero-length duration' : 0,
     });
   }
   if (/^-?\d+(\.\d+)?$/.test(phrase)) {
@@ -87,9 +89,9 @@ const parseWords = (text) => {
     return '';
   });
   if (rest.trim()) {
-    refuse('unreadableDuration', text, {
+    refuse('invalidDuration', text, {
       explanation: isDevelopment
-        ? "write quantities with units, '1h 30m' or '2 weeks 3 days', or an ISO duration like PT1H30M"
+        ? "expected numbers with units like '1h 30m' or '2 weeks 3 days', or an ISO 8601 duration like 'PT1H30M'"
         : 0,
     });
   }
@@ -105,9 +107,9 @@ const parseWords = (text) => {
 const oneSign = (fields, at) => {
   const signs = new Set(Object.values(fields).filter(Boolean).map(Math.sign));
   if (signs.size > 1) {
-    refuse('mixedSigns', at, {
+    refuse('conflictingSigns', at, {
       explanation: isDevelopment
-        ? 'a duration has one sign. subtract from a point instead: start.plus(months(1)).minus(days(3))'
+        ? "all units in a duration must have the same sign. chain `.plus()` and `.minus()` on a date or time instead, such as `start.plus(1, 'hour').minus(30, 'minutes')`"
         : 0,
     });
   }
@@ -124,9 +126,9 @@ export const fieldsFrom = (input, name) => {
     return spill({}, unit(name), Number(input));
   }
   if (name !== undefined && input != null) {
-    refuseType('notADuration', `${isPlainObject(input) ? JSON.stringify(input) : input} ${name}`, {
+    refuseType('invalidDuration', `${isPlainObject(input) ? JSON.stringify(input) : input} ${name}`, {
       explanation: isDevelopment
-        ? "that duration already has its units. a unit goes with a number: duration(90, 'minutes')"
+        ? "cannot pass a separate unit when the first argument already includes units. pass a number with a unit like `duration(90, 'minutes')`, or a duration phrase alone like `duration('2h')`"
         : 0,
     });
   }
@@ -138,7 +140,7 @@ export const fieldsFrom = (input, name) => {
   }
   if (isString(input)) {
     return /^[-+]?P/i.test(input.trim())
-      ? fieldsOf(guard(() => Temporal.Duration.from(input.trim()), 'unreadableDuration', input))
+      ? fieldsOf(guard(() => Temporal.Duration.from(input.trim()), 'invalidDuration', input))
       : oneSign(parseWords(input), input);
   }
   if (isPlainObject(input)) {
@@ -148,9 +150,9 @@ export const fieldsFrom = (input, name) => {
     });
     return oneSign(fields, JSON.stringify(input));
   }
-  return refuseType('notADuration', String(input), {
+  return refuseType('invalidDuration', String(input), {
     explanation: isDevelopment
-      ? "a duration is a number with a unit, a phrase like '2h 30m', an ISO string like PT2H30M, or a fields object"
+      ? "expected a number and unit like `duration(2, 'hours')`, milliseconds, a phrase like '2h 30m', an ISO string like 'PT2H30M', or a units object like `{ hours: 2 }`"
       : 0,
   });
 };
@@ -185,7 +187,7 @@ export const addFields = (a, b, sign) => {
 // Temporal refuses an empty fields object, and a zero duration has no nonzero field to offer it
 export const temporalDurationOf = (fields) =>
   Object.keys(fields).length
-    ? guard(() => Temporal.Duration.from(fields), 'unreadableDuration', JSON.stringify(fields))
+    ? guard(() => Temporal.Duration.from(fields), 'invalidDuration', JSON.stringify(fields))
     : new Temporal.Duration();
 
 export const temporalDurationFrom = (input, name) => temporalDurationOf(fieldsFrom(input, name));

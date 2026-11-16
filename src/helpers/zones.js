@@ -34,7 +34,7 @@ export const zoneId = (id) => {
   if (!isString(id)) {
     refuse('unknownZone', String(id), {
       explanation: isDevelopment
-        ? 'a zone is an IANA name like America/New_York, a fixed offset like +05:30, or UTC'
+        ? "expected a time zone string such as 'America/New_York', a fixed offset like '+05:30', or 'UTC'"
         : 0,
     });
   }
@@ -47,8 +47,8 @@ export const zoneId = (id) => {
     refuse('unknownZone', id, {
       explanation: isDevelopment
         ? zoneExtension
-          ? "a zone is an IANA name like America/New_York, a city like Berlin or los angeles, an abbreviation like PT or CET, a fixed offset like +05:30, or UTC. name your own once: configure({ zoneAliases: { hq: 'Europe/Berlin' } })"
-          : "a zone is an IANA name like America/New_York, a fixed offset like +05:30, or UTC. import '@native-dates/plugins/zones' for cities like Berlin, abbreviations like PT, and zoneAliases"
+          ? "expected an IANA time zone like 'America/New_York', a city like 'Berlin', an abbreviation like 'PT', a fixed offset like '+05:30', or 'UTC'. to add custom names, call `configure({ zoneAliases: { hq: 'Europe/Berlin' } })`"
+          : "expected an IANA time zone like 'America/New_York', a fixed offset like '+05:30', or 'UTC'. import '@native-dates/plugins/zones' to use city names like 'Berlin', abbreviations like 'PT', or `zoneAliases`"
         : 0,
     });
   }
@@ -61,13 +61,15 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases } = {
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
         explanation: isDevelopment
-          ? "import '@native-dates/plugins/zones' for zoneAliases"
+          ? "`zoneAliases` requires the zones plugin. import '@native-dates/plugins/zones' once at startup"
           : 0,
       });
     }
     if (zoneAliases !== null && !isPlainObject(zoneAliases)) {
-      refuse('unknownZone', String(zoneAliases), {
-        explanation: isDevelopment ? "zoneAliases is an object of names to zones: { hq: 'Europe/Berlin' }" : 0,
+      refuse('invalidZoneAliases', String(zoneAliases), {
+        explanation: isDevelopment
+          ? "`zoneAliases` must be a plain object mapping alias names to time zones like `{ hq: 'Europe/Berlin' }`, or `null` to clear all aliases"
+          : 0,
       });
     }
     // null clears every alias, and a null target clears that one name
@@ -111,7 +113,7 @@ const checkedLocale = (tag) => {
       'unknownLocale',
       key,
       isDevelopment
-        ? "a locale is a BCP 47 tag like 'en-US' or 'de', or a list of them. pick one out of an Accept-Language header"
+        ? "expected a valid BCP 47 locale tag like 'en-US' or 'de', or an array of tags. if reading an HTTP `Accept-Language` header, strip quality weights like ';q=0.9' first"
         : 0,
     );
     knownLocales.add(key);
