@@ -232,7 +232,7 @@ export class Duration {
     if (!duration.anchor && (fields.years || fields.months)) {
       refuse('missingAnchor', `${verb} of ${duration}`, {
         explanation: isDevelopment
-          ? 'months and years vary in length, so converting them to weeks, days or hours requires a starting date. measure between two dates with `a.until(b)`, or construct the duration in weeks or days. to order durations of months and years, use `.compare()`'
+          ? 'months and years vary in length, so converting or comparing them with weeks, days, or clock units requires a starting date. measure between two dates with `a.until(b)`, or construct the duration in weeks or days'
           : 0,
       });
     }
