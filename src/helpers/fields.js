@@ -1,4 +1,3 @@
-import { each } from '@semantic-ui/utils';
 import { isDevelopment } from './environment.js';
 import { guard, refuse, refuseType } from './errors.js';
 import { IS_DURATION } from './identity.js';
@@ -56,8 +55,6 @@ export const spill = (fields, name, value) => {
 };
 
 // the nonzero fields of a Temporal.Duration as a plain object
-// the loops here and in Duration stay native: they run for every duration made, where each() would
-// put a closure and a hop into every trace
 export const fieldsOf = (temporal) => {
   const fields = {};
   for (const field of fieldNames) {
@@ -97,9 +94,9 @@ const parseWords = (text) => {
   }
   const negateAll = found[0]?.[0] === '-' && found.slice(1).every(([sign]) => sign === '');
   const fields = {};
-  each(found, ([sign, amount, name]) => {
+  for (const [sign, amount, name] of found) {
     spill(fields, name, negateAll || sign === '-' ? -amount : amount);
-  });
+  }
   return fields;
 };
 
@@ -145,9 +142,9 @@ export const fieldsFrom = (input, name) => {
   }
   if (isPlainObject(input)) {
     const fields = {};
-    each(input, (value, key) => {
+    for (const [key, value] of Object.entries(input)) {
       spill(fields, unit(key), value);
-    });
+    }
     return oneSign(fields, JSON.stringify(input));
   }
   return refuseType('notADuration', String(input), {

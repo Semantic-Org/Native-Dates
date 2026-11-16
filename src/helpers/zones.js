@@ -1,4 +1,3 @@
-import { each } from '@semantic-ui/utils';
 import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
 import { isPlainObject, isString } from './types.js';
@@ -74,14 +73,14 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases } = {
     if (zoneAliases === null) {
       settings.zoneAliases = {};
     }
-    each(zoneAliases, (target, name) => {
+    for (const [name, target] of Object.entries(zoneAliases ?? {})) {
       if (target == null) {
         delete settings.zoneAliases[name];
       }
       else {
         settings.zoneAliases[name] = zoneId(target);
       }
-    });
+    }
     resolved.clear();
     resolved.set('UTC', 'UTC');
   }
