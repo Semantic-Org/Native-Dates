@@ -106,7 +106,7 @@ export class CalendarDate {
       return guard(
         () => {
           if (!wholeNumbers([input, month, day])) {
-            throw new RangeError('a date reads whole numbers');
+            throw new RangeError(isDevelopment ? 'year, month, and day must be whole numbers' : '');
           }
           return Temporal.PlainDate.from({ year: input, month, day }, { overflow: 'reject' });
         },
@@ -169,8 +169,11 @@ export class CalendarDate {
       () => Temporal.PlainDate.from(text.trim()),
       'invalidDate',
       text,
+      // text in the right shape that still fails names a day the calendar lacks, February 30th
       isDevelopment
-        ? "expected an ISO date string like '2026-09-06'. use `yearMonth('2026-11')` for a year and month, or pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
+        ? /^\s*\d{4}-\d{2}-\d{2}\s*$/.test(text)
+          ? 'this date does not exist on the calendar. check the month and the day'
+          : "expected an ISO date string like '2026-09-06'. use `yearMonth('2026-11')` for a year and month, or pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
         : 0,
     );
   }

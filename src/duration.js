@@ -310,7 +310,7 @@ export class Duration {
   format(style = 'long', locale = this.#locale) {
     if (!styles.includes(style)) {
       refuse('unknownFormat', String(style), {
-        explanation: isDevelopment ? 'expected a duration format style in [long, short, narrow, digital]' : 0,
+        explanation: isDevelopment ? `expected a duration format style in [${styles.join(', ')}]` : 0,
       });
     }
     const written = this.toFields();

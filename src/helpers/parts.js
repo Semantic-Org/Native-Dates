@@ -1,5 +1,6 @@
 import { each, isString } from '@semantic-ui/utils';
 
+import { isDevelopment } from './environment.js';
 import { names } from './tokens.js';
 import { isCount } from './units.js';
 import { locale as pickLocale } from './zones.js';
@@ -12,10 +13,12 @@ export const wholeParts = (fields, names) => {
   const parts = {};
   each(fields, (value, name) => {
     if (!names.includes(name)) {
-      throw new RangeError(`${name} is not a part here, only ${names.join(' and ')}`);
+      throw new RangeError(
+        isDevelopment ? `\`${name}\` is not accepted here. expected only [${names.join(', ')}]` : '',
+      );
     }
     if (!isCount(value) || !Number.isInteger(Number(value))) {
-      throw new RangeError(`${name} is a whole number`);
+      throw new RangeError(isDevelopment ? `\`${name}\` must be a whole number` : '');
     }
     parts[name] = Number(value);
   });
