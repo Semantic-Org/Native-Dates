@@ -273,6 +273,12 @@ export class DateTime {
   /** Alias for `locale` */
   lang(): Locale | undefined;
   lang(tag: Locale | null | undefined): this;
+  /** How far this moment is from another, in words: `'3 hours ago'`, `'in 2 days'`. From now when no other is given */
+  from(other?: DateTimeInput, locale?: Locale): string;
+  /** How far this moment is from now, in words */
+  fromNow(locale?: Locale): string;
+  /** Alias for `from` */
+  formatRelative(other?: DateTimeInput, locale?: Locale): string;
   /** The instant in UTC, `'2026-09-06T14:30:00.000Z'` */
   toString(): string;
   toJSON(): string;
@@ -397,6 +403,12 @@ export class CalendarDate {
   /** Alias for `locale` */
   lang(): Locale | undefined;
   lang(tag: Locale | null | undefined): this;
+  /** How far this day is from another, in words: `'yesterday'`, `'in 3 weeks'`. From today when no other is given */
+  from(other?: CalendarDateInput, locale?: Locale): string;
+  /** How far this day is from today, in words */
+  fromNow(locale?: Locale): string;
+  /** Alias for `from` */
+  formatRelative(other?: CalendarDateInput, locale?: Locale): string;
   /** ISO 8601, `'2026-09-06'` */
   toString(): string;
   toJSON(): string;
