@@ -1,7 +1,10 @@
 import { cached } from './intl.js';
 import { locale as pickLocale } from './zones.js';
 
-const relativeTimeFormat = cached((locale) => new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }));
+// 'auto' lets Intl say 'yesterday' and 'last month', which are claims about the calendar. a rounded
+// length of time cannot make them: 22 hours ago can be earlier today, and 26 days ago the same month.
+// so a phrase counts, '1 day ago', except where the calendar is what was measured
+const relativeTimeFormat = cached((locale, numeric) => new Intl.RelativeTimeFormat(locale, { numeric }));
 
 const minuteSeconds = 60;
 const hourSeconds = 3600;
@@ -36,10 +39,11 @@ const roundAway = (value) => Math.sign(value) * Math.round(Math.abs(value));
 export const relativeSeconds = (seconds, locale) => {
   const [name, size] = pickUnit(seconds);
   const value = roundAway(seconds / size);
-  return relativeTimeFormat(pickLocale(locale)).format(value, name);
+  // nothing apart is 'now', never 'in 0 seconds'
+  return relativeTimeFormat(pickLocale(locale), value === 0 ? 'auto' : 'always').format(value, name);
 };
 
-// Intl supplies yesterday and tomorrow
+// whole calendar days, so Intl supplies today, yesterday and tomorrow. weeks and up are counted
 export const relativeDays = (days, locale) => {
   const size = Math.abs(days);
   const [name, value] = size < 7
@@ -47,7 +51,7 @@ export const relativeDays = (days, locale) => {
     : size < 26
     ? ['week', roundAway(days / 7)]
     : size < 320
-    ? ['month', roundAway(days / 30.436875)]
-    : ['year', roundAway(days / 365.2425)];
-  return relativeTimeFormat(pickLocale(locale)).format(value, name);
+    ? ['month', roundAway(days * daySeconds / monthSeconds)]
+    : ['year', roundAway(days * daySeconds / yearSeconds)];
+  return relativeTimeFormat(pickLocale(locale), name === 'day' ? 'auto' : 'always').format(value, name);
 };

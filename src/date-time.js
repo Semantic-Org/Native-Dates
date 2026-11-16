@@ -438,18 +438,18 @@ export class DateTime {
       : formatTokens(this, 'datetime', spec, locale);
   }
 
-  // the instant in UTC, the form every database and API reads. the zone is a view and does not travel
   // how far this moment is from another, in words: '3 hours ago', 'in 2 days'. from now when no
   // other is given
   from(other, locale = this.#locale) {
-    const reference = other === undefined ? now(this.zone) : new DateTime(other, this.zone);
-    return relativeSeconds((this.epoch - reference.epoch) / 1000, locale);
+    const reference = other === undefined ? Date.now() : new DateTime(other, this.zone).epoch;
+    return relativeSeconds((this.epoch - reference) / 1000, locale);
   }
 
   fromNow(locale) {
     return this.from(undefined, locale);
   }
 
+  // the instant in UTC, the form every database and API reads. the zone is a view and does not travel
   toString() {
     const nanos = this.#zoned.epochNanoseconds % 1_000_000n;
     const digits = nanos === 0n ? 3 : nanos % 1000n === 0n ? 6 : 9;
