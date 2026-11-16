@@ -92,7 +92,7 @@ export class Time {
       return guard(
         () => {
           if (!wholeNumbers([input, minute, second])) {
-            throw new RangeError('a clock reads whole numbers');
+            throw new RangeError(isDevelopment ? 'hour, minute, and second must be whole numbers' : '');
           }
           return Temporal.PlainTime.from({ hour: input, minute: minute ?? 0, second: second ?? 0 }, {
             overflow: 'reject',
