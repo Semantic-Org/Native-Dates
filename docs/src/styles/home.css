@@ -34,12 +34,14 @@
 .hero .container { position: relative; }
 
 .hero-copy {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 31%, 405px);
+  column-gap: clamp(40px, 4.5vw, 72px);
 }
-.hero-copy h1 { grid-column: 1; margin-bottom: 28px; }
+.hero-copy h1 { grid-column: 1; margin-bottom: 24px; }
 .hero-copy .lede { grid-column: 1; }
 /* the install block stands beside the headline and lede, centered on the pair */
-.hero-side { grid-column: 2; grid-row: 1 / span 2; align-self: center; display: flex; flex-direction: column; align-items: flex-start; }
+.hero-side { grid-column: 2; grid-row: 1 / span 2; align-self: center; display: flex; flex-direction: column; align-items: stretch; }
 .hero h1 {
   font-size: var(--display);
   line-height: var(--display-lh);
@@ -48,7 +50,7 @@
   max-width: none;
 }
 .lede {
-  margin-top: 0; max-width: 58ch;
+  margin-top: 0; max-width: 62ch;
   font-size: var(--fs-lg); line-height: var(--lh-lg); color: var(--text-2);
 }
 .lede a, .ribbon-head p a {
@@ -73,7 +75,11 @@
 .install-cmd code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .install-cmd .copy { margin-inline-start: auto; }
 
-.hero-actions { margin-top: 14px; display: flex; gap: 10px; }
+.hero .install-cmd { height: 54px; padding-inline: 18px 10px; font-size: var(--fs-md); }
+.hero .install-cmd code { font-size: var(--fs-sm); }
+
+.hero-actions { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hero-actions .btn { --h: 48px; padding: 0 20px; border-radius: var(--r-3); font-size: var(--fs-md); }
 
 
 /* ---------- ribbons ---------- */
@@ -422,9 +428,14 @@
 .bytes-plugin:has(input:checked) code { color: var(--accent-strong); }
 .bytes-adds { color: var(--text-3); font: 400 var(--fs-2xs)/1 var(--font-mono); white-space: nowrap; }
 
-/* the closer tells the time: now().text, in the reader's zone and locale */
-.closer-clock { margin-top: 14px; color: var(--text); font-size: var(--fs-lg); line-height: var(--lh-lg); min-height: var(--lh-lg); }
-.closer-clock code { margin-inline: 0 10px; color: var(--text-2); }
+/* the closer tells the time to the second, and reads it again whenever now() is clicked */
+.closer-call { appearance: none; padding: 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; }
+.closer-call code { display: inline-block; padding: 4px 10px; box-shadow: inset 0 0 0 1px var(--accent-line); transition: background 140ms var(--ease), box-shadow 140ms var(--ease), color 140ms var(--ease), transform 80ms var(--ease); }
+.closer-call:hover code { color: var(--accent-strong); background: var(--accent-wash); box-shadow: inset 0 0 0 1px var(--accent); }
+.closer-call:active code { transform: translateY(1px); }
+.closer-call:focus-visible { outline: none; }
+.closer-call:focus-visible code { outline: 2px solid var(--accent); outline-offset: 3px; }
+.closer-clock { margin-top: 14px; color: var(--text-2); font-size: var(--fs-lg); line-height: var(--lh-lg); min-height: var(--lh-lg); }
 
 /* ---------- responsive ---------- */
 
@@ -438,7 +449,7 @@
 /* below this the headline column gets too narrow to hold two lines: stack the install block under the lede */
 @media (max-width: 1180px) {
   .hero-copy { grid-template-columns: 1fr; }
-  .hero-side { grid-column: 1; grid-row: auto; margin-top: 32px; }
+  .hero-side { grid-column: 1; grid-row: auto; max-width: 390px; margin-top: 32px; }
 }
 /* the sentence's columns no longer fit side by side: each thought stacks, its words over its call
    over its value, and the row names step aside */
@@ -502,8 +513,9 @@
   /* the pitch centers on a phone, as a single column reads best there */
   .hero-copy { text-align: center; }
   .hero-copy h1, .hero .lede { margin-inline: auto; text-wrap: balance; }
-  .hero-side { align-items: center; margin-top: 20px; }
-  .hero-actions { justify-content: center; margin-top: 0; }
+  .hero-side { align-items: center; max-width: none; margin-top: 20px; }
+  .hero-actions { display: flex; justify-content: center; margin-top: 0; }
+  .hero-actions .btn { --h: 42px; padding: 0 16px; font-size: var(--fs-sm); }
   .hero-copy h1 { margin-bottom: 16px; }
   .hero .lede { font-size: var(--fs-md); line-height: var(--lh-md); }
   .say { margin-top: 28px; }

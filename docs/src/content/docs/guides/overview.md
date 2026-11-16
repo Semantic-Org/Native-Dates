@@ -75,17 +75,17 @@ Because methods return new instances, `===` checks object references rather than
 
 ## Lean core and opt-in plugins
 
-The core [`native-dates`](/guides/installation/) package stays small. It covers creation, time zones, calendar math, partial dates, ranges, durations, localized presets, and token patterns.
+The core [`native-dates`](/guides/installation/) package stays small. It covers creation, time zones, calendar math, partial dates, ranges, durations, relative phrases, localized presets, and token patterns.
 
-Optional additions like relative phrases, city and abbreviation lookups, loose parsing, and legacy `Date` methods live in [`@native-dates/plugins`](/plugins/) as individual subpath imports:
+Optional additions like city and abbreviation lookups, loose parsing, and legacy `Date` methods live in [`@native-dates/plugins`](/plugins/) as individual subpath imports:
 
 ```js
-import '@native-dates/plugins/relative';
+import '@native-dates/plugins/loose';
 import '@native-dates/plugins/zones';
-import { datetime, today } from 'native-dates';
+import { date, datetime } from 'native-dates';
 
-today().minus(3, 'days').formatRelative(); // '3 days ago'
 datetime('2026-11-16T09:30', 'Berlin').zone; // 'Europe/Berlin'
+date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 ```
 
 Head to [Installation](/guides/installation/) to install the package, support older runtimes, and configure app-wide defaults.

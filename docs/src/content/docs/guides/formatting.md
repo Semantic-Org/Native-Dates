@@ -173,19 +173,23 @@ week.format('YYYY-MM-DD'); // '2026-09-01 – 2026-09-07'
 
 ## Relative phrases
 
-Import [`@native-dates/plugins/relative`](/plugins/relative/) to add `formatRelative()` to dates and moments. It turns elapsed distances into natural phrases such as "3 hours ago" or "yesterday":
+Moments and calendar dates include [`from()`](/api/date-time/#from) and [`fromNow()`](/api/date-time/#fromnow) directly in core, with `formatRelative()` as an alias. Phrases are localized automatically through the runtime's relative time formatter:
 
 ```js
-import '@native-dates/plugins/relative';
-import { date, datetime } from 'native-dates';
+import { date, datetime, now, today } from 'native-dates';
+
+now().minus(5, 'minutes').fromNow('en-US'); // '5 minutes ago'
+today().plus(1, 'day').fromNow('en-US'); // 'tomorrow'
 
 const anchor = datetime('2026-11-16T12:00', 'UTC');
-anchor.minus(3, 'hours').formatRelative(anchor, 'en-US'); // '3 hours ago'
-anchor.plus(45, 'minutes').formatRelative(anchor, 'en-US'); // 'in 1 hour'
+anchor.minus(3, 'hours').from(anchor, 'en-US'); // '3 hours ago'
+anchor.minus(23, 'hours').from(anchor, 'en-US'); // '1 day ago'
 
 const currentDay = date('2026-11-16');
-currentDay.minus(1, 'day').formatRelative(currentDay, 'en-US'); // 'yesterday'
-currentDay.plus(2, 'days').formatRelative(currentDay, 'en-US'); // 'in 2 days'
+currentDay.minus(1, 'day').from(currentDay, 'en-US'); // 'yesterday'
+currentDay.plus(14, 'days').from(currentDay, 'en-US'); // 'in 2 weeks'
 ```
 
-Omit the first argument to compare against the current moment or today's date automatically. See [Parsing](/guides/parsing/) next for reading incoming strings and external values back into code.
+Calendar dates measure whole days, so `from()` and `fromNow()` say yesterday, today, and tomorrow within seven days. Moments measure elapsed clock time and stick to numeric counts past `'now'`, since 23 hours ago can still fall on the same calendar day.
+
+See [Parsing](/guides/parsing/) next for reading incoming strings and external values back into code.
