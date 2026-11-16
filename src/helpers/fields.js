@@ -1,8 +1,8 @@
-import { each } from '@semantic-ui/utils';
+import { each, isNumber, isPlainObject, isString } from '@semantic-ui/utils';
+
 import { isDevelopment } from './environment.js';
 import { guard, refuse, refuseType } from './errors.js';
 import { IS_DURATION } from './identity.js';
-import { isNumber, isPlainObject, isString } from './types.js';
 import { isDigits, isTemporalDuration, plural, unit } from './units.js';
 
 export const fieldNames = [

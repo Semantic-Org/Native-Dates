@@ -1,6 +1,6 @@
-import { each } from '@semantic-ui/utils';
+import { each, isString } from '@semantic-ui/utils';
+
 import { names } from './tokens.js';
-import { isString } from './types.js';
 import { isCount } from './units.js';
 import { locale as pickLocale } from './zones.js';
 

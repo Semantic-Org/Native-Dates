@@ -1,4 +1,5 @@
-import { each } from '@semantic-ui/utils';
+import { each, isNumber, isPlainObject, isString } from '@semantic-ui/utils';
+
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import {
@@ -10,7 +11,6 @@ import {
   IS_TIME,
   IS_YEAR_MONTH,
 } from './identity.js';
-import { isNumber, isPlainObject, isString } from './types.js';
 
 export const inspect = Symbol.for('nodejs.util.inspect.custom');
 

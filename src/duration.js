@@ -1,4 +1,5 @@
-import { each } from '@semantic-ui/utils';
+import { each, isPlainObject } from '@semantic-ui/utils';
+
 import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, refuse, unreadable } from './helpers/errors.js';
 import {
@@ -12,7 +13,6 @@ import {
 } from './helpers/fields.js';
 import { IS_DURATION } from './helpers/identity.js';
 import { durationFormat, unitFormat } from './helpers/intl.js';
-import { isPlainObject } from './helpers/types.js';
 import { inspect, isTemporalDuration, unit } from './helpers/units.js';
 import { locale as pickLocale } from './helpers/zones.js';
 

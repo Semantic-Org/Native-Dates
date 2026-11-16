@@ -1,3 +1,5 @@
+import { isNumber, isPlainObject, isString } from '@semantic-ui/utils';
+
 import { CalendarDate } from './calendar-date.js';
 import { DateTime } from './date-time.js';
 import { days, duration, hours } from './duration.js';
@@ -6,7 +8,6 @@ import { isUnreadable, loosely, readAs, refuse, refuseType, unreadable } from '.
 import { isDurationFields } from './helpers/fields.js';
 import { epochOf, formatter, intlOptions } from './helpers/format.js';
 import { IS_DATE_RANGE, IS_DATE_TIME_RANGE, IS_DURATION, IS_RANGE, IS_TIME_RANGE } from './helpers/identity.js';
-import { isNumber, isPlainObject, isString } from './helpers/types.js';
 import { inspect, isDigits, isTemporalDuration, stepOf, unit, zoneOptions } from './helpers/units.js';
 import { Time } from './time.js';
 
