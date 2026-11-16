@@ -134,18 +134,27 @@ export class Duration {
   // weeks, months or years, and an explicit unit is taken at its word either way
   balance(largest) {
     if (!this.#anchor) {
+      const whole = Duration.#wholeMonths(this);
+      const into = largest === undefined ? undefined : unit(largest);
+      if (whole !== undefined && (into === 'year' || into === 'quarter' || into === 'month')) {
+        return this.#next(
+          temporalDurationOf(
+            into === 'year' ? { years: Math.trunc(whole / 12), months: whole % 12 } : { months: whole },
+          ),
+        );
+      }
       Duration.#requireAnchor(this, 'balance');
       if (largest === undefined) {
         return Duration.#balancedClock(this);
       }
-      const target = unit(largest);
+      const target = into;
       if (target === 'week') {
         return Duration.#balancedWeeks(this);
       }
       if (target === 'month' || target === 'quarter' || target === 'year') {
-        refuse('needsAnchor', `balance to ${target}`, {
+        refuse('missingAnchor', `balance to ${target}`, {
           explanation: isDevelopment
-            ? 'a month has no fixed length. balance a duration taken from a.until(b), which knows its calendar'
+            ? "months, quarters, and years vary in length, so balancing to them requires a starting date. measure between two dates with `a.until(b)`, or balance up to 'week' or 'day'"
             : 0,
         });
       }
@@ -210,12 +219,21 @@ export class Duration {
     );
   }
 
+  // a year is twelve months in the ISO calendar, so a duration of only years and months counts in
+  // months, anchored or not. undefined once it carries weeks, days or a clock, which a month cannot hold
+  static #wholeMonths(duration) {
+    const fields = duration.toFields();
+    return fieldNames.slice(2).some((name) => fields[name])
+      ? undefined
+      : (fields.years ?? 0) * 12 + (fields.months ?? 0);
+  }
+
   static #requireAnchor(duration, verb) {
     const fields = duration.toFields();
     if (!duration.anchor && (fields.years || fields.months)) {
-      refuse('needsAnchor', `${verb} of ${duration}`, {
+      refuse('missingAnchor', `${verb} of ${duration}`, {
         explanation: isDevelopment
-          ? 'months and years have no fixed length. take the duration from a.until(b), which remembers a, or write it in days'
+          ? 'months and years vary in length, so converting them to weeks, days or hours requires a starting date. measure between two dates with `a.until(b)`, or construct the duration in weeks or days. to order durations of months and years, use `.compare()`'
           : 0,
       });
     }
@@ -230,6 +248,12 @@ export class Duration {
     if (target === 'quarter') {
       return this.total('month') / 3;
     }
+    // years and months count in twelfths with or without an anchor, so 18 months is a year and a half
+    // however it was measured
+    const whole = Duration.#wholeMonths(this);
+    if (whole !== undefined && (target === 'year' || target === 'month')) {
+      return target === 'year' ? whole / 12 : whole;
+    }
     if (this.#anchor) {
       return guard(
         () => this.#temporal.total({ unit: target, relativeTo: this.#anchor }),
@@ -239,9 +263,9 @@ export class Duration {
     }
     Duration.#requireAnchor(this, `total in ${target}`);
     if (target === 'year' || target === 'month') {
-      refuse('needsAnchor', `total in ${target}`, {
+      refuse('missingAnchor', `total in ${target}`, {
         explanation: isDevelopment
-          ? 'a month has no fixed length. total a duration taken from a.until(b), which knows its calendar'
+          ? "months, quarters, and years vary in length, so totaling in them requires a starting date. measure between two dates with `a.until(b)`, or total in 'weeks' or 'days'"
           : 0,
       });
     }
@@ -259,6 +283,10 @@ export class Duration {
     // the same fields are the same length in any calendar, so a month equals a month without an anchor
     if (mine.toString() === theirs.toString()) {
       return 0;
+    }
+    const [myMonths, theirMonths] = [Duration.#wholeMonths(this), Duration.#wholeMonths(rival)];
+    if (myMonths !== undefined && theirMonths !== undefined) {
+      return Math.sign(myMonths - theirMonths);
     }
     const anchor = this.#anchor ?? rival.anchor;
     if (!anchor) {
@@ -282,7 +310,7 @@ export class Duration {
   format(style = 'long', locale = this.#locale) {
     if (!styles.includes(style)) {
       refuse('unknownFormat', String(style), {
-        explanation: isDevelopment ? "a duration formats as 'long', 'short', 'narrow' or 'digital'" : 0,
+        explanation: isDevelopment ? 'expected a duration format style in [long, short, narrow, digital]' : 0,
       });
     }
     const written = this.toFields();

@@ -27,8 +27,8 @@ import { zoneId } from './helpers/zones.js';
   counts in months and years, and hands over any one of its days as a date
 */
 
-// '2026-11', what <input type="month"> writes
-const noDay = /^[+-]?\d{4,6}-\d{2}$/;
+// '2026-11', '2026/11', '2026.11', or '2026-5': a four-digit (or signed six-digit) year first
+const noDay = /^([+-]\d{6}|\d{4})[-/.](\d{1,2})$/;
 
 // a month and a year in the order a card prints them, '11/26' or '11/2026'
 const monthFirst = /^(\d{1,2})[-/.](\d{2}|\d{4})$/;
@@ -92,16 +92,16 @@ export class YearMonth {
       requireLoose('loose');
     }
     if (input === undefined || input === null) {
-      return refuseType('notAYearMonth', String(input), {
+      return refuseType('missingYearMonth', String(input), {
         explanation: isDevelopment
-          ? 'today().yearMonth is the current one. a missing value is refused so an absent field never silently becomes this month'
+          ? 'a year-month value is required. use `today().yearMonth` for the current year and month'
           : 0,
       });
     }
     if (!isString(input) && !isObject(input)) {
-      return refuseType('notAYearMonth', String(input), {
+      return refuseType('invalidYearMonth', String(input), {
         explanation: isDevelopment
-          ? "a year-month is '2026-11', two numbers, a fields object, a date, or a Temporal value"
+          ? "expected an ISO string like '2026-11', `(year, month)` numbers, a `{ year, month }` object, a `CalendarDate`, a `Date`, or a `Temporal` value"
           : 0,
       });
     }
@@ -109,18 +109,23 @@ export class YearMonth {
       return input.toTemporal();
     }
     if (input instanceof Temporal.PlainYearMonth) {
-      return input.calendarId === 'iso8601' ? input : refuseType('notAYearMonth', String(input), {
-        explanation: isDevelopment ? 'a year-month is read in the ISO calendar' : 0,
+      return input.calendarId === 'iso8601' ? input : refuseType('unsupportedCalendar', String(input), {
+        explanation: isDevelopment
+          ? 'a `YearMonth` only stores dates in the ISO 8601 calendar. convert to ISO first'
+          : 0,
       });
     }
     if (isString(input)) {
       const text = input.trim();
-      if (noDay.test(text)) {
+      const yearFirst = noDay.exec(text);
+      if (yearFirst) {
+        const [, year, month] = yearFirst;
         return guard(
-          () => Temporal.PlainYearMonth.from(text),
-          'unreadableYearMonth',
+          () => Temporal.PlainYearMonth.from(`${year}-${month.padStart(2, '0')}`),
+          'invalidYearMonth',
           input,
-          isDevelopment ? "months run 01 through 12: '2026-11'" : 0,
+          // isDevelopment leads, so a production build folds the whole line away, test and all
+          isDevelopment && (month < 1 || month > 12) ? "month must be between 01 and 12, such as '2026-11'" : 0,
         );
       }
       // text that opens on a whole date is a date. no other text is ever put to Date, which makes up
@@ -131,9 +136,9 @@ export class YearMonth {
         const month = named && monthNamed(named[1] ?? named[4]);
         return month
           ? YearMonth.#fromFields({ year: named[2] ?? named[3], month }, input)
-          : refuse('unreadableYearMonth', input, {
+          : refuse('invalidYearMonth', input, {
             explanation: isDevelopment
-              ? "a year-month is '2026-11', or a date like '2026-11-16' with its day dropped. the month first, as a card prints it, is monthYear('11/26'). plugins/loose adds { loose: true } for a month by name, 'Nov 2026'. a date written any other way is date(text, { loose: true })?.yearMonth"
+              ? "expected a year-month string like '2026-11' or '2026/11', or an ISO date like '2026-11-16'. use `monthYear('11/26')` for month-first strings, or pass `{ loose: true }` with '@native-dates/plugins/loose' for month names like 'Nov 2026'"
               : 0,
           });
       }
@@ -155,7 +160,7 @@ export class YearMonth {
   static #fromFields(fields, at = JSON.stringify(fields)) {
     return guard(
       () => Temporal.PlainYearMonth.from(wholeParts(fields, ['year', 'month']), { overflow: 'reject' }),
-      'unreadableYearMonth',
+      'invalidYearMonth',
       at,
     );
   }
@@ -215,9 +220,9 @@ export class YearMonth {
   // than a month is refused before it gets there, the way a date refuses hours
   static #refuseSmaller(name) {
     if (name) {
-      refuse('notAYearMonthUnit', name, {
+      refuse('unsupportedUnit', name, {
         explanation: isDevelopment
-          ? 'a year-month counts in months and years. pick a day first for anything smaller: yearMonth.on(15)'
+          ? 'a `YearMonth` has no day or clock fields, so it only accepts months or years. choose a day first with `.on(15)` to work with smaller units'
           : 0,
       });
     }
@@ -235,8 +240,8 @@ export class YearMonth {
   on(day) {
     const count = isDigits(day) ? Number(day) : day;
     if (!Number.isInteger(count) || count < 1 || count > 31) {
-      refuse('unreadableDate', `${this}-${day}`, {
-        explanation: isDevelopment ? 'a day is a whole number from 1 through 31: yearMonth.on(15)' : 0,
+      refuse('invalidDay', `${this}-${day}`, {
+        explanation: isDevelopment ? "expected an integer day from 1 to 31, such as `yearMonth('2026-11').on(15)`" : 0,
       });
     }
     return new CalendarDate(this.#plain.toPlainDate({ day: count }), { locale: this.#locale });
@@ -331,9 +336,9 @@ export class YearMonth {
   }
 
   valueOf() {
-    return refuse('notANumber', String(this), {
+    return refuse('unsupportedComparison', String(this), {
       explanation: isDevelopment
-        ? 'a year-month is not a point on the number line. compare with isBefore, isAfter or equals, or measure with until'
+        ? 'a `YearMonth` cannot be converted to a number for `<`, `>`, or `-`. compare values with `isBefore()`, `isAfter()`, or `equals()`, or measure the difference with `until()`'
         : 0,
     });
   }
@@ -353,7 +358,7 @@ YearMonth.prototype.subtract = YearMonth.prototype.minus;
 YearMonth.prototype.remove = YearMonth.prototype.minus;
 YearMonth.prototype.lang = YearMonth.prototype.locale;
 
-const unread = new Set([...unreadable.point, 'unreadableYearMonth', 'notAYearMonth']);
+const unread = new Set([...unreadable.point, 'invalidYearMonth', 'missingYearMonth', 'unsupportedCalendar']);
 
 // with { loose: true } (via plugins/loose) an unreadable input is null, never a throw
 export const yearMonth = (input, monthOrOptions) => {

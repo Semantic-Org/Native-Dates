@@ -25,7 +25,7 @@ export const guard = (attempt, code, at, explanation) => {
 export const readAs = (kind, readings) => {
   if (!Object.hasOwn(readings, kind)) {
     refuse('unknownKind', String(kind), {
-      explanation: isDevelopment ? `this value reads as ${Object.keys(readings).join(' or ')}` : 0,
+      explanation: isDevelopment ? `\`as()\` on this value only supports ${Object.keys(readings).join(' or ')}` : 0,
     });
   }
   return readings[kind]();
@@ -35,21 +35,20 @@ export const readAs = (kind, readings) => {
 // mistake in the code, not in the data, and still throws. a bad unit is data when it sits inside a
 // duration string and code when it names a method's unit, so only the duration door forgives it
 const point = new Set([
-  'unreadableDateTime',
-  'unreadableDate',
-  'unreadableTime',
-  'notADateTime',
-  'notADate',
-  'notATime',
-  'notFinite',
+  'invalidDateTime',
+  'invalidDate',
+  'invalidTime',
+  'missingDateTime',
+  'missingDate',
+  'missingTime',
+  'invalidNumber',
 ]);
 const length = new Set([
-  'unreadableDuration',
-  'notADuration',
+  'invalidDuration',
   'unknownUnit',
-  'mixedSigns',
-  'notFinite',
-  'fractionalMonth',
+  'conflictingSigns',
+  'invalidNumber',
+  'invalidFraction',
 ]);
 
 export const unreadable = { point, length, range: new Set([...point, ...length]) };
@@ -67,7 +66,7 @@ export const requireLoose = (at = 'loose') => {
   if (!looseParser) {
     refuse('missingPlugin', at, {
       explanation: isDevelopment
-        ? "import '@native-dates/plugins/loose' for { loose: true } and dayFirst"
+        ? "`{ loose: true }` and `dayFirst` require the loose plugin. import '@native-dates/plugins/loose' once at startup"
         : 0,
     });
   }

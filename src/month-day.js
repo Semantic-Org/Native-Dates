@@ -78,16 +78,16 @@ export class MonthDay {
       requireLoose('loose');
     }
     if (input === undefined || input === null) {
-      return refuseType('notAMonthDay', String(input), {
+      return refuseType('missingMonthDay', String(input), {
         explanation: isDevelopment
-          ? 'today().monthDay is the current one. a missing value is refused so an absent field never silently becomes today'
+          ? "a month-day value is required. use `today().monthDay` for today's month and day"
           : 0,
       });
     }
     if (!isString(input) && !isObject(input)) {
-      return refuseType('notAMonthDay', String(input), {
+      return refuseType('invalidMonthDay', String(input), {
         explanation: isDevelopment
-          ? "a month-day is '10-17' or '10/17', two numbers, a fields object, a date, or a Temporal value"
+          ? "expected a string like '10-17' or '10/17', `(month, day)` numbers, a `{ month, day }` object, a `CalendarDate`, a `Date`, or a `Temporal` value"
           : 0,
       });
     }
@@ -98,8 +98,10 @@ export class MonthDay {
       // rebuilt from its parts, so the year Temporal keeps behind one never tells two apart
       return input.calendarId === 'iso8601'
         ? Temporal.PlainMonthDay.from({ monthCode: input.monthCode, day: input.day })
-        : refuseType('notAMonthDay', String(input), {
-          explanation: isDevelopment ? 'a month-day is read in the ISO calendar' : 0,
+        : refuseType('unsupportedCalendar', String(input), {
+          explanation: isDevelopment
+            ? 'a `MonthDay` only stores dates in the ISO 8601 calendar. convert to ISO first'
+            : 0,
         });
     }
     if (isString(input)) {
@@ -117,7 +119,7 @@ export class MonthDay {
   static #fromParts(parts, at = JSON.stringify(parts), explanation) {
     return guard(
       () => Temporal.PlainMonthDay.from(wholeParts(parts, ['month', 'day']), { overflow: 'reject' }),
-      'unreadableMonthDay',
+      'invalidMonthDay',
       at,
       explanation,
     );
@@ -127,7 +129,7 @@ export class MonthDay {
     const text = input.trim();
     // ISO marks a month-day with two dashes, '--10-17' or '--1017', and Temporal reads both
     if (text.startsWith('--')) {
-      return guard(() => Temporal.PlainMonthDay.from(text), 'unreadableMonthDay', input);
+      return guard(() => Temporal.PlainMonthDay.from(text), 'invalidMonthDay', input);
     }
     const parts = isoParts.exec(text) ?? twoParts.exec(text);
     if (parts) {
@@ -137,7 +139,7 @@ export class MonthDay {
         { month, day },
         input,
         isDevelopment
-          ? `that reads as month ${month}, day ${day}. monthDay reads the month first and dayMonth the day first. ISO's '10-17', two digits a side across a dash, is month first for both`
+          ? `parsed as month ${month} and day ${day}, which is not a valid calendar date. \`monthDay()\` reads month-first ('10/17') and \`dayMonth()\` reads day-first ('17/10'), though ISO 'MM-DD' strings with a hyphen are always read month-first`
           : 0,
       );
     }
@@ -152,9 +154,9 @@ export class MonthDay {
     const month = named && monthNamed(named[1] ?? named[4]);
     return month
       ? MonthDay.#fromParts({ month, day: named[2] ?? named[3] }, input)
-      : refuse('unreadableMonthDay', input, {
+      : refuse('invalidMonthDay', input, {
         explanation: isDevelopment
-          ? "a month-day is '10-17' or '10/17', or a date like '1990-10-17' with its year dropped. plugins/loose adds { loose: true } for a month by name, 'Oct 17'. a date written any other way is date(text, { loose: true })?.monthDay"
+          ? "expected a month-day string like '10-17' or '10/17', or an ISO date like '1990-10-17'. use `dayMonth('17/10')` for day-first strings, or pass `{ loose: true }` with '@native-dates/plugins/loose' for month names like 'Oct 17'"
           : 0,
       });
   }
@@ -188,12 +190,12 @@ export class MonthDay {
   in(year) {
     const count = isDigits(year) ? Number(year) : year;
     if (!Number.isInteger(count)) {
-      refuse('unreadableDate', `${year}-${this}`, {
-        explanation: isDevelopment ? 'a year is a whole number: monthDay.in(2027)' : 0,
+      refuse('invalidYear', `${year}-${this}`, {
+        explanation: isDevelopment ? 'expected an integer year, such as `monthDay(10, 17).in(2027)`' : 0,
       });
     }
     return new CalendarDate(
-      guard(() => this.#plain.toPlainDate({ year: count }), 'unreadableDate', `${count}-${this}`),
+      guard(() => this.#plain.toPlainDate({ year: count }), 'invalidYear', `${count}-${this}`),
       { locale: this.#locale },
     );
   }
@@ -238,9 +240,9 @@ export class MonthDay {
   equals(other) {
     // text as people write it has an order only under the word that read it, and equals has none
     if (isString(other) && twoParts.test(other.trim()) && !isoParts.test(other.trim())) {
-      refuse('unreadableMonthDay', other, {
+      refuse('invalidMonthDay', other, {
         explanation: isDevelopment
-          ? "equals reads ISO text, '10-17'. read text across a slash or a dot with monthDay() or dayMonth() first, which say whether the month or the day leads"
+          ? "slash and dot strings like '05/10' are ambiguous between month-first and day-first. pass an ISO string like '10-17', or wrap the string with `monthDay()` or `dayMonth()` first"
           : 0,
       });
     }
@@ -296,9 +298,9 @@ export class MonthDay {
   }
 
   valueOf() {
-    return refuse('notANumber', String(this), {
+    return refuse('unsupportedComparison', String(this), {
       explanation: isDevelopment
-        ? 'a month-day is not a point on the number line. compare with equals, or place it in a year: monthDay.in(2027)'
+        ? 'a `MonthDay` cannot be converted to a number or ordered with `<`, `>`, or `-`. check equality with `equals()`, or attach a year with `.in(2027)` to compare dates'
         : 0,
     });
   }
@@ -315,7 +317,7 @@ export class MonthDay {
 
 MonthDay.prototype.lang = MonthDay.prototype.locale;
 
-const unread = new Set([...unreadable.point, 'unreadableMonthDay', 'notAMonthDay']);
+const unread = new Set([...unreadable.point, 'invalidMonthDay', 'missingMonthDay', 'unsupportedCalendar']);
 
 // with { loose: true } (via plugins/loose) an unreadable input is null, never a throw
 export const monthDay = (input, dayOrOptions) => {

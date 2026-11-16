@@ -48,8 +48,10 @@ export const point = (input) => {
   if (isPlainTime(input)) {
     return new Time(input);
   }
-  return refuseType('notAPoint', String(input), {
-    explanation: isDevelopment ? 'a point is a datetime, a date or a time, or a string that reads as one' : 0,
+  return refuseType('invalidPoint', String(input), {
+    explanation: isDevelopment
+      ? 'expected a `DateTime`, `CalendarDate`, `Time`, `Date`, or ISO string. wrap epoch milliseconds with `datetime(ms)` first'
+      : 0,
   });
 };
 
@@ -86,9 +88,9 @@ export const kindOf = (value) => {
 
 const sameKind = (left, right) => {
   if (kindOf(left) !== kindOf(right)) {
-    refuseType('mixedKinds', `${kindOf(left)} with ${kindOf(right)}`, {
+    refuseType('conflictingKinds', `${kindOf(left)} with ${kindOf(right)}`, {
       explanation: isDevelopment
-        ? 'compare a datetime with a datetime, a date with a date. convert first: datetime.date, date.at(time, zone)'
+        ? "cannot compare values of different types. convert one side first with `.date`, `.time`, or `.at('00:00', zone)`"
         : 0,
     });
   }
@@ -133,7 +135,7 @@ export const compare = (a, b) => {
 const pick = (values, verb, wins) => {
   const raw = values.length === 1 && isArray(values[0]) ? values[0] : values;
   if (!raw.length) {
-    refuse('noPoints', verb, { explanation: isDevelopment ? `${verb}() needs at least one point` : 0 });
+    refuse('missingPoints', verb, { explanation: isDevelopment ? `\`${verb}()\` requires at least one value` : 0 });
   }
   const head = point(raw[0]);
   const points = raw.map((value, index) => (index === 0 ? head : asKindOf(head, value)));

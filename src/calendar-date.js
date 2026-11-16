@@ -88,18 +88,18 @@ export class CalendarDate {
       requireLoose(settings.loose ? 'loose' : 'dayFirst');
     }
     if (input === undefined || input === null) {
-      return refuseType('notADate', String(input), {
+      return refuseType('missingDate', String(input), {
         explanation: isDevelopment
-          ? 'today() is the current day. a missing value is refused so an absent field never silently becomes today'
+          ? 'a date value is required. use `today()` for the current date'
           : 0,
       });
     }
     if (isNumber(input) && isNumber(month)) {
       // a missing day is refused so an absent field never silently becomes the 1st
       if (day === undefined) {
-        return refuse('unreadableDate', `${input}-${month}`, {
+        return refuse('missingDay', `${input}-${month}`, {
           explanation: isDevelopment
-            ? 'a date needs its day: date(2026, 11, 16). a year and a month alone are yearMonth(2026, 11)'
+            ? 'numeric dates require a year, month, and day like `date(2026, 11, 16)`. for a year and month without a day, use `yearMonth(2026, 11)`'
             : 0,
         });
       }
@@ -110,7 +110,7 @@ export class CalendarDate {
           }
           return Temporal.PlainDate.from({ year: input, month, day }, { overflow: 'reject' });
         },
-        'unreadableDate',
+        'invalidDate',
         `${input}-${month}-${day}`,
       );
     }
@@ -125,9 +125,9 @@ export class CalendarDate {
       return new DateTime(input, settings).toTemporal().toPlainDate();
     }
     if (isNumber(input)) {
-      return refuseType('notADate', String(input), {
+      return refuseType('invalidDate', String(input), {
         explanation: isDevelopment
-          ? 'a number alone is ambiguous. epoch milliseconds are a datetime, datetime(n).date, and a year needs its month and day, date(2026, 9, 6)'
+          ? 'a single number is ambiguous between a year and epoch milliseconds. use `datetime(ms).date` for a timestamp, or `date(2026, 9, 6)` for a year, month, and day'
           : 0,
       });
     }
@@ -136,7 +136,7 @@ export class CalendarDate {
         return CalendarDate.#parse(input);
       }
       catch (error) {
-        if (!settings.loose || (error.code !== 'notADate' && error.code !== 'unreadableDate')) {
+        if (!settings.loose || error.code !== 'invalidDate') {
           throw error;
         }
         const zoned = parseLoose(input, settings.zone, settings.dayFirst);
@@ -152,13 +152,13 @@ export class CalendarDate {
     if (isPlainObject(input)) {
       return guard(
         () => Temporal.PlainDate.from(singularKeys(input), { overflow: 'reject' }),
-        'unreadableDate',
+        'invalidDate',
         JSON.stringify(input),
       );
     }
-    return refuseType('notADate', String(input), {
+    return refuseType('invalidDate', String(input), {
       explanation: isDevelopment
-        ? "a date is an ISO string like '2026-09-06', three numbers, a fields object, a datetime, or a Temporal value"
+        ? "expected an ISO date string like '2026-09-06', `(year, month, day)` numbers, a `{ year, month, day }` object, a `Date`, a `DateTime`, or a `Temporal` value"
         : 0,
     });
   }
@@ -167,10 +167,10 @@ export class CalendarDate {
   static #parse(text) {
     return guard(
       () => Temporal.PlainDate.from(text.trim()),
-      'unreadableDate',
+      'invalidDate',
       text,
       isDevelopment
-        ? "write ISO 8601: '2026-09-06'. a year and a month alone is yearMonth('2026-11'). plugins/loose adds { loose: true } for what Date reads"
+        ? "expected an ISO date string like '2026-09-06'. use `yearMonth('2026-11')` for a year and month, or pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
         : 0,
     );
   }
@@ -241,9 +241,9 @@ export class CalendarDate {
     const fields = fieldsFrom(amount, name);
     const clock = timeUnits.find((time) => fields[plural(time)]);
     if (clock) {
-      refuse('notADateUnit', `${clock}s`, {
+      refuse('unsupportedUnit', `${clock}s`, {
         explanation: isDevelopment
-          ? 'a date has no clock. add days, or combine it with a time first: date.at(time, zone).plus(hours)'
+          ? "a `CalendarDate` has no time of day, so it only accepts calendar units like days, weeks, months, or years. attach a time first with `.at('00:00', zone)` to add or subtract clock units"
           : 0,
       });
     }
@@ -271,8 +271,10 @@ export class CalendarDate {
       case 'day':
         return this;
       default:
-        return refuse('notADateUnit', String(name), {
-          explanation: isDevelopment ? 'a date starts at year, quarter, month, week or day' : 0,
+        return refuse('unsupportedUnit', String(name), {
+          explanation: isDevelopment
+            ? "expected a calendar unit in [year, quarter, month, week, day]. attach a time first with `.at('00:00', zone)` for clock units"
+            : 0,
         });
     }
   }
@@ -441,9 +443,9 @@ export class CalendarDate {
   }
 
   valueOf() {
-    return refuse('notANumber', String(this), {
+    return refuse('unsupportedComparison', String(this), {
       explanation: isDevelopment
-        ? 'a date is not a point on the number line. compare with isBefore, isAfter or equals, or measure with until'
+        ? 'a `CalendarDate` cannot be converted to a number for `<`, `>`, or `-`. compare dates with `isBefore()`, `isAfter()`, or `equals()`, or measure the difference with `until()`'
         : 0,
     });
   }

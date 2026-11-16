@@ -82,9 +82,9 @@ export class Time {
       requireLoose(settings.loose ? 'loose' : 'dayFirst');
     }
     if (input === undefined || input === null) {
-      return refuseType('notATime', String(input), {
+      return refuseType('missingTime', String(input), {
         explanation: isDevelopment
-          ? 'now().time is the current clock. a missing value is refused so an absent field never silently becomes now'
+          ? 'a time value is required. use `now().time` for the current time of day'
           : 0,
       });
     }
@@ -98,7 +98,7 @@ export class Time {
             overflow: 'reject',
           });
         },
-        'unreadableTime',
+        'invalidTime',
         `${input}:${minute ?? 0}`,
       );
     }
@@ -117,7 +117,7 @@ export class Time {
         return Time.#parse(input);
       }
       catch (error) {
-        if (!settings.loose || error.code !== 'unreadableTime') {
+        if (!settings.loose || error.code !== 'invalidTime') {
           throw error;
         }
         const zoned = parseLoose(input, settings.zone, settings.dayFirst);
@@ -133,13 +133,13 @@ export class Time {
     if (isPlainObject(input)) {
       return guard(
         () => Temporal.PlainTime.from(singularKeys(input), { overflow: 'reject' }),
-        'unreadableTime',
+        'invalidTime',
         JSON.stringify(input),
       );
     }
-    return refuseType('notATime', String(input), {
+    return refuseType('invalidTime', String(input), {
       explanation: isDevelopment
-        ? "a time is a clock string like '09:00' or '5pm', numbers, a fields object, a datetime, or a Temporal value"
+        ? "expected a time string like '09:00' or '5:30pm', `(hour, minute, second)` numbers, a `{ hour, minute }` object, a `Date`, a `DateTime`, or a `Temporal` value"
         : 0,
     });
   }
@@ -153,8 +153,10 @@ export class Time {
       if (meridiem) {
         const afternoon = meridiem[0].toLowerCase() === 'p';
         if (hour < 1 || hour > 12) {
-          refuse('unreadableTime', text, {
-            explanation: isDevelopment ? 'clock hours with am or pm run 1 through 12' : 0,
+          refuse('invalidTime', text, {
+            explanation: isDevelopment
+              ? "12-hour times with 'am' or 'pm' must use hours from 1 to 12. drop 'am' or 'pm' for 24-hour time like '13:00', or use '1pm'"
+              : 0,
           });
         }
         hour = (hour % 12) + (afternoon ? 12 : 0);
@@ -170,16 +172,16 @@ export class Time {
             microsecond: Number(nanos.slice(3, 6)),
             nanosecond: Number(nanos.slice(6)),
           }, { overflow: 'reject' }),
-        'unreadableTime',
+        'invalidTime',
         text,
       );
     }
     return guard(
       () => Temporal.PlainTime.from(text.trim()),
-      'unreadableTime',
+      'invalidTime',
       text,
       isDevelopment
-        ? "write a clock time: '09:00', '5:30pm', '17:30:15.250'. plugins/loose adds { loose: true } to read a datetime and keep the clock"
+        ? "expected a clock time like '09:00', '5:30pm', or '17:30:15'. pass `{ loose: true }` with '@native-dates/plugins/loose' to extract the time from an informal date-time string"
         : 0,
     );
   }
@@ -220,9 +222,9 @@ export class Time {
     const fields = fieldsFrom(amount, name);
     const calendar = ['years', 'months', 'weeks', 'days'].find((field) => fields[field]);
     if (calendar) {
-      refuse('notATimeUnit', calendar, {
+      refuse('unsupportedUnit', calendar, {
         explanation: isDevelopment
-          ? 'a time has no calendar. add hours or minutes, or place it on a date first: time.on(date, zone).plus(days)'
+          ? "a `Time` has no calendar date, so it only accepts clock units like hours, minutes, or seconds. attach a date first with `.on('2026-11-06', zone)` to add or subtract calendar units"
           : 0,
       });
     }
@@ -362,9 +364,9 @@ export class Time {
   }
 
   valueOf() {
-    return refuse('notANumber', String(this), {
+    return refuse('unsupportedComparison', String(this), {
       explanation: isDevelopment
-        ? 'a time of day is not a point on the number line. compare with isBefore, isAfter or equals, or measure with until'
+        ? 'a `Time` cannot be converted to a number for `<`, `>`, or `-`. compare times with `isBefore()`, `isAfter()`, or `equals()`, or measure the difference with `until()`'
         : 0,
     });
   }
