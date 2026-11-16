@@ -1,6 +1,7 @@
+import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import { cached, plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
-import { isDevelopment, isPlainObject, isString } from './types.js';
+import { isPlainObject, isString } from './types.js';
 import { locale as pickLocale } from './zones.js';
 
 const presets = {

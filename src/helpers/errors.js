@@ -1,19 +1,11 @@
-import { isDevelopment } from './types.js';
+import { createErrors } from '@semantic-ui/utils';
 
-const makeRefuse = (ErrorClass) => {
-  const throwError = (code, at, { explanation } = {}) => {
-    const line = `dates refused [${code}] ${at}`;
-    const built = new ErrorClass(explanation ? `${line}\n${explanation}` : line);
-    built.code = code;
-    built.at = at;
-    Error.captureStackTrace?.(built, throwError);
-    throw built;
-  };
-  return throwError;
-};
+import { isDevelopment } from './environment.js';
 
-export const refuse = makeRefuse(RangeError);
-export const refuseType = makeRefuse(TypeError);
+// the coded errors of @semantic-ui/utils, so a refusal here reads like one anywhere in semantic ui:
+// 'dates refused [code] at', with the code and the input on the error
+export const refuse = createErrors({ namespace: 'dates', ErrorClass: RangeError }).throwError;
+export const refuseType = createErrors({ namespace: 'dates', ErrorClass: TypeError }).throwError;
 
 // Temporal's own RangeErrors are precise but speak in spec terms. ours keep the code and echo the input
 export const guard = (attempt, code, at, explanation) => {

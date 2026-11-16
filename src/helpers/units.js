@@ -1,3 +1,4 @@
+import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import {
   IS_CALENDAR_DATE,
@@ -8,7 +9,7 @@ import {
   IS_TIME,
   IS_YEAR_MONTH,
 } from './identity.js';
-import { isDevelopment, isNumber, isPlainObject, isString } from './types.js';
+import { isNumber, isPlainObject, isString } from './types.js';
 
 export const inspect = Symbol.for('nodejs.util.inspect.custom');
 

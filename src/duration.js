@@ -1,3 +1,4 @@
+import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, refuse, unreadable } from './helpers/errors.js';
 import {
   addFields,
@@ -10,7 +11,7 @@ import {
 } from './helpers/fields.js';
 import { IS_DURATION } from './helpers/identity.js';
 import { durationFormat, unitFormat } from './helpers/intl.js';
-import { isDevelopment, isPlainObject } from './helpers/types.js';
+import { isPlainObject } from './helpers/types.js';
 import { inspect, isTemporalDuration, unit } from './helpers/units.js';
 import { locale as pickLocale } from './helpers/zones.js';
 
