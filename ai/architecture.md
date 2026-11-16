@@ -27,6 +27,7 @@ Core holds what nearly every caller needs:
 - Core nouns (`DateTime`, `CalendarDate`, `Time`, `Duration`, `MonthDay`, `YearMonth`, and the three ranges) and their lowercase factories (`datetime`, `date`, `time`, `duration`, `now`, `today`, `tomorrow`, `yesterday`, `hours`..`years`, `monthDay`, `dayMonth`, `yearMonth`, `monthYear`, `dateRange`, `datetimeRange`, `timeRange`)
 - Plain-English arithmetic (`plus`/`minus`, with zero-cost `add`/`subtract`/`remove` prototype aliases), rounding, weekday stepping (`next`/`previous`), comparisons, and `until`/`since`
 - `Intl` preset formatting (`short`, `medium`, `long`, `full`, `date`, `time`, `month`, `text`), `Intl` options bags, and token patterns (`YYYY-MM-DD HH:mm`) with `monthNames()` and `weekdayNames()`
+- Relative phrases (`fromNow()`, `from(other)`: `'3 hours ago'`, `'in 2 days'`, `'yesterday'`) through `Intl.RelativeTimeFormat`
 - Ranges from any point (`.to()`, `.range()`, `.points()`, `.split()`) with `contains`, `overlaps` and `intersection`
 - Duration phrases (`'1h 30m'`, `'2 weeks and 3 days'`) and fractional unit spilling (`1.5 days` -> `1d 12h`)
 - Standard IANA zones, fixed offsets, `UTC`, `configure({ zone, locale, weekStart })`, `compare`, `earliest`, `latest`, and `kindOf`
@@ -35,7 +36,6 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"
 
 | Subpath | Adds | Mechanism |
 |---|---|---|
-| `@native-dates/plugins/relative` | `.formatRelative(to, locale)` on `DateTime` and `CalendarDate` | Attaches prototype methods backed by `Intl.RelativeTimeFormat` |
 | `@native-dates/plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), abbreviations (`'PT'`, `'CET'`), `configure({ zoneAliases })` | Registers fallback zone resolver in `helpers/zones.js` |
 | `@native-dates/plugins/loose` | `{ loose: true, dayFirst }` `Date.parse` fallback and `null` on unreadable input | Supplies the loose parser and `loosely` wrapper in `helpers/errors.js` across factories and ranges |
 | `@native-dates/plugins/legacy-date` | `Date.prototype` read methods (`getFullYear`, `getUTC*`, `toISOString`, `toLocale*`) and `set*` refusals on `DateTime` | Attaches prototype methods onto `DateTime` (`.toJSDate()` stays in core) |

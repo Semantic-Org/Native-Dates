@@ -715,6 +715,86 @@ day.format({ weekday: 'long' }, 'en-US'); // 'Monday'
 :::
 
 :::entry
+### `from()` :kind[method]
+
+```js signature
+d.from(other?, locale?): string
+```
+
+Formats the calendar distance from another date to this one as a localized phrase via `Intl.RelativeTimeFormat`, such as `'yesterday'` or `'in 3 weeks'`.
+
+Omitting the first argument compares against `today()`, and `formatRelative()` works as an alias. Distances under seven days use natural words for yesterday, today, and tomorrow, while weeks, months, and years use numeric counts.
+
+**Parameters**
+
+```params
+- name: other
+  type: CalendarDateInput
+  description: Reference calendar date to measure from. Defaults to `today()` in the active zone.
+- name: locale
+  type: Locale
+  description: BCP 47 locale tag overriding this date's or the configured locale for one call.
+```
+
+**Returns**
+
+```returns
+type: string
+description: Localized relative phrase.
+```
+
+```js
+const anchor = date('2026-11-16');
+
+date('2026-11-15').from(anchor, 'en-US'); // 'yesterday'
+date('2026-11-16').from(anchor, 'en-US'); // 'today'
+date('2026-11-17').from(anchor, 'en-US'); // 'tomorrow'
+date('2026-11-30').from(anchor, 'en-US'); // 'in 2 weeks'
+date('2026-11-15').from(anchor, 'de'); // 'gestern'
+```
+:::
+
+:::entry
+### `fromNow()` :kind[method]
+
+```js signature
+d.fromNow(locale?): string
+```
+
+Formats how far this date is from today as a localized phrase, equivalent to calling [`from()`](#from) with no reference date.
+
+**Parameters**
+
+```params
+- name: locale
+  type: Locale
+  description: BCP 47 locale tag overriding this date's or the configured locale for one call.
+```
+
+**Returns**
+
+```returns
+type: string
+description: Localized relative phrase measured from today.
+```
+
+```js
+today().minus(1, 'day').fromNow('en-US'); // 'yesterday'
+today().plus(3, 'days').fromNow('en-US'); // 'in 3 days'
+```
+:::
+
+:::entry
+### `formatRelative()` :kind[method]
+
+```js signature
+d.formatRelative(other?, locale?): string
+```
+
+Alias for [`from()`](#from) that formats the calendar distance from `other` (or today when omitted) as a localized phrase.
+:::
+
+:::entry
 ### `locale()` :kind[method]
 
 ```js signature

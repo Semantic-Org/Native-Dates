@@ -7,7 +7,6 @@
 // only works with the plugin imported
 
 export const PLUGINS = [
-  { name: 'relative', category: 'formatting', uses: ['now'], line: "now().minus(3, 'hours').formatRelative();" },
   { name: 'zones', category: 'zones', uses: ['now'], line: "now().in('Berlin');" },
   { name: 'loose', category: 'reading', uses: ['date'], line: "date('March 5, 2026', { loose: true });" },
   { name: 'legacy-date', category: 'migration', uses: ['now'], line: 'now().getFullYear();' },
