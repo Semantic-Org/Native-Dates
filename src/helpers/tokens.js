@@ -44,17 +44,22 @@ export const names = (locale) => {
     const [MMM, MMMM] = [alone('short'), alone('long')];
     const [short, long, narrow] = [weekday('short'), weekday('long'), weekday('narrow')];
     // the shortest weekday. two letters are a real abbreviation only in a script with letter case,
-    // and only where they open the full name and tell the seven days apart: Mo, lu, пн. cutting a
-    // thai or hindi name splits a syllable, and turkish Pz for Pazartesi reads as Pazar, so everything
-    // else takes the locale's narrow form. three locales hold english M T W T F S S as theirs, and
-    // those keep their own short names
+    // and only where the full name holds them and they tell the seven days apart: Mo, lu, пн. turkish
+    // Pz for Pazartesi reads as Pazar, so a cased script otherwise takes the locale's narrow form
     const cut = short.map((name) => name.slice(0, 2));
-    const cuts = /\p{Lu}|\p{Ll}/u.test(short[0]) && new Set(cut).size === 7
-      && short.every((name, day) =>
-        name.replace('.', '').length < 3 || long[day].toLowerCase().startsWith(cut[day].toLowerCase())
-      );
+    const distinct = (list) => new Set(list).size === 7;
+    const cased = /\p{Lu}|\p{Ll}/u.test(short[0]);
     const isEnglish = language.startsWith('en');
-    const shortest = cuts ? cut : !isEnglish && narrow.join('') === 'MTWTFSS' ? short : narrow;
+    // some locales hold english M T W T F S S as their narrow form
+    const borrowed = !isEnglish && narrow.join('') === 'MTWTFSS';
+    const held = short.every((name, day) =>
+      name.replace('.', '').length < 3 || long[day].toLowerCase().includes(cut[day].toLowerCase())
+    );
+    // elsewhere the narrow form where it tells the days apart, 月, 一, จ, सो, and two letters where
+    // it does not. a locale with a borrowed narrow form and no two letters keeps its short names whole
+    const shortest = cased && distinct(cut) && held
+      ? cut
+      : [borrowed ? [] : narrow, cased ? [] : cut].find(distinct) ?? (borrowed ? short : narrow);
     // what the locale writes straight after a day in a date: the dot in 6. November, 日 in 6日
     const written = parts({ day: 'numeric', month: 'long' }, stamps[10]);
     const afterDay = written[written.findIndex((part) => part.type === 'day') + 1];

@@ -49,9 +49,7 @@ export class YearMonth {
   }
 
   static presets = {
-    // two digits of a year only read as one in the gregorian calendar: a thai card says 11/26, where
-    // the buddhist year would print 11/69
-    short: Object.freeze({ year: '2-digit', month: 'numeric', calendar: 'gregory' }),
+    short: Object.freeze({ year: '2-digit', month: 'numeric' }),
     medium: Object.freeze({ year: 'numeric', month: 'short' }),
     long: Object.freeze({ year: 'numeric', month: 'long' }),
     full: Object.freeze({ year: 'numeric', month: 'long' }),
