@@ -3,3 +3,6 @@ dist
 .DS_Store
 *.log
 .vercel
+
+# scratch files for agents and the maintainer, never committed
+ai/workspace/
