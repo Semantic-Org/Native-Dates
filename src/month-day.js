@@ -100,7 +100,7 @@ export class MonthDay {
         ? Temporal.PlainMonthDay.from({ monthCode: input.monthCode, day: input.day })
         : refuseType('unsupportedCalendar', String(input), {
           explanation: isDevelopment
-            ? 'a `MonthDay` only stores dates in the ISO 8601 calendar. convert to ISO first. to display one in another calendar, place it in a year with `.in(year)` and format that date'
+            ? 'a `MonthDay` only stores dates in the ISO 8601 calendar. pass `input.toPlainDate({ year })` to convert for a specific year, or use `.in(year)` before formatting an ISO month-day in another calendar'
             : 0,
         });
     }
