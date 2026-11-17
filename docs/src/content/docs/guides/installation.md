@@ -4,7 +4,7 @@ lede: Install the core package, add a Temporal polyfill for Safari or older runt
 updated: 2026-11-16
 ---
 
-Native Dates ships as a small ES module package with TypeScript types included and zero bundled time zone or locale data.
+Native Dates ships as a small ES module package with TypeScript types included and zero runtime dependencies.
 
 ## Install the core package
 
