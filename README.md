@@ -3,8 +3,8 @@
 > A thin date library built on the browser's Temporal and Intl APIs
 
 - **Obvious Time Types** - Makes Temporals canon of irregular words a simple `DateTime`, `CalendarDate`, `Time` and `Duration` so things read like English at callsites
-- **Browser-Native I18N** - Time zones, daylight transitions and calendar math handled by the platform not the library
-- **Immutability**  - Prevents pitfalls from JS date math that modifies antecedents 
+- **Browser-Native I18N** - Time zones, daylight transitions and calendar math handled exactly as the browser specifies (and committee adjudicated) not the library
+- **Immutability**  - Prevents js pitfalls of accidental date mutations when working with copies 
 - **Legibility** - Natural phrases (`'1h 30m'`, `today().plus(2, 'days').at('9am')`) and `Intl` presets
 - **Fully Tree Shakeable** -  ~7kb bt for core, everything arbitary is a plugin (day.js style)
 
