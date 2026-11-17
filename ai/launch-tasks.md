@@ -14,7 +14,7 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 
 ## 1. Decisions that 1.0 makes permanent
 
-- [ ] **`native-dates/helpers/*` is a public entry.** The exports map serves every file in `src/helpers/` because the plugins import from it. Either say in writing that the path is unstable, or narrow it to what the three plugins use (`errors`, `intl`, `zones`, `types`).
+- [ ] **`native-dates/helpers/*` is a public entry.** The exports map serves every file in `src/helpers/` because the plugins import from it. Either say in writing that the path is unstable, or narrow it to what the four plugins use (`environment`, `errors`, `tokens`, `zones`).
 - [x] **Error codes** use the six condition words of the sync repo (`missing`, `unknown`, `invalid`, `unsupported`, `duplicate`, `conflicting`), and every explanation was rewritten in its register and reviewed. All of them fold out of a production build. Still open for a read: the `invalid*` codes are thrown as a `TypeError` in some places and a `RangeError` in others.
 - [x] **Relative time** is in core as `from(other)` and `fromNow()`, the words moment and day.js use, with `formatRelative()` kept as a second spelling. It cost 0.29 kB of floor, the size the plugin was.
 - [ ] **Names worth one last read.** `monthDay.in(2027)` beside `datetime.in(zone)`. `after()` and `before()` beside `next()` and `previous()`. `as()` reaches five kinds where `kindOf()` reports more, so there is no `as('dateRange')`.
