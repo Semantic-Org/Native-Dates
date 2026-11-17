@@ -52,7 +52,7 @@ configure({ zone: null, locale: null, weekStart: null });
       description: Default time zone for factories and `now()`. Pass `null` to reset to the runtime's local zone.
     - name: locale
       type: Locale | null
-      description: Default BCP 47 locale tag for formatting and week boundaries. Pass `null` to reset to the runtime's locale.
+      description: Default locale tag, tag list, or `Accept-Language` header for formatting and week boundaries. Pass `null` or `''` to reset to the runtime's locale.
     - name: weekStart
       type: Weekday | null
       description: First day of the week for week boundaries and `weekdayNames()`, from 1 for Monday through 7 for Sunday. Unset or `null` follows the active locale.
