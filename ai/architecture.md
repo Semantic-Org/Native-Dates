@@ -37,7 +37,7 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"
 | Subpath | Adds | Mechanism |
 |---|---|---|
 | `@native-dates/plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), abbreviations (`'PT'`, `'CET'`), `configure({ zoneAliases })` | Registers fallback zone resolver in `helpers/zones.js` |
-| `@native-dates/plugins/loose` | `{ loose: true, dayFirst }` `Date.parse` fallback and `null` on unreadable input, and an HTTP `Accept-Language` header read as a locale | Supplies the loose parser and `loosely` wrapper in `helpers/errors.js` across factories and ranges, and registers a locale reader in `helpers/zones.js` |
+| `@native-dates/plugins/loose` | `{ loose: true, dayFirst }` `Date.parse` fallback and `null` on unreadable input | Supplies the loose parser and `loosely` wrapper in `helpers/errors.js` across factories and ranges |
 | `@native-dates/plugins/legacy-date` | `Date.prototype` read methods (`getFullYear`, `getUTC*`, `toISOString`, `toLocale*`) and `set*` refusals on `DateTime` | Attaches prototype methods onto `DateTime` (`.toJSDate()` stays in core) |
 
 ## Measuring Size

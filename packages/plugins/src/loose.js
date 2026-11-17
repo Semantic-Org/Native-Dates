@@ -1,5 +1,5 @@
 import { setLooseExtension } from 'native-dates/helpers/errors';
-import { dayFirst as readsDayFirst, setLocaleExtension, zoneId } from 'native-dates/helpers/zones';
+import { dayFirst as readsDayFirst, zoneId } from 'native-dates/helpers/zones';
 
 // a loose string that names an instant: Z, GMT, UTC or an offset at its end, with or without Date's own
 // parenthesised zone name after it
@@ -66,19 +66,3 @@ export const looseZoned = (text, zone, dayFirst) => {
 };
 
 setLooseExtension(looseZoned);
-
-// a locale handed over as an HTTP Accept-Language header, 'fr-CH, fr;q=0.9, en;q=0.8', is the tags
-// a reader wants. they are taken by weight, q, and never one weighed at nothing. * is any language,
-// so a header of nothing else leaves the runtime to choose
-setLocaleExtension((text) => {
-  if (!/[,;*]/.test(text)) {
-    return text;
-  }
-  const tags = text.split(',')
-    .map((part) => part.trim().split(/\s*;\s*q=/))
-    .filter(([name, weight]) => name && name !== '*' && weight != 0)
-    .sort((a, b) => (b[1] ?? 1) - (a[1] ?? 1))
-    .map(([name]) => name);
-  // one tag is a tag, and a list is frozen since every caller is handed the same one
-  return tags.length === 1 ? tags[0] : Object.freeze(tags);
-});
