@@ -151,7 +151,7 @@ export class MonthDay {
     // in it, the 1st, the month after a day too many. when loose, a month-day is also a month by
     // name and a day
     const named = settings.loose ? nameAndDay.exec(text) : null;
-    const month = named && monthNamed(named[1] ?? named[4]);
+    const month = named && monthNamed(named[1] ?? named[4], settings.locale);
     return month
       ? MonthDay.#fromParts({ month, day: named[2] ?? named[3] }, input)
       : refuse('invalidMonthDay', input, {

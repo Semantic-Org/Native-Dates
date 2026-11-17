@@ -49,7 +49,8 @@ export class YearMonth {
   }
 
   static presets = {
-    short: Object.freeze({ year: '2-digit', month: 'numeric' }),
+    // four digits, since 11/26 reads as a day beside a month
+    short: Object.freeze({ year: 'numeric', month: 'numeric' }),
     medium: Object.freeze({ year: 'numeric', month: 'short' }),
     long: Object.freeze({ year: 'numeric', month: 'long' }),
     full: Object.freeze({ year: 'numeric', month: 'long' }),
@@ -133,7 +134,7 @@ export class YearMonth {
       // a year-month is also a month by name and a year
       if (!opensOnDate(text)) {
         const named = settings.loose ? nameAndYear.exec(text) : null;
-        const month = named && monthNamed(named[1] ?? named[4]);
+        const month = named && monthNamed(named[1] ?? named[4], settings.locale);
         return month
           ? YearMonth.#fromFields({ year: named[2] ?? named[3], month }, input)
           : refuse('invalidYearMonth', input, {
