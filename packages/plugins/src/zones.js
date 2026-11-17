@@ -1,10 +1,36 @@
-import { timezones } from '@semantic-ui/utils';
 import { canonicalZone, setZoneExtension } from 'native-dates/helpers/zones';
 
+// the table below is forked word for word from @semantic-ui/utils 0.18.0 (dates.js), so a zone
+// abbreviation reads here as it does in every semantic ui package and nothing is installed for it.
+// an edit here no longer reaches that package's own table
+
 // timezone abbreviations are ambiguous by nature (IST is Kolkata, Jerusalem, or Dublin depending on
-// who you ask), so the base picks are editable once at app boot (timezones.IST = 'Asia/Jerusalem').
-// the table is the one @semantic-ui/utils formats dates with, so an edit reaches both
-export { timezones };
+// who you ask), so the picks are editable once at app boot (timezones.IST = 'Asia/Jerusalem'). full
+// IANA names always pass through untouched
+export const timezones = {
+  ET: 'America/New_York',
+  CT: 'America/Chicago',
+  MT: 'America/Denver',
+  PT: 'America/Los_Angeles',
+  AKT: 'America/Anchorage',
+  HT: 'Pacific/Honolulu',
+  AT: 'America/Halifax',
+  UK: 'Europe/London',
+  WET: 'Europe/London',
+  CET: 'Europe/Paris',
+  ECT: 'Europe/Paris',
+  EET: 'Europe/Helsinki',
+  IRST: 'Europe/Dublin',
+  AET: 'Australia/Sydney',
+  ACT: 'Australia/Adelaide',
+  AWT: 'Australia/Perth',
+  NZT: 'Pacific/Auckland',
+  BRT: 'America/Sao_Paulo',
+  IST: 'Asia/Kolkata',
+  INST: 'Asia/Kolkata',
+  JST: 'Asia/Tokyo',
+  SGT: 'Asia/Singapore',
+};
 
 // daylight-observing readings of common abbreviations, because the bare IANA 'EST' is a fixed offset
 // that never springs forward, and nobody who types it means that
