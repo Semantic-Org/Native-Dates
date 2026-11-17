@@ -1,18 +1,12 @@
+import { each } from '@semantic-ui/utils';
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
-import { pad } from './units.js';
-import { locale as pickLocale, weekStart } from './zones.js';
+import { pad, weekdayNumber } from './units.js';
+import { locale as pickLocale, settings, weekStart } from './zones.js';
 
-const nameCache = new Map();
-
-// plugins/weekdays supplies the names a language writes by hand and Intl has no form for
-let namesExtension = null;
-
-export const setNamesExtension = (lookup) => {
-  namesExtension = lookup;
-  nameCache.clear();
-};
+// configure() empties this when an app writes weekdays or ordinals its own way
+export const nameCache = new Map();
 
 // month and weekday names come from Intl for the locale, so tokens stay legible outside English. the
 // tokens print the ISO calendar's numbers, so the names are the Gregorian ones even where the locale
@@ -26,6 +20,8 @@ export const names = (locale) => {
     const monthIn = (options, stamp) => parts(options, stamp).find((part) => part.type === 'month').value;
     const clock = plainDateTimeFormat(locale, { hour: 'numeric', hour12: true });
     const language = clock.resolvedOptions().locale;
+    // what the app configured for this language, under its own tag or its language's: sw-KE reads sw
+    const configured = (noun) => settings[noun]?.[language] ?? settings[noun]?.[language.split('-')[0]];
     // greek is the one language Intl hands the beside-a-day form when asked for a long month alone,
     // Νοεμβρίου for Νοέμβριος. beside a year it gives the plain one, so that is where greek reads it
     const alone = (style) =>
@@ -65,7 +61,7 @@ export const names = (locale) => {
     // what the locale writes straight after a day in a date: the dot in 6. November, 日 in 6日
     const written = parts({ day: 'numeric', month: 'long' }, stamps[10]);
     const afterDay = written[written.findIndex((part) => part.type === 'day') + 1];
-    nameCache.set(key, {
+    const table = {
       MMM,
       MMMM,
       besideDay: { MMM: besideDay('short', MMM), MMMM: besideDay('long', MMMM) },
@@ -75,9 +71,14 @@ export const names = (locale) => {
       dayPeriods: [periodAt(9), periodAt(15)],
       dayMark: afterDay?.type === 'literal' ? afterDay.value.match(/^[^\s,،]*/)[0] : '',
       isEnglish: language.startsWith('en'),
-      isFrench: /^fr\b/.test(language),
-      ...namesExtension?.(language),
-    });
+      // Intl has no ordinals, so one the app configured for the language is all there is: 1er in French
+      ordinal: configured('ordinals'),
+    };
+    each(configured('weekdays'), (days, style) =>
+      each(days, (name, day) => {
+        table[{ narrow: 'dd', long: 'dddd' }[style] ?? 'ddd'][weekdayNumber(day) - 1] = name;
+      }));
+    nameCache.set(key, table);
   }
   return nameCache.get(key);
 };
@@ -93,11 +94,14 @@ const dayPeriod = (subject, locale, cased) => {
 };
 
 // 6th in English. any other language gets the day as its dates write it: 6. in German, 6日 in Japanese.
-// french writes the first of a month 1er and every other day plain, which Intl has nowhere
+// an ordinal the app configured is asked first
 const ordinal = (number, locale) => {
-  const { dayMark, isEnglish, isFrench } = names(locale);
+  const { dayMark, isEnglish, ordinal: own } = names(locale);
+  if (own) {
+    return `${own(number)}`;
+  }
   if (!isEnglish) {
-    return `${number}${isFrench && number === 1 ? 'er' : dayMark}`;
+    return `${number}${dayMark}`;
   }
   const tens = number % 100;
   const suffix = tens >= 11 && tens <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][number % 10] ?? 'th';

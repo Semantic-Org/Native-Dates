@@ -2,10 +2,11 @@ import { each, isPlainObject, isString } from '@semantic-ui/utils';
 
 import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
+import { nameCache } from './tokens.js';
 import { weekdayNumber } from './units.js';
 
 // process-wide defaults, zoneAliases being the names a zone answers to when plugins/zones is loaded
-const settings = { zone: undefined, locale: undefined, weekStart: undefined, dayFirst: false, zoneAliases: {} };
+export const settings = { zone: undefined, locale: undefined, weekStart: undefined, dayFirst: false, zoneAliases: {} };
 const resolved = new Map([['UTC', 'UTC']]);
 
 export const canonicalZone = (id) => {
@@ -56,7 +57,7 @@ export const zoneId = (id) => {
   return found;
 };
 
-export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases } = {}) => {
+export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, weekdays, ordinals } = {}) => {
   if (zoneAliases !== undefined) {
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
@@ -96,6 +97,13 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases } = {
   if (weekStart !== undefined) {
     settings.weekStart = weekStart === null ? undefined : weekdayNumber(weekStart);
   }
+  // names and ordinals an app writes its own way, by language. null goes back to what Intl has
+  each({ weekdays, ordinals }, (table, noun) => {
+    if (table !== undefined) {
+      settings[noun] = table ?? undefined;
+      nameCache.clear();
+    }
+  });
   if (dayFirst !== undefined) {
     requireLoose('dayFirst');
     settings.dayFirst = !!dayFirst;

@@ -655,6 +655,17 @@ export interface Settings {
    * locale's own: sunday in the United States, monday in most of Europe. Null goes back to following the locale
    */
   weekStart?: Weekday | null;
+  /**
+   * Weekday names written your own way, by language, then width, then day: `{ lv: { narrow: { fri: 'Pk', sun: 'Sv' } } }`.
+   * `narrow` is what the `dd` token prints, `short` is `ddd`, `long` is `dddd`, and `weekdayNames()` follows. A regional
+   * tag reads its language's names unless it has its own. Null goes back to the runtime's names
+   */
+  weekdays?: Record<Locale, Partial<Record<'narrow' | 'short' | 'long', Record<string, string>>>> | null;
+  /**
+   * What the `Do` token writes for a day of the month, by language: `{ fr: (day) => (day === 1 ? '1er' : day) }`.
+   * Null goes back to the built-in English suffixes and the mark the runtime writes after a day
+   */
+  ordinals?: Record<Locale, (day: number) => string | number> | null;
 }
 
 /** Sets package-wide defaults once at app boot. Returns the settings in effect */
@@ -664,4 +675,6 @@ export function configure(settings?: Settings): {
   weekStart: number | undefined;
   dayFirst: boolean;
   zoneAliases: Record<string, string>;
+  weekdays?: Settings['weekdays'];
+  ordinals?: Settings['ordinals'];
 };
