@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 14.22 kB for all of `native-dates`, 12.71 kB for `import { now }`, 15.59 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-16 (`npm run size`, Brotli): 14.21 kB for all of `native-dates`, 12.72 kB for `import { now }`, 15.56 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -61,16 +61,19 @@ Cost: 0.07 kB.
 
 ### Decided: answer where the answer is always true
 
-A refusal is right when there are two readings. Where there is one, the library answers. Six refusals were found by asking which error messages could have been a conversion, and each now is:
+A refusal is right when there are two readings. Where there is one, the library answers. Six refusals were found by asking which error messages could have been a conversion. Four now answer, and review showed the other two have a second reading, so they still refuse:
 
-- **A date that opens on its year reads however it was typed**: `date('2026/11/06')`, `'2026.11.06'`, `'2026-1-5'`, `datetime('2026/11/06 9:00')`, and through them `yearMonth('2026/11/16')` and `monthDay('2026/11/16')`. A four-digit year first has one reading. `'11/06/2026'` still refuses, since it has two. 74 B, 80 B of floor.
-- **A bare number beside a point is epoch milliseconds**: `compare(Date.now(), deadline)`, `earliest(a, b)`, a list of timestamps sorted by `compare`.
-- **A date beside a datetime compares by the day**, the datetime's own in its zone: `compare(date, datetime)`, `earliest(date, datetime)`. `isBefore()` already did. A date beside a time still refuses. 34 B for this and the one above, none of it floor.
-- **A subtraction that leaves two signs borrows across fixed units**: `days(1).minus(hours(1))` is 23 hours, `weeks(1).minus(days(1))` is 6 days, `years(1).minus(months(1))` is 11 months. Months against days still refuses, and so does an anchored duration, whose days a clock change can stretch.
-- **A bare `balance()` carries months into years**: `months(18).balance()` is a year and six months. Days still carry into nothing. About 0.10 kB for this and the one above.
-- **A locale is read however a server hands it over**: `'en_US'` is `en-US`, and a raw `Accept-Language` header is its tags in the order written. This reverses the earlier call that a header should refuse at `.locale()`. About 0.08 kB.
+- **A date that opens on its year reads however it was typed**: `date('2026/11/06')`, `'2026.11.06'`, `'2026-1-5'`, `datetime('2026/11/06 9:00')`, and through them `yearMonth('2026/11/16')` and `monthDay('2026/11/16')`. A four-digit year first has one reading. `'11/06/2026'` still refuses, since it has two. 0.08 kB, all of it floor.
+- **A bare number standing first is epoch milliseconds**: `compare(Date.now(), deadline)`, `earliest(a, b)`, a list of timestamps sorted by `compare`. Beside a time it is still an hour, `compare(time('09:00'), 9)`, and beside a date it still refuses. A fraction of a millisecond is dropped, as `Date` drops it. 0.03 kB, none of it floor.
+- **A subtraction that leaves two signs borrows where a calendar says how**: `years(1).minus(months(1))` is 11 months and `weeks(1).minus(days(1))` is 6 days, since a year is always twelve months and a week always seven days. A bare `balance()` carries months into years the same way, `months(18).balance()`. 0.12 kB, 0.11 kB of it floor.
+- **A locale is read however a server hands it over**: `'en_US'` is `en-US`, and a raw `Accept-Language` header is its tags in the order written. A value keeps the tag as read, so `locale()` hands back `en-US`. This reverses the earlier call that a header should refuse at `.locale()`. 0.09 kB, 0.07 kB of it floor.
 
-Cost: 0.29 kB, 0.26 kB of it floor. Not taken, from the same list: zone spellings like `'UTC+2'`, `time('0930')`, `duration('1:30:00')`, `dateRange(datetimeRange)`.
+Still refusing, each with two readings:
+
+- **`days(1).minus(hours(1))`.** A day is a calendar day here and not 24 hours. Across a clock change, `plus(days(1).minus(hours(1)))` and `plus(days(1)).minus(hours(1))` land an hour apart, so there is no one answer, and the refusal already says to chain.
+- **`compare(date, datetime)`.** By the day, a date ties with every moment on it and a mixed list cannot be sorted. As midnight, it disagrees with `isBefore()`. The refusal names both conversions.
+
+Cost: 0.28 kB, 0.26 kB of it floor. Not taken, from the same list: zone spellings like `'UTC+2'`, `time('0930')`, `duration('1:30:00')`, `dateRange(datetimeRange)`.
 
 ## 2. Locale sweep
 
