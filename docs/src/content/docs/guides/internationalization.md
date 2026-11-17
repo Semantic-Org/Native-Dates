@@ -1,7 +1,7 @@
 ---
 title: Internationalization
 lede: Choose between the browser's default locale, a one-time app setting, a locale carried on a value, or a single-call override.
-updated: 2026-11-14
+updated: 2026-11-16
 ---
 
 Native Dates formats through the JavaScript engine's built-in `Intl` data. Every language, script, plural rule, and calendar system works out of the box with zero locale files to download.
@@ -90,7 +90,7 @@ Pass a single BCP 47 tag rather than a raw HTTP `Accept-Language` header with qu
 Global configuration updates shared state across the entire JavaScript process. On a multi-user server, another request can overwrite a `configure()` call across an async boundary. Attach `locale()` to the value instead.
 :::
 
-A carried locale governs localized text and where a week begins. Exact comparisons, sorting, `equals()`, and ISO serialization with `toString()` or `toJSON()` ignore it:
+A carried locale governs localized text and where a week begins. Exact comparisons, sorting, `equals()`, and ISO serialization with `toString()` ignore it:
 
 ```js
 import { date } from 'native-dates';
@@ -124,9 +124,9 @@ weekdayNames('short', undefined, 'en-US')[0]; // 'Sun'
 weekdayNames('short', undefined, 'de-DE')[0]; // 'Mo'
 ```
 
-Pass an explicit weekday to override one call, or set `weekStart` in [`configure()`](/api/configure/) to pin a start day across every locale. Passing `null` returns to following the locale, and runtimes without week data fall back to Monday.
+Pass an explicit weekday to override one call, or set `weekStart` in [`configure()`](/api/configure/) to pin a start day across every locale. Passing an empty value returns to following the locale, and runtimes without week data fall back to Monday.
 
-A value keeps the locale of the value it was made from, so pin `weekStart` or pass the day wherever a week is a key in stored data, such as a weekly report or a billing period, and should not shift with the reader's language.
+A value keeps the locale of whatever it was made from. Pin `weekStart` or pass a day whenever weeks key stored data like reports or billing periods.
 
 Every date and datetime reports the day its own weeks start on as `weekStart`, from 1 for Monday through 7 for Sunday. Check it where code depends on one kind of week:
 
@@ -158,9 +158,11 @@ eid.format('long', 'ar-SA-u-ca-islamic-umalqura'); // '١ شوال ١٤٤٧ هـ
 
 ## Writing weekdays and ordinals your own way
 
-Month and weekday names come from the runtime, so they match what the reader's own device prints. Two token forms have no counterpart there: the two-letter weekday `dd` and the ordinal `Do`. `dd` prints two letters where the language abbreviates that way (`Mo`, `lu`, `пн`) and otherwise the single letters its calendars use, such as `S T Q Q S S D` in Portuguese. `Do` prints English suffixes in English and elsewhere the mark the language writes after a day, such as `6.` in German.
+Month and weekday names come from the runtime, matching what the reader's own device prints. Two format tokens have no standard platform field: two-letter weekdays with `dd`, and day ordinals with `Do`.
 
-Set your own with `configure()` once at startup. Weekdays are keyed by language, then width, then day name, so a single day can be changed without listing all seven:
+By default, `dd` cuts two letters where the script abbreviates that way, and otherwise uses the single-letter calendar headers from the runtime. `Do` prints English suffixes in English and the locale's own day marker elsewhere, like 6. in German.
+
+Override either in [`configure()`](/api/configure/) once at startup. Key weekday tables by language, width, and day name so you can adjust individual days without listing all seven:
 
 ```js
 import { configure, date } from 'native-dates';
@@ -178,9 +180,13 @@ configure({
 date('2026-11-01').format('Do MMMM', 'fr'); // '1er novembre'
 date('2026-11-01').format('dd', 'lv'); // 'Sv'
 date('2026-11-03').format('ddd', 'en-US'); // 'Tues'
+
+configure({ weekdays: null, ordinals: null });
 ```
 
-The widths are the ones [`weekdayNames()`](/api/month-names/#weekdaynames) takes: `narrow` is `dd`, `short` is `ddd`, and `long` is `dddd`. A regional tag such as `fr-CA` reads its language's entry, and an entry of its own is laid over that, so `en-US` can change one day of what `en` set. Tags match in any letter case. Presets and options bags are formatted by the runtime and are not affected.
+Widths match [weekday names](/api/month-names/#weekdaynames), mapping narrow, short, and long styles to `dd`, `ddd`, and `dddd` tokens.
+
+Regional tags like `'fr-CA'` inherit their base language's entry and layer any overrides of their own on top, matching in any letter case. Presets and options bags come straight from the runtime and are unaffected.
 
 ## How locales resolve
 

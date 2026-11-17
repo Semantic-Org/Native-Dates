@@ -40,6 +40,7 @@ Properties read the ISO calendar fields directly.
 | `yearMonth` | `YearMonth` | Calendar year and month with the day dropped. |
 | `monthDay` | `MonthDay` | Calendar month and day with the year dropped. |
 | `weekday` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
+| `weekStart` | `number` | First day of this date's weeks from 1 to 7, following `configure()` or its locale. |
 | `quarter` | `number` | Calendar quarter (1–4). |
 | `weekOfYear`, `dayOfYear` | `number` | ISO week number (1–53) and day of the year (1–366). |
 | `daysInMonth`, `daysInYear` | `number` | Number of days in the current month (28–31) and year (365 or 366). |
@@ -802,7 +803,7 @@ d.locale(): Locale | undefined
 d.locale(tag): CalendarDate
 ```
 
-Reads the locale carried on this date, or returns a copy that formats and starts weeks in another locale across text previews, presets, week boundaries, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+Reads the locale carried on this date, or returns a copy that formats and starts weeks in another locale across presets, week boundaries, and derived values. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
 
 **Parameters**
 
