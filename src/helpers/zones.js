@@ -100,7 +100,7 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
     settings.zone = zone === null ? undefined : zoneId(zone);
   }
   if (locale !== undefined) {
-    settings.locale = locale === null ? undefined : checkedLocale(locale);
+    settings.locale = locale ? checkedLocale(locale) : undefined;
   }
   if (weekStart !== undefined) {
     settings.weekStart = weekStart === null ? undefined : weekdayNumber(weekStart);
@@ -143,8 +143,13 @@ export const checkedLocale = (tag) => {
   // a list and a header can spell the same text, 'es,en', and are not the same thing to hand back
   const key = isString(tag) ? tag : `[${tag}]`;
   if (!knownLocales.has(key)) {
-    const tags = isString(tag) && /[_,;]/.test(tag)
-      ? tag.replace(/_/g, '-').split(',').map((part) => part.split(';')[0].trim()).filter((part) => part !== '*')
+    // a header's tags are taken by weight, q, and never one weighed at nothing. * is any language
+    const tags = isString(tag) && /[_,;*]/.test(tag)
+      ? tag.replace(/_/g, '-').split(',')
+        .map((part) => part.trim().split(/\s*;\s*q=/))
+        .filter(([name, weight]) => name && name !== '*' && weight != 0)
+        .sort((a, b) => (b[1] ?? 1) - (a[1] ?? 1))
+        .map(([name]) => name)
       : undefined;
     guard(
       () => Intl.getCanonicalLocales(tags ?? tag),

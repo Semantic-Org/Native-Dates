@@ -177,7 +177,7 @@ export const localeOf = (options, input) => {
   // a value from an older copy of the package carries the brand and no locale to ask for
   const tag = options?.locale ?? (nouns.some((brand) => input?.[brand]) ? input.locale?.() : undefined);
   // kept as it was read, so 'en_US' hands back en-US, a tag Intl takes
-  return tag == null ? tag : checkedLocale(tag);
+  return tag ? checkedLocale(tag) : undefined;
 };
 
 // the second argument of a factory is a zone, or an options bag { zone, loose }

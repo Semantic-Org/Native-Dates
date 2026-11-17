@@ -43,7 +43,7 @@ export class Duration {
       ? input
       : temporalDurationOf(fieldsFrom(input, name));
     this.#anchor = anchor;
-    this.#locale = locale == null ? undefined : checkedLocale(locale);
+    this.#locale = locale ? checkedLocale(locale) : undefined;
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it
     this.text = undefined;
