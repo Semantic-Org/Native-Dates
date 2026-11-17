@@ -8,6 +8,9 @@ import { locale as pickLocale, settings, weekStart } from './zones.js';
 // configure() empties this when an app writes weekdays or ordinals its own way
 export const nameCache = new Map();
 
+// the token each width of weekday name prints as, the widths weekdayNames() takes
+export const weekdayWidths = { narrow: 'dd', short: 'ddd', long: 'dddd' };
+
 // month and weekday names come from Intl for the locale, so tokens stay legible outside English. the
 // tokens print the ISO calendar's numbers, so the names are the Gregorian ones even where the locale
 // keeps another calendar: a Persian locale would otherwise name November's 6th as Aban's
@@ -20,8 +23,6 @@ export const names = (locale) => {
     const monthIn = (options, stamp) => parts(options, stamp).find((part) => part.type === 'month').value;
     const clock = plainDateTimeFormat(locale, { hour: 'numeric', hour12: true });
     const language = clock.resolvedOptions().locale;
-    // what the app configured for this language, under its own tag or its language's: sw-KE reads sw
-    const configured = (noun) => settings[noun]?.[language] ?? settings[noun]?.[language.split('-')[0]];
     // greek is the one language Intl hands the beside-a-day form when asked for a long month alone,
     // Νοεμβρίου for Νοέμβριος. beside a year it gives the plain one, so that is where greek reads it
     const alone = (style) =>
@@ -65,19 +66,24 @@ export const names = (locale) => {
       MMM,
       MMMM,
       besideDay: { MMM: besideDay('short', MMM), MMMM: besideDay('long', MMMM) },
-      dd: cuts ? cut : /^(MTWTFSS|\d+)$/.test(narrow.join('')) && !language.startsWith('en') ? short : narrow,
+      dd: cuts ? cut : /^(MTWTFSS|\d+)$/.test(narrow.join('')) && !language.startsWith('en') ? [...short] : narrow,
       ddd: short,
       dddd: long,
       dayPeriods: [periodAt(9), periodAt(15)],
       dayMark: afterDay?.type === 'literal' ? afterDay.value.match(/^[^\s,،]*/)[0] : '',
       isEnglish: language.startsWith('en'),
-      // Intl has no ordinals, so one the app configured for the language is all there is: 1er in French
-      ordinal: configured('ordinals'),
     };
-    each(configured('weekdays'), (days, style) =>
-      each(days, (name, day) => {
-        table[{ narrow: 'dd', long: 'dddd' }[style] ?? 'ddd'][weekdayNumber(day) - 1] = name;
-      }));
+    // what the app configured is laid over that, the language first and each longer tag over it:
+    // en, then en-US. Intl has no ordinals, so a configured one is all there is: 1er in French
+    const subtags = language.toLowerCase().split('-');
+    each(subtags, (_, index) => {
+      const tag = subtags.slice(0, index + 1).join('-');
+      table.ordinal = settings.ordinals?.[tag] ?? table.ordinal;
+      each(settings.weekdays?.[tag], (days, width) =>
+        each(days, (name, day) => {
+          table[weekdayWidths[width]][weekdayNumber(day) - 1] = name;
+        }));
+    });
     nameCache.set(key, table);
   }
   return nameCache.get(key);

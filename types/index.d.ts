@@ -658,7 +658,7 @@ export interface Settings {
   /**
    * Weekday names written your own way, by language, then width, then day: `{ lv: { narrow: { fri: 'Pk', sun: 'Sv' } } }`.
    * `narrow` is what the `dd` token prints, `short` is `ddd`, `long` is `dddd`, and `weekdayNames()` follows. A regional
-   * tag reads its language's names unless it has its own. Null goes back to the runtime's names
+   * tag reads its language's names with its own laid over them. Null goes back to the runtime's names
    */
   weekdays?: Record<Locale, Partial<Record<'narrow' | 'short' | 'long', Record<string, string>>>> | null;
   /**
