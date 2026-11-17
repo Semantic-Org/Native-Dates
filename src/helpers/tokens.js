@@ -53,7 +53,9 @@ export const names = (locale) => {
     // the shortest weekday. two letters are a real abbreviation only in a script with letter case,
     // and only where the full name holds them and they tell the seven days apart: Mo, lu, пн. turkish
     // Pz for Pazartesi reads as Pazar, and cutting a thai or hindi name splits a syllable, so
-    // everything else takes the locale's narrow form: 月, 一, จ, सो
+    // everything else takes the locale's narrow form: 月, 一, จ, सो. where that form is not the
+    // language's own, english M T W T F S S in urdu and swahili or 1 to 7 in azerbaijani, the short
+    // name stands whole
     const cut = short.map((name) => name.slice(0, 2));
     const cuts = /\p{Lu}|\p{Ll}/u.test(short[0]) && new Set(cut).size === 7
       && short.every((name, day) =>
@@ -66,7 +68,7 @@ export const names = (locale) => {
       MMM,
       MMMM,
       besideDay: { MMM: besideDay('short', MMM), MMMM: besideDay('long', MMMM) },
-      dd: cuts ? cut : narrow,
+      dd: cuts ? cut : /^(MTWTFSS|\d+)$/.test(narrow.join('')) && !language.startsWith('en') ? short : narrow,
       ddd: short,
       dddd: long,
       dayPeriods: [periodAt(9), periodAt(15)],
