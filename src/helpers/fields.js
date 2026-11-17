@@ -103,10 +103,17 @@ const parseWords = (text) => {
   return fields;
 };
 
+// a year is twelve months in the ISO calendar, so months carry into years with nothing to anchor them
+export const carriedMonths = (years = 0, months = 0) => {
+  const whole = years * 12 + months;
+  return whole ? { years: Math.trunc(whole / 12), months: whole % 12 } : {};
+};
+
+const twoSigns = (fields) => new Set(Object.values(fields).filter(Boolean).map(Math.sign)).size > 1;
+
 // a duration has one sign. '1h -30m' has no meaning until it is subtracted from a point
 const oneSign = (fields, at) => {
-  const signs = new Set(Object.values(fields).filter(Boolean).map(Math.sign));
-  if (signs.size > 1) {
+  if (twoSigns(fields)) {
     refuse('conflictingSigns', at, {
       explanation: isDevelopment
         ? "all units in a duration must have the same sign. chain `.plus()` and `.minus()` on a date or time instead, such as `start.plus(1, 'hour').minus(30, 'minutes')`"
@@ -170,8 +177,8 @@ export const clockFields = (fields) => {
 // years, months, weeks and days stay field-wise: they are calendar units, and folding 25 hours into a
 // day would move a deadline across a daylight saving change. hours and below combine through Temporal
 // so a subtraction balances to one sign: 2h minus 30m is 1h 30m
-export const addFields = (a, b, sign) => {
-  const fields = {};
+export const addFields = (a, b, sign, anchor) => {
+  let fields = {};
   each(['years', 'months', 'weeks', 'days'], (field) => {
     const sum = (a[field] ?? 0) + sign * (b[field] ?? 0);
     if (sum) {
@@ -181,6 +188,15 @@ export const addFields = (a, b, sign) => {
   const clockA = temporalDurationOf(clockFields(a));
   const clockB = temporalDurationOf(clockFields(b));
   Object.assign(fields, fieldsOf(sign > 0 ? clockA.add(clockB) : clockA.subtract(clockB)));
+  // a subtraction can leave two signs, a day less an hour. a year is always twelve months, and with
+  // no date to anchor it a week is seven days and a day twenty four hours, so the larger unit is
+  // broken into the smaller: 23 hours, 6 days, 11 months. months against days still has no answer,
+  // and an anchored length keeps its own days, which a clock change can make longer or shorter
+  if (twoSigns(fields) && !anchor) {
+    const { years, months, weeks = 0, days = 0, ...clock } = fields;
+    const fixed = temporalDurationOf({ hours: (weeks * 7 + days) * 24 }).add(temporalDurationOf(clock));
+    fields = { ...carriedMonths(years, months), ...fieldsOf(fixed.round({ largestUnit: 'day' })) };
+  }
   return oneSign(fields, JSON.stringify(fields));
 };
 

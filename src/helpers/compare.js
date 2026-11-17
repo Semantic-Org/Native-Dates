@@ -1,4 +1,4 @@
-import { isArray, isDate, isString } from './utils.js';
+import { isArray, isDate, isNumber, isString } from './utils.js';
 
 import { CalendarDate } from '../calendar-date.js';
 import { DateTime } from '../date-time.js';
@@ -39,7 +39,8 @@ export const point = (input) => {
     }
     return new CalendarDate(text);
   }
-  if (isDate(input) || isZonedDateTime(input) || isInstant(input) || isPlainDateTime(input)) {
+  // a bare number is epoch milliseconds, what Date.now() and a database timestamp hand over
+  if (isDate(input) || isNumber(input) || isZonedDateTime(input) || isInstant(input) || isPlainDateTime(input)) {
     return new DateTime(input);
   }
   if (isPlainDate(input)) {
@@ -50,7 +51,7 @@ export const point = (input) => {
   }
   return refuseType('invalidPoint', String(input), {
     explanation: isDevelopment
-      ? 'expected a `DateTime`, `CalendarDate`, `Time`, `Date`, or ISO string. wrap epoch milliseconds with `datetime(ms)` first'
+      ? 'expected a `DateTime`, `CalendarDate`, `Time`, `Date`, epoch milliseconds, or ISO string'
       : 0,
   });
 };
@@ -102,7 +103,8 @@ const asKindOf = (left, value) => {
     return value;
   }
   const kind = kindOf(left);
-  if (kind === 'datetime') {
+  // a number is a moment whatever it stands beside, never a year
+  if (kind === 'datetime' || isNumber(value)) {
     return new DateTime(value, left.zone);
   }
   return kind === 'date' ? new CalendarDate(value) : new Time(value);
@@ -126,8 +128,11 @@ export const compare = (a, b) => {
     sameKind(a, b);
     return compare(a.start, b.start) || compare(a.end, b.end);
   }
-  const left = point(a);
-  const right = asKindOf(left, b);
+  // a date beside a datetime is compared by the day, the datetime's own day in its zone
+  const day = (value, other) => (value[IS_DATE_TIME] && other[IS_CALENDAR_DATE] ? value.date : value);
+  const first = point(a);
+  const second = asKindOf(first, b);
+  const [left, right] = [day(first, second), day(second, first)];
   sameKind(left, right);
   return left.isBefore(right) ? -1 : left.isAfter(right) ? 1 : 0;
 };
