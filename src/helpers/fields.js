@@ -179,7 +179,7 @@ export const clockFields = (fields) => {
 // day would move a deadline across a daylight saving change. hours and below combine through Temporal
 // so a subtraction balances to one sign: 2h minus 30m is 1h 30m
 export const addFields = (a, b, sign, anchor) => {
-  let fields = {};
+  const fields = {};
   each(['years', 'months', 'weeks', 'days'], (field) => {
     const sum = (a[field] ?? 0) + sign * (b[field] ?? 0);
     if (sum) {
@@ -189,16 +189,24 @@ export const addFields = (a, b, sign, anchor) => {
   const clockA = temporalDurationOf(clockFields(a));
   const clockB = temporalDurationOf(clockFields(b));
   Object.assign(fields, fieldsOf(sign > 0 ? clockA.add(clockB) : clockA.subtract(clockB)));
-  // a subtraction can leave two signs, a year less a month. a year is always twelve months and a
-  // week always seven days, so the larger unit is broken into the smaller: 11 months, 6 days. a day
-  // is not always twenty four hours, so a day less an hour still has no answer, nor months less
-  // days, and an anchored length is left to its anchor
   // a refusal names the fields as they were written, before anything was broken down
   const written = JSON.stringify(fields);
-  if (twoSigns(fields) && !anchor) {
-    const { years, months, weeks = 0, days = 0, ...clock } = fields;
-    const whole = weeks * 7 + days;
-    fields = { ...carriedMonths(years, months), ...(whole && { days: whole }), ...clock };
+  // a subtraction can leave two signs, a year less a month. a year is always twelve months and a
+  // week always seven days, so the larger of a pair that disagrees is broken into the smaller: 11
+  // months, 6 days. a pair that agrees stays as written. a day is not always twenty four hours, so
+  // a day less an hour still has no answer, nor months less days, and an anchored length is left
+  // to its anchor
+  if (!anchor) {
+    const { years = 0, months = 0, weeks = 0, days = 0 } = fields;
+    if (years * months < 0) {
+      delete fields.years;
+      delete fields.months;
+      Object.assign(fields, carriedMonths(years, months));
+    }
+    if (weeks * days < 0) {
+      delete fields.weeks;
+      fields.days = weeks * 7 + days;
+    }
   }
   return oneSign(fields, written);
 };

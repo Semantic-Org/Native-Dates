@@ -30,8 +30,8 @@ export const wholeParts = (fields, names) => {
 // January, and an hour after it gains its zero too, '2026-1-5 9:00'
 export const yearFirst = (text) =>
   text.replace(
-    /^(\s*[+-]?\d{4,6})[/.-](\d{1,2})[/.-](\d{1,2})(?!\d)(?:([T ])(\d)(?=:))?/,
-    (_, year, month, day, gap, hour) => `${year}-${pad(month)}-${pad(day)}${gap ? `${gap}0${hour}` : ''}`,
+    /^(\s*[+-]?\d{4,6})([/.-])(\d{1,2})\2(\d{1,2})(?!\d)(?:([T ])(\d)(?=:))?/,
+    (_, year, mark, month, day, gap, hour) => `${year}-${pad(month)}-${pad(day)}${gap ? `${gap}0${hour}` : ''}`,
   );
 
 // text that opens on a year, a month and a day is a date, whatever follows: '1990-10-17'

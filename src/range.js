@@ -84,12 +84,13 @@ class Range {
   // own separators read too: '9am - 5pm', 'Sep 1 to Sep 7'
   static #splitInterval(text) {
     const blanked = text.replace(/\[[^\]]*\]/g, (zone) => ' '.repeat(zone.length));
-    const at = blanked.indexOf('/');
-    if (at !== -1) {
-      return [text.slice(0, at), text.slice(at + 1)];
-    }
+    // a spaced dash or 'to' is looked for first, since a date may be written with slashes of its own
     const dash = blanked.match(/\s(?:-|–|to)\s/);
-    return dash ? [text.slice(0, dash.index), text.slice(dash.index + dash[0].length)] : [text];
+    if (dash) {
+      return [text.slice(0, dash.index), text.slice(dash.index + dash[0].length)];
+    }
+    const at = blanked.indexOf('/');
+    return at === -1 ? [text] : [text.slice(0, at), text.slice(at + 1)];
   }
 
   // an end reads through the kind's own factory with the range's options, and a datetime end reads in
