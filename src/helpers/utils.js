@@ -1,14 +1,7 @@
-// a verbatim fork of @semantic-ui/utils 0.18.0 (types.js, loops.js, debug.js), so this package
-// installs nothing and still loops and refuses exactly as every semantic ui package does.
-//
-// DO NOT edit, trim, reformat or rewrite anything below this note, comments included. the text is
-// byte for byte what utils ships on purpose: when an app bundles native-dates into the same chunk
-// as another @semantic-ui library (component, sync and the rest), brotli sees the second copy as a
-// repeat of the first and it compresses to almost nothing. a single renamed variable or dropped
-// branch breaks the match and the app pays for both copies in full. branches this library never
-// reaches stay for the same reason
-//
-// to update, paste the new text from utils. dprint skips this file (see excludes in dprint.json)
+// vendored from @semantic-ui/utils 0.18.0 (types.js, loops.js, debug.js) so native-dates ships
+// with zero dependencies while keeping the same helpers and error format as @semantic-ui/utils.
+// kept verbatim (and excluded in dprint.json) so upstream updates copy straight over and bundles
+// that include both packages compress the duplicate code away under brotli
 
 /*-------------------
         Types
