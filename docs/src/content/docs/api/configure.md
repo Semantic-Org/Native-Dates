@@ -56,6 +56,12 @@ configure({ zone: null, locale: null, weekStart: null });
     - name: weekStart
       type: Weekday | null
       description: First day of the week for week boundaries and `weekdayNames()`, from 1 for Monday through 7 for Sunday. Unset or `null` follows the active locale.
+    - name: weekdays
+      type: Record<Locale, { narrow?, short?, long? }> | null
+      description: "Weekday names written your own way, by language, then width, then day, such as `{ lv: { narrow: { fri: 'Pk', sun: 'Sv' } } }`. `narrow` is what the `dd` token prints. Pass `null` to return to the runtime's names."
+    - name: ordinals
+      type: Record<Locale, (day: number) => string | number> | null
+      description: "What the `Do` token writes for a day of the month, by language, such as `{ fr: (day) => (day === 1 ? '1er' : day) }`. Pass `null` to return to the built-in behavior."
     - name: dayFirst
       type: boolean
       default: 'false'
@@ -68,7 +74,7 @@ configure({ zone: null, locale: null, weekStart: null });
 **Returns**
 
 ```returns
-type: "{ zone, locale, weekStart, dayFirst, zoneAliases }"
+type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdays, ordinals }"
 description: A shallow copy of the active settings after applying updates. Unset keys return `undefined`.
 ```
 

@@ -10,7 +10,6 @@ export const PLUGINS = [
   { name: 'zones', category: 'zones', uses: ['now'], line: "now().in('Berlin');" },
   { name: 'loose', category: 'reading', uses: ['date'], line: "date('March 5, 2026', { loose: true });" },
   { name: 'legacy-date', category: 'migration', uses: ['now'], line: 'now().getFullYear();' },
-  { name: 'weekdays', category: 'formatting', uses: ['today'], line: "today().format('dd', 'sw');" },
 ];
 
 // a sketch: the package ships no presets yet. populate PRESETS once preset packages publish
