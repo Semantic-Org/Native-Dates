@@ -7,6 +7,7 @@ import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } 
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
+import { yearFirst } from './helpers/parts.js';
 import { relativeDays } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
@@ -165,13 +166,14 @@ export class CalendarDate {
 
   // a wall-clock string keeps its day and drops the clock
   static #parse(text) {
+    const iso = yearFirst(text.trim());
     return guard(
-      () => Temporal.PlainDate.from(text.trim()),
+      () => Temporal.PlainDate.from(iso),
       'invalidDate',
       text,
       // text in the right shape that still fails names a day the calendar lacks, February 30th
       isDevelopment
-        ? /^\s*\d{4}-\d{2}-\d{2}\s*$/.test(text)
+        ? /^\d{4}-\d{2}-\d{2}$/.test(iso)
           ? 'this calendar date does not exist. check the year, month, and day'
           : "expected an ISO date string like '2026-09-06'. use `yearMonth('2026-11')` for a year and month, or pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
         : 0,

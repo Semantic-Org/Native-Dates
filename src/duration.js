@@ -4,6 +4,7 @@ import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, refuse, unreadable } from './helpers/errors.js';
 import {
   addFields,
+  carriedMonths,
   clockFields,
   fieldNames,
   fieldsFrom,
@@ -14,7 +15,7 @@ import {
 import { IS_DURATION } from './helpers/identity.js';
 import { durationFormat, unitFormat } from './helpers/intl.js';
 import { inspect, isTemporalDuration, unit } from './helpers/units.js';
-import { locale as pickLocale } from './helpers/zones.js';
+import { checkedLocale, locale as pickLocale } from './helpers/zones.js';
 
 /*
   a length of time. fields stay as written (90 minutes is 90 minutes until you balance it), and a
@@ -42,7 +43,7 @@ export class Duration {
       ? input
       : temporalDurationOf(fieldsFrom(input, name));
     this.#anchor = anchor;
-    this.#locale = locale ?? undefined;
+    this.#locale = locale ? checkedLocale(locale) : undefined;
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it
     this.text = undefined;
@@ -99,17 +100,17 @@ export class Duration {
   *******************************/
 
   plus(other, name) {
-    return this.#next(
-      temporalDurationOf(addFields(this.toFields(), fieldsFrom(other, name), 1)),
-      this.#anchor ?? (other instanceof Duration ? other.anchor : undefined),
-    );
+    return this.#add(other, name, 1);
   }
 
   minus(other, name) {
-    return this.#next(
-      temporalDurationOf(addFields(this.toFields(), fieldsFrom(other, name), -1)),
-      this.#anchor ?? (other instanceof Duration ? other.anchor : undefined),
-    );
+    return this.#add(other, name, -1);
+  }
+
+  // a string has an anchor method of its own, so only another duration is asked for one
+  #add(other, name, sign) {
+    const anchor = this.#anchor ?? (other instanceof Duration ? other.anchor : undefined);
+    return this.#next(temporalDurationOf(addFields(this.toFields(), fieldsFrom(other, name), sign, anchor)), anchor);
   }
 
   times(factor) {
@@ -128,25 +129,26 @@ export class Duration {
     return this.#next(this.#temporal.abs(), this.#anchor);
   }
 
-  // carries overflow upward: 90 minutes balances to an hour and a half. a length stops at hours, since
-  // a day is a calendar unit and folding 36 hours into one would move a deadline across a daylight
-  // saving change. an anchored duration knows its calendar, so days are its ceiling until asked for
-  // weeks, months or years, and an explicit unit is taken at its word either way
+  // carries overflow upward: 90 minutes balances to an hour and a half, 18 months to a year and a
+  // half. a length stops at hours, since a day is a calendar unit and folding 36 hours into one would
+  // move a deadline across a daylight saving change. an anchored duration knows its calendar, so days
+  // are its ceiling until asked for weeks, months or years, and an explicit unit is taken at its
+  // word either way
   balance(largest) {
     if (!this.#anchor) {
+      if (largest === undefined) {
+        return Duration.#balancedClock(this);
+      }
       const whole = Duration.#wholeMonths(this);
-      const into = largest === undefined ? undefined : unit(largest);
+      const into = unit(largest);
       if (whole !== undefined && (into === 'year' || into === 'quarter' || into === 'month')) {
         return this.#next(
           temporalDurationOf(
-            into === 'year' ? { years: Math.trunc(whole / 12), months: whole % 12 } : { months: whole },
+            into === 'year' ? carriedMonths(0, whole) : { months: whole },
           ),
         );
       }
       Duration.#requireAnchor(this, 'balance');
-      if (largest === undefined) {
-        return Duration.#balancedClock(this);
-      }
       if (into === 'week') {
         return Duration.#balancedWeeks(this);
       }
@@ -194,13 +196,17 @@ export class Duration {
     return temporalDurationOf(addFields({ ...duration.toFields(), weeks: 0 }, { days: temporal.weeks * 7 }, 1));
   }
 
-  // weeks are already days here, and months or years were refused, so days are the one calendar field left
+  // weeks are already days here. a year is always twelve months, so months carry into years with no
+  // anchor, where days carry into nothing and stay as they are
   static #balancedClock(duration) {
-    Duration.#requireAnchor(duration, 'balance');
-    const { days, ...clock } = fieldsOf(Duration.#fixed(duration));
+    const { years, months, days, ...clock } = fieldsOf(Duration.#fixed(duration));
     const balanced = fieldsOf(temporalDurationOf(clock).round({ largestUnit: 'hour' }));
     return new Duration(
-      temporalDurationOf(days ? { days, ...balanced } : balanced),
+      temporalDurationOf({
+        ...carriedMonths(years, months),
+        ...(days && { days }),
+        ...balanced,
+      }),
       undefined,
       { locale: duration.locale() },
     );
