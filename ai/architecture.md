@@ -38,7 +38,6 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"
 |---|---|---|
 | `@native-dates/plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), abbreviations (`'PT'`, `'CET'`), `configure({ zoneAliases })` | Registers fallback zone resolver in `helpers/zones.js` |
 | `@native-dates/plugins/loose` | `{ loose: true, dayFirst }` `Date.parse` fallback and `null` on unreadable input | Supplies the loose parser and `loosely` wrapper in `helpers/errors.js` across factories and ranges |
-| `@native-dates/plugins/weekdays` | Two-letter weekdays for `dd` and `weekdayNames('narrow')` in the long tail of languages where `Intl` has none (`J3 J4 J5` in Swahili), with an editable `weekdays` table. Widely written languages are core's to get right | Registers a names lookup in `helpers/tokens.js`, which lays its rows over the names read from `Intl` |
 | `@native-dates/plugins/legacy-date` | `Date.prototype` read methods (`getFullYear`, `getUTC*`, `toISOString`, `toLocale*`) and `set*` refusals on `DateTime` | Attaches prototype methods onto `DateTime` (`.toJSDate()` stays in core) |
 
 ## Measuring Size
