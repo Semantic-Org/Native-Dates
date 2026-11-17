@@ -4,7 +4,7 @@ kind: plugin
 lede: Opt-in fallback parsing and `null` returns for untrusted text from forms, CSVs, and legacy feeds.
 import: import '@native-dates/plugins/loose'
 size: loose
-updated: 2026-11-12
+updated: 2026-11-16
 ---
 
 ## Opt-in loose parsing
@@ -34,14 +34,14 @@ const rolled = date('2026-02-30', { loose: true }); // null
 const missing = datetime(undefined, { loose: true }); // null
 ```
 
-Range and partial-date factories for [ranges](/api/ranges/), [`YearMonth`](/api/year-month/), and [`MonthDay`](/api/month-day/) accept the same option:
+Range and partial-date factories for [ranges](/api/ranges/), [`YearMonth`](/api/year-month/), and [`MonthDay`](/api/month-day/) accept the same option, with partial dates also matching month names in the active or passed locale:
 
 ```js
 import { dateRange, monthDay, yearMonth } from 'native-dates';
 
 dateRange('Sep 1 2026', 'Sep 7 2026', { loose: true })?.toString(); // '2026-09-01/2026-09-07'
-yearMonth('Nov 2026', { loose: true })?.toString(); // '2026-11'
-monthDay('Oct 17', { loose: true })?.toString(); // '10-17'
+yearMonth('février 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-02'
+monthDay('17 février', { loose: true, locale: 'fr' })?.toString(); // '02-17'
 dateRange('TBD', '2026-09-07', { loose: true }); // null
 ```
 
@@ -87,13 +87,13 @@ configure({ dayFirst: false });
 ### `datetime()` :kind[function]
 
 ```js signature
-datetime(input, { loose: true, zone?, dayFirst? }): DateTime | null
-date(input, { loose: true, zone?, dayFirst? }): CalendarDate | null
+datetime(input, { loose: true, zone?, locale?, dayFirst? }): DateTime | null
+date(input, { loose: true, zone?, locale?, dayFirst? }): CalendarDate | null
 time(input, { loose: true, zone?, dayFirst? }): Time | null
-duration(input, { loose: true }): Duration | null
-yearMonth(input, { loose: true, zone? }): YearMonth | null
-monthDay(input, { loose: true, zone?, dayFirst? }): MonthDay | null
-dateRange(start, end, { loose: true, zone?, dayFirst? }): DateRange | null
+duration(input, { loose: true, locale? }): Duration | null
+yearMonth(input, { loose: true, zone?, locale? }): YearMonth | null
+monthDay(input, { loose: true, zone?, locale?, dayFirst? }): MonthDay | null
+dateRange(start, end, { loose: true, zone?, locale?, dayFirst? }): DateRange | null
 ```
 
 Extends every factory with fallback parsing and `null` returns on unreadable input. Calling class constructors like `new DateTime()` with `{ loose: true }` enables fallback parsing while still throwing if the input cannot be read.
@@ -104,7 +104,7 @@ Extends every factory with fallback parsing and `null` returns on unreadable inp
 - name: loose
   type: boolean
   default: "false"
-  description: Fall back to engine `Date` parsing and return `null` when input cannot be read.
+  description: Fall back to engine `Date` parsing, or localized `Intl` month names on partial dates, and return `null` when unreadable.
 - name: dayFirst
   type: boolean
   default: "false"
@@ -112,6 +112,9 @@ Extends every factory with fallback parsing and `null` returns on unreadable inp
 - name: zone
   type: Zone
   description: Time zone used to interpret local date-time strings or view instants.
+- name: locale
+  type: Locale
+  description: BCP 47 locale tag carried on the value, and used to match month names in `yearMonth()` and `monthDay()`.
 ```
 
 **Returns**

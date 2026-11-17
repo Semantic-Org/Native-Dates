@@ -1,7 +1,7 @@
 ---
 title: Formatting
 lede: Format dates, times, ranges, and durations with Intl presets, locale tags, token patterns, and relative phrases.
-updated: 2026-11-14
+updated: 2026-11-16
 ---
 
 Native Dates uses the platform's built-in `Intl` formatters and caches them automatically. You get localized output across languages and regions without adding locale files to your bundle.
@@ -61,7 +61,7 @@ span.format('digital', 'en-US'); // '2:15:00'
 
 ## Locales and Intl options
 
-Set a default once with [`configure()`](/api/configure/), attach a language to a value and everything derived from it with [`locale()`](/api/date-time/#locale), or pass a BCP 47 tag to `format()` for a single call. Read [Internationalization](/guides/internationalization/) for guidance on client apps versus multi-user servers:
+Set a default once with [`configure()`](/api/configure/), attach a language to a value with [`locale()`](/api/date-time/#locale), or pass a tag to a single format call. Read [Internationalization](/guides/internationalization/) for guidance on client apps versus multi-user servers:
 
 ```js
 import { configure, datetime } from 'native-dates';
@@ -116,7 +116,7 @@ yearMonth('2026-11').format('MMM YYYY', 'en-US'); // 'Nov 2026'
 monthDay('11-16').format('MMMM Do', 'en-US'); // 'November 16th'
 ```
 
-Month and weekday names inside token patterns come from `Intl` in your active or requested locale.
+Month and weekday names inside token patterns come from `Intl` in the active locale. Digits and years stay in Western ISO form so patterns like `'YYYY-MM-DD'` stay machine-readable everywhere.
 
 | Token | Example | Output |
 |---|---|---|
@@ -124,19 +124,19 @@ Month and weekday names inside token patterns come from `Intl` in your active or
 | `YY` | `'26'` | Two-digit year. |
 | `Q` | `'4'` | Calendar quarter from 1 through 4. |
 | `M`, `MM` | `'11'`, `'05'` | Month number, unpadded or zero-padded to two digits. |
-| `MMM`, `MMMM` | `'Nov'`, `'November'` | Localized short or full month name. |
+| `MMM`, `MMMM` | `'Nov'`, `'November'` | Localized Gregorian month name, inflected automatically right after a day token. |
 | `D`, `DD` | `'5'`, `'05'` | Day of the month, unpadded or zero-padded. |
-| `Do` | `'16th'` | Day of the month with an English ordinal suffix. |
+| `Do` | `'16th'` | Day of the month with English ordinals, the locale's day marker like `'6.'` or `'6日'`, or custom [`ordinals`](/api/configure/). |
 | `DDD`, `DDDD` | `'320'`, `'045'` | Day of the year, unpadded or zero-padded to three digits. |
 | `d` | `'1'` | Day of the week from 0 to 6, starting on Sunday at 0. |
-| `dd`, `ddd`, `dddd` | `'Mo'`, `'Mon'`, `'Monday'` | Localized two-letter, short, or full weekday name. |
+| `dd`, `ddd`, `dddd` | `'Mo'`, `'Mon'`, `'Monday'` | Localized shortest, abbreviated, or full weekday name, customizable via [`weekdays`](/api/configure/). |
 | `W`, `WW` | `'47'`, `'05'` | ISO week of the year, unpadded or zero-padded. |
 | `H`, `HH` | `'9'`, `'09'` | Hour on the 24-hour clock, unpadded or zero-padded. |
 | `h`, `hh` | `'9'`, `'09'` | Hour on the 12-hour clock from 1 through 12. |
 | `m`, `mm` | `'5'`, `'05'` | Minute, unpadded or zero-padded. |
 | `s`, `ss` | `'8'`, `'08'` | Second, unpadded or zero-padded. |
 | `S`, `SS`, `SSS` | `'4'`, `'42'`, `'420'` | Tenths, hundredths, or milliseconds. |
-| `A`, `a` | `'AM'`, `'am'` | Uppercase or lowercase meridiem marker. |
+| `A`, `a` | `'AM'`, `'am'` | Uppercase or lowercase `'AM'` and `'PM'` in English, or the locale's own day period like `'午後'` or `'م'`. |
 | `Z`, `ZZ` | `'-08:00'`, `'-0800'` | UTC offset with or without a colon. |
 | `z`, `zz` | `'PST'` | Localized short time zone name. |
 | `zzz`, `zzzz` | `'Pacific Standard Time'` | Localized full time zone name. |
@@ -155,7 +155,7 @@ import { monthNames, weekdayNames } from 'native-dates';
 
 monthNames('short', 'en-US'); // ['Jan', 'Feb', 'Mar', ...]
 weekdayNames('short', undefined, 'en-US'); // ['Sun', 'Mon', 'Tue', ...]
-weekdayNames('short', 'monday', 'en-US'); // ['Mon', 'Tue', 'Wed', ...]
+weekdayNames('narrow', 'monday', 'en-US'); // ['Mo', 'Tu', 'We', ...]
 ```
 
 ## Formatting ranges

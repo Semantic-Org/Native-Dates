@@ -4,7 +4,7 @@ kind: function
 lede: Read a month-and-day string, numbers, fields, or date into a MonthDay.
 import: import { monthDay, dayMonth } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-16
 ---
 
 ## Reading month-days
@@ -57,7 +57,7 @@ fromInstant.toString(); // '10-17'
     - name: loose
       type: boolean
       default: 'false'
-      description: "Read English month names like `'Oct 17'` and return `null` on unreadable input with `@native-dates/plugins/loose`."
+      description: "Read English or localized month names like `'17 février'` and return `null` on unreadable input with `@native-dates/plugins/loose`."
 ```
 
 **Returns**
@@ -67,14 +67,14 @@ type: MonthDay
 description: "A `MonthDay` with no year, or `null` when loose mode cannot read `input`."
 ```
 
-When the [loose plugin](/plugins/loose/) is loaded, loose mode parses English month names with optional ordinals and returns `null` on unreadable input:
+When the [loose plugin](/plugins/loose/) is loaded, loose mode parses month names in English or the active `locale` and returns `null` on unreadable input:
 
 ```js
 import { monthDay } from 'native-dates';
 import '@native-dates/plugins/loose';
 
 monthDay('Oct 17', { loose: true })?.toString(); // '10-17'
-monthDay('17th October', { loose: true })?.toString(); // '10-17'
+monthDay('17 février', { loose: true, locale: 'fr' })?.toString(); // '02-17'
 monthDay('whenever', { loose: true }); // null
 ```
 :::
@@ -131,7 +131,7 @@ Numeric strings without a year are never handed to the native `Date` parser. Tha
 | Two numbers | `monthDay(10, 17)`, `dayMonth(17, 10)` | Takes whole numbers in month-then-day or day-then-month order. |
 | Fields object | `{ month: 10, day: 17 }` | Reads 1-indexed fields and rejects impossible pairs such as April 31. |
 | Date or timestamp | `'1990-10-17'`, `datetime(...)`, `new Date()` | Extracts the calendar month and day in the given or configured zone and drops the year. |
-| Loose month name | `'Oct 17'`, `'17th October'` | Reads English month names and ordinals in either order in loose mode. |
+| Loose month name | `'Oct 17'`, `'17 février'` | Reads English or active-locale month names and ordinals in either order in loose mode. |
 | Temporal value | `Temporal.PlainMonthDay`, `Temporal.PlainDate` | Wraps ISO 8601 Temporal values directly. |
 
 :::tip[Reading today's month and day]
