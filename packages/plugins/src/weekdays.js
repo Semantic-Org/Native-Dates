@@ -15,7 +15,6 @@ export const weekdays = {
   mi: 'Ma Tū We Tāi Pa Hā Ta',
   my: 'လာ ဂါ ဟူး ကြာ သော နေ နွေ',
   oc: 'dl dm dc dj dv ds dg',
-  ps: 'د س چ پ ج ش ی',
   sw: 'J3 J4 J5 Al Ij J1 J2',
   yo: 'Aj Ìs Ọr Ọb Ẹt Àb Àì',
 };

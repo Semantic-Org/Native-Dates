@@ -11,6 +11,7 @@ let namesExtension = null;
 
 export const setNamesExtension = (lookup) => {
   namesExtension = lookup;
+  nameCache.clear();
 };
 
 // month and weekday names come from Intl for the locale, so tokens stay legible outside English. the
