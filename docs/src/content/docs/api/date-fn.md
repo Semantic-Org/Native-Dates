@@ -1,10 +1,10 @@
 ---
 title: date()
 kind: function
-lede: Create a CalendarDate from an ISO date string, year-month-day numbers, fields, or the current day.
+lede: Create a CalendarDate from a year-first date string, year-month-day numbers, fields, or the current day.
 import: import { date, today } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-16
 ---
 
 ## Reading calendar dates
@@ -18,17 +18,18 @@ date(input, zone?): CalendarDate
 date(year, month, day): CalendarDate
 ```
 
-Creates a [`CalendarDate`](/api/calendar-date/) from an ISO date string, three 1-indexed numbers, a fields object, or an existing date or timestamp. Impossible dates such as February 30 throw a `RangeError` instead of rolling into March.
+Creates a [`CalendarDate`](/api/calendar-date/) from a year-first date string, three 1-indexed numbers, a fields object, or an existing date or timestamp. Impossible dates such as February 30 throw a `RangeError` instead of rolling into March.
 
 ```js title="create.js"
 import { date, datetime } from 'native-dates';
 
 const fromIso = date('2026-11-16');
+const fromSlashes = date('2026/11/6');
 const fromNumbers = date(2026, 11, 16);
 const fromFields = date({ year: 2026, month: 11, day: 16 });
 const fromMoment = date(datetime('2026-11-17T02:00:00Z', 'America/Los_Angeles'));
 
-fromNumbers.toString(); // '2026-11-16'
+fromSlashes.toString(); // '2026-11-06'
 fromMoment.toString(); // '2026-11-16'
 ```
 
@@ -82,7 +83,7 @@ Months always run from 1 for January through 12 for December, unlike JavaScript'
 
 | Input | Example | How it reads |
 |---|---|---|
-| ISO date string | `'2026-11-16'` | Reads the 4-digit year, 1-indexed month, and day directly. |
+| Year-first date string | `'2026-11-16'`, `'2026/11/06'`, `'2026-1-5'` | Reads a 4-digit year, month, and day across matching `-`, `/`, or `.` separators. |
 | Local date-time string | `'2026-11-16T09:30'` | Keeps the calendar date and drops the time of day. |
 | ISO instant string | `'2026-11-17T02:00:00Z'` | Reads the calendar day of that moment in the given zone or configured default. |
 | Year, month, and day | `date(2026, 11, 16)` | Takes three whole numbers with `1` for January through `12` for December. |

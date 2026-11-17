@@ -80,7 +80,7 @@ Type errors indicate that a required input is missing, has the wrong JavaScript 
 | `invalidMonthDay` | `monthDay()`, `dayMonth()`, `MonthDay` | Input is a single number or an unsupported type. |
 | `invalidDuration` | `duration()`, `Duration`, `plus()`, `minus()` | Input is `null`, `undefined`, an unsupported type, or a unit passed beside a duration that already carries units. |
 | `unsupportedCalendar` | `yearMonth()`, `monthDay()`, `YearMonth`, `MonthDay` | Input is a `Temporal.PlainYearMonth` or `PlainMonthDay` with a non-ISO calendar. |
-| `invalidPoint` | `compare()`, `earliest()`, `latest()` | Value is not a `DateTime`, `CalendarDate`, `Time`, `YearMonth`, `Date`, Temporal point, or parseable string. |
+| `invalidPoint` | `compare()`, `earliest()`, `latest()` | Value is not a `DateTime`, `CalendarDate`, `Time`, `YearMonth`, `Date`, epoch timestamp, Temporal point, or parseable string. |
 | `conflictingKinds` | `compare()`, `earliest()`, `latest()` | Comparing values of different kinds, such as a `CalendarDate` with a `DateTime`. |
 | `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange` | Passing a range of one kind to another range constructor or factory. |
 
@@ -102,7 +102,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `invalidDay` | `YearMonth.on()` | Day passed to `on()` is not an integer from 1 to 31. |
 | `invalidDuration` | `duration()`, `Duration` | Empty or unparseable duration phrase, invalid ISO 8601 duration, or out-of-range duration fields. |
 | `invalidNumber` | `datetime()`, `duration()`, unit helpers | Numeric input is `NaN`, `Infinity`, `-Infinity`, or an invalid `Date` instance. |
-| `conflictingSigns` | `duration()`, `Duration` | Duration phrase or fields mix positive and negative units, such as `'1h -30m'`. |
+| `conflictingSigns` | `duration()`, `Duration`, `minus()` | Duration mixes positive and negative units that cannot borrow cleanly, such as `'1h -30m'` or unanchored days minus hours. |
 | `invalidFraction` | `duration()`, `months()`, `times()` | Fractional months or nanoseconds cannot be converted to a smaller fixed unit. |
 
 ### Units, zones, and formats
@@ -114,7 +114,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `unknownWidth` | `configure()` | A `weekdays` entry names a width other than `narrow`, `short`, or `long`, or leaves the width out. |
 | `unknownZone` | Factories, `in()`, `configure()` | Unknown IANA time zone ID, non-string zone, or malformed UTC offset. |
 | `invalidZoneAliases` | `configure()` | `zoneAliases` is neither a plain object nor `null`. |
-| `unknownLocale` | `locale()`, factories, `format()`, `monthNames()`, `weekdayNames()`, `configure()` | Invalid BCP 47 locale tag rejected by `Intl.getCanonicalLocales()`. |
+| `unknownLocale` | `locale()`, factories, `format()`, `monthNames()`, `weekdayNames()`, `configure()` | Locale tag, tag list, or `Accept-Language` header contains an invalid language tag. |
 | `unknownFormat` | `format()` | Non-string format spec, unsupported duration style, or unrecognized letters in a token pattern outside `[brackets]`. |
 | `unsupportedToken` | `format()` | Token pattern asks for a field the value lacks, such as `HH` on a `CalendarDate` or `YYYY` on a `Time`. |
 | `unknownKind` | `as()` | Target kind is not supported by the receiver. |

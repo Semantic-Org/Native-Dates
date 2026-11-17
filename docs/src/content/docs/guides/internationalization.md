@@ -82,9 +82,14 @@ function formatOrder(order, user) {
 formatOrder({ placedAt: '2026-05-15T14:30:00Z' }, { zone: 'Asia/Tokyo', locale: 'ja-JP' });
 ```
 
-Calling `locale()` with no arguments reads back the active tag, or returns `undefined` when none was set. Passing an empty tag clears it so `locale(user.locale)` chains cleanly even without a saved preference.
+Calling `locale()` with no arguments reads back the active tag, or returns `undefined` when none was set. Passing an empty value clears it so `locale(user.locale)` chains cleanly even on an empty database column.
 
-A locale is read however a server hands it over. An underscore tag such as `en_US` reads as `en-US`, and a raw HTTP `Accept-Language` header reads as its tags by weight, leaving out any weighted at zero. Text that is neither throws an [`unknownLocale`](/api/errors/#units-zones-and-formats) error immediately.
+Server values read as handed over. Underscore tags like `'en_US'` normalize automatically, and HTTP Accept-Language headers sort tags by quality weight while dropping zero-weighted entries. Strings that are neither throw [`unknownLocale`](/api/errors/#units-zones-and-formats):
+
+```js
+datetime('2026-05-15T14:30:00Z').locale('en_US').locale(); // 'en-US'
+datetime('2026-05-15T14:30:00Z').locale('fr-CH;q=0.8, de;q=0.9, es;q=0').locale(); // ['de', 'fr-CH']
+```
 
 :::warning[Avoid per-request configure on servers]
 Global configuration updates shared state across the entire JavaScript process. On a multi-user server, another request can overwrite a `configure()` call across an async boundary. Attach `locale()` to the value instead.
