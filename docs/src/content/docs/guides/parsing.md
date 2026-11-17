@@ -1,7 +1,7 @@
 ---
 title: Parsing
 lede: Read ISO strings, clock times, partial dates, ranges, duration phrases, and user input without silent guesswork.
-updated: 2026-11-12
+updated: 2026-11-16
 ---
 
 Core parses standard, unambiguous inputs directly into the type you ask for:
@@ -130,7 +130,7 @@ import { date, datetime, monthDay, yearMonth } from 'native-dates';
 date('Nov 16, 2026', { loose: true }); // 2026-11-16
 datetime('Mon, 16 Nov 2026 17:30:00 GMT', { loose: true });
 yearMonth('Nov 2026', { loose: true }); // 2026-11
-monthDay('Oct 17', { loose: true }); // 10-17
+monthDay('17 février', { loose: true, locale: 'fr' }); // 02-17
 ```
 
 Numeric slash and dot dates default to month-first order. Enable `dayFirst` per call or once at startup via [app configuration](/api/configure/) when reading day-first dates.

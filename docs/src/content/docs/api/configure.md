@@ -1,10 +1,10 @@
 ---
 title: configure()
 kind: function
-lede: Read or update process-wide defaults for time zone, locale, week start, and plugins.
+lede: Read or update process-wide defaults for time zone, locale, week start, token names, and plugins.
 import: import { configure } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-16
 ---
 
 ## Global defaults
@@ -18,7 +18,7 @@ configure(settings?): ActiveSettings
 
 Updates one or more process-wide defaults and returns a snapshot of the active configuration. Calling it with no arguments reads the current settings without changing them.
 
-Omitted properties keep their current values. Pass `null` for the time zone, locale, or week start to restore the runtime and locale defaults.
+Omitted properties keep their current values. Pass `null` for any setting to restore the runtime and built-in defaults.
 
 ```js title="setup.js"
 import { configure, date, datetime } from 'native-dates';
@@ -57,11 +57,11 @@ configure({ zone: null, locale: null, weekStart: null });
       type: Weekday | null
       description: First day of the week for week boundaries and `weekdayNames()`, from 1 for Monday through 7 for Sunday. Unset or `null` follows the active locale.
     - name: weekdays
-      type: Record<Locale, { narrow?, short?, long? }> | null
-      description: "Weekday names written your own way, by language, then width, then day, such as `{ lv: { narrow: { fri: 'Pk', sun: 'Sv' } } }`. `narrow` is what the `dd` token prints. Pass `null` to return to the runtime's names."
+      type: "Record<Locale, { narrow?, short?, long? }> | null"
+      description: "Custom weekday labels keyed by language, width (`narrow`, `short`, or `long`), and day name. Regional tags layer over their base language, and an empty value restores runtime names."
     - name: ordinals
-      type: Record<Locale, (day: number) => string | number> | null
-      description: "What the `Do` token writes for a day of the month, by language, such as `{ fr: (day) => (day === 1 ? '1er' : day) }`. Pass `null` to return to the built-in behavior."
+      type: "Record<Locale, (day: number) => string | number> | null"
+      description: "Custom `Do` day-of-month formatter keyed by language tag. Pass `null` to restore built-in English suffixes and locale day markers."
     - name: dayFirst
       type: boolean
       default: 'false'
@@ -76,6 +76,22 @@ configure({ zone: null, locale: null, weekStart: null });
 ```returns
 type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdays, ordinals }"
 description: A shallow copy of the active settings after applying updates. Unset keys return `undefined`.
+```
+
+Custom `weekdays` and `ordinals` customize token patterns and [`weekdayNames()`](/api/month-names/#weekdaynames) without plugins:
+
+```js
+import { configure, date, weekdayNames } from 'native-dates';
+
+configure({
+  weekdays: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
+  ordinals: { fr: (day) => (day === 1 ? '1er' : day) },
+});
+
+date('2026-11-01').format('Do MMMM', 'fr'); // '1er novembre'
+weekdayNames('narrow', 'monday', 'lv'); // ['P', 'O', 'T', 'C', 'Pk', 'S', 'Sv']
+
+configure({ weekdays: null, ordinals: null });
 ```
 
 Plugins extend `configure()` with their own options once imported. Setting a plugin option before importing its plugin throws a `RangeError`:

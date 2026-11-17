@@ -1,7 +1,7 @@
 ---
 title: Durations
 lede: Create lengths of time from unit helpers or plain phrases, measure spans between dates, and convert or format totals.
-updated: 2026-11-12
+updated: 2026-11-16
 ---
 
 A [`Duration`](/api/duration/) represents a length of time, such as 90 minutes or 2 weeks. You can create one directly for date math, or get one back when measuring between two values.
@@ -88,14 +88,15 @@ shift.as('minutes'); // 450
 ```
 
 :::note[Totals in months and years]
-Months and years vary in length, so sixty standalone days cannot convert to months without a calendar date. Spans returned by `until()` and `since()` remember where they started, so month and year totals work directly.
+Years and months total and balance directly into each other at 12 months per year. Converting between days and months needs a calendar date, which spans from `until()` and `since()` remember automatically.
 :::
 
 ```js
-import { date } from 'native-dates';
+import { date, months } from 'native-dates';
+
+months(18).total('years'); // 1.5
 
 const span = date('2026-01-15').until('2026-04-15');
-
 span.total('months'); // 3
 span.total('days'); // 90
 ```

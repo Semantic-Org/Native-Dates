@@ -1,4 +1,4 @@
-import { each, isString } from '@semantic-ui/utils';
+import { each, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { names } from './tokens.js';

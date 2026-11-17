@@ -1,4 +1,4 @@
-import { each, isPlainObject } from '@semantic-ui/utils';
+import { each, isPlainObject } from './helpers/utils.js';
 
 import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, refuse, unreadable } from './helpers/errors.js';

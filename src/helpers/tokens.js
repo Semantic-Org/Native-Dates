@@ -1,8 +1,8 @@
-import { each } from '@semantic-ui/utils';
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
 import { pad, weekdayNumber } from './units.js';
+import { each } from './utils.js';
 import { locale as pickLocale, settings, weekStart } from './zones.js';
 
 // configure() empties this when an app writes weekdays or ordinals its own way

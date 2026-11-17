@@ -4,7 +4,7 @@ kind: function
 lede: Return localized month and weekday label arrays for calendar headers and menus.
 import: import { monthNames, weekdayNames } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-16
 ---
 
 ## Calendar labels
@@ -57,17 +57,17 @@ monthNames('long', 'fr-FR').slice(0, 3);
 weekdayNames(style?, firstDay?, locale?): string[]
 ```
 
-Returns an array of 7 localized weekday labels rotated to begin on `firstDay`, the configured `weekStart` from [`configure()`](/api/configure/), or the active locale's first day of the week.
+Returns an array of 7 localized weekday labels rotated to begin on `firstDay`, the configured `weekStart` from [app settings](/api/configure/), or the active locale's first day of the week.
 
-Week boundaries in `startOf('week')` and week ranges follow the same first-day rule, so calendar headers always match week grids.
+Week boundaries in `startOf('week')` and week ranges follow the same first-day rule, so calendar headers always match week grids. Custom weekday labels set in [`configure()`](/api/configure/) apply here too.
 
 **Parameters**
 
 ```params
 - name: style
-  type: "'short' | 'long'"
+  type: "'short' | 'long' | 'narrow'"
   default: "'short'"
-  description: Abbreviated weekday labels like `'Mon'` or full names like `'Monday'`.
+  description: "Abbreviated labels like `'Mon'`, full names like `'Monday'`, or compact two-letter and single-letter headers like `'Mo'`."
 - name: firstDay
   type: Weekday
   description: Starting weekday name or ISO number from 1 for Monday through 7 for Sunday.
@@ -89,8 +89,11 @@ import { date, weekdayNames } from 'native-dates';
 weekdayNames('short', undefined, 'en-US');
 // ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-weekdayNames('short', undefined, 'de-DE');
-// ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+weekdayNames('narrow', undefined, 'en-US');
+// ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+
+weekdayNames('narrow', undefined, 'pt-BR');
+// ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
 weekdayNames('short', 'monday', 'en-US');
 // ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']

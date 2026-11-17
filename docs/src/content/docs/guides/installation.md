@@ -1,7 +1,7 @@
 ---
 title: Installation
-lede: Install the core package, add a Temporal polyfill for older runtimes, and set app-wide defaults.
-updated: 2026-11-14
+lede: Install the core package, add a Temporal polyfill for Safari or older runtimes, and set app-wide defaults.
+updated: 2026-11-16
 ---
 
 Native Dates ships as a small ES module package with TypeScript types included and zero runtime dependencies.
@@ -30,9 +30,9 @@ const birthday = monthDay('10/17');
 
 ## Runtime support and polyfilling
 
-Native Dates runs directly on the platform's built-in `Temporal` and `Intl` APIs. Modern releases of Chrome, Edge, Firefox, Node, Deno, and Bun ship `Temporal` natively.
+Native Dates runs directly on the platform's built-in `Temporal` and `Intl` APIs. Current releases of Chrome, Edge, Firefox, Node 26+, Deno, and Bun ship both natively.
 
-If your app also targets browsers or server versions without native support, install `@native-dates/polyfill` alongside `temporal-polyfill`:
+Safari, older browser versions, and Node releases before 26 do not ship native `Temporal` yet. When targeting those runtimes, install `@native-dates/polyfill` alongside `temporal-polyfill`:
 
 ```bash
 npm i @native-dates/polyfill temporal-polyfill
@@ -46,6 +46,8 @@ import { today } from 'native-dates';
 
 const launch = today().plus(30, 'days');
 ```
+
+If another imported module evaluates dates at module load time before top-level `await` finishes, import `'@native-dates/polyfill/sync'` instead to load the polyfill synchronously.
 
 :::tip[Zero cost on modern browsers]
 The entry import checks `globalThis.Temporal` first and dynamically loads `temporal-polyfill` only when it is missing. Browsers with native support skip downloading the polyfill chunk altogether.
