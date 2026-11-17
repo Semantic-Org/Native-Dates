@@ -106,7 +106,8 @@ const parseWords = (text) => {
 // a year is twelve months in the ISO calendar, so months carry into years with nothing to anchor them
 export const carriedMonths = (years = 0, months = 0) => {
   const whole = years * 12 + months;
-  return whole ? { years: Math.trunc(whole / 12), months: whole % 12 } : {};
+  const [carried, left] = [Math.trunc(whole / 12), whole % 12];
+  return { ...(carried && { years: carried }), ...(left && { months: left }) };
 };
 
 const twoSigns = (fields) => new Set(Object.values(fields).filter(Boolean).map(Math.sign)).size > 1;
@@ -188,14 +189,14 @@ export const addFields = (a, b, sign, anchor) => {
   const clockA = temporalDurationOf(clockFields(a));
   const clockB = temporalDurationOf(clockFields(b));
   Object.assign(fields, fieldsOf(sign > 0 ? clockA.add(clockB) : clockA.subtract(clockB)));
-  // a subtraction can leave two signs, a day less an hour. a year is always twelve months, and with
-  // no date to anchor it a week is seven days and a day twenty four hours, so the larger unit is
-  // broken into the smaller: 23 hours, 6 days, 11 months. months against days still has no answer,
-  // and an anchored length keeps its own days, which a clock change can make longer or shorter
+  // a subtraction can leave two signs, a year less a month. a year is always twelve months and a
+  // week always seven days, so the larger unit is broken into the smaller: 11 months, 6 days. a day
+  // is not always twenty four hours, so a day less an hour still has no answer, nor months less
+  // days, and an anchored length is left to its anchor
   if (twoSigns(fields) && !anchor) {
     const { years, months, weeks = 0, days = 0, ...clock } = fields;
-    const fixed = temporalDurationOf({ hours: (weeks * 7 + days) * 24 }).add(temporalDurationOf(clock));
-    fields = { ...carriedMonths(years, months), ...fieldsOf(fixed.round({ largestUnit: 'day' })) };
+    const whole = weeks * 7 + days;
+    fields = { ...carriedMonths(years, months), ...(whole && { days: whole }), ...clock };
   }
   return oneSign(fields, JSON.stringify(fields));
 };

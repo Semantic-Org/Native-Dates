@@ -11,6 +11,7 @@ import {
   IS_TIME,
   IS_YEAR_MONTH,
 } from './identity.js';
+import { checkedLocale } from './zones.js';
 
 export const inspect = Symbol.for('nodejs.util.inspect.custom');
 
@@ -172,9 +173,12 @@ export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(
 // the locale a new value is written in: the one its options name, or else the one carried by the
 // value it is made from, so a date taken from a Spanish datetime is Spanish too
 const nouns = [IS_DATE_TIME, IS_CALENDAR_DATE, IS_TIME, IS_DURATION, IS_MONTH_DAY, IS_YEAR_MONTH, IS_RANGE];
-export const localeOf = (options, input) =>
+export const localeOf = (options, input) => {
   // a value from an older copy of the package carries the brand and no locale to ask for
-  options?.locale ?? (nouns.some((brand) => input?.[brand]) ? input.locale?.() : undefined);
+  const tag = options?.locale ?? (nouns.some((brand) => input?.[brand]) ? input.locale?.() : undefined);
+  // kept as it was read, so 'en_US' hands back en-US, a tag Intl takes
+  return tag == null ? tag : checkedLocale(tag);
+};
 
 // the second argument of a factory is a zone, or an options bag { zone, loose }
 export const zoneOptions = (value) => (isPlainObject(value) ? value : { zone: value });

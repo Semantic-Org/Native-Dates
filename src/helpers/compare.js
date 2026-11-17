@@ -39,7 +39,8 @@ export const point = (input) => {
     }
     return new CalendarDate(text);
   }
-  // a bare number is epoch milliseconds, what Date.now() and a database timestamp hand over
+  // a bare number standing first is epoch milliseconds, what Date.now() and a database timestamp
+  // hand over. beside a time or a date it still reads as that kind reads it, an hour or a refusal
   if (isDate(input) || isNumber(input) || isZonedDateTime(input) || isInstant(input) || isPlainDateTime(input)) {
     return new DateTime(input);
   }
@@ -103,8 +104,7 @@ const asKindOf = (left, value) => {
     return value;
   }
   const kind = kindOf(left);
-  // a number is a moment whatever it stands beside, never a year
-  if (kind === 'datetime' || isNumber(value)) {
+  if (kind === 'datetime') {
     return new DateTime(value, left.zone);
   }
   return kind === 'date' ? new CalendarDate(value) : new Time(value);
@@ -128,11 +128,8 @@ export const compare = (a, b) => {
     sameKind(a, b);
     return compare(a.start, b.start) || compare(a.end, b.end);
   }
-  // a date beside a datetime is compared by the day, the datetime's own day in its zone
-  const day = (value, other) => (value[IS_DATE_TIME] && other[IS_CALENDAR_DATE] ? value.date : value);
-  const first = point(a);
-  const second = asKindOf(first, b);
-  const [left, right] = [day(first, second), day(second, first)];
+  const left = point(a);
+  const right = asKindOf(left, b);
   sameKind(left, right);
   return left.isBefore(right) ? -1 : left.isAfter(right) ? 1 : 0;
 };
