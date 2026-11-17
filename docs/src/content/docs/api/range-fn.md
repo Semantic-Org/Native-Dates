@@ -4,7 +4,7 @@ kind: function
 lede: Create a DateRange, DateTimeRange, or TimeRange from endpoints, durations, or interval strings.
 import: import { dateRange, datetimeRange, timeRange } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-16
 ---
 
 ## Creating ranges
@@ -163,7 +163,7 @@ Single-string intervals split on an ISO slash or on spaced range separators. Sla
 | Form | Example | How it reads |
 |---|---|---|
 | ISO slash interval | `'2026-09-01/2026-09-07'`, `'09:00/17:00'` | Splits on `/` outside bracketed time zone names, matching `toString()` output. |
-| Spaced hyphen or en-dash | `'9am - 5pm'`, `'2026-09-01 – 2026-09-07'` | Splits on `-` or `–` surrounded by spaces so hyphens inside ISO dates stay intact. |
+| Spaced hyphen or en-dash | `'9am - 5pm'`, `'2026/09/01 - 2026/09/07'` | Splits on `-` or `–` surrounded by spaces first, keeping date hyphens and slashes intact. |
 | English `to` separator | `'2026-09-01 to 2026-09-07'` | Splits on ` to ` surrounded by spaces. |
 | Start and length | `dateRange('2026-09-01', '7d')`, `timeRange('9am', '90m')` | Reads the second argument as a duration when it is a `Duration`, duration fields, or duration phrase. |
 

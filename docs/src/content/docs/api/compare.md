@@ -4,7 +4,7 @@ kind: function
 lede: Sort and pick boundary values across dates, moments, times, durations, and ranges.
 import: import { compare, earliest, latest } from 'native-dates'
 size: core
-updated: 2026-11-12
+updated: 2026-11-16
 ---
 
 ## Sorting and ordering
@@ -16,9 +16,9 @@ updated: 2026-11-12
 compare(a, b): -1 | 0 | 1
 ```
 
-Orders two values of the same kind for `Array.prototype.sort()`, returning negative, zero, or positive numbers. Works across moments, calendar dates, clock times, durations, [year-month values](/api/year-month/), and [ranges](/api/ranges/).
+Orders two values of the same kind for `Array.prototype.sort()`, returning negative, zero, or positive numbers. Works across moments, epoch timestamps, calendar dates, clock times, durations, [year-month values](/api/year-month/), and [ranges](/api/ranges/).
 
-When the first argument is a typed point or `Duration`, a raw second argument such as an ISO string is read as the same kind. Comparing two different kinds throws a `TypeError`.
+Raw ISO strings, native JavaScript dates, and epoch millisecond numbers can stand first too. Beside a clock time, a number reads as an hour, while comparing two different kinds throws a `TypeError`.
 
 ```js title="sort.js"
 import { compare, date, datetime, hours, minutes } from 'native-dates';
@@ -32,6 +32,8 @@ const moments = [
 ];
 moments.sort(compare)[0].zone; // 'America/Los_Angeles'
 
+compare(1794840000000, datetime('2026-11-16T18:00Z')); // -1
+
 const spans = [hours(2), minutes(45), minutes(90)].sort(compare);
 spans[0].minutes; // 45
 ```
@@ -42,7 +44,7 @@ spans[0].minutes; // 45
 - name: a
   type: Point | Duration | YearMonth | Range
   required: true
-  description: First typed value to compare.
+  description: First typed value, ISO string, `Date`, or epoch millisecond timestamp to compare.
 - name: b
   type: Point | Duration | YearMonth | Range
   required: true
@@ -88,7 +90,7 @@ earliest(...points): DateTime | CalendarDate | Time | YearMonth
 earliest(points): DateTime | CalendarDate | Time | YearMonth
 ```
 
-Returns the earliest value from one or more arguments or a non-empty array of the same kind. Passing an empty array throws a `RangeError`.
+Returns the earliest value from one or more arguments or a non-empty array of the same kind, converting raw dates or epoch millisecond inputs into a `DateTime`. Passing an empty array throws a `RangeError`.
 
 **Parameters**
 
@@ -96,7 +98,7 @@ Returns the earliest value from one or more arguments or a non-empty array of th
 - name: points
   type: Point[] | YearMonth[]
   required: true
-  description: One or more dates, moments, clock times, or year-months of the same kind.
+  description: One or more dates, moments, epoch timestamps, clock times, or year-months of the same kind.
 ```
 
 **Returns**
@@ -111,6 +113,7 @@ import { date, earliest, time } from 'native-dates';
 
 earliest(date('2026-11-20'), date('2026-11-04'), date('2026-11-16')).toString(); // '2026-11-04'
 earliest([time('5:30pm'), time('9:00am'), time('12:15pm')]).toString(); // '09:00:00'
+earliest(1794850200000, 1794840000000).epoch; // 1794840000000
 ```
 :::
 
