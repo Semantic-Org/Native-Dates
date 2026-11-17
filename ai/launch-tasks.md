@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 13.70 kB for all of `native-dates`, 12.30 kB for `import { now }`, 15.56 kB with the four plugins (`zones`, `loose`, `weekdays`, `legacy-date`) on top.
+Sizes on 2026-11-16 (`npm run size`, Brotli): 13.72 kB for all of `native-dates`, 12.33 kB for `import { now }`, 15.47 kB with the four plugins (`zones`, `loose`, `weekdays`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -94,11 +94,11 @@ A review of that work, run across every locale ICU has, then found and fixed:
 - **A list of locales** passed as an array built a new formatter on every call.
 - **A range that runs backwards needs no fallback.** An engine from before 2022 refuses one, and no browser the library runs on is that old: Safari 27 on the polyfill was checked on a phone and formats it.
 
-A fourth pass, after asking readers of the languages and a review across every locale ICU has, cost 0.11 kB (0.06 kB of floor):
+A fourth pass, after asking readers of the languages and a review across every locale ICU has, cost 0.14 kB (0.09 kB of floor):
 
 - **Greek names a month alone in the nominative.** `format('MMMM YYYY', 'el')` is `Νοέμβριος 2026`, `6 Νοεμβρίου 2026` keeps the genitive beside its day, and `monthNames('long', 'el')` is twelve nominatives. Greek is the one locale where `Intl` hands back the genitive for a month alone, so it is the one special case.
-- **`dd` in core is one rule.** Two letters in a script with capitals, where the seven differ and the long name holds each (`Mo`, `lu`, `пн`, `Δε`, Welsh `Ll` from `Dydd Llun`), keeping a short name the locale already writes in two letters with its dot dropped (Polish `pt`, Catalan `dl`). Everything else is `Intl`'s narrow form (`月`, `一`, `จ`, `सो`, `د`), so no Thai or Hindi syllable is split and Turkish never prints `Pz`, Sunday's letters, for Monday.
-- **The languages that need a hand-written row have a plugin.** Core spent bytes on fallbacks for Tigrinya, Pashto, Urdu and Swahili for one review round, 56 B that every reader paid for a fraction of a percent of them, and only roughly. They came back out. `@native-dates/plugins/weekdays` (0.54 kB) lays Moment's rows over `dd` for seventeen languages whose narrow form repeats a letter, borrows English ones or counts the days: Turkish `Pt Sa Ça Pe Cu Ct Pz`, Indonesian, Swahili, Portuguese, Hungarian, Urdu and the rest. Its table is exported, so an app can set a row for a language it lacks.
+- **`dd` in core serves every widely written language with no import.** Two letters in a script with capitals, where the seven differ and the long name holds each (`Mo`, `lu`, `пн`, `Δε`, Welsh `Ll` from `Dydd Llun`), keeping a short name the locale already writes in two letters with its dot dropped (Polish `pt`, Catalan `dl`). Otherwise `Intl`'s narrow form, the letters a calendar in the language heads its columns with: `月`, `一`, `จ`, `सो`, `د`, Portuguese `S T Q Q S S D`, Turkish `P S Ç P C C P`, Indonesian `S S R K J S M`, Hungarian `H K Sz Cs P Sz V`. Where the narrow form is not the language's own, English letters in Urdu, Swahili and Pashto or digits in Azerbaijani, the short name stands whole (20 B).
+- **The plugin is for the long tail, never for a common language.** A language most readers of the docs could be writing in is core's to get right, since nobody should need an import for Brazil. `@native-dates/plugins/weekdays` (0.41 kB) lays Moment's rows over `dd` for eleven less widely used languages whose narrow form is not what a reader writes: Azerbaijani, Armenian, Javanese, Khmer, Latvian, Māori, Burmese, Occitan, Pashto, Swahili, Yoruba. Its table is exported, so an app can set a row for any language, a common one included (`weekdays.tr = 'Pt Sa Ça Pe Cu Ct Pz'`).
 - **The hook is general.** A plugin registers a lookup with `setNamesExtension` in `helpers/tokens.js`, and whatever it returns for a language is laid over the names read from `Intl`. Anything else `Intl` has no form for can ride it.
 - **`weekdayNames('narrow')`** returns the table `dd` prints.
 - **Loose month names read in the locale a call passes**: `monthDay('17 octobre', { loose: true, locale: 'fr' })`, where only `configure({ locale })` counted, which a server answering many readers cannot use.
