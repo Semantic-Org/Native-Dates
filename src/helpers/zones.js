@@ -140,7 +140,8 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
 // they want them, which is what Intl takes as a list
 const knownLocales = new Map();
 export const checkedLocale = (tag) => {
-  const key = String(tag);
+  // a list and a header can spell the same text, 'es,en', and are not the same thing to hand back
+  const key = isString(tag) ? tag : `[${tag}]`;
   if (!knownLocales.has(key)) {
     const tags = isString(tag) && /[_,;]/.test(tag)
       ? tag.replace(/_/g, '-').split(',').map((part) => part.split(';')[0].trim()).filter((part) => part !== '*')
@@ -148,7 +149,7 @@ export const checkedLocale = (tag) => {
     guard(
       () => Intl.getCanonicalLocales(tags ?? tag),
       'unknownLocale',
-      key,
+      String(tag),
       isDevelopment
         ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
         : 0,

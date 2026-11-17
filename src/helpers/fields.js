@@ -193,12 +193,14 @@ export const addFields = (a, b, sign, anchor) => {
   // week always seven days, so the larger unit is broken into the smaller: 11 months, 6 days. a day
   // is not always twenty four hours, so a day less an hour still has no answer, nor months less
   // days, and an anchored length is left to its anchor
+  // a refusal names the fields as they were written, before anything was broken down
+  const written = JSON.stringify(fields);
   if (twoSigns(fields) && !anchor) {
     const { years, months, weeks = 0, days = 0, ...clock } = fields;
     const whole = weeks * 7 + days;
     fields = { ...carriedMonths(years, months), ...(whole && { days: whole }), ...clock };
   }
-  return oneSign(fields, JSON.stringify(fields));
+  return oneSign(fields, written);
 };
 
 // Temporal refuses an empty fields object, and a zero duration has no nonzero field to offer it
