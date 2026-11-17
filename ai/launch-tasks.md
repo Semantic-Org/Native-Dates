@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 13.13 kB for everything in `native-dates`, 11.70 kB for `import { now }`, three plugins on top (`zones`, `loose`, `legacy-date`).
+Sizes on 2026-11-16 (`npm run size`, Brotli): 13.93 kB for all of `native-dates`, 12.46 kB for `import { now }`, 15.33 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -14,8 +14,8 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 
 ## 1. Decisions that 1.0 makes permanent
 
-- [ ] **`native-dates/helpers/*` is a public entry.** The exports map serves every file in `src/helpers/` because the plugins import from it. Either say in writing that the path is unstable, or narrow it to what the three plugins use (`errors`, `intl`, `zones`, `types`).
-- [ ] **Error codes.** Apps will route on `error.code`, so the codes freeze at 1.0. Read all of them once for naming. The reference is the sync repo: `../sync/ai/skills/author-error-messages.md` for the register and the six condition words (`missing`, `unknown`, `invalid`, `unsupported`, `duplicate`, `conflicting`), and `../sync/ai/reference/error-corpus.md` for worked lines. Take the register and the vocabulary. Leave whatever in it adds production bytes, since explanations here already fold out when `isDevelopment` is false and nothing more should ship.
+- [ ] **`native-dates/helpers/*` is a public entry.** The exports map serves every file in `src/helpers/` because the plugins import from it. Either say in writing that the path is unstable, or narrow it to what the three plugins use (`environment`, `errors`, `utils`, `zones`).
+- [x] **Error codes** use the six condition words of the sync repo (`missing`, `unknown`, `invalid`, `unsupported`, `duplicate`, `conflicting`), and every explanation was rewritten in its register and reviewed. All of them fold out of a production build. Still open for a read: the `invalid*` codes are thrown as a `TypeError` in some places and a `RangeError` in others.
 - [x] **Relative time** is in core as `from(other)` and `fromNow()`, the words moment and day.js use, with `formatRelative()` kept as a second spelling. It cost 0.29 kB of floor, the size the plugin was.
 - [ ] **Names worth one last read.** `monthDay.in(2027)` beside `datetime.in(zone)`. `after()` and `before()` beside `next()` and `previous()`. `as()` reaches five kinds where `kindOf()` reports more, so there is no `as('dateRange')`.
 
@@ -35,6 +35,19 @@ Left as the contract does not say, for a decision if anyone asks:
 - A value with no locale takes one from the value it is combined with in some places and not others: `time('18:00').on(frenchDate)` is French, `hours(1).plus(spanishDuration)` is not Spanish.
 - `text` is in the value's locale, so two values that are `equals()` can differ under a deep-equality assertion.
 - A range written by a token pattern prints each end in its own locale.
+
+### Decided: zero dependencies, by forking word for word
+
+`native-dates` installs nothing. Taking `@semantic-ui/utils` as a dependency was tried for a day and reversed: "zero dependencies" is worth more to someone choosing a date library than one copy of each helper across the organization.
+
+- What the library used from it is forked into `src/helpers/utils.js`, under the same names: the type guards, `each()`, and the coded errors (`createErrors`, `error`, `throwError`). The timezone table is forked into the zones plugin.
+- The text is identical to utils 0.18.0, branches this library never reaches included, and the comments too. An app that ships another Semantic UI package compresses the second copy away, a refusal behaves exactly as one does anywhere in the organization, and a fix upstream is a paste. Do not restyle it, trim it or rewrite it in this repo's voice. `dprint` skips the file.
+- An edit to `timezones` in the zones plugin no longer reaches the table utils formats dates with.
+- Bytes did not move: 13.93 kB before and after.
+
+### Decided: `text` is a plain property
+
+`Duration.text` is built when the duration is made and stays an own property, never a getter, so it shows in a console and in a spread. The cost is one `Intl.DurationFormat` call for each duration, measured loosely at 14 microseconds on Node, and accepted.
 
 ### Decided: a week starts where the locale starts it
 
@@ -56,7 +69,7 @@ The docs will carry examples for each language, and may show a homepage section 
 - [x] **Token `dd` is the first two letters of the short weekday name**, which is right in English and arbitrary elsewhere.
 - [x] **Week start follows the locale.** See the decision above.
 - [x] **Loose parsing reads month names in English only.** `monthDay('17 octobre', { loose: true })` is `null`. Decide whether that is a gap or the meaning of loose.
-- [ ] **Calendars.** A Persian or Hebrew locale prints a full date in its own calendar, while `MonthDay` and `YearMonth` always print Gregorian months. That was chosen, and the example for such a language should show it on purpose.
+- [x] **Calendars.** A Persian locale prints a full date in its own calendar, while `MonthDay` and `YearMonth` always print Gregorian months. That was chosen, and the example for such a language should show it on purpose.
 
 For the examples themselves: lead with presets and options bags, where the library is strongest in every locale, before token patterns.
 
@@ -74,7 +87,7 @@ Fixed, at 0.22 kB for all four:
 Then three pieces of our own guessing were handed to the platform, which took 0.09 kB back off:
 
 - **A time range across midnight is one `formatRange` call.** `Intl` formats a range whose end reads earlier on the same day, so the sample range and the joiner read off it are gone, and a night shift is written exactly as a day shift is: `22:00–06:00 Uhr`, `22時00分～6時00分`.
-- **`dd` is two letters of the short name where they tell the seven days apart, and `Intl`'s narrow form where they do not**: Arabic, Hebrew and Vietnamese.
+- **`dd` took `Intl`'s narrow form** where two letters of the short name did not tell the seven days apart. Replaced by the rule under the fourth sweep below.
 - **Loose reading matches month names against `Intl`'s tables** for the configured locale as well as English, so `17 octobre`, `17. Oktober` and `17 октября` read. The typed English list is gone.
 
 A review of that work, run across every locale ICU has, then found and fixed:
@@ -86,17 +99,42 @@ A review of that work, run across every locale ICU has, then found and fixed:
 - **A list of locales** passed as an array built a new formatter on every call.
 - **A range that runs backwards needs no fallback.** An engine from before 2022 refuses one, and no browser the library runs on is that old: Safari 27 on the polyfill was checked on a phone and formats it.
 
+A fourth pass, after asking readers of the languages and a review across every locale ICU has, cost 0.36 kB (0.24 kB of floor), more than half of it the door below:
+
+- **Greek names a month alone in the nominative.** `format('MMMM YYYY', 'el')` is `Νοέμβριος 2026`, `6 Νοεμβρίου 2026` keeps the genitive beside its day, and `monthNames('long', 'el')` is twelve nominatives. Greek is the one locale where `Intl` hands back the genitive for a month alone, so it is the one special case.
+- **`dd` in core serves every widely written language with no import.** Two letters in a script with capitals, where the seven differ and the long name holds each (`Mo`, `lu`, `пн`, `Δε`, Welsh `Ll` from `Dydd Llun`), keeping a short name the locale already writes in two letters with its dot dropped (Polish `pt`, Catalan `dl`). Otherwise `Intl`'s narrow form, the letters a calendar in the language heads its columns with: `月`, `一`, `จ`, `सो`, `د`, Portuguese `S T Q Q S S D`, Turkish `P S Ç P C C P`, Indonesian `S S R K J S M`, Hungarian `H K Sz Cs P Sz V`. Where the narrow form is not the language's own, English letters in Urdu, Swahili and Pashto or digits in Azerbaijani, the short name stands whole (20 B).
+- **`weekdayNames('narrow')`** returns the table `dd` prints.
+- **Loose month names read in the locale a call passes**: `monthDay('17 octobre', { loose: true, locale: 'fr' })`, where only `configure({ locale })` counted, which a server answering many readers cannot use.
+
+### Decided: what `Intl` has not settled is the app's to write
+
+`dd` and `Do` are the only two tokens `Intl` has no field for. Core prints the best it can read off the platform and does not carry tables or per-language rules of its own: if `Intl` prints `1 novembre` for French, a French `1er` is not ours to hard-code and charge every reader for. The app writes it, in `configure()`, under plain nouns:
+
+```js
+configure({
+  weekdays: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
+  ordinals: { fr: (day) => (day === 1 ? '1er' : day) },
+});
+```
+
+- Weekdays are keyed by language, then width (`narrow` is `dd`, `short` is `ddd`, `long` is `dddd`), then day name. Day names and not positions, since Moment's tables start on Sunday and ours on Monday, and a row off by one shifts every weekday in an app.
+- A regional tag reads its language's entry with its own laid over it, tags match in any case (`pt-br`, as Moment spells it), and `null` goes back to the platform.
+- A width left out or misspelled, or a day that is not one, refuses at `configure()` and not at the first format.
+- It replaced a `weekdays` plugin that held Moment's rows for ten less widely used languages. Applied evenly, the test that took Portuguese out of it (single letters that repeat are what that language's calendars print) took out all but two rows, and a fourth plugin named `weekdays` made a reader wonder whether weekdays need a plugin.
+- Months are not in it. `Intl` has every month name, so that would be taste, and it can be added without breaking anyone.
+
+Cost: 0.22 kB, 0.15 kB of it floor.
+
+Decided, and closed unless a reader reports otherwise:
+
+- **A token pattern is literal.** Month and weekday names follow the locale and nothing else does: Western digits, the Gregorian year (`6 พฤศจิกายน 2026`), and ` – ` between the ends of a range. `YYYY-MM-DD` has to stay machine-readable in every locale, and a preset is the way to ask for what the locale writes.
+- **A Persian reader sees two calendars.** Dates print in the Persian calendar (`۱۵ آبان ۱۴۰۵`) and a month-day or year-month prints Gregorian (`۶ نوامبر`), since a Gregorian birthday falls on a different Persian date each year. The Persian page should show it on purpose. Hebrew and Arabic locales print Gregorian dates by default.
+
 Open, each a decision more than a bug:
 
-- [ ] **`YearMonth` short is `11/26`**, a two-digit year, which reads as November 26th in most of these locales and as year 26 month 11 in Japanese. A four-digit year would not be mistaken for a day.
-- [ ] **A Persian reader sees two calendars.** Dates print in the Persian calendar (`۱۵ آبان ۱۴۰۵`) and a month-day prints Gregorian (`۶ نوامبر`). Chosen, and the Persian page should say so.
-- [ ] **Greek names a month alone in the form it takes beside a day.** `format('MMMM YYYY', 'el')` gives `Νοεμβρίου 2026` where `Νοέμβριος 2026` is right, and `monthNames('long', 'el')` is twelve genitives. `Intl` only gives the plain Greek form beside a year, and taking it from there puts an ezafe on four Persian months, so no rule read off the platform fixes one without breaking the other.
-- [ ] **`dd` is still a guess in some languages.** Turkish gets `Pz` for Monday, which a Turkish reader takes for Sunday. Urdu and Swahili get Latin letters, since that is the narrow form ICU has for them. Persian gets two arbitrary letters where one is the custom.
-- [ ] **Loose reading cannot read back everything the library prints**: `17 באוקטובר`, `۱۷ اکتبر`, `10月17日`, `ноябрь 2026 г.`, and Greek months in the plain form. It also takes `14 jui` as June in French, where it could as well be July.
-- [ ] **A range formatted by a token pattern always joins with ` – `**, where a preset uses the locale's own, `تا` or `～`.
-- [ ] **Thai token patterns print the Gregorian year beside Thai month names**, `6 พฤศจิกายน 2026`, where the preset says `2569`.
+- [x] **`YearMonth` short prints four digits of the year**, `11/2026`, where `11/26` read as November 26th beside a month-day and as year 26 in Japanese. It follows the locale's calendar and any calendar asked for in the tag, so Thai is `11/2569`. A card form asks for `format('MM/YY')`, which is `11/26` everywhere.
+- [ ] **Loose reading cannot read back everything the library prints**: `17 באוקטובר`, `۱۷ اکتبر`, `10月17日`, `ноябрь 2026 г.`. It also takes `14 jui` as June in French, where it could as well be July.
 - [ ] **A time range of nearly a day reads as an hour backwards in English**: `time('10:00').to('09:00')` prints `10:00 – 9:00 AM`.
-- [ ] **Token patterns print ASCII digits** in locales with their own (`ar-EG`, `fa`), where presets print the locale's. Right for `YYYY-MM-DD`, arguable for `D MMMM`.
 
 ## 3. Tests
 
@@ -113,7 +151,7 @@ Everything so far ran on Node 26 with native Temporal and was bundled with esbui
 - [ ] **Browsers.** Chrome and Firefox on native Temporal. Safari through `@native-dates/polyfill` was checked on 2026-11-14, Safari 27.2 on iOS, which has no Temporal of its own: ranges, token patterns, durations, month-days and year-months all printed correctly. The docs playground in Safari is still to check.
 - [ ] **Bundlers.** One small app each on Vite, Rollup and webpack, checking the size and that nothing is dropped.
 - [ ] **Types in a consumer project** under both `nodenext` and `bundler` resolution, and through the `@native-dates/core` alias. The type files re-export each other with `.js` specifiers.
-- [ ] **Performance.** No benchmark exists. Measure parsing, arithmetic and formatting in a loop against Day.js before someone else does.
+- [ ] **Performance.** No benchmark is in the repo. The tachometer and bundle-size setup from `../next` is being ported, and is the standard: scratch timings in Node are a loose signal only. Measure parsing, arithmetic and formatting against Day.js once it lands.
 
 ## 5. Release mechanics
 

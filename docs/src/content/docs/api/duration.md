@@ -4,7 +4,7 @@ kind: class
 lede: A length of time across calendar and clock units.
 import: import { Duration } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-16
 ---
 
 ## Creating a Duration
@@ -174,8 +174,8 @@ hours(2).negated().toString(); // '-PT2H'
 
 Roll smaller units up into larger ones, round to a target precision, or express the entire span as a single number.
 
-:::warning[Months and years need a starting date]
-Standalone calendar spans like `months(1)` have no fixed day count, so converting them to days or milliseconds throws a `RangeError`. Measure between two dates with `until()` when you need exact totals across months or years.
+:::warning[Converting months and years to days]
+Pure month and year durations balance, total, and compare among themselves using 12 months per year. Converting them to weeks, days, or clock units requires a starting date from `until()` or `since()`, since calendar months vary in day count.
 :::
 
 :::entry
@@ -238,9 +238,11 @@ description: Total length in `unit`, including any fractional part.
 ```
 
 ```js
+import { months } from 'native-dates';
+
 minutes(90).total('hours'); // 1.5
-days(14).total('weeks'); // 2
-date('2026-01-01').until('2026-07-01').total('months'); // 6
+months(18).total('years'); // 1.5
+date('2026-01-01').until('2026-04-01').total('days'); // 90
 ```
 :::
 
@@ -320,10 +322,10 @@ description: '`true` if both durations have equal length.'
 ```
 
 ```js
-import { months } from 'native-dates';
+import { months, years } from 'native-dates';
 
 hours(1).equals(minutes(60)); // true
-months(1).equals('P1M'); // true
+years(1).equals(months(12)); // true
 ```
 :::
 

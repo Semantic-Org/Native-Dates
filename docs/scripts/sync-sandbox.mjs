@@ -37,9 +37,3 @@ await build({
   logLevel: 'silent',
 });
 console.log(`[site] temporal-polyfill → ${polyfill}`);
-
-// the library imports @semantic-ui/utils by name, so the sandbox serves its single-file build
-// its package.json is not among its exports, so the file is found from the install folder
-const utils = resolve(root, 'node_modules/@semantic-ui/utils/dist/cdn/utils.min.js');
-await fs.copyFile(utils, resolve(pub, 'libs/semantic-ui-utils.js'));
-console.log(`[site] ${utils} → libs/semantic-ui-utils.js`);
