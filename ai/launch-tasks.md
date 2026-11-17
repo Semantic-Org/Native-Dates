@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 14.21 kB for all of `native-dates`, 12.72 kB for `import { now }`, 15.56 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-16 (`npm run size`, Brotli): 14.23 kB for all of `native-dates`, 12.75 kB for `import { now }`, 15.59 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -73,7 +73,7 @@ Still refusing, each with two readings:
 - **`days(1).minus(hours(1))`.** A day is a calendar day here and not 24 hours. Across a clock change, `plus(days(1).minus(hours(1)))` and `plus(days(1)).minus(hours(1))` land an hour apart, so there is no one answer, and the refusal already says to chain.
 - **`compare(date, datetime)`.** By the day, a date ties with every moment on it and a mixed list cannot be sorted. As midnight, it disagrees with `isBefore()`. The refusal names both conversions.
 
-Cost: 0.28 kB, 0.26 kB of it floor. Not taken, from the same list: zone spellings like `'UTC+2'`, `time('0930')`, `duration('1:30:00')`, `dateRange(datetimeRange)`.
+Cost: 0.30 kB, 0.28 kB of it floor. Not taken, from the same list: zone spellings like `'UTC+2'`, `time('0930')`, `duration('1:30:00')`, `dateRange(datetimeRange)`.
 
 ## 2. Locale sweep
 
