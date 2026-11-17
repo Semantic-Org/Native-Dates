@@ -84,7 +84,9 @@ formatOrder({ placedAt: '2026-05-15T14:30:00Z' }, { zone: 'Asia/Tokyo', locale: 
 
 Calling `locale()` with no arguments reads back the active tag, or returns `undefined` when none was set. Passing an empty tag clears it so `locale(user.locale)` chains cleanly even without a saved preference.
 
-A locale is read however a server hands it over. An underscore tag such as `en_US` reads as `en-US`, and a raw HTTP `Accept-Language` header reads as its tags by weight, leaving out any weighted at zero. Text that is neither throws an [`unknownLocale`](/api/errors/#units-zones-and-formats) error immediately.
+An underscore tag such as `en_US` reads as `en-US`, the spelling many servers and databases use. Any other text throws an [`unknownLocale`](/api/errors/#units-zones-and-formats) error immediately.
+
+To pass a raw HTTP `Accept-Language` header, import the [loose plugin](/plugins/loose/#accept-language-headers). It reads the header as its tags by weight.
 
 :::warning[Avoid per-request configure on servers]
 Global configuration updates shared state across the entire JavaScript process. On a multi-user server, another request can overwrite a `configure()` call across an async boundary. Attach `locale()` to the value instead.
