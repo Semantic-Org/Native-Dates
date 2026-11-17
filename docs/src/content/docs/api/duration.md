@@ -85,7 +85,7 @@ dur.subtract(other, unit?): Duration
 dur.remove(other, unit?): Duration
 ```
 
-Subtracts another duration, throwing an error if calendar and clock fields end up with opposite signs. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()` and `remove()`.
+Subtracts another duration, borrowing across years and months or weeks and days when needed. Incompatible opposite-sign pairs like days minus hours throw a `RangeError`, and `subtract()` and `remove()` work as aliases.
 
 **Parameters**
 
@@ -107,7 +107,11 @@ description: A new `Duration` with `other` subtracted.
 ```
 
 ```js
+import { months, weeks, years } from 'native-dates';
+
 hours(2).minus('30m').toString(); // 'PT1H30M'
+years(1).minus(months(1)).toString(); // 'P11M'
+weeks(1).minus(days(1)).toString(); // 'P6D'
 ```
 :::
 
@@ -185,7 +189,7 @@ Pure month and year durations balance, total, and compare among themselves using
 dur.balance(largestUnit?): Duration
 ```
 
-Carries overflow from smaller units into larger ones. By default, standalone durations balance up to hours and measured spans balance up to days, unless you pass a larger target unit.
+Carries overflow from smaller units into larger ones. By default, standalone durations roll clock units up to hours and months into years, while measured spans balance up to days unless you pass a larger target unit.
 
 **Parameters**
 
@@ -203,9 +207,10 @@ description: A new balanced `Duration`.
 ```
 
 ```js
-import { minutes } from 'native-dates';
+import { minutes, months } from 'native-dates';
 
 minutes(150).balance().toString(); // 'PT2H30M'
+months(18).balance().toString(); // 'P1Y6M'
 duration('36h').balance('day').toString(); // 'P1DT12H'
 duration('10d').balance('week').toString(); // 'P1W3D'
 ```

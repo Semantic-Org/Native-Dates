@@ -15,7 +15,7 @@ Core parses standard, unambiguous inputs directly into the type you ask for:
 
 ## ISO dates and timestamps
 
-Pass an ISO date string, three year, month, and day numbers, or a fields object to `date()`.
+Pass a year-first date string, three year, month, and day numbers, or a fields object to `date()`. Year-first strings accept matching dashes, slashes, or dots with padded or single-digit months and days.
 
 Months run from 1 through 12. Impossible calendar dates like February 30 throw an error instead of rolling forward into March.
 
@@ -23,6 +23,7 @@ Months run from 1 through 12. Impossible calendar dates like February 30 throw a
 import { date } from 'native-dates';
 
 date('2026-11-16');
+date('2026/11/6');
 date(2026, 11, 16);
 date({ year: 2026, month: 11, day: 16 });
 ```
@@ -113,7 +114,7 @@ const localDay = date(new Date('2026-11-16T17:30:00Z'), 'America/Los_Angeles');
 
 ## Why ambiguous strings throw
 
-A string like `'03/05/2026'` means March 5 in the United States and May 3 across Europe and Latin America. Core refuses locale-dependent strings rather than guessing the wrong month in production.
+While a four-digit year at the front has only one reading, `'03/05/2026'` means March 5 in the United States and May 3 across Europe and Latin America. Core refuses ambiguous numeric strings rather than guessing the wrong month in production.
 
 :::warning[Missing values never default to now]
 Passing an empty value to any factory throws instead of returning the current date, so a missing API field never masquerades as today. Call [`now()`](/api/datetime-fn/#now) or [`today()`](/api/date-fn/#today) when you want the current clock.

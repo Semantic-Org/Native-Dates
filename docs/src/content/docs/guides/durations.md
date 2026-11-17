@@ -66,13 +66,14 @@ date('2026-11-01').to('2026-11-07').duration.days; // 7
 Values stay in the units you gave them until you ask otherwise. Call `balance()` when you want overflow carried into larger units:
 
 ```js
-import { hours, minutes } from 'native-dates';
+import { hours, minutes, months } from 'native-dates';
 
 minutes(90).balance().toFields(); // { hours: 1, minutes: 30 }
+months(18).balance().toFields(); // { years: 1, months: 6 }
 hours(36).balance('day').toFields(); // { days: 1, hours: 12 }
 ```
 
-Without an argument, standalone durations balance clock units up to hours rather than assuming every calendar day has 24 hours.
+Without an argument, standalone durations carry months into years and clock units up to hours, leaving days untouched so daylight saving boundaries never shift.
 
 Pass `'day'` or `'week'` when you want fixed 24-hour days or 7-day weeks.
 

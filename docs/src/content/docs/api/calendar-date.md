@@ -803,14 +803,14 @@ d.locale(): Locale | undefined
 d.locale(tag): CalendarDate
 ```
 
-Reads the locale carried on this date, or returns a copy that formats and starts weeks in another locale across presets, week boundaries, and derived values. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+Reads the locale carried on this date, or returns a copy that formats and starts weeks in another locale across presets, week boundaries, and derived values. Underscore tags and `Accept-Language` headers normalize automatically, an empty tag clears it, and `lang()` is an alias.
 
 **Parameters**
 
 ```params
 - name: tag
   type: Locale | null | undefined
-  description: BCP 47 locale tag to carry forward, or `null` to clear an existing tag.
+  description: Locale tag, tag array, or `Accept-Language` header to carry forward, or `null` to clear it.
 ```
 
 **Returns**
