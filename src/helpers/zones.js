@@ -1,4 +1,4 @@
-import { each, isPlainObject, isString } from './utils.js';
+import { each, isArray, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
@@ -135,22 +135,27 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
   return { ...settings, zoneAliases: { ...settings.zoneAliases } };
 };
 
-// an Accept-Language header is the classic first attempt, and Intl would refuse it far from the cause
-const knownLocales = new Set();
+// a locale is read however it arrives. 'en_US' is how a server, a database or java spells en-US, and
+// an Accept-Language header, 'fr-CH, fr;q=0.9, en;q=0.8', is the tags a reader wants in the order
+// they want them, which is what Intl takes as a list
+const knownLocales = new Map();
 const checkedLocale = (tag) => {
   const key = String(tag);
   if (!knownLocales.has(key)) {
+    const read = isString(tag) && /[_,;]/.test(tag)
+      ? tag.replace(/_/g, '-').split(',').map((part) => part.split(';')[0].trim()).filter((part) => part !== '*')
+      : tag;
     guard(
-      () => Intl.getCanonicalLocales(tag),
+      () => Intl.getCanonicalLocales(read),
       'unknownLocale',
       key,
       isDevelopment
-        ? "expected a valid BCP 47 locale tag like 'en-US' or 'de', or an array of tags. if reading an HTTP `Accept-Language` header, strip quality weights like ';q=0.9' first"
+        ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
         : 0,
     );
-    knownLocales.add(key);
+    knownLocales.set(key, isArray(read) && read.length === 1 ? read[0] : read);
   }
-  return tag;
+  return knownLocales.get(key);
 };
 
 export const locale = (override) => (override === undefined ? settings.locale : checkedLocale(override));
@@ -170,7 +175,8 @@ export const weekStart = (override, tag = settings.locale) => {
   if (!firstDays.has(key)) {
     // a tag is asked as written, so its region and its own -u-fw- choice count. the runtime's
     // locale, or a list of them, is first resolved to one tag
-    const asked = isString(tag) ? tag : new Intl.DateTimeFormat(tag).resolvedOptions().locale;
+    const read = tag === undefined ? tag : checkedLocale(tag);
+    const asked = isString(read) ? read : new Intl.DateTimeFormat(read).resolvedOptions().locale;
     firstDays.set(key, new Intl.Locale(asked).getWeekInfo?.().firstDay ?? 1);
   }
   return firstDays.get(key);

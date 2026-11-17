@@ -7,6 +7,7 @@ import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } 
 import { temporalDurationFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
+import { yearFirst } from './helpers/parts.js';
 import { relativeSeconds } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
@@ -138,7 +139,7 @@ export class DateTime {
   }
 
   static #parse(text, zone, loose, dayFirst) {
-    const trimmed = text.trim();
+    const trimmed = yearFirst(text.trim());
     try {
       return guard(
         () => {
