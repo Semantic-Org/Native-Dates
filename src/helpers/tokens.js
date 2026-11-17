@@ -6,6 +6,13 @@ import { locale as pickLocale, weekStart } from './zones.js';
 
 const nameCache = new Map();
 
+// plugins/weekdays supplies the names a language writes by hand and Intl has no form for
+let namesExtension = null;
+
+export const setNamesExtension = (lookup) => {
+  namesExtension = lookup;
+};
+
 // month and weekday names come from Intl for the locale, so tokens stay legible outside English. the
 // tokens print the ISO calendar's numbers, so the names are the Gregorian ones even where the locale
 // keeps another calendar: a Persian locale would otherwise name November's 6th as Aban's
@@ -45,21 +52,13 @@ export const names = (locale) => {
     const [short, long, narrow] = [weekday('short'), weekday('long'), weekday('narrow')];
     // the shortest weekday. two letters are a real abbreviation only in a script with letter case,
     // and only where the full name holds them and they tell the seven days apart: Mo, lu, пн. turkish
-    // Pz for Pazartesi reads as Pazar, so a cased script otherwise takes the locale's narrow form
+    // Pz for Pazartesi reads as Pazar, and cutting a thai or hindi name splits a syllable, so
+    // everything else takes the locale's narrow form: 月, 一, จ, सो
     const cut = short.map((name) => name.slice(0, 2));
-    const distinct = (list) => new Set(list).size === 7;
-    const cased = /\p{Lu}|\p{Ll}/u.test(short[0]);
-    const isEnglish = language.startsWith('en');
-    // some locales hold english M T W T F S S as their narrow form
-    const borrowed = !isEnglish && narrow.join('') === 'MTWTFSS';
-    const held = short.every((name, day) =>
-      name.replace('.', '').length < 3 || long[day].toLowerCase().includes(cut[day].toLowerCase())
-    );
-    // elsewhere the narrow form where it tells the days apart, 月, 一, จ, सो, and two letters where
-    // it does not. a locale with a borrowed narrow form and no two letters keeps its short names whole
-    const shortest = cased && distinct(cut) && held
-      ? cut
-      : [borrowed ? [] : narrow, cased ? [] : cut].find(distinct) ?? (borrowed ? short : narrow);
+    const cuts = /\p{Lu}|\p{Ll}/u.test(short[0]) && new Set(cut).size === 7
+      && short.every((name, day) =>
+        name.replace('.', '').length < 3 || long[day].toLowerCase().includes(cut[day].toLowerCase())
+      );
     // what the locale writes straight after a day in a date: the dot in 6. November, 日 in 6日
     const written = parts({ day: 'numeric', month: 'long' }, stamps[10]);
     const afterDay = written[written.findIndex((part) => part.type === 'day') + 1];
@@ -67,12 +66,13 @@ export const names = (locale) => {
       MMM,
       MMMM,
       besideDay: { MMM: besideDay('short', MMM), MMMM: besideDay('long', MMMM) },
-      dd: shortest,
+      dd: cuts ? cut : narrow,
       ddd: short,
       dddd: long,
       dayPeriods: [periodAt(9), periodAt(15)],
       dayMark: afterDay?.type === 'literal' ? afterDay.value.match(/^[^\s,،]*/)[0] : '',
-      isEnglish,
+      isEnglish: language.startsWith('en'),
+      ...namesExtension?.(language),
     });
   }
   return nameCache.get(key);
