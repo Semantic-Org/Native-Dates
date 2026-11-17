@@ -4,7 +4,7 @@ lede: Readable, immutable dates and times built on the browser's Temporal and In
 updated: 2026-11-16
 ---
 
-Modern JavaScript engines include `Temporal` for calendar and time-zone math alongside `Intl` for localized formatting. Native Dates wraps those built-in APIs in plain English with zero bundled locale or time-zone tables.
+Modern JavaScript engines include `Temporal` for calendar and time-zone math alongside `Intl` for localized formatting. Native Dates wraps those built-in APIs in plain English with zero runtime dependencies.
 
 ```js
 import { date, now, today } from 'native-dates';

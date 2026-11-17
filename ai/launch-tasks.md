@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 13.94 kB for all of `native-dates`, 12.48 kB for `import { now }`, 15.29 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-16 (`npm run size`, Brotli): 13.93 kB for all of `native-dates`, 12.46 kB for `import { now }`, 15.33 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -14,7 +14,7 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 
 ## 1. Decisions that 1.0 makes permanent
 
-- [ ] **`native-dates/helpers/*` is a public entry.** The exports map serves every file in `src/helpers/` because the plugins import from it. Either say in writing that the path is unstable, or narrow it to what the three plugins use (`environment`, `errors`, `zones`).
+- [ ] **`native-dates/helpers/*` is a public entry.** The exports map serves every file in `src/helpers/` because the plugins import from it. Either say in writing that the path is unstable, or narrow it to what the three plugins use (`environment`, `errors`, `utils`, `zones`).
 - [x] **Error codes** use the six condition words of the sync repo (`missing`, `unknown`, `invalid`, `unsupported`, `duplicate`, `conflicting`), and every explanation was rewritten in its register and reviewed. All of them fold out of a production build. Still open for a read: the `invalid*` codes are thrown as a `TypeError` in some places and a `RangeError` in others.
 - [x] **Relative time** is in core as `from(other)` and `fromNow()`, the words moment and day.js use, with `formatRelative()` kept as a second spelling. It cost 0.29 kB of floor, the size the plugin was.
 - [ ] **Names worth one last read.** `monthDay.in(2027)` beside `datetime.in(zone)`. `after()` and `before()` beside `next()` and `previous()`. `as()` reaches five kinds where `kindOf()` reports more, so there is no `as('dateRange')`.
@@ -36,9 +36,14 @@ Left as the contract does not say, for a decision if anyone asks:
 - `text` is in the value's locale, so two values that are `equals()` can differ under a deep-equality assertion.
 - A range written by a token pattern prints each end in its own locale.
 
-### Decided: one of each across the organization
+### Decided: zero dependencies, by forking word for word
 
-`@semantic-ui/utils` is a runtime dependency, for coded errors (`createErrors`), type guards, the timezone table and `each()`. Two copies of one thing drift, so a helper stays local only where sharing costs bytes: `cached` in `helpers/intl.js`, `isDevelopment` alone in `helpers/environment.js` (an import beside it stops explanations folding out, 2.2 kB), and the `Intl` duration formatting.
+`native-dates` installs nothing. Taking `@semantic-ui/utils` as a dependency was tried for a day and reversed: "zero dependencies" is worth more to someone choosing a date library than one copy of each helper across the organization.
+
+- What the library used from it is forked into `src/helpers/utils.js`, under the same names: the type guards, `each()`, and the coded errors (`createErrors`, `error`, `throwError`). The timezone table is forked into the zones plugin.
+- The text is identical to utils 0.18.0, branches this library never reaches included, and the comments too. An app that ships another Semantic UI package compresses the second copy away, a refusal behaves exactly as one does anywhere in the organization, and a fix upstream is a paste. Do not restyle it, trim it or rewrite it in this repo's voice. `dprint` skips the file.
+- An edit to `timezones` in the zones plugin no longer reaches the table utils formats dates with.
+- Bytes did not move: 13.93 kB before and after.
 
 ### Decided: `text` is a plain property
 
