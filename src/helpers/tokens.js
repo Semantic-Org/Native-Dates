@@ -75,6 +75,7 @@ export const names = (locale) => {
       dayPeriods: [periodAt(9), periodAt(15)],
       dayMark: afterDay?.type === 'literal' ? afterDay.value.match(/^[^\s,،]*/)[0] : '',
       isEnglish: language.startsWith('en'),
+      isFrench: /^fr\b/.test(language),
       ...namesExtension?.(language),
     });
   }
@@ -91,11 +92,12 @@ const dayPeriod = (subject, locale, cased) => {
   return isEnglish ? period[cased]() : period;
 };
 
-// 6th in English. any other language gets the day as its dates write it: 6. in German, 6日 in Japanese
+// 6th in English. any other language gets the day as its dates write it: 6. in German, 6日 in Japanese.
+// french writes the first of a month 1er and every other day plain, which Intl has nowhere
 const ordinal = (number, locale) => {
-  const { dayMark, isEnglish } = names(locale);
+  const { dayMark, isEnglish, isFrench } = names(locale);
   if (!isEnglish) {
-    return `${number}${dayMark}`;
+    return `${number}${isFrench && number === 1 ? 'er' : dayMark}`;
   }
   const tens = number % 100;
   const suffix = tens >= 11 && tens <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][number % 10] ?? 'th';
