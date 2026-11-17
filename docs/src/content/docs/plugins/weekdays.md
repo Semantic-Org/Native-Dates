@@ -39,7 +39,6 @@ Each row runs Monday to Sunday. The middle column is what core prints without th
 | Māori `mi` | `M T W T P Rh Rt` | `Ma Tū We Tāi Pa Hā Ta` |
 | Burmese `my` | `တ အ ဗ က သ စ တ` | `လာ ဂါ ဟူး ကြာ သော နေ နွေ` |
 | Occitan `oc` | `diluns dimars dimècres …` | `dl dm dc dj dv ds dg` |
-| Pashto `ps` | `دونۍ درېنۍ څلرنۍ …` | `د س چ پ ج ش ی` |
 | Swahili `sw` | `Jumatatu Jumanne Jumatano …` | `J3 J4 J5 Al Ij J1 J2` |
 | Yoruba `yo` | `A Ì Ọ Ọ Ẹ À À` | `Aj Ìs Ọr Ọb Ẹt Àb Àì` |
 
