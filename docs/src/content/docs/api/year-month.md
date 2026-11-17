@@ -434,7 +434,7 @@ description: Formatted month-and-year string.
 ```js
 const nov = yearMonth('2026-11');
 
-nov.format('short', 'en-US'); // '11/26'
+nov.format('short', 'en-US'); // '11/2026'
 nov.format('medium', 'en-US'); // 'Nov 2026'
 nov.format('long', 'en-US'); // 'November 2026'
 nov.format('L', 'en-US'); // '11/2026'

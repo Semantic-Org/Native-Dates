@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 13.79 kB for all of `native-dates`, 12.36 kB for `import { now }`, 15.11 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-16 (`npm run size`, Brotli): 13.76 kB for all of `native-dates`, 12.36 kB for `import { now }`, 15.11 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -94,12 +94,13 @@ A review of that work, run across every locale ICU has, then found and fixed:
 - **A list of locales** passed as an array built a new formatter on every call.
 - **A range that runs backwards needs no fallback.** An engine from before 2022 refuses one, and no browser the library runs on is that old: Safari 27 on the polyfill was checked on a phone and formats it.
 
-A fourth pass, after asking readers of the languages and a review across every locale ICU has, cost 0.20 kB (0.12 kB of floor):
+A fourth pass, after asking readers of the languages and a review across every locale ICU has, cost 0.17 kB (0.12 kB of floor):
 
 - **Greek names a month alone in the nominative.** `format('MMMM YYYY', 'el')` is `Νοέμβριος 2026`, `6 Νοεμβρίου 2026` keeps the genitive beside its day, and `monthNames('long', 'el')` is twelve nominatives. Greek is the one locale where `Intl` hands back the genitive for a month alone, so it is the one special case.
 - **`dd` is two letters only where two letters are an abbreviation**: a script with capitals, seven different cuts, each one found in the long name (`Mo`, `lu`, `пн`, `Δε`, Welsh `Ll` from `Dydd Llun`). A short name the locale already writes in two letters is kept whole, with any dot dropped (Polish `pt`, Catalan `dl`). A cased script otherwise takes `Intl`'s narrow form, which is what keeps Turkish from printing `Pz`, Sunday's letters, for Monday.
 - **A script without capitals takes the narrow form** where it tells the seven days apart (`月`, `一`, `จ`, `सो`, `د`), so no Thai or Hindi syllable is split, and two letters where it does not (Tigrinya, Khmer). Where the narrow form is English `M T W T F S S` in a language that is not English, it is two letters if they differ (Pashto) and the short name whole if not (Urdu, Swahili).
 - **`weekdayNames('narrow')`** returns that table.
+- **Loose month names read in the locale a call passes**: `monthDay('17 octobre', { loose: true, locale: 'fr' })`, where only `configure({ locale })` counted, which a server answering many readers cannot use.
 
 Decided, and closed unless a reader reports otherwise:
 
@@ -108,9 +109,9 @@ Decided, and closed unless a reader reports otherwise:
 
 Open, each a decision more than a bug:
 
-- [ ] **`YearMonth` short is `11/26`**, a two-digit year, which reads as November 26th in most of these locales and as year 26 month 11 in Japanese. A four-digit year would not be mistaken for a day. In Thai it is `11/69`, the Buddhist year, where a card is embossed `11/26`: forcing the Gregorian year there overrode a calendar asked for in the tag (`ja-JP-u-ca-japanese`) and disagreed with a Thai date's own short form, so the docs should show `format('MM/YY')` for a card.
-- [ ] **`dd` wants a native read in a few languages.** Their two-letter cuts collide or mislead, so they print a narrow form that repeats letters, where moment keeps a hand-written table: Portuguese `S T Q Q S S D`, Turkish `P S Ç P C C P`, Indonesian `S S R K J S M`, Hungarian `H K Sz Cs P Sz V`, Latvian, Armenian, Burmese. Urdu and Swahili print whole words. Khmer's two letters can end on a joining mark.
-- [ ] **Loose reading cannot read back everything the library prints**: `17 באוקטובר`, `۱۷ اکتبر`, `10月17日`, `ноябрь 2026 г.`, and Greek months in the plain form. It also takes `14 jui` as June in French, where it could as well be July.
+- [x] **`YearMonth` short prints four digits of the year**, `11/2026`, where `11/26` read as November 26th beside a month-day and as year 26 in Japanese. It follows the locale's calendar and any calendar asked for in the tag, so Thai is `11/2569`. A card form asks for `format('MM/YY')`, which is `11/26` everywhere.
+- [x] **`dd` where two letters collide is the narrow form**, read by the outside agent as what a calendar header prints in each: Portuguese `S T Q Q S S D`, Turkish `P S Ç P C C P`, Indonesian `S S R K J S M`, and Hungarian `H K Sz Cs P Sz V`, where `Sz` and `Cs` are single letters of the alphabet. Latvian, Armenian and Burmese repeat a letter the same way, Urdu and Swahili print whole words, and Khmer's two letters can end on a joining mark.
+- [ ] **Loose reading cannot read back everything the library prints**: `17 באוקטובר`, `۱۷ اکتبر`, `10月17日`, `ноябрь 2026 г.`. It also takes `14 jui` as June in French, where it could as well be July.
 - [ ] **A time range of nearly a day reads as an hour backwards in English**: `time('10:00').to('09:00')` prints `10:00 – 9:00 AM`.
 
 ## 3. Tests
