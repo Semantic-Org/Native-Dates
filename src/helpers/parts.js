@@ -1,4 +1,4 @@
-import { each, isString } from '@semantic-ui/utils';
+import { each, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { names } from './tokens.js';
@@ -30,9 +30,9 @@ export const opensOnDate = (value) => isString(value) && /^\s*[+-]?\d{4,6}-?\d{2
 
 // the month a name stands for, whole, shortened or its first three letters and more: 'Oct', 'sept',
 // 'octobre', 'октября'. English is tried first, so 'Mar' is March in a Finnish locale too, then the
-// names Intl has for the configured locale, alone and beside a day. zero when it stands for none
-export const monthNamed = (name) => {
-  const tag = pickLocale();
+// names Intl has for the locale the call passes or the configured one, alone and beside a day. zero when it stands for none
+export const monthNamed = (name, locale) => {
+  const tag = pickLocale(locale);
   const written = name.toLocaleLowerCase(tag);
   for (const table of [names('en'), names(tag)]) {
     for (const months of [table.MMMM, table.besideDay.MMMM, table.MMM, table.besideDay.MMM]) {

@@ -1,7 +1,7 @@
 ---
 title: Overview
 lede: Readable, immutable dates and times built on the browser's Temporal and Intl APIs.
-updated: 2026-11-12
+updated: 2026-11-16
 ---
 
 Modern JavaScript engines include `Temporal` for calendar and time-zone math alongside `Intl` for localized formatting. Native Dates wraps those built-in APIs in plain English with zero runtime dependencies.

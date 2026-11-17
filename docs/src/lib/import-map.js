@@ -11,8 +11,6 @@ const helpers = readdirSync(resolve(PACKAGE_DIR, 'src/helpers')).map((file) => f
 export const IMPORT_MAP = {
   imports: {
     'native-dates': '/libs/native-dates/index.js',
-    // the one package the library's own source imports
-    '@semantic-ui/utils': '/libs/semantic-ui-utils.js',
     ...Object.fromEntries(helpers.map((name) => [`native-dates/helpers/${name}`, `/libs/native-dates/helpers/${name}.js`])),
     ...Object.fromEntries(shippedPlugins().map((name) => [`@native-dates/plugins/${name}`, `/libs/plugins/${name}.js`])),
     // the sandbox's hidden setup imports the polyfill loader, which imports temporal-polyfill on demand

@@ -1,4 +1,4 @@
-import { isArray, isDate, isString } from '@semantic-ui/utils';
+import { isArray, isDate, isString } from './utils.js';
 
 import { CalendarDate } from '../calendar-date.js';
 import { DateTime } from '../date-time.js';

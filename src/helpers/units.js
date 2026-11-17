@@ -1,4 +1,4 @@
-import { each, isNumber, isPlainObject, isString } from '@semantic-ui/utils';
+import { each, isNumber, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';

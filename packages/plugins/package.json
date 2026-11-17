@@ -14,9 +14,6 @@
       "import": "./src/*.js"
     }
   },
-  "dependencies": {
-    "@semantic-ui/utils": "^0.18.0"
-  },
   "peerDependencies": {
     "native-dates": "^0.0.6"
   },
