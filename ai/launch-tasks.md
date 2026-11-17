@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 13.93 kB for all of `native-dates`, 12.46 kB for `import { now }`, 15.33 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-16 (`npm run size`, Brotli): 14.22 kB for all of `native-dates`, 12.71 kB for `import { now }`, 15.59 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -58,6 +58,19 @@ Left as the contract does not say, for a decision if anyone asks:
 - Week numbers do not follow it. `weekOfYear` and the `W` token count ISO weeks, from Monday.
 
 Cost: 0.07 kB.
+
+### Decided: answer where the answer is always true
+
+A refusal is right when there are two readings. Where there is one, the library answers. Six refusals were found by asking which error messages could have been a conversion, and each now is:
+
+- **A date that opens on its year reads however it was typed**: `date('2026/11/06')`, `'2026.11.06'`, `'2026-1-5'`, `datetime('2026/11/06 9:00')`, and through them `yearMonth('2026/11/16')` and `monthDay('2026/11/16')`. A four-digit year first has one reading. `'11/06/2026'` still refuses, since it has two. 74 B, 80 B of floor.
+- **A bare number beside a point is epoch milliseconds**: `compare(Date.now(), deadline)`, `earliest(a, b)`, a list of timestamps sorted by `compare`.
+- **A date beside a datetime compares by the day**, the datetime's own in its zone: `compare(date, datetime)`, `earliest(date, datetime)`. `isBefore()` already did. A date beside a time still refuses. 34 B for this and the one above, none of it floor.
+- **A subtraction that leaves two signs borrows across fixed units**: `days(1).minus(hours(1))` is 23 hours, `weeks(1).minus(days(1))` is 6 days, `years(1).minus(months(1))` is 11 months. Months against days still refuses, and so does an anchored duration, whose days a clock change can stretch.
+- **A bare `balance()` carries months into years**: `months(18).balance()` is a year and six months. Days still carry into nothing. About 0.10 kB for this and the one above.
+- **A locale is read however a server hands it over**: `'en_US'` is `en-US`, and a raw `Accept-Language` header is its tags in the order written. This reverses the earlier call that a header should refuse at `.locale()`. About 0.08 kB.
+
+Cost: 0.29 kB, 0.26 kB of it floor. Not taken, from the same list: zone spellings like `'UTC+2'`, `time('0930')`, `duration('1:30:00')`, `dateRange(datetimeRange)`.
 
 ## 2. Locale sweep
 
