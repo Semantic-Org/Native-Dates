@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 13.93 kB for all of `native-dates`, 12.46 kB for `import { now }`, 15.33 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-16 (`npm run size`, Brotli): 13.97 kB for all of `native-dates`, 12.47 kB for `import { now }`, 15.35 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -36,14 +36,14 @@ Left as the contract does not say, for a decision if anyone asks:
 - `text` is in the value's locale, so two values that are `equals()` can differ under a deep-equality assertion.
 - A range written by a token pattern prints each end in its own locale.
 
-### Decided: zero dependencies, by forking word for word
+### Decided: zero dependencies, with the shared helpers cut to what is reached
 
 `native-dates` installs nothing. Taking `@semantic-ui/utils` as a dependency was tried for a day and reversed: "zero dependencies" is worth more to someone choosing a date library than one copy of each helper across the organization.
 
-- What the library used from it is forked into `src/helpers/utils.js`, under the same names: the type guards, `each()`, and the coded errors (`createErrors`, `error`, `throwError`). The timezone table is forked into the zones plugin.
-- The text is identical to utils 0.18.0, branches this library never reaches included, and the comments too. An app that ships another Semantic UI package compresses the second copy away, a refusal behaves exactly as one does anywhere in the organization, and a fix upstream is a paste. Do not restyle it, trim it or rewrite it in this repo's voice. `dprint` skips the file.
-- An edit to `timezones` in the zones plugin no longer reaches the table utils formats dates with.
-- Bytes did not move: 13.93 kB before and after.
+- What the library used from it lives in `src/helpers/utils.js` under the same names: the type guards, `each()` and `createErrors`. The timezone table is in the zones plugin.
+- It holds only the branches this library reaches. A word-for-word copy went in first, on the theory that an app shipping both would compress the second copy away. Measured, the copy saved that app 61 B and cost every other reader 300 B, since a bundler cannot drop the unused branches of `each()` or the reporting half of the errors. So the copy was cut down, and that is what brought core back under 14 kB.
+- The error line is unchanged, `dates refused [code] at` with `code` and `at` on the error, so a refusal still reads as it does anywhere in the organization. 211 outputs across twelve locales and every error path were compared before and after the cut, and none differ.
+- An edit to `timezones` in the zones plugin does not reach the table utils formats dates with.
 
 ### Decided: `text` is a plain property
 
@@ -58,6 +58,22 @@ Left as the contract does not say, for a decision if anyone asks:
 - Week numbers do not follow it. `weekOfYear` and the `W` token count ISO weeks, from Monday.
 
 Cost: 0.07 kB.
+
+### Decided: answer where the answer is always true
+
+A refusal is right when there are two readings. Where there is one, the library answers. Six refusals were found by asking which error messages could have been a conversion. Four now answer, and review showed the other two have a second reading, so they still refuse:
+
+- **A date that opens on its year reads however it was typed**: `date('2026/11/06')`, `'2026.11.06'`, `'2026-1-5'`, `datetime('2026/11/06 9:00')`, and through them `yearMonth('2026/11/16')` and `monthDay('2026/11/16')`. A four-digit year first has one reading. `'11/06/2026'` still refuses, since it has two, and so does a date with two different marks, `'2026/1.5'`. A range in one string takes them too, `dateRange('2026/11/06 - 2026/11/10')`. 0.08 kB, all of it floor.
+- **A bare number standing first is epoch milliseconds**: `compare(Date.now(), deadline)`, `earliest(a, b)`, a list of timestamps sorted by `compare`. Beside a time it is still an hour, `compare(time('09:00'), 9)`, and beside a date it still refuses. A fraction of a millisecond is dropped, as `Date` drops it. 0.03 kB, none of it floor.
+- **A subtraction that leaves two signs borrows where a calendar says how**: `years(1).minus(months(1))` is 11 months and `weeks(1).minus(days(1))` is 6 days, since a year is always twelve months and a week always seven days. Only the pair that disagrees is broken down, and every other field stays as written. A bare `balance()` carries months into years the same way, `months(18).balance()`. 0.12 kB, 0.11 kB of it floor.
+- **A locale is read however a server hands it over**: `'en_US'` is `en-US`, and a raw `Accept-Language` header is its tags by weight, without any weighed at zero. A value keeps the tag as read, so `locale()` hands back `en-US`, and an empty tag clears it, so `locale(user.locale)` works on an empty column. This reverses the earlier call that a header should refuse at `.locale()`. About 0.13 kB, 0.10 kB of it floor.
+
+Still refusing, each with two readings:
+
+- **`days(1).minus(hours(1))`.** A day is a calendar day here and not 24 hours. Across a clock change, `plus(days(1).minus(hours(1)))` and `plus(days(1)).minus(hours(1))` land an hour apart, so there is no one answer, and the refusal already says to chain.
+- **`compare(date, datetime)`.** By the day, a date ties with every moment on it and a mixed list cannot be sorted. As midnight, it disagrees with `isBefore()`. The refusal names both conversions.
+
+Cost: 0.35 kB, 0.32 kB of it floor. Not taken, from the same list: zone spellings like `'UTC+2'`, `time('0930')`, `duration('1:30:00')`, `dateRange(datetimeRange)`.
 
 ## 2. Locale sweep
 
@@ -156,7 +172,7 @@ Everything so far ran on Node 26 with native Temporal and was bundled with esbui
 ## 5. Release mechanics
 
 - [ ] **Versions.** All four packages say `0.0.6`. Nobody depends on the published ones, so there is nothing to migrate, but core, plugins, polyfill and the `@native-dates/core` alias need one number and matching peer ranges.
-- [ ] **Docs.** The site has to say 13 kB and three plugins everywhere, and show one import for ranges, tokens and the two date nouns. The root README is written by the maintainer by hand.
+- [ ] **Docs.** The site has to say the measured size and three plugins everywhere. Core is 13.97 kB, so "14 kB" is the honest headline and "13 kB" is not, and show one import for ranges, tokens and the two date nouns. The root README is written by the maintainer by hand.
 - [ ] **`@see` links in the type files.** An editor shows a declaration's doc comment in autocomplete and on hover, so each public class, factory and method in `types/*.d.ts` and `packages/plugins/types/*.d.ts` gets a doc comment ending in a `@see {@link ...}` to its page on the live site, `https://nativedates.dev`, never the staging domain. None has one today. The conventions are in `../next/ai/skills/contributing/types.md`: the URL is the docs page's path (`docs/src/content/docs/api/calendar-date.md` is `https://nativedates.dev/api/calendar-date/`, with the trailing slash the site serves), a method links to its heading's anchor, and internal types are marked `@internal` and get no link. Do this after the docs pages for ranges, month-days and year-months have settled, since the links follow those paths, and check every anchor against the built page.
 - [ ] **When the polyfill is needed.** Node 26 is the first Node with Temporal and `engines` says so. The install page has to say plainly which browsers need `@native-dates/polyfill`.
 - [ ] **Locales on a server.** `configure({ locale })` is process-wide, which suits a browser and is a trap for a server answering many users. A value now carries its own: `datetime(row.at, zone).locale(request.locale)` sets it once, and every value made from it keeps it. The docs should teach that for servers, and `configure()` for an app with one reader.

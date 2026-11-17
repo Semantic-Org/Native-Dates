@@ -2,9 +2,8 @@ import { createErrors } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 
-// the coded errors of @semantic-ui/utils, forked in ./utils.js, so a refusal here reads like one
-// anywhere in semantic ui:
-// 'dates refused [code] at', with the code and the input on the error
+// the coded errors of @semantic-ui/utils, as ./utils.js keeps them, so a refusal here reads like one
+// anywhere in semantic ui: 'dates refused [code] at', with the code and the input on the error
 export const refuse = createErrors({ namespace: 'dates', ErrorClass: RangeError }).throwError;
 export const refuseType = createErrors({ namespace: 'dates', ErrorClass: TypeError }).throwError;
 

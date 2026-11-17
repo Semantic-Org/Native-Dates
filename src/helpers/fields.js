@@ -103,10 +103,18 @@ const parseWords = (text) => {
   return fields;
 };
 
+// a year is twelve months in the ISO calendar, so months carry into years with nothing to anchor them
+export const carriedMonths = (years = 0, months = 0) => {
+  const whole = years * 12 + months;
+  const [carried, left] = [Math.trunc(whole / 12), whole % 12];
+  return { ...(carried && { years: carried }), ...(left && { months: left }) };
+};
+
+const twoSigns = (fields) => new Set(Object.values(fields).filter(Boolean).map(Math.sign)).size > 1;
+
 // a duration has one sign. '1h -30m' has no meaning until it is subtracted from a point
 const oneSign = (fields, at) => {
-  const signs = new Set(Object.values(fields).filter(Boolean).map(Math.sign));
-  if (signs.size > 1) {
+  if (twoSigns(fields)) {
     refuse('conflictingSigns', at, {
       explanation: isDevelopment
         ? "all units in a duration must have the same sign. chain `.plus()` and `.minus()` on a date or time instead, such as `start.plus(1, 'hour').minus(30, 'minutes')`"
@@ -170,7 +178,7 @@ export const clockFields = (fields) => {
 // years, months, weeks and days stay field-wise: they are calendar units, and folding 25 hours into a
 // day would move a deadline across a daylight saving change. hours and below combine through Temporal
 // so a subtraction balances to one sign: 2h minus 30m is 1h 30m
-export const addFields = (a, b, sign) => {
+export const addFields = (a, b, sign, anchor) => {
   const fields = {};
   each(['years', 'months', 'weeks', 'days'], (field) => {
     const sum = (a[field] ?? 0) + sign * (b[field] ?? 0);
@@ -181,7 +189,26 @@ export const addFields = (a, b, sign) => {
   const clockA = temporalDurationOf(clockFields(a));
   const clockB = temporalDurationOf(clockFields(b));
   Object.assign(fields, fieldsOf(sign > 0 ? clockA.add(clockB) : clockA.subtract(clockB)));
-  return oneSign(fields, JSON.stringify(fields));
+  // a refusal names the fields as they were written, before anything was broken down
+  const written = JSON.stringify(fields);
+  // a subtraction can leave two signs, a year less a month. a year is always twelve months and a
+  // week always seven days, so the larger of a pair that disagrees is broken into the smaller: 11
+  // months, 6 days. a pair that agrees stays as written. a day is not always twenty four hours, so
+  // a day less an hour still has no answer, nor months less days, and an anchored length is left
+  // to its anchor
+  if (!anchor) {
+    const { years = 0, months = 0, weeks = 0, days = 0 } = fields;
+    if (years * months < 0) {
+      delete fields.years;
+      delete fields.months;
+      Object.assign(fields, carriedMonths(years, months));
+    }
+    if (weeks * days < 0) {
+      delete fields.weeks;
+      fields.days = weeks * 7 + days;
+    }
+  }
+  return oneSign(fields, written);
 };
 
 // Temporal refuses an empty fields object, and a zero duration has no nonzero field to offer it

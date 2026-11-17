@@ -597,8 +597,8 @@ export function milliseconds(count: number | string): Duration;
 
 export function isDuration(value: unknown): value is Duration;
 
-/** A datetime, a date or a time, or a string that reads as one */
-export type Point = DateTime | CalendarDate | Time | Date | string;
+/** A datetime, a date or a time, a string that reads as one, or epoch milliseconds */
+export type Point = DateTime | CalendarDate | Time | Date | string | number;
 
 export interface RangeMap {
   date: DateRange;
@@ -616,10 +616,12 @@ export function compare(a: YearMonth, b: YearMonthInput): -1 | 0 | 1;
 export function earliest(...months: YearMonth[] | [YearMonth[]]): YearMonth;
 export function earliest<T extends Point>(
   ...points: T[] | [T[]]
-): T extends string ? DateTime | CalendarDate | Time : T;
+): T extends string ? DateTime | CalendarDate | Time : T extends number | Date ? DateTime : T;
 /** The point that comes last, from several arguments or one array */
 export function latest(...months: YearMonth[] | [YearMonth[]]): YearMonth;
-export function latest<T extends Point>(...points: T[] | [T[]]): T extends string ? DateTime | CalendarDate | Time : T;
+export function latest<T extends Point>(
+  ...points: T[] | [T[]]
+): T extends string ? DateTime | CalendarDate | Time : T extends number | Date ? DateTime : T;
 
 /** The kind of a value from this library, or undefined */
 export function kindOf(

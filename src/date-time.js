@@ -7,6 +7,7 @@ import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } 
 import { temporalDurationFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
+import { yearFirst } from './helpers/parts.js';
 import { relativeSeconds } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
@@ -106,7 +107,8 @@ export class DateTime {
           explanation: isDevelopment ? 'expected a finite timestamp or a valid `Date` instance' : 0,
         });
       }
-      return Temporal.Instant.fromEpochMilliseconds(epoch).toZonedDateTimeISO(timeZone);
+      // a timer hands over fractions of a millisecond, which Date drops and Temporal refuses
+      return Temporal.Instant.fromEpochMilliseconds(Math.trunc(epoch)).toZonedDateTimeISO(timeZone);
     }
     if (isString(input)) {
       return DateTime.#parse(input, zone, loose, dayFirst);
@@ -138,7 +140,7 @@ export class DateTime {
   }
 
   static #parse(text, zone, loose, dayFirst) {
-    const trimmed = text.trim();
+    const trimmed = yearFirst(text.trim());
     try {
       return guard(
         () => {
