@@ -81,6 +81,22 @@ date('07.09.2026', { loose: true, dayFirst: false })?.toString(); // '2026-07-09
 configure({ dayFirst: false });
 ```
 
+## Accept-Language headers
+
+With the plugin imported, a locale can be a raw HTTP `Accept-Language` header. Its tags are taken by weight, and a tag weighted at zero is left out:
+
+```js
+import '@native-dates/plugins/loose';
+import { date } from 'native-dates';
+
+const header = 'fr-CH, fr;q=0.9, en;q=0.8';
+
+date('2026-11-06').locale(header).format('long'); // '6 novembre 2026'
+date('2026-11-06').locale(header).locale(); // ['fr-CH', 'fr', 'en']
+```
+
+This applies wherever a locale is accepted and needs no option on the call. Without the plugin, a header throws `unknownLocale`.
+
 ## Factory options
 
 :::entry
