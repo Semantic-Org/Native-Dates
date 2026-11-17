@@ -15,7 +15,7 @@ import {
 import { IS_DURATION } from './helpers/identity.js';
 import { durationFormat, unitFormat } from './helpers/intl.js';
 import { inspect, isTemporalDuration, unit } from './helpers/units.js';
-import { locale as pickLocale } from './helpers/zones.js';
+import { checkedLocale, locale as pickLocale } from './helpers/zones.js';
 
 /*
   a length of time. fields stay as written (90 minutes is 90 minutes until you balance it), and a
@@ -43,7 +43,7 @@ export class Duration {
       ? input
       : temporalDurationOf(fieldsFrom(input, name));
     this.#anchor = anchor;
-    this.#locale = locale ?? undefined;
+    this.#locale = locale == null ? undefined : checkedLocale(locale);
     // the parts are own properties, so a value prints them in a console without a click. the text is
     // keyed first so a preview leads with it
     this.text = undefined;

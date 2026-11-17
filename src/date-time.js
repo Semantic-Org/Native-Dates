@@ -107,7 +107,8 @@ export class DateTime {
           explanation: isDevelopment ? 'expected a finite timestamp or a valid `Date` instance' : 0,
         });
       }
-      return Temporal.Instant.fromEpochMilliseconds(epoch).toZonedDateTimeISO(timeZone);
+      // a timer hands over fractions of a millisecond, which Date drops and Temporal refuses
+      return Temporal.Instant.fromEpochMilliseconds(Math.trunc(epoch)).toZonedDateTimeISO(timeZone);
     }
     if (isString(input)) {
       return DateTime.#parse(input, zone, loose, dayFirst);

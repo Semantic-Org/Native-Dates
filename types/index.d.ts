@@ -597,8 +597,8 @@ export function milliseconds(count: number | string): Duration;
 
 export function isDuration(value: unknown): value is Duration;
 
-/** A datetime, a date or a time, or a string that reads as one */
-export type Point = DateTime | CalendarDate | Time | Date | string;
+/** A datetime, a date or a time, a string that reads as one, or epoch milliseconds */
+export type Point = DateTime | CalendarDate | Time | Date | string | number;
 
 export interface RangeMap {
   date: DateRange;

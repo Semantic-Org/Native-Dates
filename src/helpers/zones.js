@@ -1,4 +1,4 @@
-import { each, isArray, isPlainObject, isString } from './utils.js';
+import { each, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
@@ -139,23 +139,24 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
 // an Accept-Language header, 'fr-CH, fr;q=0.9, en;q=0.8', is the tags a reader wants in the order
 // they want them, which is what Intl takes as a list
 const knownLocales = new Map();
-const checkedLocale = (tag) => {
+export const checkedLocale = (tag) => {
   const key = String(tag);
   if (!knownLocales.has(key)) {
-    const read = isString(tag) && /[_,;]/.test(tag)
+    const tags = isString(tag) && /[_,;]/.test(tag)
       ? tag.replace(/_/g, '-').split(',').map((part) => part.split(';')[0].trim()).filter((part) => part !== '*')
-      : tag;
+      : undefined;
     guard(
-      () => Intl.getCanonicalLocales(read),
+      () => Intl.getCanonicalLocales(tags ?? tag),
       'unknownLocale',
       key,
       isDevelopment
         ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
         : 0,
     );
-    knownLocales.set(key, isArray(read) && read.length === 1 ? read[0] : read);
+    // one tag is a tag, and a list is frozen since every caller is handed the same one
+    knownLocales.set(key, tags && (tags.length === 1 ? tags[0] : Object.freeze(tags)));
   }
-  return knownLocales.get(key);
+  return (isString(tag) && knownLocales.get(key)) || tag;
 };
 
 export const locale = (override) => (override === undefined ? settings.locale : checkedLocale(override));
