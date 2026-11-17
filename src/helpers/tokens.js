@@ -178,7 +178,7 @@ const tokenPattern = new RegExp(
 // week does, so the header row matches the grid
 export const weekdayNames = (style = 'short', firstDay, locale) => {
   // 'narrow' is the shortest form, the one the dd token prints, for a compact calendar header
-  const table = names(pickLocale(locale))[{ long: 'dddd', narrow: 'dd' }[style] ?? 'ddd'];
+  const table = names(pickLocale(locale))[weekdayWidths[style] ?? 'ddd'];
   const first = weekStart(firstDay, locale) - 1;
   return [...table.slice(first), ...table.slice(0, first)];
 };
