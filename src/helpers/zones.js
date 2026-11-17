@@ -135,34 +135,35 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
   return { ...settings, zoneAliases: { ...settings.zoneAliases } };
 };
 
-// a locale is read however it arrives. 'en_US' is how a server, a database or java spells en-US, and
-// an Accept-Language header, 'fr-CH, fr;q=0.9, en;q=0.8', is the tags a reader wants in the order
-// they want them, which is what Intl takes as a list
+// plugins/loose reads an HTTP Accept-Language header as the tags it lists
+let localeExtension = null;
+
+export const setLocaleExtension = (reader) => {
+  localeExtension = reader;
+  knownLocales.clear();
+};
+
+// 'en_US' is how a server, a database or java spells en-US, so a tag is read with either mark. a
+// value keeps the tag as it was read, which is one Intl takes
 const knownLocales = new Map();
 export const checkedLocale = (tag) => {
-  // a list and a header can spell the same text, 'es,en', and are not the same thing to hand back
-  const key = isString(tag) ? tag : `[${tag}]`;
+  // a list is checked once and handed back as it came. only text is read into something else
+  const text = isString(tag);
+  const key = text ? tag : `[${tag}]`;
   if (!knownLocales.has(key)) {
-    // a header's tags are taken by weight, q, and never one weighed at nothing. * is any language
-    const tags = isString(tag) && /[_,;*]/.test(tag)
-      ? tag.replace(/_/g, '-').split(',')
-        .map((part) => part.trim().split(/\s*;\s*q=/))
-        .filter(([name, weight]) => name && name !== '*' && weight != 0)
-        .sort((a, b) => (b[1] ?? 1) - (a[1] ?? 1))
-        .map(([name]) => name)
-      : undefined;
+    const plain = text ? tag.replace(/_/g, '-') : tag;
+    const read = text && localeExtension ? localeExtension(plain) : plain;
     guard(
-      () => Intl.getCanonicalLocales(tags ?? tag),
+      () => Intl.getCanonicalLocales(read),
       'unknownLocale',
       String(tag),
       isDevelopment
-        ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
+        ? "expected a locale tag like 'en-US' or 'de', or an array of tags. to read an HTTP `Accept-Language` header, import '@native-dates/plugins/loose' once at startup"
         : 0,
     );
-    // one tag is a tag, and a list is frozen since every caller is handed the same one
-    knownLocales.set(key, tags && (tags.length === 1 ? tags[0] : Object.freeze(tags)));
+    knownLocales.set(key, read);
   }
-  return (isString(tag) && knownLocales.get(key)) || tag;
+  return text ? knownLocales.get(key) : tag;
 };
 
 export const locale = (override) => (override === undefined ? settings.locale : checkedLocale(override));
