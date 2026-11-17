@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 13.72 kB for all of `native-dates`, 12.33 kB for `import { now }`, 15.43 kB with the four plugins (`zones`, `loose`, `weekdays`, `legacy-date`) on top.
+Sizes on 2026-11-16 (`npm run size`, Brotli): 13.75 kB for all of `native-dates`, 12.36 kB for `import { now }`, 15.46 kB with the four plugins (`zones`, `loose`, `weekdays`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -101,6 +101,7 @@ A fourth pass, after asking readers of the languages and a review across every l
 - **The plugin is for the long tail, never for a common language.** A language most readers of the docs could be writing in is core's to get right, since nobody should need an import for Brazil. `@native-dates/plugins/weekdays` (0.39 kB) lays Moment's rows over `dd` for ten less widely used languages whose narrow form is not what a reader writes: Azerbaijani, Armenian, Javanese, Khmer, Latvian, Māori, Burmese, Occitan, Swahili, Yoruba. Moment's Pashto row is left out: it holds the Persian day letters, where `Intl` names the days in Pashto, so the two would disagree on one page. Its table is exported, so an app can set a row for any language, a common one included (`weekdays.tr = 'Pt Sa Ça Pe Cu Ct Pz'`).
 - **The hook is general.** A plugin registers a lookup with `setNamesExtension` in `helpers/tokens.js`, and whatever it returns for a language is laid over the names read from `Intl`. Anything else `Intl` has no form for can ride it.
 - **`weekdayNames('narrow')`** returns the table `dd` prints.
+- **`Do` writes the first of a month `1er` in French**, `1er novembre`, and every other day plain. `Intl` prints `1 novembre` in its own presets and has the suffix nowhere, so French is a second special case beside Greek, at 28 B. `Do` and `dd` are the only two tokens `Intl` has no field for. Spanish, Italian and Portuguese `1º` and Dutch `1e` exist in Moment and are left plain, which is also normal in those languages, until a native reader says otherwise.
 - **Loose month names read in the locale a call passes**: `monthDay('17 octobre', { loose: true, locale: 'fr' })`, where only `configure({ locale })` counted, which a server answering many readers cannot use.
 
 Decided, and closed unless a reader reports otherwise:
