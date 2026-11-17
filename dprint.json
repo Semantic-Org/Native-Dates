@@ -35,6 +35,7 @@
   "toml": {},
   "excludes": [
     "dist/",
+    "src/helpers/utils.js",
     "docs/",
     "types/",
     "**/node_modules",

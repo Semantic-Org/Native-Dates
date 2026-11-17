@@ -1,4 +1,4 @@
-import { isNumber, isPlainObject, isString } from '@semantic-ui/utils';
+import { isNumber, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate } from './calendar-date.js';
 import { DateTime } from './date-time.js';

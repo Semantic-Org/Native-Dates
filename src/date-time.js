@@ -1,4 +1,4 @@
-import { isDate, isNumber, isPlainObject, isString } from '@semantic-ui/utils';
+import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
 import { anchored, duration } from './duration.js';

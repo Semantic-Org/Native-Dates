@@ -4,7 +4,7 @@ kind: function
 lede: Read an ISO year-month string, card expiry, numbers, or date into a YearMonth.
 import: import { yearMonth, monthYear } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-16
 ---
 
 ## Reading year-months
@@ -18,7 +18,7 @@ yearMonth(input, zone?): YearMonth
 yearMonth(year, month): YearMonth
 ```
 
-Creates a [`YearMonth`](/api/year-month/) from an ISO year-month string, year and 1-indexed month numbers, a fields object, or any date or timestamp with its day dropped. Missing inputs throw a type error instead of defaulting to the current month.
+Creates a [`YearMonth`](/api/year-month/) from a year-first string, year and 1-indexed month numbers, a fields object, or any date or timestamp with its day dropped. Missing inputs throw a type error instead of defaulting to the current month.
 
 ```js title="billing.js"
 import { datetime, yearMonth } from 'native-dates';
@@ -53,7 +53,7 @@ fromInstant.toString(); // '2026-10'
     - name: loose
       type: boolean
       default: 'false'
-      description: "Read English month names like `'Nov 2026'` and return `null` on unreadable input with `@native-dates/plugins/loose`."
+      description: "Read English or localized month names like `'février 2026'` and return `null` on unreadable input with `@native-dates/plugins/loose`."
 ```
 
 **Returns**
@@ -63,14 +63,14 @@ type: YearMonth
 description: "A `YearMonth` with no day, or `null` when loose mode cannot read `input`."
 ```
 
-When the [loose plugin](/plugins/loose/) is loaded, loose mode parses English month names beside a four-digit year and returns `null` on unreadable strings:
+When the [loose plugin](/plugins/loose/) is loaded, loose mode parses month names in English or the active `locale` beside a four-digit year and returns `null` on unreadable strings:
 
 ```js
 import { yearMonth } from 'native-dates';
 import '@native-dates/plugins/loose';
 
 yearMonth('Nov 2026', { loose: true })?.toString(); // '2026-11'
-yearMonth('2026 November', { loose: true })?.toString(); // '2026-11'
+yearMonth('février 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-02'
 yearMonth('not-a-month', { loose: true }); // null
 ```
 :::
@@ -122,12 +122,12 @@ Months run from 1 for January through 12 for December across numbers, strings, a
 
 | Input | Example | How it reads |
 |---|---|---|
-| ISO year-month string | `'2026-11'` | Reads the 4-digit year and 2-digit month directly, matching HTML month inputs. |
+| Year-first string | `'2026-11'`, `'2026/11'`, `'2026-5'` | Reads a 4-digit year and 1- or 2-digit month across `-`, `/`, or `.`, matching HTML month inputs. |
 | Card expiry string | `monthYear('11/26')`, `monthYear('11.2026')` | Reads month first across `/`, `-`, or `.` and expands 2-digit years with `YearMonth.century`. |
 | Two numbers | `yearMonth(2026, 11)`, `monthYear(11, 26)` | Takes whole numbers in year-then-month or month-then-year order. |
 | Fields object | `{ year: 2026, month: 11 }` | Reads 1-indexed calendar fields and rejects months outside 1 through 12. |
 | Date or timestamp | `'2026-11-16'`, `datetime(...)`, `new Date()` | Extracts the calendar month in the given zone or configured default and drops the day. |
-| Loose month name | `'Nov 2026'`, `'2026 November'` | Reads English short or full month names with a 4-digit year in loose mode. |
+| Loose month name | `'Nov 2026'`, `'février 2026'` | Reads English or active-locale month names beside a 4-digit year in loose mode. |
 | Temporal value | `Temporal.PlainYearMonth`, `Temporal.PlainDate` | Wraps ISO 8601 Temporal values directly. |
 
 :::tip[Reading the current month]

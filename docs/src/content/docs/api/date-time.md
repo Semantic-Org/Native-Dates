@@ -50,6 +50,7 @@ Properties read the date and time in the instance's time zone.
 | `yearMonth` | `YearMonth` | Calendar year and month in this time zone. |
 | `monthDay` | `MonthDay` | Calendar month and day in this time zone. |
 | `weekday` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
+| `weekStart` | `number` | First day of this moment's weeks from 1 to 7, following `configure()` or its locale. |
 | `quarter` | `number` | Calendar quarter (1–4). |
 | `weekOfYear`, `dayOfYear` | `number` | ISO week number (1–53) and day of the year (1–366). |
 | `daysInMonth`, `daysInYear`, `hoursInDay` | `number` | Length of the current month, year, and local calendar day. |
@@ -837,7 +838,7 @@ dt.locale(): Locale | undefined
 dt.locale(tag): DateTime
 ```
 
-Reads the locale carried on this moment, or returns a copy that formats and starts weeks in another locale across text previews, presets, week boundaries, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+Reads the locale carried on this moment, or returns a copy that formats and starts weeks in another locale across presets, week boundaries, and derived values. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
 
 **Parameters**
 

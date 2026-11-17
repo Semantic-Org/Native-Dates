@@ -1,4 +1,4 @@
-import { isPlainObject } from '@semantic-ui/utils';
+import { isPlainObject } from './utils.js';
 
 import { guard } from './errors.js';
 
