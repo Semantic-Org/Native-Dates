@@ -180,7 +180,7 @@ date('2026-11-01').format('dd', 'lv'); // 'Sv'
 date('2026-11-03').format('ddd', 'en-US'); // 'Tues'
 ```
 
-The widths are the ones [`weekdayNames()`](/api/month-names/#weekdaynames) takes: `narrow` is `dd`, `short` is `ddd`, and `long` is `dddd`. A regional tag such as `fr-CA` reads its language's entry unless it has one of its own. Presets and options bags are formatted by the runtime and are not affected.
+The widths are the ones [`weekdayNames()`](/api/month-names/#weekdaynames) takes: `narrow` is `dd`, `short` is `ddd`, and `long` is `dddd`. A regional tag such as `fr-CA` reads its language's entry, and an entry of its own is laid over that, so `en-US` can change one day of what `en` set. Tags match in any letter case. Presets and options bags are formatted by the runtime and are not affected.
 
 ## How locales resolve
 
