@@ -1,8 +1,7 @@
 import { canonicalZone, setZoneExtension } from 'native-dates/helpers/zones';
 
-// the table below is forked word for word from @semantic-ui/utils 0.18.0 (dates.js), so a zone
-// abbreviation reads here as it does in every semantic ui package and nothing is installed for it.
-// an edit here no longer reaches that package's own table
+// the table below is the one @semantic-ui/utils reads zone abbreviations from, copied so that
+// nothing is installed for it. an edit here does not reach that package's own table
 
 // timezone abbreviations are ambiguous by nature (IST is Kolkata, Jerusalem, or Dublin depending on
 // who you ask), so the picks are editable once at app boot (timezones.IST = 'Asia/Jerusalem'). full
