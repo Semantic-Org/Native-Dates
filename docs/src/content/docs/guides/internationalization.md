@@ -156,6 +156,32 @@ const eid = date('2026-03-20').locale('ar-SA');
 eid.format('long', 'ar-SA-u-ca-islamic-umalqura'); // '١ شوال ١٤٤٧ هـ'
 ```
 
+## Writing weekdays and ordinals your own way
+
+Month and weekday names come from the runtime, so they match what the reader's own device prints. Two token forms have no counterpart there: the two-letter weekday `dd` and the ordinal `Do`. `dd` prints two letters where the language abbreviates that way (`Mo`, `lu`, `пн`) and otherwise the single letters its calendars use, such as `S T Q Q S S D` in Portuguese. `Do` prints English suffixes in English and elsewhere the mark the language writes after a day, such as `6.` in German.
+
+Set your own with `configure()` once at startup. Weekdays are keyed by language, then width, then day name, so a single day can be changed without listing all seven:
+
+```js
+import { configure, date } from 'native-dates';
+
+configure({
+  weekdays: {
+    lv: { narrow: { fri: 'Pk', sun: 'Sv' } },
+    en: { short: { tue: 'Tues', thu: 'Thurs' } },
+  },
+  ordinals: {
+    fr: (day) => (day === 1 ? '1er' : day),
+  },
+});
+
+date('2026-11-01').format('Do MMMM', 'fr'); // '1er novembre'
+date('2026-11-01').format('dd', 'lv'); // 'Sv'
+date('2026-11-03').format('ddd', 'en-US'); // 'Tues'
+```
+
+The widths are the ones [`weekdayNames()`](/api/month-names/#weekdaynames) takes: `narrow` is `dd`, `short` is `ddd`, and `long` is `dddd`. A regional tag such as `fr-CA` reads its language's entry unless it has one of its own. Presets and options bags are formatted by the runtime and are not affected.
+
 ## How locales resolve
 
 When formatting any value, range, duration, or relative phrase, Native Dates checks each source in order and uses the first locale it finds:

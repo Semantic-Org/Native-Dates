@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 13.75 kB for all of `native-dates`, 12.36 kB for `import { now }`, 15.46 kB with the four plugins (`zones`, `loose`, `weekdays`, `legacy-date`) on top.
+Sizes on 2026-11-16 (`npm run size`, Brotli): 13.86 kB for all of `native-dates`, 12.44 kB for `import { now }`, 15.21 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -14,7 +14,7 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 
 ## 1. Decisions that 1.0 makes permanent
 
-- [ ] **`native-dates/helpers/*` is a public entry.** The exports map serves every file in `src/helpers/` because the plugins import from it. Either say in writing that the path is unstable, or narrow it to what the four plugins use (`environment`, `errors`, `tokens`, `zones`).
+- [ ] **`native-dates/helpers/*` is a public entry.** The exports map serves every file in `src/helpers/` because the plugins import from it. Either say in writing that the path is unstable, or narrow it to what the three plugins use (`environment`, `errors`, `zones`).
 - [x] **Error codes** use the six condition words of the sync repo (`missing`, `unknown`, `invalid`, `unsupported`, `duplicate`, `conflicting`), and every explanation was rewritten in its register and reviewed. All of them fold out of a production build. Still open for a read: the `invalid*` codes are thrown as a `TypeError` in some places and a `RangeError` in others.
 - [x] **Relative time** is in core as `from(other)` and `fromNow()`, the words moment and day.js use, with `formatRelative()` kept as a second spelling. It cost 0.29 kB of floor, the size the plugin was.
 - [ ] **Names worth one last read.** `monthDay.in(2027)` beside `datetime.in(zone)`. `after()` and `before()` beside `next()` and `previous()`. `as()` reaches five kinds where `kindOf()` reports more, so there is no `as('dateRange')`.
@@ -94,15 +94,30 @@ A review of that work, run across every locale ICU has, then found and fixed:
 - **A list of locales** passed as an array built a new formatter on every call.
 - **A range that runs backwards needs no fallback.** An engine from before 2022 refuses one, and no browser the library runs on is that old: Safari 27 on the polyfill was checked on a phone and formats it.
 
-A fourth pass, after asking readers of the languages and a review across every locale ICU has, cost 0.14 kB (0.09 kB of floor):
+A fourth pass, after asking readers of the languages and a review across every locale ICU has, cost 0.27 kB (0.20 kB of floor), about half of it the door below:
 
 - **Greek names a month alone in the nominative.** `format('MMMM YYYY', 'el')` is `Νοέμβριος 2026`, `6 Νοεμβρίου 2026` keeps the genitive beside its day, and `monthNames('long', 'el')` is twelve nominatives. Greek is the one locale where `Intl` hands back the genitive for a month alone, so it is the one special case.
 - **`dd` in core serves every widely written language with no import.** Two letters in a script with capitals, where the seven differ and the long name holds each (`Mo`, `lu`, `пн`, `Δε`, Welsh `Ll` from `Dydd Llun`), keeping a short name the locale already writes in two letters with its dot dropped (Polish `pt`, Catalan `dl`). Otherwise `Intl`'s narrow form, the letters a calendar in the language heads its columns with: `月`, `一`, `จ`, `सो`, `د`, Portuguese `S T Q Q S S D`, Turkish `P S Ç P C C P`, Indonesian `S S R K J S M`, Hungarian `H K Sz Cs P Sz V`. Where the narrow form is not the language's own, English letters in Urdu, Swahili and Pashto or digits in Azerbaijani, the short name stands whole (20 B).
-- **The plugin is for the long tail, never for a common language.** A language most readers of the docs could be writing in is core's to get right, since nobody should need an import for Brazil. `@native-dates/plugins/weekdays` (0.39 kB) lays Moment's rows over `dd` for ten less widely used languages whose narrow form is not what a reader writes: Azerbaijani, Armenian, Javanese, Khmer, Latvian, Māori, Burmese, Occitan, Swahili, Yoruba. Moment's Pashto row is left out: it holds the Persian day letters, where `Intl` names the days in Pashto, so the two would disagree on one page. Its table is exported, so an app can set a row for any language, a common one included (`weekdays.tr = 'Pt Sa Ça Pe Cu Ct Pz'`).
-- **The hook is general.** A plugin registers a lookup with `setNamesExtension` in `helpers/tokens.js`, and whatever it returns for a language is laid over the names read from `Intl`. Anything else `Intl` has no form for can ride it.
 - **`weekdayNames('narrow')`** returns the table `dd` prints.
-- **`Do` writes the first of a month `1er` in French**, `1er novembre`, and every other day plain. `Intl` prints `1 novembre` in its own presets and has the suffix nowhere, so French is a second special case beside Greek, at 28 B. `Do` and `dd` are the only two tokens `Intl` has no field for. Spanish, Italian and Portuguese `1º` and Dutch `1e` exist in Moment and are left plain, which is also normal in those languages, until a native reader says otherwise.
 - **Loose month names read in the locale a call passes**: `monthDay('17 octobre', { loose: true, locale: 'fr' })`, where only `configure({ locale })` counted, which a server answering many readers cannot use.
+
+### Decided: what `Intl` has not settled is the app's to write
+
+`dd` and `Do` are the only two tokens `Intl` has no field for. Core prints the best it can read off the platform and does not carry tables or per-language rules of its own: if `Intl` prints `1 novembre` for French, a French `1er` is not ours to hard-code and charge every reader for. The app writes it, in `configure()`, under plain nouns:
+
+```js
+configure({
+  weekdays: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
+  ordinals: { fr: (day) => (day === 1 ? '1er' : day) },
+});
+```
+
+- Weekdays are keyed by language, then width (`narrow` is `dd`, `short` is `ddd`, `long` is `dddd`), then day name. Day names and not positions, since Moment's tables start on Sunday and ours on Monday, and a row off by one shifts every weekday in an app.
+- A regional tag reads its language's entry unless it has its own. `null` goes back to the platform.
+- It replaced a `weekdays` plugin that held Moment's rows for ten less widely used languages. Applied evenly, the test that took Portuguese out of it (single letters that repeat are what that language's calendars print) took out all but two rows, and a fourth plugin named `weekdays` made a reader wonder whether weekdays need a plugin.
+- Months are not in it. `Intl` has every month name, so that would be taste, and it can be added without breaking anyone.
+
+Cost: 0.13 kB, 0.11 kB of it floor.
 
 Decided, and closed unless a reader reports otherwise:
 
@@ -112,7 +127,6 @@ Decided, and closed unless a reader reports otherwise:
 Open, each a decision more than a bug:
 
 - [x] **`YearMonth` short prints four digits of the year**, `11/2026`, where `11/26` read as November 26th beside a month-day and as year 26 in Japanese. It follows the locale's calendar and any calendar asked for in the tag, so Thai is `11/2569`. A card form asks for `format('MM/YY')`, which is `11/26` everywhere.
-- [ ] **`dd` without a row.** Languages Moment has no table for print the narrow form with or without the plugin: Tigrinya, Somali, Hausa, Malagasy, Yiddish. A row from a native reader is one line in the plugin.
 - [ ] **Loose reading cannot read back everything the library prints**: `17 באוקטובר`, `۱۷ اکتبر`, `10月17日`, `ноябрь 2026 г.`. It also takes `14 jui` as June in French, where it could as well be July.
 - [ ] **A time range of nearly a day reads as an hour backwards in English**: `time('10:00').to('09:00')` prints `10:00 – 9:00 AM`.
 
@@ -136,7 +150,7 @@ Everything so far ran on Node 26 with native Temporal and was bundled with esbui
 ## 5. Release mechanics
 
 - [ ] **Versions.** All four packages say `0.0.6`. Nobody depends on the published ones, so there is nothing to migrate, but core, plugins, polyfill and the `@native-dates/core` alias need one number and matching peer ranges.
-- [ ] **Docs.** The site has to say 13 kB and four plugins everywhere, and show one import for ranges, tokens and the two date nouns. The root README is written by the maintainer by hand.
+- [ ] **Docs.** The site has to say 13 kB and three plugins everywhere, and show one import for ranges, tokens and the two date nouns. The root README is written by the maintainer by hand.
 - [ ] **`@see` links in the type files.** An editor shows a declaration's doc comment in autocomplete and on hover, so each public class, factory and method in `types/*.d.ts` and `packages/plugins/types/*.d.ts` gets a doc comment ending in a `@see {@link ...}` to its page on the live site, `https://nativedates.dev`, never the staging domain. None has one today. The conventions are in `../next/ai/skills/contributing/types.md`: the URL is the docs page's path (`docs/src/content/docs/api/calendar-date.md` is `https://nativedates.dev/api/calendar-date/`, with the trailing slash the site serves), a method links to its heading's anchor, and internal types are marked `@internal` and get no link. Do this after the docs pages for ranges, month-days and year-months have settled, since the links follow those paths, and check every anchor against the built page.
 - [ ] **When the polyfill is needed.** Node 26 is the first Node with Temporal and `engines` says so. The install page has to say plainly which browsers need `@native-dates/polyfill`.
 - [ ] **Locales on a server.** `configure({ locale })` is process-wide, which suits a browser and is a trap for a server answering many users. A value now carries its own: `datetime(row.at, zone).locale(request.locale)` sets it once, and every value made from it keeps it. The docs should teach that for servers, and `configure()` for an app with one reader.
