@@ -30,6 +30,7 @@ declare module 'native-dates' {
     dayFirst?: boolean;
   }
 
+  /** @see {@link https://nativedates.dev/plugins/loose/#datetime datetime} */
   export function datetime(input: unknown, options: ReadOptions & { loose: true; }): DateTime | null;
   export function date(input: unknown, options: ReadOptions & { loose: true; }): CalendarDate | null;
   export function time(input: unknown, options: ReadOptions & { loose: true; }): Time | null;
