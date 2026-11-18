@@ -1,63 +1,158 @@
 import type { DayOfWeek } from './units.js';
 
 /**
- * An IANA zone (`'America/New_York'`), a fixed offset (`'+05:30'`), or `'UTC'`. With `@native-dates/plugins/zones`,
- * also cities (`'Berlin'`, `'los angeles'`), abbreviations (`'PT'`, `'CET'`), and `zoneAliases`
+ * Time zone identifier: an IANA zone name such as `'America/New_York'`, a fixed UTC offset
+ * such as `'+05:30'`, or `'UTC'`.
+ *
+ * When `@native-dates/plugins/zones` is imported, also accepts city names, common abbreviations,
+ * and custom `zoneAliases`.
+ *
+ * @see {@link https://nativedates.dev/guides/time-zones/ Time zones}
  */
 export type Zone = string;
 
-/** The options form of a factory's second argument */
+/**
+ * BCP 47 locale tag such as `'en-US'` or `'de-DE'`, underscore tag, or `Accept-Language` header.
+ *
+ * @see {@link https://nativedates.dev/guides/internationalization/ Internationalization}
+ */
+export type Locale = string;
+
+/**
+ * Options accepted as the second argument when reading values in factory functions.
+ *
+ * @see {@link https://nativedates.dev/guides/parsing/ Parsing}
+ */
 export interface ReadOptions {
-  /** The zone to read the value in (default: the configured zone, else the machine's) */
+  /**
+   * Time zone used to view instants or interpret local date and time inputs.
+   * Defaults to the configured `zone`, or the runtime's local time zone.
+   */
   zone?: Zone;
-  /** The locale the value is written in (default: the configured locale, else the runtime's) */
+
+  /**
+   * BCP 47 locale tag carried on the returned value and every value derived from it.
+   * Defaults to the configured `locale`, or the runtime's default locale.
+   */
   locale?: Locale;
 }
 
-/** A BCP 47 locale tag, overriding the configured locale for one call */
-export type Locale = string;
-
+/**
+ * Process-wide default settings accepted by `configure()`.
+ * Omitted keys stay unchanged, and passing `null` for a key restores its built-in default.
+ *
+ * @see {@link https://nativedates.dev/api/configure/#configure configure}
+ */
 export interface Settings {
-  /** The default zone every factory reads in. Null resets to the machine's zone */
-  zone?: Zone | null;
-  /** The default locale for formatting. Null resets to the runtime's */
-  locale?: Locale | null;
   /**
-   * The first day of the week for `startOf('week')`, `range('week')` and `weekdayNames()`. Unset, it is the
-   * locale's own: sunday in the United States, monday in most of Europe. Null goes back to following the locale
+   * Default time zone used by factories and `now()` when no explicit zone is passed.
+   * Pass `null` to reset to the runtime's local time zone.
+   */
+  zone?: Zone | null;
+
+  /**
+   * Default locale for formatting and week boundaries when a value carries no locale of its own.
+   * Pass `null` or `''` to reset to the runtime's default locale.
+   */
+  locale?: Locale | null;
+
+  /**
+   * First day of the week for week boundaries and `weekdayNames()`.
+   * When unset or `null`, follows the active locale (Sunday in the US, Monday in most of Europe).
    */
   weekStart?: DayOfWeek | null;
+
   /**
-   * Weekday names written your own way, by language, then width, then day: `{ lv: { narrow: { fri: 'Pk', sun: 'Sv' } } }`.
-   * `narrow` is what the `dd` token prints, `short` is `ddd`, `long` is `dddd`, and `weekdayNames()` follows. A regional
-   * tag reads its language's names with its own laid over them. Null goes back to the runtime's names
+   * Custom weekday labels keyed by language tag, width (narrow, short, or long), and three-letter day name.
+   * Regional tags inherit from their base language, and `null` restores runtime labels.
+   *
+   * @example
+   * ```ts
+   * configure({
+   *   weekdayNames: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
+   * });
+   * ```
    */
   weekdayNames?: Record<Locale, Partial<Record<'narrow' | 'short' | 'long', Record<string, string>>>> | null;
+
   /**
-   * What the `Do` token writes for a day of the month, by language: `{ fr: (day) => (day === 1 ? '1er' : day) }`.
-   * Null goes back to the built-in English suffixes and the mark the runtime writes after a day
+   * Custom formatter for the `Do` day-of-month token, keyed by language tag.
+   * Pass `null` to restore built-in English suffixes and locale day markers.
+   *
+   * @example
+   * ```ts
+   * configure({
+   *   ordinals: { fr: (day) => (day === 1 ? '1er' : day) },
+   * });
+   * ```
    */
   ordinals?: Record<Locale, (day: number) => string | number> | null;
+
   /**
-   * Formats an app names once and asks for everywhere: `{ invoice: 'YYYY-MM-DD', receipt: { dateStyle: 'long' } }`,
-   * then `value.format('invoice')`. Each is a token pattern or an `Intl.DateTimeFormat` options bag, and prints
-   * on a datetime, a date, a time, a month-day, a year-month and a range. A name is asked before the built-in
-   * presets, so an app can give `'short'` its own meaning. Null takes them all away
+   * Named formats reusable across `format(name)` calls on dates, moments, times, partial dates, and ranges.
+   * Checked before built-in presets so an app can customize names like `'short'`. Pass `null` to clear all custom formats.
+   *
+   * @example
+   * ```ts
+   * configure({
+   *   formats: {
+   *     invoice: 'YYYY-MM-DD',
+   *     receipt: { dateStyle: 'long' },
+   *   },
+   * });
+   * ```
    */
   formats?: Record<string, string | Intl.DateTimeFormatOptions> | null;
 }
 
 /**
- * Sets package-wide defaults once at app boot. Returns the settings in effect
+ * Snapshot of the active process-wide configuration returned by `configure()`.
+ *
  * @see {@link https://nativedates.dev/api/configure/#configure configure}
  */
-export function configure(settings?: Settings): {
+export interface ActiveSettings {
+  /** Active default IANA time zone or offset, or `undefined` when using the runtime's local zone. */
   zone: string | undefined;
+  /** Active default BCP 47 locale tag, or `undefined` when using the runtime's default locale. */
   locale: string | undefined;
+  /** Active ISO week-start number (1–7), or `undefined` when following the locale. */
   weekStart: number | undefined;
+  /** Whether loose numeric dates default to day-first order (`false` unless set with `@native-dates/plugins/loose`). */
   dayFirst: boolean;
+  /** Active custom zone alias map registered via `@native-dates/plugins/zones`. */
   zoneAliases: Record<string, string>;
+  /** Custom weekday label overrides, if configured. */
   weekdayNames?: Settings['weekdayNames'];
+  /** Custom `Do` ordinal formatters by language, if configured. */
   ordinals?: Settings['ordinals'];
+  /** Custom named format definitions, if configured. */
   formats?: Settings['formats'];
-};
+}
+
+/**
+ * Updates one or more process-wide defaults and returns a snapshot of the active settings.
+ * Call with no arguments to inspect the current configuration without changing it.
+ *
+ * Set global defaults once at application startup. On servers handling multiple users,
+ * attach each user's time zone and `.locale()` to individual values inside request handlers.
+ *
+ * @param settings - Process-wide defaults to update, leaving omitted keys unchanged
+ * @returns A shallow copy of the active settings after applying any updates
+ *
+ * @example
+ * ```ts
+ * import { configure } from 'native-dates';
+ *
+ * configure({
+ *   zone: 'Europe/Berlin',
+ *   locale: 'de-DE',
+ *   formats: { invoice: 'YYYY-MM-DD' },
+ * });
+ *
+ * configure().zone; // 'Europe/Berlin'
+ * configure({ zone: null, locale: null, formats: null });
+ * ```
+ *
+ * @see {@link https://nativedates.dev/api/configure/#configure configure}
+ */
+export function configure(settings?: Settings): ActiveSettings;

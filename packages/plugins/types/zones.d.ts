@@ -1,13 +1,41 @@
 import type { Zone } from 'native-dates';
 
-/** Base abbreviation table, editable at app boot (`timezones.IST = 'Asia/Jerusalem'`) */
+/**
+ * Mutable base abbreviation lookup table mapping common time zone abbreviations such as `'PT'`
+ * and `'CET'` to daylight-observing IANA zone identifiers.
+ *
+ * Because abbreviations like `'IST'` are regionally ambiguous, you can customize defaults once at
+ * application startup (`timezones.IST = 'Asia/Jerusalem'`). Full IANA names always pass through unchanged.
+ *
+ * @example
+ * ```ts
+ * import { timezones } from '@native-dates/plugins/zones';
+ *
+ * timezones.JST; // 'Asia/Tokyo'
+ * timezones.IST = 'Asia/Jerusalem';
+ * ```
+ *
+ * @see {@link https://nativedates.dev/plugins/zones/#common-abbreviations Common abbreviations}
+ */
 export const timezones: Record<string, string>;
 
 declare module 'native-dates' {
   interface Settings {
     /**
-     * Names a zone answers to, on top of cities and abbreviations: `{ hq: 'Europe/Berlin' }`. A `null` target
-     * removes that name, and `null` removes them all
+     * Custom shorthand names mapped to time zones on top of city names and abbreviations.
+     * Alias keys match without case or accent sensitivity, a `null` target removes that alias,
+     * and passing `zoneAliases: null` clears all custom aliases.
+     *
+     * @example
+     * ```ts
+     * import '@native-dates/plugins/zones';
+     * import { configure, datetime } from 'native-dates';
+     *
+     * configure({ zoneAliases: { hq: 'Europe/Berlin' } });
+     * datetime('2026-11-16T09:30Z', 'hq').zone; // 'Europe/Berlin'
+     * ```
+     *
+     * @see {@link https://nativedates.dev/plugins/zones/#configure configure}
      */
     zoneAliases?: Record<string, Zone | null> | null;
   }
