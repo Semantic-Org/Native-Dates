@@ -1,11 +1,11 @@
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
-import { pad, weekdayNumber } from './units.js';
+import { dayOfWeek, pad } from './units.js';
 import { each } from './utils.js';
 import { locale as pickLocale, settings, weekStart } from './zones.js';
 
-// configure() empties this when an app writes weekdays or ordinals its own way
+// configure() empties this when an app writes weekday names or ordinals its own way
 export const nameCache = new Map();
 
 // the token each width of weekday name prints as, the widths weekdayNames() takes
@@ -79,9 +79,9 @@ export const names = (locale) => {
     each(subtags, (_, index) => {
       const tag = subtags.slice(0, index + 1).join('-');
       table.ordinal = settings.ordinals?.[tag] ?? table.ordinal;
-      each(settings.weekdays?.[tag], (days, width) =>
+      each(settings.weekdayNames?.[tag], (days, width) =>
         each(days, (name, day) => {
-          table[weekdayWidths[width]][weekdayNumber(day) - 1] = name;
+          table[weekdayWidths[width]][dayOfWeek(day) - 1] = name;
         }));
     });
     nameCache.set(key, table);
@@ -136,10 +136,10 @@ const tokenReaders = {
   Do: ['day', (subject, locale) => ordinal(subject.day, locale)],
   DDD: ['dayOfYear', (subject) => String(subject.dayOfYear)],
   DDDD: ['dayOfYear', (subject) => pad(subject.dayOfYear, 3)],
-  d: ['weekday', (subject) => String(subject.weekday % 7)],
-  dd: ['weekday', (subject, locale) => names(locale).dd[subject.weekday - 1]],
-  ddd: ['weekday', (subject, locale) => names(locale).ddd[subject.weekday - 1]],
-  dddd: ['weekday', (subject, locale) => names(locale).dddd[subject.weekday - 1]],
+  d: ['dayOfWeek', (subject) => String(subject.dayOfWeek % 7)],
+  dd: ['dayOfWeek', (subject, locale) => names(locale).dd[subject.dayOfWeek - 1]],
+  ddd: ['dayOfWeek', (subject, locale) => names(locale).ddd[subject.dayOfWeek - 1]],
+  dddd: ['dayOfWeek', (subject, locale) => names(locale).dddd[subject.dayOfWeek - 1]],
   H: ['hour', (subject) => String(subject.hour)],
   HH: ['hour', (subject) => pad(subject.hour)],
   h: ['hour', (subject) => String(subject.hour % 12 || 12)],

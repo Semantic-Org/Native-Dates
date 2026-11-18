@@ -11,6 +11,7 @@ import { yearFirst } from './helpers/parts.js';
 import { relativeDays } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
+  dayOfWeek,
   inspect,
   isCount,
   isDigits,
@@ -27,7 +28,6 @@ import {
   stepOf,
   timeUnits,
   unit,
-  weekdayNumber,
   wholeNumbers,
   withParts,
 } from './helpers/units.js';
@@ -76,7 +76,7 @@ export class CalendarDate {
     this.month = plain.month;
     this.day = plain.day;
     this.year = plain.year;
-    this.weekday = plain.dayOfWeek;
+    this.dayOfWeek = plain.dayOfWeek;
     this.text = this.format();
     Object.freeze(this);
   }
@@ -272,7 +272,7 @@ export class CalendarDate {
       case 'month':
         return this.#next(this.#plain.with({ day: 1 }));
       case 'week':
-        return this.#next(this.#plain.subtract({ days: (this.weekday - weekStart(firstDay, this.#locale) + 7) % 7 }));
+        return this.#next(this.#plain.subtract({ days: (this.dayOfWeek - weekStart(firstDay, this.#locale) + 7) % 7 }));
       case 'day':
         return this;
       default:
@@ -294,7 +294,7 @@ export class CalendarDate {
     if (target?.[IS_MONTH_DAY]) {
       return this.#next(target.after(this).toTemporal());
     }
-    const delta = (weekdayNumber(target) - this.weekday + 7) % 7 || 7;
+    const delta = (dayOfWeek(target) - this.dayOfWeek + 7) % 7 || 7;
     return this.plus({ days: delta });
   }
 
@@ -302,7 +302,7 @@ export class CalendarDate {
     if (target?.[IS_MONTH_DAY]) {
       return this.#next(target.before(this).toTemporal());
     }
-    const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
+    const delta = (this.dayOfWeek - dayOfWeek(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
   }
 
