@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-17 (`npm run size`, Brotli): 14.13 kB for all of `native-dates`, 12.58 kB for `import { now }`, 15.50 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-17 (`npm run size`, Brotli): 14.09 kB for all of `native-dates`, 12.53 kB for `import { now }`, 15.50 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
