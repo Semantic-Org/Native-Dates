@@ -48,7 +48,7 @@ export const spill = (fields, name, value) => {
     if (!next) {
       refuse('invalidFraction', `${value} ${name}`, {
         explanation: isDevelopment
-          ? 'months and nanoseconds must be whole numbers because months vary in length and nanoseconds are the smallest unit. use whole months, or specify days instead'
+          ? 'months and nanoseconds must be whole numbers because months vary in length and nanoseconds are the smallest unit. Use whole months, or specify days instead'
           : 0,
       });
     }
@@ -77,7 +77,7 @@ const parseWords = (text) => {
   const phrase = text.trim().replace(/,|\band\b/gi, ' ');
   if (!phrase) {
     refuse('invalidDuration', text, {
-      explanation: isDevelopment ? 'duration string cannot be empty. use `duration(0)` for a zero-length duration' : 0,
+      explanation: isDevelopment ? 'duration string cannot be empty. Use `duration(0)` for a zero-length duration' : 0,
     });
   }
   if (/^-?\d+(\.\d+)?$/.test(phrase)) {
@@ -117,7 +117,7 @@ const oneSign = (fields, at) => {
   if (twoSigns(fields)) {
     refuse('conflictingSigns', at, {
       explanation: isDevelopment
-        ? "all units in a duration must have the same sign. chain `.plus()` and `.minus()` on a date or time instead, such as `start.plus(1, 'hour').minus(30, 'minutes')`"
+        ? "all units in a duration must have the same sign. Chain `.plus()` and `.minus()` on a date or time instead, such as `start.plus(1, 'hour').minus(30, 'minutes')`"
         : 0,
     });
   }
@@ -136,7 +136,7 @@ export const fieldsFrom = (input, name) => {
   if (name !== undefined && input != null) {
     refuseType('invalidDuration', `${isPlainObject(input) ? JSON.stringify(input) : input} ${name}`, {
       explanation: isDevelopment
-        ? "cannot pass a separate unit when the first argument already includes units. pass a number with a unit like `duration(90, 'minutes')`, or a duration phrase alone like `duration('2h')`"
+        ? "cannot pass a separate unit when the first argument already includes units. Pass a number with a unit like `duration(90, 'minutes')`, or a duration phrase alone like `duration('2h')`"
         : 0,
     });
   }

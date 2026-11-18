@@ -95,7 +95,7 @@ export const unit = (input) => {
     explanation: isDevelopment
       ? `expected a time unit in [${
         units.join(', ')
-      }, quarter]. singular, plural, and shorthand names like 'd', 'h', and 'min' are all accepted`
+      }, quarter]. Singular, plural, and shorthand names like 'd', 'h', and 'min' are all accepted`
       : 0,
   });
 };
