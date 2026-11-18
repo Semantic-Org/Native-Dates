@@ -18,8 +18,8 @@ export const fieldNames = [
   'nanoseconds',
 ];
 
-// a fractional quantity spills into the next unit down: 1.5 days is a day and 12 hours. a month has no
-// next unit, so a fraction of one is refused rather than guessed
+// cascade fractional units downward (1.5 days -> 1d 12h). Months vary in length so they are omitted
+// and rejected below, and toFixed(9) strips IEEE-754 float residue so 0.1h doesn't leak stray nanoseconds
 const spillsInto = {
   year: ['month', 12],
   week: ['day', 7],
@@ -57,7 +57,6 @@ export const spill = (fields, name, value) => {
   return fields;
 };
 
-// the nonzero fields of a Temporal.Duration as a plain object
 export const fieldsOf = (temporal) => {
   const fields = {};
   each(fieldNames, (field) => {
@@ -70,9 +69,6 @@ export const fieldsOf = (temporal) => {
 
 const quantity = /([-+]?)(\d+(?:\.\d+)?)\s*([a-zµ]+)/gi;
 
-// '1h 30m', '2 weeks and 3 days', '90 minutes', '1500' (milliseconds).
-// a leading minus with the rest unsigned negates the whole phrase, the way a person means '-1h 30m',
-// and a sign on each quantity is taken as written
 const parseWords = (text) => {
   const phrase = text.trim().replace(/,|\band\b/gi, ' ');
   if (!phrase) {
@@ -80,6 +76,7 @@ const parseWords = (text) => {
       explanation: isDevelopment ? 'duration string cannot be empty. Use `duration(0)` for a zero-length duration' : 0,
     });
   }
+  // bare numeric string like '1500' defaults to milliseconds, matching duration(1500)
   if (/^-?\d+(\.\d+)?$/.test(phrase)) {
     return spill({}, 'millisecond', Number(phrase));
   }
@@ -95,6 +92,7 @@ const parseWords = (text) => {
         : 0,
     });
   }
+  // '-1h 30m' negates every unit, whereas '-1h +30m' keeps explicit signs so oneSign() rejects it
   const negateAll = found[0]?.[0] === '-' && found.slice(1).every(([sign]) => sign === '');
   const fields = {};
   each(found, ([sign, amount, name]) => {
@@ -103,7 +101,7 @@ const parseWords = (text) => {
   return fields;
 };
 
-// a year is twelve months in the ISO calendar, so months carry into years with nothing to anchor them
+// ISO years are always 12 months, so months carry into years without a calendar anchor
 export const carriedMonths = (years = 0, months = 0) => {
   const whole = years * 12 + months;
   const [carried, left] = [Math.trunc(whole / 12), whole % 12];
@@ -112,7 +110,6 @@ export const carriedMonths = (years = 0, months = 0) => {
 
 const twoSigns = (fields) => new Set(Object.values(fields).filter(Boolean).map(Math.sign)).size > 1;
 
-// a duration has one sign. '1h -30m' has no meaning until it is subtracted from a point
 const oneSign = (fields, at) => {
   if (twoSigns(fields)) {
     refuse('conflictingSigns', at, {
@@ -124,12 +121,11 @@ const oneSign = (fields, at) => {
   return fields;
 };
 
-// every shape a duration can be written as, as plural Temporal fields
 export const fieldsFrom = (input, name) => {
   if (isNumber(input)) {
     return spill({}, name === undefined ? 'millisecond' : unit(name), input);
   }
-  // a count from a form or a query string is text, and '30' beside 'days' is thirty days
+  // accept numeric strings from form inputs or query params when paired with a unit, e.g. ('30', 'days')
   if (isString(input) && isDigits(input) && name !== undefined) {
     return spill({}, unit(name), Number(input));
   }
@@ -175,9 +171,8 @@ export const clockFields = (fields) => {
   return clock;
 };
 
-// years, months, weeks and days stay field-wise: they are calendar units, and folding 25 hours into a
-// day would move a deadline across a daylight saving change. hours and below combine through Temporal
-// so a subtraction balances to one sign: 2h minus 30m is 1h 30m
+// sum calendar units field-wise so 25h never folds into a day (which would shift deadlines across DST),
+// while sub-day clock units combine through Temporal so 2h minus 30m resolves to 1h 30m
 export const addFields = (a, b, sign, anchor) => {
   const fields = {};
   each(['years', 'months', 'weeks', 'days'], (field) => {
@@ -189,13 +184,9 @@ export const addFields = (a, b, sign, anchor) => {
   const clockA = temporalDurationOf(clockFields(a));
   const clockB = temporalDurationOf(clockFields(b));
   Object.assign(fields, fieldsOf(sign > 0 ? clockA.add(clockB) : clockA.subtract(clockB)));
-  // a refusal names the fields as they were written, before anything was broken down
   const written = JSON.stringify(fields);
-  // a subtraction can leave two signs, a year less a month. a year is always twelve months and a
-  // week always seven days, so the larger of a pair that disagrees is broken into the smaller: 11
-  // months, 6 days. a pair that agrees stays as written. a day is not always twenty four hours, so
-  // a day less an hour still has no answer, nor months less days, and an anchored length is left
-  // to its anchor
+  // borrow across fixed-ratio ISO pairs (1y = 12mo, 1w = 7d) when signs conflict. Days vs hours and
+  // months vs days depend on DST or month length so they fall through to oneSign() and throw
   if (!anchor) {
     const { years = 0, months = 0, weeks = 0, days = 0 } = fields;
     if (years * months < 0) {
@@ -211,7 +202,7 @@ export const addFields = (a, b, sign, anchor) => {
   return oneSign(fields, written);
 };
 
-// Temporal refuses an empty fields object, and a zero duration has no nonzero field to offer it
+// Temporal.Duration.from({}) throws RangeError, so construct a zero duration directly when empty
 export const temporalDurationOf = (fields) =>
   Object.keys(fields).length
     ? guard(() => Temporal.Duration.from(fields), 'invalidDuration', JSON.stringify(fields))
@@ -219,7 +210,6 @@ export const temporalDurationOf = (fields) =>
 
 export const temporalDurationFrom = (input, name) => temporalDurationOf(fieldsFrom(input, name));
 
-// plural keys are how Temporal writes a length, singular keys how it writes a point, so { hours: 2 }
-// is two hours where { hour: 2 } is two o'clock
+// plural keys ({ hours: 2 }) distinguish a duration bag from a point's singular fields ({ hour: 2 })
 export const isDurationFields = (value) =>
   isPlainObject(value) && Object.keys(value).length > 0 && Object.keys(value).every((key) => fieldNames.includes(key));

@@ -39,8 +39,9 @@ import { Time } from './time.js';
 import { YearMonth } from './year-month.js';
 
 /*
-  a calendar date with no time and no zone: a due date, a birthday, a booking night. it is not a
-  moment, so it never shifts when read from another zone
+  a calendar date with no clock and no zone (Temporal.PlainDate).
+  Represents a civil day like a birthday or due date that stays on the same date regardless of viewer timezone,
+  and rejects sub-day units until paired with a time and zone via .at()
 */
 
 export class CalendarDate {
@@ -70,9 +71,7 @@ export class CalendarDate {
       isPlainDate(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
         : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings);
-    // the parts are own properties, so a value prints them in a console without a click, in the order a
-    // preview reads: the text first, filled once the parts it reads are in, then month, day, year
-    this.text = undefined;
+    this.text = undefined; // keep text first in console previews
     const plain = this.#plain;
     this.month = plain.month;
     this.day = plain.day;
@@ -97,7 +96,7 @@ export class CalendarDate {
       });
     }
     if (isNumber(input) && isNumber(month)) {
-      // a missing day is refused so an absent field never silently becomes the 1st
+      // reject two-number date(2026, 11) instead of defaulting day to 1 (use yearMonth(2026, 11) for a month)
       if (day === undefined) {
         return refuse('missingDay', `${input}-${month}`, {
           explanation: isDevelopment
@@ -119,7 +118,7 @@ export class CalendarDate {
     if (input instanceof CalendarDate) {
       return input.toTemporal();
     }
-    // a moment falls on a different day and clock in each zone, so it is read in the zone asked for
+    // instants and zoned inputs resolve their calendar day in the requested (or default) zone
     if (
       input instanceof DateTime || isDate(input) || isZonedDateTime(input) || isInstant(input)
       || (isString(input) && namesInstant(input))
@@ -165,14 +164,13 @@ export class CalendarDate {
     });
   }
 
-  // a wall-clock string keeps its day and drops the clock
+  // wall-clock ISO strings keep their written date, while instant strings ('...Z') were already zoned in #read
   static #parse(text) {
     const iso = yearFirst(text.trim());
     return guard(
       () => Temporal.PlainDate.from(iso),
       'invalidDate',
       text,
-      // text in the right shape that still fails names a day the calendar lacks, February 30th
       isDevelopment
         ? /^\d{4}-\d{2}-\d{2}$/.test(iso)
           ? 'this calendar date does not exist. Check the year, month, and day'
@@ -181,7 +179,6 @@ export class CalendarDate {
     );
   }
 
-  // the locale this value is written in, or the same value written in another. an unset tag clears it
   locale(...tag) {
     return tag.length ? new CalendarDate(this.#plain, { locale: tag[0] }) : this.#locale;
   }
@@ -194,7 +191,6 @@ export class CalendarDate {
               Reads
   *******************************/
 
-  // the day this value's weeks start on, 1 for monday through 7 for sunday
   get weekStart() {
     return weekStart(undefined, this.#locale);
   }
@@ -263,7 +259,6 @@ export class CalendarDate {
     );
   }
 
-  // a week starts on the configured first day, or on the one given: a picker's first day is a prop
   startOf(name, firstDay) {
     switch (unit(name)) {
       case 'year':
@@ -289,8 +284,7 @@ export class CalendarDate {
     return this.startOf(name, firstDay).plus(stepOf(unit(name))).minus({ days: 1 });
   }
 
-  // steps to a weekday, which comes around each week. a month-day comes
-  // around each year and finds its own occurrence. either way this day itself never counts
+  // always steps strictly forward (monday.next('monday') is 7 days later, matching birthday.after(day))
   next(target) {
     if (target?.[IS_MONTH_DAY]) {
       return this.#next(target.after(this).toTemporal());
@@ -307,7 +301,6 @@ export class CalendarDate {
     return this.minus({ days: delta });
   }
 
-  // a range from this date through another, both included, or every day of the unit it falls in
   to(end, name) {
     return new DateRange(this, name === undefined ? end : duration(end, name));
   }
@@ -316,8 +309,7 @@ export class CalendarDate {
     return new DateRange(this.startOf(name, firstDay), this.endOf(name, firstDay));
   }
 
-  // a day is a range of time, so it walks and splits like one: today().split('hour') is the day's hours
-  // in the zone, 23 or 25 of them on a transition day, which only the zone knows
+  // expand across this date's actual hours in `zone` (23 or 25 hours on DST transition days)
   points(step, ...rest) {
     const [name, zone] = stepArguments(step, rest);
     return this.at('00:00', zone).range('day').points(step, name);
@@ -352,7 +344,6 @@ export class CalendarDate {
     if (name === undefined) {
       return this.equals(other);
     }
-    // one first day for both sides, this value's, so the question is asked of one week
     const first = weekStart(firstDay, this.#locale);
     return this.startOf(name, first).equals(new CalendarDate(other).startOf(name, first));
   }
@@ -403,7 +394,6 @@ export class CalendarDate {
     return new YearMonth(this);
   }
 
-  // a date read as a datetime is its midnight in the zone
   as(kind, zone) {
     return readAs(kind, {
       date: () => this,
@@ -422,8 +412,6 @@ export class CalendarDate {
     return options ? formatIntl('date', this.#plain, options, locale) : formatTokens(this, 'date', spec, locale);
   }
 
-  // how far this day is from another, in words: 'yesterday', 'in 3 weeks'. from today when no other
-  // is given
   from(other, locale = this.#locale) {
     return relativeDays((other === undefined ? today() : new CalendarDate(other)).until(this, 'day'), locale);
   }
@@ -456,7 +444,7 @@ export class CalendarDate {
     });
   }
 
-  // + gives the string, while < and - still refuse through valueOf
+  // '+' sends hint 'default', which would call valueOf() and throw without this
   [Symbol.toPrimitive](hint) {
     return hint === 'number' ? this.valueOf() : this.toString();
   }
@@ -466,8 +454,7 @@ export class CalendarDate {
   }
 }
 
-// for is to given a length, the word that reads aloud: start.for(3, 'days'). through is to on a date
-// alone, since a date range runs through its last day and the other kinds stop short of theirs
+// `through` exists only on CalendarDate because DateRange includes its final day while TimeRange and DateTimeRange exclude theirs
 alias(CalendarDate, {
   add: 'plus',
   subtract: 'minus',

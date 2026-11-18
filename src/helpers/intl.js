@@ -2,11 +2,8 @@ import { isPlainObject } from './utils.js';
 
 import { guard } from './errors.js';
 
-// an Intl constructor costs about a hundred format calls, so each formatter is built once per argument
-// list and reused. the arguments key nested maps, a string by value and a frozen options object by
-// identity, so a preset costs no serialization on a format call. a caller's own object may change
-// between calls, so it keys by its fields, and a list of locales is a new array on each call, so it
-// keys by its text. every call of one formatter passes the same number of arguments
+// memoize Intl formatters in a fixed-arity Map trie (~100x faster than constructing per call).
+// Frozen preset bags key by reference, while caller objects serialize in case they are mutated
 export const cached = (make) => {
   const root = new Map();
   return (...args) => {
@@ -30,9 +27,8 @@ export const cached = (make) => {
   };
 };
 
-// a datetime prints in its zone unless the options name one. a date or a time has no instant, so its
-// fields print through UTC whatever the options say. an unknown option throws as the formatter is built,
-// so the refusal wraps the build alone and a call that finds its formatter pays nothing for it
+// spread order differs on purpose: DateTime lets options.timeZone override its zone, whereas
+// plain dates and times pin timeZone: 'UTC' last to match epochOf()'s UTC timestamps
 export const zonedDateTimeFormat = cached((locale, options, zone) =>
   guard(() => new Intl.DateTimeFormat(locale, { timeZone: zone, ...options }), 'unknownFormat', JSON.stringify(options))
 );

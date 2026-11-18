@@ -1,3 +1,3 @@
-// alone in its file, with no imports and no optional chaining, so a bundler folds process.env.NODE_ENV
-// into every module that reads it and the explanations drop out of a production build
+// isolated with plain member access (never optional chaining) so bundlers inline `process.env.NODE_ENV`
+// and dead-code-eliminate dev error explanations from production builds
 export const isDevelopment = typeof process !== 'undefined' ? process.env.NODE_ENV !== 'production' : false;

@@ -1,5 +1,4 @@
-// the helpers this library shares by name with @semantic-ui/utils, cut down to what it reaches so
-// it installs nothing. a word for word copy was tried first and measured 300 bytes heavier
+// minimal internal utilities inlined so native-dates has zero dependencies
 
 export const isObject = (x) => x !== null && typeof x == 'object';
 
@@ -17,9 +16,9 @@ export const isNumber = (x) => typeof x == 'number';
 
 export const isArray = (x) => Array.isArray(x);
 
+// Object.prototype.toString works across realms where `instanceof Date` fails
 export const isDate = (x) => Object.prototype.toString.call(x) === '[object Date]';
 
-// no loop here stops early or walks a Map, so those branches of the original stayed behind
 export const each = (obj, func) => {
   if (isArray(obj)) {
     obj.forEach(func);
@@ -30,15 +29,14 @@ export const each = (obj, func) => {
   return obj;
 };
 
-// the explanation is meant to fold out of production at the callsite,
-// `explanation: isDevelopment ? '...' : 0`, since a bundler folds branches and never arguments
+// callers pass `explanation: isDevelopment ? '...' : 0` at the callsite because bundlers fold ternary
+// branches there, whereas string arguments passed into a helper stay in the bundle
 export const createErrors = ({ namespace, ErrorClass }) => {
   const throwError = (code, at, { explanation } = {}) => {
     const line = `${namespace} refused [${code}] ${at}`;
     const built = new ErrorClass(explanation ? `${line}\n${explanation}` : line);
     built.code = code;
     built.at = at;
-    // open the stack at the caller, so the frame that builds the error folds away
     Error.captureStackTrace?.(built, throwError);
     throw built;
   };
