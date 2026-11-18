@@ -6,3 +6,6 @@ dist
 
 # scratch files for agents and the maintainer, never committed
 ai/workspace/
+
+# worktrees and local state an agent keeps beside the repo, never committed
+.claude/
