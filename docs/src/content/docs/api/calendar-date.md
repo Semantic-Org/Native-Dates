@@ -221,7 +221,7 @@ Returns the first day of the calendar unit containing this date. Week boundaries
   required: true
   description: Calendar unit from `'year'` down to `'day'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when rounding to a week, such as `'sunday'` or `7`.
 ```
 
@@ -259,7 +259,7 @@ Returns the final day of the calendar unit containing this date.
   required: true
   description: Calendar unit from `'year'` down to `'day'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 
@@ -289,7 +289,7 @@ Moves forward to the next given weekday or [`MonthDay`](/api/month-day/) after t
 
 ```params
 - name: target
-  type: Weekday | MonthDay
+  type: DayOfWeek | MonthDay
   required: true
   description: Weekday name such as `'friday'`, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
@@ -325,7 +325,7 @@ Moves back to the most recent given weekday or [`MonthDay`](/api/month-day/) bef
 
 ```params
 - name: target
-  type: Weekday | MonthDay
+  type: DayOfWeek | MonthDay
   required: true
   description: Weekday name, three-letter prefix, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
@@ -432,7 +432,7 @@ Checks whether another date falls in the same calendar unit, such as the same mo
   type: DateUnit
   description: Calendar unit to compare, from `'year'` down to `'day'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 
@@ -570,7 +570,7 @@ Returns an inclusive [`DateRange`](/api/ranges/) covering every day of the calen
   required: true
   description: Calendar unit from `'year'` down to `'day'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 

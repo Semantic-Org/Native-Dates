@@ -261,7 +261,7 @@ Moves back to the start of a calendar or clock unit in this time zone. Week boun
   required: true
   description: Calendar or clock unit from `'year'` down to `'millisecond'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when rounding to a week, such as `'sunday'` or `7`.
 ```
 
@@ -298,7 +298,7 @@ Moves to the final millisecond of a calendar or clock unit in this time zone.
   required: true
   description: Calendar or clock unit from `'year'` down to `'nanosecond'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 
@@ -329,7 +329,7 @@ Moves forward to the next given weekday or [`MonthDay`](/api/month-day/) at the 
 
 ```params
 - name: target
-  type: Weekday | MonthDay
+  type: DayOfWeek | MonthDay
   required: true
   description: Weekday name such as `'friday'`, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
@@ -365,7 +365,7 @@ Moves back to the most recent given weekday or [`MonthDay`](/api/month-day/) bef
 
 ```params
 - name: target
-  type: Weekday | MonthDay
+  type: DayOfWeek | MonthDay
   required: true
   description: Weekday name, three-letter prefix, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
@@ -541,7 +541,7 @@ Checks whether another moment falls in the same calendar or clock unit when both
   type: Unit
   description: Calendar or clock unit to compare, such as `'day'` or `'month'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 
@@ -683,7 +683,7 @@ Returns the half-open [`DateTimeRange`](/api/ranges/) for the calendar or clock 
   required: true
   description: Calendar or clock unit from `'year'` down to `'nanosecond'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 

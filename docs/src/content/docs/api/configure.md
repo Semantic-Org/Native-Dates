@@ -54,7 +54,7 @@ configure({ zone: null, locale: null, weekStart: null });
       type: Locale | null
       description: Default locale tag, tag list, or `Accept-Language` header for formatting and week boundaries. Pass `null` or `''` to reset to the runtime's locale.
     - name: weekStart
-      type: Weekday | null
+      type: DayOfWeek | null
       description: First day of the week for week boundaries and `weekdayNames()`, from 1 for Monday through 7 for Sunday. Unset or `null` follows the active locale.
     - name: weekdayNames
       type: "Record<Locale, { narrow?, short?, long? }> | null"
@@ -134,7 +134,7 @@ Converts a weekday name, three-letter prefix, or ISO number into an integer from
 
 ```params
 - name: day
-  type: Weekday
+  type: DayOfWeek
   required: true
   description: Weekday name such as `'monday'`, case-insensitive prefix such as `'Fri'`, or integer from 1 to 7.
 ```

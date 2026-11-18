@@ -69,7 +69,7 @@ Week boundaries in `startOf('week')` and week ranges follow the same first-day r
   default: "'short'"
   description: "Abbreviated labels like `'Mon'`, full names like `'Monday'`, or compact two-letter and single-letter headers like `'Mo'`."
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: Starting weekday name or ISO number from 1 for Monday through 7 for Sunday.
 - name: locale
   type: Locale
