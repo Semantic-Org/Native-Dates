@@ -32,17 +32,24 @@
     "docs"
   ],
   "scripts": {
+    "test": "vitest",
     "errors": "node tools/gates/errors.js --all",
     "comments": "node tools/gates/comments.js --all",
     "size": "node tools/size.js",
+    "check": "npm test && npm run size",
     "format": "npx dprint fmt",
     "setup": "npx simple-git-hooks"
   },
   "devDependencies": {
-    "dprint": "^0.50.0",
-    "esbuild": "^0.25.0",
-    "simple-git-hooks": "^2.11.1",
-    "typescript": "^6.0.3"
+    "@vitest/browser": "^5.1.1",
+    "@vitest/browser-playwright": "^5.1.1",
+    "dprint": "^0.65.0",
+    "esbuild": "^0.28.2",
+    "jsdom": "^31.0.1",
+    "playwright": "^1.65.1",
+    "simple-git-hooks": "^2.14.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.1"
   },
   "simple-git-hooks": {
     "pre-commit": "bash tools/hooks/pre-commit",

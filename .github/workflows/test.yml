@@ -1,0 +1,44 @@
+name: Test
+
+# Runs the unit/DOM/browser tests of every package, the size report, the formatting check and the
+# docs build on every pull request and every push to main. Reads the repo only and needs no secrets
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.node-version'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+
+      - name: Install Playwright Chromium when browser tests exist
+        run: |
+          if [ -n "$(find . -path '*/test/browser/*.test.*' -not -path './node_modules/*' -print -quit)" ]; then
+            npx playwright install --with-deps chromium
+          fi
+
+      - name: Run tests and the size report
+        run: npm run check
+
+      - name: Check formatting
+        run: npx dprint check
+
+      - name: Build documentation site
+        run: npm -w docs run build
