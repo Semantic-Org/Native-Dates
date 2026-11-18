@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-17 (`npm run size`, Brotli): 13.99 kB for all of `native-dates`, 12.50 kB for `import { now }`, 15.36 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-17 (`npm run size`, Brotli): 14.00 kB for all of `native-dates`, 12.51 kB for `import { now }`, 15.40 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -24,6 +24,8 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 Public names go through a blind naming pass before 1.0 (`../next/ai/skills/contributing/name-public-api.md`): a room that has never seen the names proposes them from a description of the behaviour, and the maintainer rules. The brief and its key are in `ai/workspace/naming/`. Rulings so far:
 
 - **The count since 1970 always says its unit**: `epochSeconds`, `epochMilliseconds`, `epochNanoseconds`, and no bare `epoch`. The field cannot agree what the bare word means: seconds to a shell, Python and a JWT, milliseconds to `Date.now()`. `timestamp`, the room's pick, commits to no unit and often is not a number at all. `epochSeconds` is whole seconds rounded down, what the `X` token already printed. `epochMilliseconds` stays the own property a console shows, and the other two are read on demand. A bare `epoch` for the default was weighed and turned down: it would round-trip through `datetime(n)`, which reads milliseconds, and every JavaScript date library leaves milliseconds unqualified, but the unit in the name is what stops `token.exp = date.epoch` at a boundary that counts in seconds.
+- **The number of a day in its week is `dayOfWeek`**, on a date and a datetime, and the exported helper is `dayOfWeek('sunday')`. "Weekday" is left with two meanings a reader already has: the name of a day, as in `weekdayNames()` and a format's `weekday: 'long'`, and Monday to Friday, as in `isWeekday()`. The number no longer says Sunday is a weekday while `isWeekday()` says it is not. That a format's options key is `weekday` was weighed and set aside: a key in `Intl`'s bag is `Intl` speaking, not the library.
+- **The `configure` key for an app's own day names is `weekdayNames`**, the word the `weekdayNames()` function already uses for what it changes. It was `weekdays`.
 
 ### Decided: a locale rides on the value
 
@@ -134,7 +136,7 @@ A fourth pass, after asking readers of the languages and a review across every l
 
 ```js
 configure({
-  weekdays: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
+  weekdayNames: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
   ordinals: { fr: (day) => (day === 1 ? '1er' : day) },
 });
 ```

@@ -50,7 +50,7 @@ Properties read the date and time in the instance's time zone.
 | `time` | `Time` | Time of day in this time zone. |
 | `yearMonth` | `YearMonth` | Calendar year and month in this time zone. |
 | `monthDay` | `MonthDay` | Calendar month and day in this time zone. |
-| `weekday` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
+| `dayOfWeek` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
 | `weekStart` | `number` | First day of this moment's weeks from 1 to 7, following `configure()` or its locale. |
 | `quarter` | `number` | Calendar quarter (1–4). |
 | `weekOfYear`, `dayOfYear` | `number` | ISO week number (1–53) and day of the year (1–366). |

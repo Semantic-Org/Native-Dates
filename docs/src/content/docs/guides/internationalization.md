@@ -173,7 +173,7 @@ Override either in [`configure()`](/api/configure/) once at startup. Key weekday
 import { configure, date } from 'native-dates';
 
 configure({
-  weekdays: {
+  weekdayNames: {
     lv: { narrow: { fri: 'Pk', sun: 'Sv' } },
     en: { short: { tue: 'Tues', thu: 'Thurs' } },
   },
@@ -186,7 +186,7 @@ date('2026-11-01').format('Do MMMM', 'fr'); // '1er novembre'
 date('2026-11-01').format('dd', 'lv'); // 'Sv'
 date('2026-11-03').format('ddd', 'en-US'); // 'Tues'
 
-configure({ weekdays: null, ordinals: null });
+configure({ weekdayNames: null, ordinals: null });
 ```
 
 Widths match [weekday names](/api/month-names/#weekdaynames), mapping narrow, short, and long styles to `dd`, `ddd`, and `dddd` tokens.

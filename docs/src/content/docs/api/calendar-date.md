@@ -39,7 +39,7 @@ Properties read the ISO calendar fields directly.
 | `year`, `month`, `day` | `number` | Calendar year, month (1–12), and day of month (1–31). |
 | `yearMonth` | `YearMonth` | Calendar year and month with the day dropped. |
 | `monthDay` | `MonthDay` | Calendar month and day with the year dropped. |
-| `weekday` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
+| `dayOfWeek` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
 | `weekStart` | `number` | First day of this date's weeks from 1 to 7, following `configure()` or its locale. |
 | `quarter` | `number` | Calendar quarter (1–4). |
 | `weekOfYear`, `dayOfYear` | `number` | ISO week number (1–53) and day of the year (1–366). |

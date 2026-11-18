@@ -39,11 +39,11 @@ const d = date('2026-11-16');
 d.year; // 2026
 d.month; // 11, November
 d.day; // 16
-d.weekday; // 1, Monday
+d.dayOfWeek; // 1, Monday
 ```
 
 :::warning[Check month and weekday numbers]
-Day.js numbers months from 0 to 11 and starts weekdays on Sunday at 0. Here, `month` runs from 1 through 12, and `weekday` runs from 1 on Monday through 7 on Sunday.
+Day.js numbers months from 0 to 11 and starts weekdays on Sunday at 0. Here, `month` runs from 1 through 12, and `dayOfWeek` runs from 1 on Monday through 7 on Sunday.
 :::
 
 ## Time zones, durations, and ranges built in
