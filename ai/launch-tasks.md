@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-17 (`npm run size`, Brotli): 14.13 kB for all of `native-dates`, 12.57 kB for `import { now }`, 15.48 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-17 (`npm run size`, Brotli): 14.13 kB for all of `native-dates`, 12.58 kB for `import { now }`, 15.50 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -37,6 +37,7 @@ Public names go through a blind naming pass before 1.0 (`../next/ai/skills/contr
 - **`balance` stands alone.** The room's first guess was `normalize`, and it asked for it as a second spelling. Luxon is the one library with `normalize()` on a duration, and there it never moves into a larger unit: 90 minutes stays 90 minutes, where `balance()` here gives 1 hour 30 minutes. The developers who would reach for the word are the ones it would give a different answer to.
 - **`points` stands alone**, where the room offered `every`. `every` and `each` are verbs that promise a loop or a test, as they do on an array, and `points()` hands back a plain array of what the library already calls points: the `Point` type, `invalidPoint`, `missingPoints`.
 - **A month-day keeps every way of asking for its next occurrence**: `birthday.next()`, `birthday.next(day)`, `birthday.after(day)` and `day.next(birthday)`, and the same four backwards. The room, told `next()` took nothing, argued for that split. It stays as it is because the extra spelling costs nothing, a wrong guess such as `birthday.next('friday')` refuses, and the day is how `next()` counts from another zone's today.
+- **A range from a start and a length is `for`**: `meeting.for(90, 'minutes')`, `time('9am').for(hours(8))`, `checkIn.for(3, 'days')`. The first room had judged `to` only on `monday.to(friday)`, and "Monday to two weeks" is not a sentence. A second room, given one blank and never told `to` already took a length, guessed `for` first, ranked it first, and read `start.to(3, 'days')` cold as a conversion. On a date it is also the form that counts right: working out the end by hand is a day too many, since a date range includes its last day. `for` is a second name for `to`, which keeps taking a length. The stricter shape, `to` taking only an end, was measured and turned down: `time('9am').to(8, 'hours')` would read the 8 as eight o'clock and hand back 23 hours without a word. `lasting`, the room's second spelling, was not taken. 10 B.
 
 ### Decided: a locale rides on the value
 

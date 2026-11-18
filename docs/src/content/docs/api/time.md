@@ -477,9 +477,11 @@ time('5:00pm').since('9:00am', 'hours'); // 8
 ```js signature
 t.to(end): TimeRange
 t.to(count, unit): TimeRange
+t.for(length): TimeRange
+t.for(count, unit): TimeRange
 ```
 
-Creates a half-open [`TimeRange`](/api/ranges/) from this time until the target time or elapsed duration. An end earlier than the start wraps overnight across midnight.
+Creates a half-open [`TimeRange`](/api/ranges/) from this time until the target time or elapsed duration. An end earlier than the start wraps overnight across midnight. Given a length, it is also spelled `for()`.
 
 **Parameters**
 
@@ -502,7 +504,7 @@ description: A half-open `TimeRange` starting at this time.
 
 ```js
 time('9:00am').to('5:00pm').duration.hours; // 8
-time('9:00am').to(90, 'minutes').end.toString(); // '10:30:00'
+time('9:00am').for(90, 'minutes').end.toString(); // '10:30:00'
 time('22:00').to('06:00').duration.hours; // 8
 ```
 :::

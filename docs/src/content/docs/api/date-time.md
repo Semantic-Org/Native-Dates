@@ -635,9 +635,11 @@ standup.since('2026-11-16T08:00', 'minutes'); // 90
 ```js signature
 dt.to(end): DateTimeRange
 dt.to(count, unit): DateTimeRange
+dt.for(length): DateTimeRange
+dt.for(count, unit): DateTimeRange
 ```
 
-Creates a half-open [`DateTimeRange`](/api/ranges/) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start.
+Creates a half-open [`DateTimeRange`](/api/ranges/) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start. Given a length, it is also spelled `for()`.
 
 **Parameters**
 
@@ -662,7 +664,7 @@ description: A half-open `DateTimeRange` in this instance's time zone.
 const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 
 standup.to('2026-11-16T10:00').duration.minutes; // 30
-standup.to(2, 'hours').end.hour; // 11
+standup.for(2, 'hours').end.hour; // 11
 ```
 :::
 
