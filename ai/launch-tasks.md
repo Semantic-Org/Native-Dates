@@ -35,6 +35,7 @@ Public names go through a blind naming pass before 1.0 (`../next/ai/skills/contr
 - **An app names its own formats in `configure({ formats })`**: `{ invoice: 'YYYY-MM-DD', receipt: { dateStyle: 'long' } }`, then `value.format('invoice')` on a datetime, a date, a time, a month-day, a year-month and a range. It took the place of two statics, `MonthDay.presets` and `YearMonth.presets`, which were open to more for those two kinds only and are private tables now. A name is read before the built-in presets, so an app can give `'short'` its own meaning. Setting `formats` again replaces the set, as `weekdayNames` and `ordinals` do. A duration keeps its own four styles. 90 B, 17 B of it floor.
 - **Second spellings taken from the room**: `includes` beside `contains` on a range and a year-month, `splitBy` beside `split` on a range and a date, `last` beside `previous` on a month-day, and `through` beside `to` on a date alone, since a date range runs through its last day where a datetime or time range stops short of its end. 53 B together.
 - **`balance` stands alone.** The room's first guess was `normalize`, and it asked for it as a second spelling. Luxon is the one library with `normalize()` on a duration, and there it never moves into a larger unit: 90 minutes stays 90 minutes, where `balance()` here gives 1 hour 30 minutes. The developers who would reach for the word are the ones it would give a different answer to.
+- **`points` stands alone**, where the room offered `every`. `every` and `each` are verbs that promise a loop or a test, as they do on an array, and `points()` hands back a plain array of what the library already calls points: the `Point` type, `invalidPoint`, `missingPoints`.
 
 ### Decided: a locale rides on the value
 
@@ -184,7 +185,9 @@ Everything so far ran on Node 26 with native Temporal and was bundled with esbui
 - [ ] **Browsers.** Chrome and Firefox on native Temporal. Safari through `@native-dates/polyfill` was checked on 2026-11-14, Safari 27.2 on iOS, which has no Temporal of its own: ranges, token patterns, durations, month-days and year-months all printed correctly. The docs playground in Safari is still to check.
 - [ ] **Bundlers.** One small app each on Vite, Rollup and webpack, checking the size and that nothing is dropped.
 - [ ] **Types in a consumer project** under both `nodenext` and `bundler` resolution, and through the `@native-dates/core` alias. The type files re-export each other with `.js` specifiers.
-- [ ] **Performance.** No benchmark is in the repo. The tachometer and bundle-size setup from `../next` is being ported, and is the standard: scratch timings in Node are a loose signal only. Measure parsing, arithmetic and formatting against Day.js once it lands.
+- [ ] **Performance.** No benchmark is in the repo. The tachometer and bundle-size setup from `../next` is being ported, and is the standard: scratch timings in Node are a loose signal only. Measure parsing, arithmetic and formatting against Day.js once it lands. Found while naming, and waiting for that suite:
+  - `range.points()` builds three values for each point, the point and two that are thrown away: the step as a duration, which is most of the cost, and a second copy of the point read only to test it is in range. A loose Node timing put it at 38 microseconds a point, so a week by the minute takes about 460 ms. Building one value per point gave the same results in ten cases and was about seven times faster. The sketch is in `ai/workspace/bench/points-one-value-per-point.diff`. Every point keeps its `text`, which is under four microseconds of it.
+  - Comparing two dates builds a throwaway date each time, so `compare()` sorts 2,000 dates in about 46 ms where 2,000 datetimes take 10 ms.
 
 ## 5. Release mechanics
 
