@@ -36,6 +36,15 @@ const monthFirst = /^(\d{1,2})[-/.](\d{2}|\d{4})$/;
 // a month by its name and a year, in either order: 'Nov 2026', '2026 November', 'novembre 2026'
 const nameAndYear = /^(?:([\p{L}\p{M}]{3,})\.?,?\s+(?:de\s+)?(\d{4})|(\d{4})\s+([\p{L}\p{M}]{3,})\.?)$/iu;
 
+// what each preset name prints of a year and a month
+const presets = {
+  // four digits, since 11/26 reads as a day beside a month
+  short: Object.freeze({ year: 'numeric', month: 'numeric' }),
+  medium: Object.freeze({ year: 'numeric', month: 'short' }),
+  long: Object.freeze({ year: 'numeric', month: 'long' }),
+  full: Object.freeze({ year: 'numeric', month: 'long' }),
+};
+
 // the units below a month, which a year-month has no room for
 const smaller = units.slice(2);
 
@@ -47,14 +56,6 @@ export class YearMonth {
   static [Symbol.hasInstance](value) {
     return !!value?.[IS_YEAR_MONTH];
   }
-
-  static presets = {
-    // four digits, since 11/26 reads as a day beside a month
-    short: Object.freeze({ year: 'numeric', month: 'numeric' }),
-    medium: Object.freeze({ year: 'numeric', month: 'short' }),
-    long: Object.freeze({ year: 'numeric', month: 'long' }),
-    full: Object.freeze({ year: 'numeric', month: 'long' }),
-  };
 
   // the century a two-digit year is read in: monthYear('11/26') is November 2026
   static century = 2000;
@@ -318,7 +319,7 @@ export class YearMonth {
   }
 
   format(spec = 'medium', locale = this.#locale) {
-    const options = partOptions(spec, ['year', 'month', 'era'], YearMonth.presets);
+    const options = partOptions(spec, ['year', 'month', 'era'], presets);
     return options
       ? partFormatter(options, locale).format(epochOf('date', { year: this.year, month: this.month, day: 1 }))
       : formatTokens(this, 'year-month', spec, locale);

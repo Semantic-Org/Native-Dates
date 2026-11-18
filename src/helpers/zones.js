@@ -14,6 +14,7 @@ export const settings = {
   zoneAliases: {},
   weekdayNames: undefined,
   ordinals: undefined,
+  formats: undefined,
 };
 const resolved = new Map([['UTC', 'UTC']]);
 
@@ -65,7 +66,7 @@ export const zoneId = (id) => {
   return found;
 };
 
-export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals } = {}) => {
+export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats } = {}) => {
   if (zoneAliases !== undefined) {
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
@@ -128,6 +129,15 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
       nameCache.clear();
     }
   });
+  // a format an app names once and asks for everywhere, a preset of its own: an options bag or a
+  // token pattern. a bag is copied and frozen, so its formatter is found by identity as a built-in
+  // preset's is. null takes them all away
+  if (formats !== undefined) {
+    settings.formats = formats && { __proto__: null };
+    each(formats, (format, name) => {
+      settings.formats[name] = isString(format) ? format : Object.freeze({ ...format });
+    });
+  }
   if (dayFirst !== undefined) {
     requireLoose('dayFirst');
     settings.dayFirst = !!dayFirst;
@@ -164,6 +174,10 @@ export const checkedLocale = (tag) => {
   }
   return (isString(tag) && knownLocales.get(key)) || tag;
 };
+
+// the format an app configured under a name, or the spec as it came. it is asked first, so an app can
+// give a built-in name like 'short' its own meaning
+export const namedFormat = (spec) => (isString(spec) && settings.formats?.[spec]) || spec;
 
 export const locale = (override) => (override === undefined ? settings.locale : checkedLocale(override));
 export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);

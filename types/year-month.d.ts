@@ -34,8 +34,6 @@ export class YearMonth {
   constructor(input: YearMonthInput, options?: Zone | ReadOptions);
   constructor(year: number | string, month: number | string);
 
-  /** The presets `format()` reads by name, open to more: `'short'` `11/2026`, `'medium'` `Nov 2026`, `'long'` `November 2026` */
-  static presets: Record<string, Intl.DateTimeFormatOptions>;
   /** The century a two-digit year is read in by `monthYear()` (default: 2000) */
   static century: number;
 

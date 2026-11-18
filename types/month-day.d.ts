@@ -33,9 +33,6 @@ export class MonthDay {
   constructor(input: MonthDayInput, options?: Zone | MonthDayOptions);
   constructor(month: number | string, day: number | string);
 
-  /** The presets `format()` reads by name, open to more: `'short'` `10/17`, `'medium'` `Oct 17`, `'long'` `October 17` */
-  static presets: Record<string, Intl.DateTimeFormatOptions>;
-
   /** The value in the configured locale's common form, `'Oct 17'`, what `format()` prints */
   readonly text: string;
   readonly month: number;
