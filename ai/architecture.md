@@ -45,8 +45,8 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"
 `npm run check` runs the local verification suite:
 
 - `npm test`: Vitest across `test/` and `packages/*/test/`. Tests import public package names and assert errors by `error.code` and `error.at`.
-- `npm run size`: `tools/size.js`.
+- `npm run size`: `tools/size.js` + `tools/gates/budget.js`.
 
 ## Measuring Size
 
-Run `npm run size` (`tools/size.js`) after any change to `src/`. It bundles with `esbuild` (`minify: true`, `NODE_ENV=production` so `isDevelopment` explanations fold out) and compresses at Brotli quality 11, reporting core, each plugin (with core external), and the combined total.
+Run `npm run size` (`tools/size.js` + `tools/gates/budget.js`) after any change to `src/` or `packages/`. It bundles with `esbuild` (`minify: true`, `NODE_ENV=production` so `isDevelopment` explanations fold out) and compresses at Brotli quality 11, reporting core, each plugin (with core external), and the combined total, while also verifying that dev explanations exist in a development build and fold out of a production one. `tools/gates/budget.js` enforces [`ai/contributing/budget.md`](contributing/budget.md) locally and in CI, and [`tools/ci/README.md`](../tools/ci/README.md) covers the pull request check and its comment.
