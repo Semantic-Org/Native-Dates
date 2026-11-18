@@ -50,7 +50,7 @@ class Range {
       if (start.kind !== kind) {
         refuseType('conflictingRanges', `${Range.factoryNames[start.kind]} as ${Range.factoryNames[kind]}`, {
           explanation: isDevelopment
-            ? 'cannot pass one range type directly into another range factory. convert a `DateRange` to a `DateTimeRange` with `.in(zone)`, or build a new range from converted `start` and `end` endpoints'
+            ? 'cannot pass one range type directly into another range factory. Convert a `DateRange` to a `DateTimeRange` with `.in(zone)`, or build a new range from converted `start` and `end` endpoints'
             : 0,
         });
       }
@@ -65,7 +65,7 @@ class Range {
     if (kind !== 'time' && this.end.isBefore(this.start)) {
       refuse('invalidRange', `${this.start} to ${this.end}`, {
         explanation: isDevelopment
-          ? 'range end cannot be earlier than its start. swap the start and end arguments, or order unknown endpoints with `earliest(a, b)` and `latest(a, b)`'
+          ? 'range end cannot be earlier than its start. Swap the start and end arguments, or order unknown endpoints with `earliest(a, b)` and `latest(a, b)`'
           : 0,
       });
     }
@@ -250,7 +250,7 @@ class Range {
     if (pieces.length > 1) {
       refuse('unsupportedIntersection', `${this} with ${rival}`, {
         explanation: isDevelopment
-          ? 'these two time ranges wrap around midnight and overlap in two separate windows, which a single `TimeRange` cannot represent. split the overnight range at midnight and intersect each half separately'
+          ? 'these two time ranges wrap around midnight and overlap in two separate windows, which a single `TimeRange` cannot represent. Split the overnight range at midnight and intersect each half separately'
           : 0,
       });
     }
@@ -338,7 +338,7 @@ class Range {
     }
     return refuse('unsupportedZone', String(this), {
       explanation: isDevelopment
-        ? 'a `TimeRange` has no calendar date, so it cannot be placed in a time zone directly. anchor each end to a date with `.on(day, zone)` on `start` and `end`'
+        ? 'a `TimeRange` has no calendar date, so it cannot be placed in a time zone directly. Anchor each end to a date with `.on(day, zone)` on `start` and `end`'
         : 0,
     });
   }
@@ -380,7 +380,7 @@ class Range {
   valueOf() {
     return refuse('unsupportedComparison', String(this), {
       explanation: isDevelopment
-        ? 'ranges cannot be converted to a number for `<`, `>`, or `-`. read `.duration` to measure length, or use `compare(a, b)` and `equals()` to compare ranges'
+        ? 'ranges cannot be converted to a number for `<`, `>`, or `-`. Read `.duration` to measure length, or use `compare(a, b)` and `equals()` to compare ranges'
         : 0,
     });
   }

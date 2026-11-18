@@ -155,7 +155,7 @@ export class Duration {
       if (into === 'month' || into === 'quarter' || into === 'year') {
         refuse('missingAnchor', `balance to ${into}`, {
           explanation: isDevelopment
-            ? "months, quarters, and years vary in length, so balancing to them requires a starting date. measure between two dates with `a.until(b)`, or balance up to 'week' or 'day'"
+            ? "months, quarters, and years vary in length, so balancing to them requires a starting date. Measure between two dates with `a.until(b)`, or balance up to 'week' or 'day'"
             : 0,
         });
       }
@@ -238,7 +238,7 @@ export class Duration {
     if (!duration.anchor && (fields.years || fields.months)) {
       refuse('missingAnchor', `${verb} of ${duration}`, {
         explanation: isDevelopment
-          ? 'months and years vary in length, so converting or comparing them with weeks, days, or clock units requires a starting date. measure between two dates with `a.until(b)`, or construct the duration in weeks or days'
+          ? 'months and years vary in length, so converting or comparing them with weeks, days, or clock units requires a starting date. Measure between two dates with `a.until(b)`, or construct the duration in weeks or days'
           : 0,
       });
     }
@@ -270,7 +270,7 @@ export class Duration {
     if (target === 'year' || target === 'month') {
       refuse('missingAnchor', `total in ${target}`, {
         explanation: isDevelopment
-          ? "months, quarters, and years vary in length, so totaling in them requires a starting date. measure between two dates with `a.until(b)`, or total in 'weeks' or 'days'"
+          ? "months, quarters, and years vary in length, so totaling in them requires a starting date. Measure between two dates with `a.until(b)`, or total in 'weeks' or 'days'"
           : 0,
       });
     }
