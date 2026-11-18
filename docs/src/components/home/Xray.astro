@@ -29,7 +29,7 @@ const made = (way) => samples.reduce((values, sample) => {
 const printed = (value) => String(value.toTemporal ? value.toTemporal() : value);
 // whether a Date holds what ours does: a moment by its epoch, a calendar day by its own date
 const day = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-const holds = (date, ours) => (kindOf(ours) === 'datetime' ? date.getTime() === ours.epoch : day(date) === String(ours));
+const holds = (date, ours) => (kindOf(ours) === 'datetime' ? date.getTime() === ours.epochMilliseconds : day(date) === String(ours));
 const SAME = {
   temporal: (theirs, ours) => printed(theirs) === printed(ours),
   legacy: (theirs, ours) => (typeof ours === 'string' ? theirs === ours : holds(theirs, ours)),

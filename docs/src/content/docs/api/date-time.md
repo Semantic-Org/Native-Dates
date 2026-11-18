@@ -43,7 +43,8 @@ Properties read the date and time in the instance's time zone.
 | `millisecond`, `microsecond`, `nanosecond` | `number` | Sub-second clock fields (0–999). |
 | `zone` | `string` | Canonical IANA zone ID or fixed offset, such as `'America/Los_Angeles'` or `'UTC'`. |
 | `offset` | `string` | Active UTC offset at this instant, such as `'-08:00'`. |
-| `epoch` | `number` | Milliseconds since the Unix epoch. |
+| `epochSeconds` | `number` | Whole seconds since the Unix epoch, rounded down. |
+| `epochMilliseconds` | `number` | Milliseconds since the Unix epoch. |
 | `epochNanoseconds` | `bigint` | Exact nanoseconds since the Unix epoch. |
 | `date` | `CalendarDate` | Calendar date in this time zone. |
 | `time` | `Time` | Time of day in this time zone. |
