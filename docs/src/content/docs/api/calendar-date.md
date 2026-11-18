@@ -524,9 +524,11 @@ date('2026-11-16').since('2026-11-02', 'weeks'); // 2
 ```js signature
 d.to(end): DateRange
 d.to(count, unit): DateRange
+d.through(end): DateRange
+d.through(count, unit): DateRange
 ```
 
-Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included.
+Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included. It is also aliased as `through()`.
 
 **Parameters**
 
@@ -634,9 +636,11 @@ slots[1].toString(); // '2026-11-16T06:00:00.000Z'
 ```js signature
 d.split(step, zone?): DateTimeRange[]
 d.split(count, unit, zone?): DateTimeRange[]
+d.splitBy(step, zone?): DateTimeRange[]
+d.splitBy(count, unit, zone?): DateTimeRange[]
 ```
 
-Divides this calendar day into contiguous half-open [`DateTimeRange`](/api/ranges/) intervals in the given or configured time zone.
+Divides this calendar day into contiguous half-open [`DateTimeRange`](/api/ranges/) intervals in the given or configured time zone. It is also aliased as `splitBy()`.
 
 **Parameters**
 

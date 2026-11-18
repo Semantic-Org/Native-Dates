@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-17 (`npm run size`, Brotli): 14.00 kB for all of `native-dates`, 12.51 kB for `import { now }`, 15.40 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-17 (`npm run size`, Brotli): 14.13 kB for all of `native-dates`, 12.57 kB for `import { now }`, 15.48 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -28,6 +28,12 @@ Public names go through a blind naming pass before 1.0 (`../next/ai/skills/contr
 - **The `configure` key for an app's own day names is `weekdayNames`**, the word the `weekdayNames()` function already uses for what it changes. It was `weekdays`.
 - **Taking away has two spellings, `minus` and `subtract`.** A third, `remove`, is gone: `date.remove(2, 'days')` reads as deleting something, and the room, asked blind for other words, never offered it. Adding stays `plus` and `add`.
 - **A length counted in one unit is `total(unit)`, with `as(unit)` beside it.** The room preferred `hours(36).in('days')`, which reads best aloud. `total` leads because it is the one word of the three the library uses for nothing else, so what comes back can be guessed: `in` gives a value of the library everywhere else (`datetime.in(zone)`, `monthDay.in(year)`, `range.in(zone)`), and beside `balance('day')`, which takes the same argument and gives a duration, `total` and `balance` say which is the number. Nothing changed in the code.
+- **`fallsOn` stays, with `isOn` beside it.** `birthday.fallsOn(day)` is the idiom, and `isOn` is the spelling the house's `is*` rule would guess.
+- **A year-month's `start` and `end` stay.** They are the two a range of that month runs between, the words a range's own ends have.
+- **`range('week')` stays**, where the room offered `rangeOf`.
+- **The century a two-digit year is read into stays on `YearMonth.century`.** As a `configure` key it measured 19 B, and the ruling was configure only if it cost nothing: nobody is known to change it outside a legacy import.
+- **An app names its own formats in `configure({ formats })`**: `{ invoice: 'YYYY-MM-DD', receipt: { dateStyle: 'long' } }`, then `value.format('invoice')` on a datetime, a date, a time, a month-day, a year-month and a range. It took the place of two statics, `MonthDay.presets` and `YearMonth.presets`, which were open to more for those two kinds only and are private tables now. A name is read before the built-in presets, so an app can give `'short'` its own meaning. Setting `formats` again replaces the set, as `weekdayNames` and `ordinals` do. A duration keeps its own four styles. 90 B, 17 B of it floor.
+- **Second spellings taken from the room**: `includes` beside `contains` on a range and a year-month, `splitBy` beside `split` on a range and a date, `last` beside `previous` on a month-day, and `through` beside `to` on a date alone, since a date range runs through its last day where a datetime or time range stops short of its end. 53 B together.
 
 ### Decided: a locale rides on the value
 

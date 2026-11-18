@@ -62,6 +62,9 @@ configure({ zone: null, locale: null, weekStart: null });
     - name: ordinals
       type: "Record<Locale, (day: number) => string | number> | null"
       description: "Custom `Do` day-of-month formatter keyed by language tag. Pass `null` to restore built-in English suffixes and locale day markers."
+    - name: formats
+      type: "Record<string, string | Intl.DateTimeFormatOptions> | null"
+      description: "Formats named once and printed anywhere with `format(name)`, each a token pattern or an options bag. A name is read before the built-in presets, and `null` removes them all."
     - name: dayFirst
       type: boolean
       default: 'false'
@@ -74,7 +77,7 @@ configure({ zone: null, locale: null, weekStart: null });
 **Returns**
 
 ```returns
-type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals }"
+type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
 description: A shallow copy of the active settings after applying updates. Unset keys return `undefined`.
 ```
 
@@ -92,6 +95,24 @@ date('2026-11-01').format('Do MMMM', 'fr'); // '1er novembre'
 weekdayNames('narrow', 'monday', 'lv'); // ['P', 'O', 'T', 'C', 'Pk', 'S', 'Sv']
 
 configure({ weekdayNames: null, ordinals: null });
+```
+
+Named formats give an app its own presets on every kind of value that prints a date or a clock:
+
+```js
+import { configure, date, datetime } from 'native-dates';
+
+configure({
+  formats: {
+    invoice: 'YYYY-MM-DD',
+    receipt: { weekday: 'long', month: 'long', day: 'numeric' },
+  },
+});
+
+date('2026-11-06').format('invoice'); // '2026-11-06'
+datetime('2026-11-06T09:05', 'Europe/Berlin').format('receipt'); // 'Friday, November 6'
+
+configure({ formats: null });
 ```
 
 Plugins extend `configure()` with their own options once imported. Setting a plugin option before importing its plugin throws a `RangeError`:
