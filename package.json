@@ -33,13 +33,15 @@
   ],
   "scripts": {
     "size": "node tools/size.js",
+    "types": "tsc --noEmit && tsc --noEmit --module preserve --moduleResolution bundler",
     "format": "npx dprint fmt",
     "setup": "npx simple-git-hooks"
   },
   "devDependencies": {
     "dprint": "^0.50.0",
     "esbuild": "^0.25.0",
-    "simple-git-hooks": "^2.11.1"
+    "simple-git-hooks": "^2.11.1",
+    "typescript": "^6.0.3"
   },
   "simple-git-hooks": {
     "pre-commit": "bash tools/hooks/pre-commit",
