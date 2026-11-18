@@ -5,7 +5,7 @@ import { guard, refuse, requireLoose } from './errors.js';
 import { nameCache, weekdayWidths } from './tokens.js';
 import { dayOfWeek } from './units.js';
 
-// process-wide defaults, zoneAliases being the names a zone answers to when plugins/zones is loaded
+// process-wide defaults mutated by configure()
 export const settings = {
   zone: undefined,
   locale: undefined,
@@ -35,8 +35,6 @@ export const setZoneExtension = (resolver) => {
   resolved.set('UTC', 'UTC');
 };
 
-// an IANA name, a fixed offset, or UTC in core, plus cities, abbreviations and zoneAliases when
-// plugins/zones is loaded. resolves once per spelling and hands back the canonical id
 export const zoneId = (id) => {
   if (id === undefined || id === null) {
     return settings.zone ?? Temporal.Now.timeZoneId();
@@ -82,7 +80,6 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
           : 0,
       });
     }
-    // null clears every alias, and a null target clears that one name
     if (zoneAliases === null) {
       settings.zoneAliases = {};
     }
@@ -106,7 +103,7 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
   if (weekStart !== undefined) {
     settings.weekStart = weekStart === null ? undefined : dayOfWeek(weekStart);
   }
-  // a width left out or misspelled would otherwise fail far from here, at the first format
+  // validate widths and day keys eagerly in configure() rather than failing later on first format()
   each(weekdayNames, (widths) =>
     each(widths, (days, width) => {
       if (!weekdayWidths[width]) {
@@ -118,8 +115,7 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
       }
       each(days, (name, day) => dayOfWeek(day));
     }));
-  // names and ordinals an app writes its own way, by language. a tag is kept in lower case, so
-  // 'pt-br' and 'pt-BR' are one, and null goes back to what Intl has
+  // normalize locale keys to lowercase so 'pt-BR' and 'pt-br' merge into one entry
   each({ weekdayNames, ordinals }, (table, noun) => {
     if (table !== undefined) {
       settings[noun] = table === null ? undefined : {};
@@ -129,9 +125,7 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
       nameCache.clear();
     }
   });
-  // a format an app names once and asks for everywhere, a preset of its own: an options bag or a
-  // token pattern. a bag is kept as it was written and finds its formatter by its fields, so naming
-  // the same formats again builds nothing new. null takes them all away
+  // null-prototype copy prevents Object.prototype keys like 'toString' from matching in namedFormat()
   if (formats !== undefined) {
     settings.formats = formats && { __proto__: null, ...formats };
   }
@@ -142,15 +136,13 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
   return { ...settings, zoneAliases: { ...settings.zoneAliases } };
 };
 
-// a locale is read however it arrives. 'en_US' is how a server, a database or java spells en-US, and
-// an Accept-Language header, 'fr-CH, fr;q=0.9, en;q=0.8', is the tags a reader wants in the order
-// they want them, which is what Intl takes as a list
+// accept BCP 47 tags, POSIX 'en_US' tags, tag arrays, and raw HTTP Accept-Language headers
 const knownLocales = new Map();
 export const checkedLocale = (tag) => {
-  // a list and a header can spell the same text, 'es,en', and are not the same thing to hand back
+  // bracket array keys so ['es', 'en'] doesn't collide with header string 'es,en'
   const key = isString(tag) ? tag : `[${tag}]`;
   if (!knownLocales.has(key)) {
-    // a header's tags are taken by weight, q, and never one weighed at nothing. * is any language
+    // parse Accept-Language q-weights in descending order, dropping '*' wildcards and q=0 rejections
     const tags = isString(tag) && /[_,;*]/.test(tag)
       ? tag.replace(/_/g, '-').split(',')
         .map((part) => part.trim().split(/\s*;\s*q=/))
@@ -166,21 +158,17 @@ export const checkedLocale = (tag) => {
         ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
         : 0,
     );
-    // one tag is a tag, and a list is frozen since every caller is handed the same one
     knownLocales.set(key, tags && (tags.length === 1 ? tags[0] : Object.freeze(tags)));
   }
   return (isString(tag) && knownLocales.get(key)) || tag;
 };
 
-// the format an app configured under a name, or the spec as it came. it is asked first, so an app can
-// give a built-in name like 'short' its own meaning
+// checked before built-in presets so apps can redefine names like 'short'
 export const namedFormat = (spec) => (isString(spec) && settings.formats?.[spec]) || spec;
 
 export const locale = (override) => (override === undefined ? settings.locale : checkedLocale(override));
 export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);
-// the day a week starts on: the one a call names, then the one configured, then the locale's own,
-// sunday in the United States and saturday in Egypt, read from the value's locale, the configured
-// one or the runtime's. monday where the platform cannot say
+
 const firstDays = new Map();
 export const weekStart = (override, tag = settings.locale) => {
   if (override !== undefined) {
@@ -191,8 +179,8 @@ export const weekStart = (override, tag = settings.locale) => {
   }
   const key = String(tag);
   if (!firstDays.has(key)) {
-    // a tag is asked as written, so its region and its own -u-fw- choice count. the runtime's
-    // locale, or a list of them, is first resolved to one tag
+    // pass single tag strings straight to Intl.Locale so region and -u-fw- extensions survive,
+    // resolving through DateTimeFormat only for undefined (system locale) or tag arrays
     const read = tag === undefined ? tag : checkedLocale(tag);
     const asked = isString(read) ? read : new Intl.DateTimeFormat(read).resolvedOptions().locale;
     firstDays.set(key, new Intl.Locale(asked).getWeekInfo?.().firstDay ?? 1);

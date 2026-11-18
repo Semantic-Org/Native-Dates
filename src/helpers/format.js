@@ -22,7 +22,7 @@ const presets = {
       minute: '2-digit',
       timeZoneName: 'short',
     },
-    // the localized names moment and day.js format with
+    // Moment / Day.js localized format shorthands
     LT: { timeStyle: 'short' },
     LTS: { timeStyle: 'medium' },
     L: { year: 'numeric', month: '2-digit', day: '2-digit' },
@@ -39,7 +39,7 @@ const presets = {
     default: { timeStyle: 'short' },
     short: { timeStyle: 'short' },
     medium: { timeStyle: 'medium' },
-    // Intl's long and full time styles only add a zone name, and a time has no zone
+    // Intl timeStyle 'long' and 'full' append a timezone name, which PlainTime doesn't have
     long: { timeStyle: 'medium' },
     full: { timeStyle: 'medium' },
   },
@@ -51,8 +51,7 @@ const zoneParts = ['timeZone', 'timeZoneName'];
 const ownParts = { date: dateParts, time: timeParts };
 const otherParts = { date: [...timeParts, ...zoneParts], time: [...dateParts, ...zoneParts] };
 
-// a date prints only date parts and a time only clock parts, so one options bag can format a datetime, a
-// date and a time alike. a bag that names none of the noun's own parts prints the noun's default
+// strip parts the noun lacks so one options bag works across DateTime, CalendarDate, and Time
 const ownOptions = (kind, bag) => {
   const options = { ...bag };
   each(otherParts[kind], (part) => {
@@ -65,11 +64,9 @@ const ownOptions = (kind, bag) => {
   return namesOwnPart ? options : { ...intlOptions(kind), ...options };
 };
 
-// what a datetime's text prints. handed over as the bag itself, so a value is written the same
-// whatever an app has named 'text', and making one can never refuse
+// passed as an object rather than 'text' so configure({ formats: { text } }) cannot alter value.text
 export const textFormat = presets.datetime.text;
 
-// a preset name or an Intl options bag resolves to Intl options, anything else resolves to undefined
 export const intlOptions = (kind, named) => {
   const spec = namedFormat(named);
   if (spec === undefined) {
@@ -85,28 +82,27 @@ export const intlOptions = (kind, named) => {
         : 0,
     });
   }
+  // unknown strings return undefined so callers fall through to formatTokens()
   return Object.hasOwn(presets[kind], spec) ? presets[kind][spec] : undefined;
 };
 
-// every preset name formats every noun. a date and a time take their own parts of the datetime preset
 each(['date', 'time'], (kind) => {
   each(presets.datetime, (options, name) => {
     presets[kind][name] ??= ownOptions(kind, options);
   });
 });
 
-// frozen, so a preset keys its formatter by identity and a format call serializes nothing
+// frozen so cached() in intl.js keys preset bags by reference instead of JSON.stringify
 each(presets, (kind) => {
   each(kind, (options) => {
     Object.freeze(options);
   });
 });
 
-// Intl gets epoch milliseconds and a zone on every engine. a date is its UTC midnight read in UTC, a
-// time is that clock on the epoch day, so the fields print unshifted whether Temporal is native or not
+// temporal-polyfill doesn't patch Intl.DateTimeFormat, so format dates and times via UTC epoch ms
 export const epochOf = (kind, subject) => {
   if (kind === 'date') {
-    // Date.UTC reads a year under 100 as the 1900s, setUTCFullYear reads it as written
+    // Date.UTC maps years 0..99 to 1900..1999, whereas setUTCFullYear keeps them verbatim
     const stamp = new Date(0);
     stamp.setUTCFullYear(subject.year, subject.month - 1, subject.day);
     return stamp.getTime();
@@ -125,13 +121,11 @@ export const formatter = (kind, options, locale, zone) =>
 export const formatIntl = (kind, subject, options, locale, zone) =>
   formatter(kind, options, locale, zone).format(epochOf(kind, subject));
 
-// the calendars that keep the Gregorian months and days, and count only the year their own way
+// calendars that share the 12 Gregorian months while numbering years their own way (e.g. Thai 2569)
 const gregorianMonths = ['gregory', 'buddhist', 'japanese', 'roc'];
 
-// the formatter for a part of a date, a month and a day or a year and a month. in a calendar with
-// other months the part falls on different days each year, so it prints the Gregorian months
-// whatever the locale's own calendar. the ISO calendar's months are the Gregorian ones too, but Intl
-// has no names for them
+// MonthDay and YearMonth are Gregorian, so override non-Gregorian calendars (e.g. Persian) to 'gregory'
+// ('iso8601' prints numeric months in Intl rather than localized names)
 const partFormatters = /* @__PURE__ */ cached((locale, options) => {
   const format = plainDateTimeFormat(locale, options);
   return gregorianMonths.includes(format.resolvedOptions().calendar)
@@ -141,7 +135,6 @@ const partFormatters = /* @__PURE__ */ cached((locale, options) => {
 
 export const partFormatter = (options, locale) => partFormatters(pickLocale(locale), options);
 
-// every part a format can name. a part of a date drops the ones it lacks
 const parts = [
   'weekday',
   'era',
@@ -158,16 +151,12 @@ const parts = [
   'timeZoneName',
 ];
 
-// a part of a date prints only the parts it has, so the presets and the options bag that format a
-// datetime format it too. a format that names none of its parts prints its medium form. what is no
-// part, a calendar or a numbering system, goes to Intl as written
 export const partOptions = (named, names, styles) => {
   const spec = namedFormat(named);
   if (isString(spec) && Object.hasOwn(styles, spec)) {
     return styles[spec];
   }
   const bag = isPlainObject(spec) ? spec : intlOptions('datetime', spec);
-  // a string that is no preset is a token pattern, which the caller puts to formatTokens
   if (!bag) {
     return undefined;
   }
@@ -180,6 +169,6 @@ export const partOptions = (named, names, styles) => {
       delete options[part];
     }
   });
-  // the first two names are the parts it always has, and an era prints only beside them
+  // require at least one primary field (not just 'era') before skipping the medium fallback
   return names.slice(0, 2).some((name) => options[name] !== undefined) ? options : { ...styles.medium, ...options };
 };

@@ -1,56 +1,52 @@
 ---
 title: Size Budget
-description: Production Brotli bundle ceilings, per-PR byte limits, and bundle size rules for this package.
-# the ceiling is the maintainer's. change and bug are the values docs-frame ships with, so set them for the package
-change: 100
-bug: 30
+description: The Brotli ceiling on native-dates, the sizes a pull request is read at, and the bundle size rules for this package.
+# every number the size check and the bundle bot run on, each the maintainer's
+ceiling: 15000
+sizes:
+  bug sized: 50
+  small feature sized: 100
+  feature sized: 250
+  large feature sized: 500
 prose: []
-bundles:
-  - name: everything
-    ceiling: 15000
-    code: |
-      import * as everything from 'native-dates';
-      console.log(everything);
 ---
 
-# Size Budget: Entry Bundles, Ceilings, and Rules
+# Size Budget: Rows, the Ceiling, and Rules
 
-> The YAML frontmatter above is read by `npm run size` (`tools/gates/budget.js`), and pull requests are evaluated against the `main` branch copy so a PR cannot raise its own ceiling. Only the maintainer updates ceilings or bundle definitions.
+> The YAML frontmatter above is read by `npm run size` (`tools/gates/budget.js`), and pull requests are evaluated against the `main` branch copy so a PR cannot raise its own ceiling. Only the maintainer updates the ceiling, the sizes or the rows.
 
 ## Package-Specific Thresholds
 
 Every byte limit in this file is calibrated for this specific package's size and import patterns rather than copied from larger monorepos (a 200-byte increase is negligible in a 70 KB sync client and 20% of a 1 KB utility library):
 
-- **`change`**: Maximum Brotli bytes a single PR may add to any bundle.
-- **`bug`**: Growth threshold at which a `Bug:` PR fails the check.
-- **`ceiling`**: Maximum total Brotli bytes allowed for that bundle.
+- **`ceiling`**: Maximum total Brotli bytes allowed for all of `native-dates` without plugins.
+- **`sizes`**: The edge of each size the bundle bot names a pull request by, in Brotli bytes added to all of `native-dates`. A `Bug:` PR fails the check at the first edge, and any PR fails past the last.
 - **`prose`**: Allowlist of human-readable strings permitted in production bundles (`{ text, why }`). Empty by default. Development error explanations are never allowlisted.
 
-Only the ceiling above is set for this package. The maintainer gave 15 kB as the ceiling for now, written as 15,000 bytes and applied to all of `native-dates` without plugins (14,059 bytes on 2026-11-18), since core with its three plugins already measures 15,410. `change` and `bug` are the values `docs-frame` ships with, and no bundle covers a plugin or `import { now }` because none has a ceiling yet. They are not a judgment about what this package should cost. Define the remaining bundles from how the package is consumed, set each number from what the package should cost, and write the reasoning for each number here.
+The ceiling and the four sizes above are the maintainer's. He gave 15 kB as the ceiling for now, written as 15,000 bytes and applied to all of `native-dates` without plugins (14,063 bytes on 2026-11-18), since core with its three plugins already measures 15,412. He ruled the sizes on 2026-11-18: the sizes of the bot in the sync repo at about a fifth, as a 15,000 byte ceiling is to its 75 KB gate, checked against what landed here that month (a second spelling 10 bytes, a guard 19 to 30, a week that starts by locale 70, named formats about 80, reading an `Accept-Language` header 130, relative time 290, a locale on every value 320), with `bug sized` raised from 30 to 50. No size sits above 500, since about 940 bytes is all that is left under the ceiling. A `Bug:` PR is red at the edge of `bug sized`, as the sync bot ties the two together.
 
 ## Choosing What to Measure
 
-Each entry under `bundles` models a realistic consumer import (`esbuild` minified with `__DEV__` set to `false`, compressed with Brotli quality 11):
+The rows are `rowsFrom` in `tools/size.js`, each a realistic consumer import (`esbuild` minified with `NODE_ENV` set to `production`, compressed with Brotli quality 11), and each carries the part it plays in the pull request comment:
 
-| Package consumption model | Bundles to define |
-|---|---|
-| Imported as a single unit (e.g., router or client) | One bundle importing the full public barrel |
-| Collection of independent functions | Individual entrypoints or common combinations, rather than `import *` |
-| Distinct feature groups (e.g., formatting vs. ranges) | One bundle per group so changes in one group do not silently inflate another |
-| Core plus optional plugins | Core alone plus representative core + plugin combinations |
-| Code-split / lazy modules | Initial entry plus each lazy chunk (extend `tools/gates/budget.js` before relying on multi-chunk numbers) |
+| Row | What it is | Part |
+|---|---|---|
+| `import { now }` | An app that imports one factory | Shown with every other row, never judged |
+| `native-dates (full)` | All of `native-dates` without plugins | The ceiling, the sizes and the comment's title |
+| `plugins/<name>` | What a plugin adds to an app that already has all of `native-dates`, one row per file in `packages/plugins/src` | Listed when it changed, never fails the check |
+| `core + all plugins` | All of `native-dates` with every plugin | Shown with every other row, never judged |
 
-Each bundle snippet must reference what it imports (`console.log(...)`) so `esbuild` does not tree-shake the bundle to 0 bytes (`tools/gates/budget.js` rejects empty bundles). Add new bundle entries to `main` before opening PRs that depend on them.
+Each row's snippet must reference what it imports (`console.log(...)`) so `esbuild` does not tree-shake the bundle to 0 bytes. A new plugin gets its row with no edit.
 
 ## Per-PR Byte Limits by Category
 
-| PR title category | Expected delta | Fails the Size check when |
+| PR title category | Expected delta | Fails the Bundle Size check when |
 |---|---|---|
-| `Bug:` | 0 bytes | Any bundle grows by `bug` bytes or more |
-| `Refactor:`, `Perf:` | 0 bytes | Any bundle grows by more than `change` bytes |
-| `Build:`, `Harness:`, `Docs:`, `Test:`, `Chore:` | 0 bytes | Any bundle grows by more than `change` bytes |
-| `Feat:` | ~0 bytes unless priced via `Expected bytes: <N>` in the PR body | Any bundle grows by more than `change` bytes |
-| Any category | None | Any bundle exceeds its `ceiling` or contains unallowlisted dev prose |
+| `Bug:` | 0 bytes | `native-dates (full)` grows by the edge of `bug sized` or more |
+| `Refactor:`, `Perf:` | 0 bytes | `native-dates (full)` grows past the edge of `large feature sized` |
+| `Build:`, `Harness:`, `Docs:`, `Test:`, `Chore:` | 0 bytes | `native-dates (full)` grows past the edge of `large feature sized` |
+| `Feat:` | ~0 bytes in `native-dates (full)`, since features are generally implemented as plugins, unless priced via `Expected bytes: <N>` in the PR body | `native-dates (full)` grows past the edge of `large feature sized` |
+| Any category | None | `native-dates (full)` exceeds the `ceiling`, or it or a plugin contains unallowlisted dev prose |
 
 ## Budget Rules
 
@@ -60,7 +56,7 @@ Each bundle snippet must reference what it imports (`console.log(...)`) so `esbu
 4. **Bug fixes aim for 0 bytes.** Small targeted fixes are normal. Large byte increases require a high-severity bug and maintainer sign-off.
 5. **Raising a ceiling for one feature does not create slack for unrelated additions.**
 6. **Optional conveniences belong in plugins** (`@native-dates/plugins/*`) unless nearly every consumer needs them on initial load.
-7. **Strip diagnostic prose from production builds.** Gate error explanations inline with `isDevelopment ? '...' : 0` (`ai/contributing/standards/legibility/errors-and-logs.md`). `tools/gates/budget.js` parses both development (`__DEV__: 'true'`) and production (`__DEV__: 'false'`) bundle ASTs and fails if dev prose disappears from dev builds or survives in production builds outside `prose`.
+7. **Strip diagnostic prose from production builds.** Gate error explanations inline with `isDevelopment ? '...' : 0` (`ai/contributing/standards/legibility/errors-and-logs.md`). `tools/gates/budget.js` parses both development (`NODE_ENV: 'development'`) and production (`NODE_ENV: 'production'`) bundle ASTs and fails if dev prose disappears from dev builds or survives in production builds outside `prose`.
 
 ## When a Change Exceeds the Budget
 

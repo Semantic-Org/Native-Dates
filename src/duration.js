@@ -18,8 +18,9 @@ import { alias, inspect, isTemporalDuration, unit } from './helpers/units.js';
 import { checkedLocale, locale as pickLocale } from './helpers/zones.js';
 
 /*
-  a length of time. fields stay as written (90 minutes is 90 minutes until you balance it), and a
-  duration that came from until() or since() remembers where it started, so months and years total
+  a span of calendar and clock units (Temporal.Duration).
+  Fields keep their written units (90 minutes remains 90 minutes until .balance()), while durations
+  measured by .until() or .since() record their starting point as `anchor` so months and years can total
 */
 
 const subsecond = fieldNames.indexOf('milliseconds');
@@ -44,9 +45,7 @@ export class Duration {
       : temporalDurationOf(fieldsFrom(input, name));
     this.#anchor = anchor;
     this.#locale = locale ? checkedLocale(locale) : undefined;
-    // the parts are own properties, so a value prints them in a console without a click. the text is
-    // keyed first so a preview leads with it
-    this.text = undefined;
+    this.text = undefined; // keep text first in console previews
     const temporal = this.#temporal;
     this.years = temporal.years;
     this.months = temporal.months;
@@ -62,8 +61,6 @@ export class Duration {
     Object.freeze(this);
   }
 
-  // the locale this duration is written in, or the same duration written in another. an unset tag
-  // clears it
   locale(...tag) {
     return tag.length
       ? new Duration(this.#temporal, undefined, { anchor: this.#anchor, locale: tag[0] })
@@ -107,7 +104,7 @@ export class Duration {
     return this.#add(other, name, -1);
   }
 
-  // a string has an anchor method of its own, so only another duration is asked for one
+  // String.prototype.anchor is a legacy HTML method, so check instanceof Duration rather than truthy .anchor
   #add(other, name, sign) {
     const anchor = this.#anchor ?? (other instanceof Duration ? other.anchor : undefined);
     return this.#next(temporalDurationOf(addFields(this.toFields(), fieldsFrom(other, name), sign, anchor)), anchor);
@@ -129,11 +126,8 @@ export class Duration {
     return this.#next(this.#temporal.abs(), this.#anchor);
   }
 
-  // carries overflow upward: 90 minutes balances to an hour and a half, 18 months to a year and a
-  // half. a length stops at hours, since a day is a calendar unit and folding 36 hours into one would
-  // move a deadline across a daylight saving change. an anchored duration knows its calendar, so days
-  // are its ceiling until asked for weeks, months or years, and an explicit unit is taken at its
-  // word either way
+  // unanchored balance() stops clock overflow at hours (calendar days can be 23 or 25h across DST)
+  // while still carrying months into 12-month ISO years
   balance(largest) {
     if (!this.#anchor) {
       if (largest === undefined) {
@@ -185,9 +179,8 @@ export class Duration {
     );
   }
 
-  // Temporal treats a week as seven days only when told where it starts. in the ISO calendar that is
-  // always true, so an unanchored duration folds weeks into days before it totals or balances. reads
-  // through the public face, so a duration from another copy of this package fixes the same way
+  // Temporal.Duration.round/total/compare throw on `weeks` without relativeTo, even though ISO weeks are
+  // always 7 days. Fold weeks into days via public getters so cross-bundle Duration instances work too
   static #fixed(duration) {
     const temporal = duration.toTemporal();
     if (duration.anchor || !temporal.weeks) {
@@ -196,8 +189,6 @@ export class Duration {
     return temporalDurationOf(addFields({ ...duration.toFields(), weeks: 0 }, { days: temporal.weeks * 7 }, 1));
   }
 
-  // weeks are already days here. a year is always twelve months, so months carry into years with no
-  // anchor, where days carry into nothing and stay as they are
   static #balancedClock(duration) {
     const { years, months, days, ...clock } = fieldsOf(Duration.#fixed(duration));
     const balanced = fieldsOf(temporalDurationOf(clock).round({ largestUnit: 'hour' }));
@@ -212,7 +203,7 @@ export class Duration {
     );
   }
 
-  // a week is seven days in the ISO calendar, so it needs no anchor: the days fold in sevens
+  // convert back from days in sevens since Temporal.Duration.round({ largestUnit: 'week' }) requires relativeTo
   static #balancedWeeks(duration) {
     const { days = 0, ...clock } = fieldsOf(Duration.#fixed(duration).round({ largestUnit: 'day' }));
     const weeks = Math.trunc(days / 7);
@@ -224,8 +215,7 @@ export class Duration {
     );
   }
 
-  // a year is twelve months in the ISO calendar, so a duration of only years and months counts in
-  // months, anchored or not. undefined once it carries weeks, days or a clock, which a month cannot hold
+  // pure year/month durations convert 12:1 without an anchor, returning undefined when sub-month fields exist
   static #wholeMonths(duration) {
     const fields = duration.toFields();
     return fieldNames.slice(2).some((name) => fields[name])
@@ -253,8 +243,6 @@ export class Duration {
     if (target === 'quarter') {
       return this.total('month') / 3;
     }
-    // years and months count in twelfths with or without an anchor, so 18 months is a year and a half
-    // however it was measured
     const whole = Duration.#wholeMonths(this);
     if (whole !== undefined && (target === 'year' || target === 'month')) {
       return target === 'year' ? whole / 12 : whole;
@@ -285,7 +273,7 @@ export class Duration {
   compare(other) {
     const rival = other instanceof Duration ? other : new Duration(other);
     const [mine, theirs] = [Duration.#fixed(this), Duration.#fixed(rival)];
-    // the same fields are the same length in any calendar, so a month equals a month without an anchor
+    // identical ISO strings are equal even for unanchored months/years where Temporal.Duration.compare() throws
     if (mine.toString() === theirs.toString()) {
       return 0;
     }
@@ -309,9 +297,7 @@ export class Duration {
               Output
   *******************************/
 
-  // Intl.DurationFormat over the calendar fields as written and the clock balanced, so a stored count of
-  // milliseconds reads as hours and minutes. the sub-second fields only show when nothing larger is set,
-  // so a wall-clock difference reads as hours and minutes and a timer reads as milliseconds
+  // keep calendar fields as written, balance clock overflow up to hours, and hide sub-second fields when >= 1s is set
   format(style = 'long', locale = this.#locale) {
     if (!styles.includes(style)) {
       refuse('unknownFormat', String(style), {
@@ -328,7 +314,7 @@ export class Duration {
         shown[field] = fields[field];
       }
     });
-    // Intl.DurationFormat prints nothing for a zero duration, so zero is spelled out as seconds
+    // Intl.DurationFormat omits zero fields by default (returning '' for { seconds: 0 } and throwing on {})
     if (this.isZero()) {
       const unitDisplay = style === 'long' ? 'long' : style === 'narrow' ? 'narrow' : 'short';
       return style === 'digital'
@@ -358,7 +344,7 @@ export class Duration {
     return this.toMilliseconds();
   }
 
-  // + gives the string and < and - the number, the way Date decides
+  // '+' sends hint 'default', which would return ms instead of toString() without this
   [Symbol.toPrimitive](hint) {
     return hint === 'number' ? this.toMilliseconds() : this.toString();
   }
@@ -370,7 +356,6 @@ export class Duration {
 
 alias(Duration, { add: 'plus', subtract: 'minus', lang: 'locale', as: 'total' });
 
-// duration(input, unit), or duration(input, { loose, locale })
 export const duration = (input, unitOrOptions) => {
   const hasOptions = isPlainObject(unitOrOptions);
   const name = hasOptions ? undefined : unitOrOptions;
@@ -382,12 +367,10 @@ export const duration = (input, unitOrOptions) => {
   return hasOptions && unitOrOptions.loose ? loosely(build, unreadable.length) : build();
 };
 
-// a duration that remembers the point it was measured from, so months and years can total
 export const anchored = (temporal, anchor, locale) => new Duration(temporal, undefined, { anchor, locale });
 
 export const isDuration = (value) => value instanceof Duration;
 
-// a duration is a fields object, a phrase, or one of these: hours(2), days(3)
 export const years = (count) => new Duration(count, 'year');
 export const months = (count) => new Duration(count, 'month');
 export const weeks = (count) => new Duration(count, 'week');

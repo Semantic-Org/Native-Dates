@@ -1,11 +1,7 @@
 import { canonicalZone, setZoneExtension } from 'native-dates/helpers/zones';
 
-// the table below is the one @semantic-ui/utils reads zone abbreviations from, copied so that
-// nothing is installed for it. an edit here does not reach that package's own table
-
-// timezone abbreviations are ambiguous by nature (IST is Kolkata, Jerusalem, or Dublin depending on
-// who you ask), so the picks are editable once at app boot (timezones.IST = 'Asia/Jerusalem'). full
-// IANA names always pass through untouched
+// ambiguous abbreviations (IST can mean Kolkata, Jerusalem, or Dublin), left mutable so apps can
+// override entries at startup (`timezones.IST = 'Asia/Jerusalem'`) or via `configure({ zoneAliases })`
 export const timezones = {
   ET: 'America/New_York',
   CT: 'America/Chicago',
@@ -31,8 +27,8 @@ export const timezones = {
   SGT: 'Asia/Singapore',
 };
 
-// daylight-observing readings of common abbreviations, because the bare IANA 'EST' is a fixed offset
-// that never springs forward, and nobody who types it means that
+// checked before Temporal itself because bare IANA 'EST', 'MST', and 'HST' are legacy fixed-offset
+// zones without DST, whereas callers writing 'EST' expect America/New_York
 const abbreviations = {
   est: 'America/New_York',
   edt: 'America/New_York',
@@ -70,8 +66,7 @@ const capitalize = (word) => (word ? word[0].toUpperCase() + word.slice(1).toLow
 const normalize = (text) =>
   text.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s_-]+/g, ' ');
 
-// every IANA id the engine knows, by its loose full spelling and by its city. the canonical cities
-// are unique, so 'los angeles' and 'sao paulo' each name exactly one zone
+// index both full IANA ids and leaf city names (including 3-part ids like America/Argentina/Buenos_Aires)
 let index;
 const cities = () => {
   if (!index) {
@@ -84,9 +79,8 @@ const cities = () => {
   return index;
 };
 
-// ICU's canonical list can lag the tz database (it still says Saigon where the database says
-// Ho_Chi_Minh), so a city the index does not know is rebuilt in IANA spelling under each region and
-// put to Temporal, which knows every link
+// Intl.supportedValuesOf('timeZone') omits IANA link aliases (e.g. Ho_Chi_Minh when ICU lists Saigon),
+// so probe <Region>/<City> against Temporal to resolve tzdb links
 const regions = ['Africa', 'America', 'Antarctica', 'Asia', 'Atlantic', 'Australia', 'Europe', 'Indian', 'Pacific'];
 const rebuilt = (key) => {
   const city = key.split(' ').map(capitalize).join('_');
