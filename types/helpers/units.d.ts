@@ -51,5 +51,8 @@ export type DayOfWeek =
   | 7
   | (string & {});
 
-/** The number of a day of the week from its name, `dayOfWeek('sunday')` is 7, a number passing through */
+/**
+ * The number of a day of the week from its name, `dayOfWeek('sunday')` is 7, a number passing through
+ * @see {@link https://nativedates.dev/api/configure/#dayofweek dayOfWeek}
+ */
 export function dayOfWeek(day: DayOfWeek): number;

@@ -30,6 +30,7 @@ export type DateTimeInput = DateTime | CalendarDate | Date | number | string | D
 /**
  * An exact moment with a zone to read it in. One type for timestamps, appointments and deadlines.
  * The zone is a view: `toString()` and `toJSON()` print the instant in UTC.
+ * @see {@link https://nativedates.dev/api/date-time/ DateTime Documentation}
  */
 export class DateTime {
   constructor(input: DateTimeInput, zone?: Zone);
@@ -75,7 +76,10 @@ export class DateTime {
   readonly date: CalendarDate;
   /** The time of day in this zone */
   readonly time: Time;
-  /** This datetime as a date or a time, the call spelling of `.date` and `.time` */
+  /**
+   * This datetime as a date or a time, the call spelling of `.date` and `.time`
+   * @see {@link https://nativedates.dev/api/date-time/#as as}
+   */
   as(kind: 'date'): CalendarDate;
   as(kind: 'time'): Time;
   as(kind: 'datetime'): DateTime;
@@ -86,51 +90,92 @@ export class DateTime {
   /** The year and month in this zone, the day dropped */
   readonly yearMonth: YearMonth;
 
-  /** Adding days keeps the wall clock across a daylight saving change, adding hours counts hours */
+  /**
+   * Adding days keeps the wall clock across a daylight saving change, adding hours counts hours
+   * @see {@link https://nativedates.dev/api/date-time/#plus plus}
+   */
   plus(amount: DurationInput, unit?: Unit): DateTime;
   /** Alias for `plus` */
   add(amount: DurationInput, unit?: Unit): DateTime;
+  /** @see {@link https://nativedates.dev/api/date-time/#minus minus} */
   minus(amount: DurationInput, unit?: Unit): DateTime;
   /** Alias for `minus` */
   subtract(amount: DurationInput, unit?: Unit): DateTime;
 
+  /** @see {@link https://nativedates.dev/api/date-time/#set set} */
   set(fields: DateTimeFields): DateTime;
   set(unit: Unit, value: number): DateTime;
-  /** The same date and zone at another time of day */
+  /**
+   * The same date and zone at another time of day
+   * @see {@link https://nativedates.dev/api/date-time/#at at}
+   */
   at(time: TimeInput): DateTime;
-  /** The same instant read in another zone */
+  /**
+   * The same instant read in another zone
+   * @see {@link https://nativedates.dev/api/date-time/#in in}
+   */
   in(zone: Zone): DateTime;
-  /** The first instant of the unit around this value. A week starts on the configured first day, or on `firstDay` */
+  /**
+   * The first instant of the unit around this value. A week starts on the configured first day, or on `firstDay`
+   * @see {@link https://nativedates.dev/api/date-time/#startof startOf}
+   */
   startOf(unit: Unit, firstDay?: DayOfWeek): DateTime;
-  /** The last millisecond of the unit */
+  /**
+   * The last millisecond of the unit
+   * @see {@link https://nativedates.dev/api/date-time/#endof endOf}
+   */
   endOf(unit: Unit, firstDay?: DayOfWeek): DateTime;
+  /** @see {@link https://nativedates.dev/api/date-time/#round round} */
   round(unit: Unit): DateTime;
   round(increment: number, unit: Unit): DateTime;
+  /** @see {@link https://nativedates.dev/api/date-time/#floor floor} */
   floor(unit: Unit): DateTime;
   floor(increment: number, unit: Unit): DateTime;
+  /** @see {@link https://nativedates.dev/api/date-time/#ceil ceil} */
   ceil(unit: Unit): DateTime;
   ceil(increment: number, unit: Unit): DateTime;
-  /** The next such day of the week strictly after this one, at the same time of day */
+  /**
+   * The next such day of the week strictly after this one, at the same time of day
+   * @see {@link https://nativedates.dev/api/date-time/#next next}
+   */
   next(dayOfWeek: DayOfWeek): DateTime;
+  /** @see {@link https://nativedates.dev/api/date-time/#previous previous} */
   previous(dayOfWeek: DayOfWeek): DateTime;
-  /** The next occurrence of a month-day strictly after this one, at the same time of day */
+  /**
+   * The next occurrence of a month-day strictly after this one, at the same time of day
+   * @see {@link https://nativedates.dev/api/date-time/#next next}
+   */
   next(monthDay: MonthDay): DateTime;
   previous(monthDay: MonthDay): DateTime;
 
-  /** A range from this moment until another, the end excluded */
+  /**
+   * A range from this moment until another, the end excluded
+   * @see {@link https://nativedates.dev/api/date-time/#to to}
+   */
   to(end: DateTimeInput | DurationInput): DateTimeRange;
   to(count: number, unit: Unit): DateTimeRange;
   /** A range that starts at this moment and runs for a length, the end excluded: `meeting.for(90, 'minutes')`. The same as `to` given a length */
   for(length: DurationInput): DateTimeRange;
   for(count: number, unit: Unit): DateTimeRange;
-  /** The unit containing this moment as a half-open range, its start until the next start */
+  /**
+   * The unit containing this moment as a half-open range, its start until the next start
+   * @see {@link https://nativedates.dev/api/date-time/#range range}
+   */
   range(unit: Unit, firstDay?: DayOfWeek): DateTimeRange;
 
-  /** The same instant, whatever zone each side reads it in */
+  /**
+   * The same instant, whatever zone each side reads it in
+   * @see {@link https://nativedates.dev/api/date-time/#equals equals}
+   */
   equals(other: DateTimeInput): boolean;
+  /** @see {@link https://nativedates.dev/api/date-time/#isbefore isBefore} */
   isBefore(other: DateTimeInput): boolean;
+  /** @see {@link https://nativedates.dev/api/date-time/#isafter isAfter} */
   isAfter(other: DateTimeInput): boolean;
-  /** Same to the unit, judged in this datetime's zone */
+  /**
+   * Same to the unit, judged in this datetime's zone
+   * @see {@link https://nativedates.dev/api/date-time/#issame isSame}
+   */
   isSame(other: DateTimeInput, unit?: Unit, firstDay?: DayOfWeek): boolean;
   isPast(): boolean;
   isFuture(): boolean;
@@ -138,33 +183,66 @@ export class DateTime {
   isTomorrow(): boolean;
   isYesterday(): boolean;
 
-  /** A duration balanced from years down that remembers this moment, or the whole length as a number in a unit */
+  /**
+   * A duration balanced from years down that remembers this moment, or the whole length as a number in a unit
+   * @see {@link https://nativedates.dev/api/date-time/#until until}
+   */
   until(other: DateTimeInput): Duration;
   until(other: DateTimeInput, unit: Unit): number;
+  /** @see {@link https://nativedates.dev/api/date-time/#since since} */
   since(other: DateTimeInput): Duration;
   since(other: DateTimeInput, unit: Unit): number;
 
-  /** A preset ('short', 'medium', 'long', 'full', 'date', 'time', 'month', 'text') or an Intl options bag */
+  /**
+   * A preset ('short', 'medium', 'long', 'full', 'date', 'time', 'month', 'text') or an Intl options bag
+   * @see {@link https://nativedates.dev/api/date-time/#format format}
+   */
   format(spec?: FormatSpec, locale?: Locale): string;
-  /** The locale this value is written in, when one was set on it or on the value it came from */
+  /**
+   * The locale this value is written in, when one was set on it or on the value it came from
+   * @see {@link https://nativedates.dev/api/date-time/#locale locale}
+   */
   locale(): Locale | undefined;
-  /** The same value written in another locale, which every value made from it keeps. An unset tag clears it */
+  /**
+   * The same value written in another locale, which every value made from it keeps. An unset tag clears it
+   * @see {@link https://nativedates.dev/api/date-time/#locale locale}
+   */
   locale(tag: Locale | null | undefined): this;
-  /** Alias for `locale` */
+  /**
+   * Alias for `locale`
+   * @see {@link https://nativedates.dev/api/date-time/#lang lang}
+   */
   lang(): Locale | undefined;
   lang(tag: Locale | null | undefined): this;
-  /** How far this moment is from another, in words: `'3 hours ago'`, `'in 2 days'`. From now when no other is given */
+  /**
+   * How far this moment is from another, in words: `'3 hours ago'`, `'in 2 days'`. From now when no other is given
+   * @see {@link https://nativedates.dev/api/date-time/#from from}
+   */
   from(other?: DateTimeInput, locale?: Locale): string;
-  /** How far this moment is from now, in words */
+  /**
+   * How far this moment is from now, in words
+   * @see {@link https://nativedates.dev/api/date-time/#fromnow fromNow}
+   */
   fromNow(locale?: Locale): string;
-  /** Alias for `from` */
+  /**
+   * Alias for `from`
+   * @see {@link https://nativedates.dev/api/date-time/#formatrelative formatRelative}
+   */
   formatRelative(other?: DateTimeInput, locale?: Locale): string;
-  /** The instant in UTC, `'2026-09-06T14:30:00.000Z'` */
+  /**
+   * The instant in UTC, `'2026-09-06T14:30:00.000Z'`
+   * @see {@link https://nativedates.dev/api/date-time/#tostring toString}
+   */
   toString(): string;
   toJSON(): string;
+  /** @see {@link https://nativedates.dev/api/date-time/#tojsdate toJSDate} */
   toJSDate(): Date;
+  /** @see {@link https://nativedates.dev/api/date-time/#totemporal toTemporal} */
   toTemporal(): TemporalValue;
-  /** Epoch milliseconds, so datetimes sort and subtract with `<` and `-` */
+  /**
+   * Epoch milliseconds, so datetimes sort and subtract with `<` and `-`
+   * @see {@link https://nativedates.dev/api/date-time/#valueof valueOf}
+   */
   valueOf(): number;
 }
 
@@ -172,15 +250,26 @@ export class DateTime {
  * Reads an ISO string (`'2026-09-06T14:30Z'`, `'2026-09-06T14:30'` as a wall clock in the zone,
  * `'2026-09-06'` as midnight), a Date, epoch milliseconds, a fields object, a date, or a Temporal value.
  * A missing value refuses, `now()` reads the current moment
+ * @see {@link https://nativedates.dev/api/datetime-fn/#datetime datetime}
  */
 export function datetime(input: DateTimeInput, zone?: Zone): DateTime;
 export function datetime(input: DateTimeInput, options?: ReadOptions): DateTime;
 
-/** The current moment at millisecond precision, in the zone or the configured default */
+/**
+ * The current moment at millisecond precision, in the zone or the configured default
+ * @see {@link https://nativedates.dev/api/datetime-fn/#now now}
+ */
 export function now(zone?: Zone): DateTime;
-/** `now(zone).startOf('day')`, the bound a query for today writes */
+/**
+ * `now(zone).startOf('day')`, the bound a query for today writes
+ * @see {@link https://nativedates.dev/api/datetime-fn/#startoftoday startOfToday}
+ */
 export function startOfToday(zone?: Zone): DateTime;
-/** `now(zone).endOf('day')`, the last millisecond of today */
+/**
+ * `now(zone).endOf('day')`, the last millisecond of today
+ * @see {@link https://nativedates.dev/api/datetime-fn/#endoftoday endOfToday}
+ */
 export function endOfToday(zone?: Zone): DateTime;
 
+/** @see {@link https://nativedates.dev/api/kind-of/#isdatetime isDateTime} */
 export function isDateTime(value: unknown): value is DateTime;

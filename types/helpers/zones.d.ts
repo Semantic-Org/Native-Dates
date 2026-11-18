@@ -47,7 +47,10 @@ export interface Settings {
   formats?: Record<string, string | Intl.DateTimeFormatOptions> | null;
 }
 
-/** Sets package-wide defaults once at app boot. Returns the settings in effect */
+/**
+ * Sets package-wide defaults once at app boot. Returns the settings in effect
+ * @see {@link https://nativedates.dev/api/configure/#configure configure}
+ */
 export function configure(settings?: Settings): {
   zone: string | undefined;
   locale: string | undefined;
