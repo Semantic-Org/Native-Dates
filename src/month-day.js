@@ -288,7 +288,8 @@ export class MonthDay {
     return tag.length ? new MonthDay(this.#plain, { locale: tag[0] }) : this.#locale;
   }
 
-  format(spec = 'medium', locale = this.#locale) {
+  // with nothing named it is the built-in medium form, which no format an app names can change
+  format(spec, locale = this.#locale) {
     const options = partOptions(spec, ['month', 'day'], presets);
     return options
       ? partFormatter(options, locale).format(epochOf('date', { year: leapYear, month: this.month, day: this.day }))

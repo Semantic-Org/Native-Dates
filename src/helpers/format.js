@@ -65,6 +65,10 @@ const ownOptions = (kind, bag) => {
   return namesOwnPart ? options : { ...intlOptions(kind), ...options };
 };
 
+// what a datetime's text prints. handed over as the bag itself, so a value is written the same
+// whatever an app has named 'text', and making one can never refuse
+export const textFormat = presets.datetime.text;
+
 // a preset name or an Intl options bag resolves to Intl options, anything else resolves to undefined
 export const intlOptions = (kind, named) => {
   const spec = namedFormat(named);
