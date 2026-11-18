@@ -1,125 +1,96 @@
-// checks production bundle sizes and dev-vs-prod prose stripping against ai/contributing/budget.md
-//   node tools/gates/budget.js                             check current working tree
-//   node tools/gates/budget.js --head <dir> --base <dir>   compare head against base for a PR
+// checks the rows tools/size.js measures against ai/contributing/budget.md: the ceiling, the per-PR limits, and development text
+//   node tools/gates/budget.js                                          check the working tree
+//   node tools/gates/budget.js --base <dir> --title <title>             and judge what it adds to another checkout
+//   node tools/gates/budget.js --head <dir> --base <dir> --json <dir>   weigh a pull request, writing head.json and base.json
 
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { parse } from 'yaml';
 
-import { measure } from '../size.js';
-import { sentences } from './prose.js';
+import { buildReport } from '../ci/bundle/reporter.js';
+import { measureRows, printRows } from '../size.js';
+import { isProse, literals, sentences, sourceLocator } from './prose.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 export const budget = parse(
   readFileSync(resolve(root, 'ai/contributing/budget.md'), 'utf8').match(/^---\n([\s\S]*?)\n---/)[1],
 );
-for (const key of ['change', 'bug']) {
-  if (!Number.isFinite(budget[key])) {
-    throw new Error(`ai/contributing/budget.md is missing '${key}' in frontmatter`);
-  }
+if (!Number.isFinite(budget.ceiling)) {
+  throw new Error("ai/contributing/budget.md is missing 'ceiling' in frontmatter");
 }
-if (!budget.bundles?.length) { throw new Error('ai/contributing/budget.md defines no bundles in frontmatter'); }
 
-const allowedProse = new Set((budget.prose ?? []).map(({ text }) => text));
+// one tree as the bundle bot's reporter reads it: every row in minified, gzip and brotli bytes with the
+// source files behind it, core's distance to the ceiling, and what the two checks on development text found
+export async function checkTree(dir = root) {
+  const { rows, builds } = await measureRows(resolve(dir));
+  const headline = rows.find((row) => row.part === 'headline');
+  const overhead = rows.find((row) => row.part === 'overhead');
+  const allowed = new Set((budget.prose ?? []).map(({ text }) => text));
 
-const sourceUsesDevGate = (dir) => {
-  const srcDir = resolve(dir, 'src');
-  if (!existsSync(srcDir)) { return false; }
-  const walk = (current) =>
-    readdirSync(current, { withFileTypes: true }).some((entry) => {
-      const full = resolve(current, entry.name);
-      if (entry.isDirectory()) { return walk(full); }
-      return entry.name.endsWith('.js') && /\bisDevelopment\b/.test(readFileSync(full, 'utf8'));
-    });
-  return walk(srcDir);
-};
-
-export const measureBundles = async (dir) => {
-  const resolved = resolve(dir);
-  const expectsDevProse = sourceUsesDevGate(resolved);
-  return Object.fromEntries(
-    await Promise.all(budget.bundles.map(async ({ name, code }) => {
-      const [prod, dev] = await Promise.all([
-        measure(code, resolved).catch((error) => {
-          throw new Error(`bundle "${name}" failed to build in ${dir}\n${error.message}`);
-        }),
-        measure(code, resolved, { dev: true }).catch((error) => {
-          throw new Error(`dev bundle "${name}" failed to build in ${dir}\n${error.message}`);
-        }),
-      ]);
-      // an empty bundle means tree-shaking dropped unused imports and would report 0 B
-      if (!prod.min) {
-        throw new Error(`bundle "${name}" built to 0 bytes: reference its imports so esbuild retains them`);
-      }
-      return [name, {
-        min: prod.min,
-        br: prod.br,
-        prose: sentences(prod.text).filter((text) => !allowedProse.has(text)),
-        devProse: sentences(dev.text).filter((text) => !allowedProse.has(text)),
-        expectsDevProse,
-      }];
-    })),
-  );
-};
-
-export const formatCount = (number) => number.toLocaleString('en-US');
-export const formatSigned = (number) => `${number > 0 ? '+' : ''}${formatCount(number)}`;
-const formatBytes = (number) => `${formatCount(number)} bytes`;
-
-export function evaluateBudget({ head, base, title = '', body = '' }) {
-  // compound categories like Feat/Bug: skip single-category delta rules
-  const kind = title.match(/^(\w+)(?:\([^)]*\))?:/)?.[1];
-  const priced = body.match(/^Expected bytes:.*$/m)?.[0];
-
-  // brotli can shift by 1-2 B on unrelated edits, so only treat a bundle as changed when minified size changed
-  const rows = budget.bundles.map(({ name, ceiling }) => {
-    const moved = Boolean(base) && head[name].min !== base[name].min;
-    return { name, ceiling, br: head[name].br, moved, added: moved ? head[name].br - base[name].br : 0 };
-  });
-
-  const leakedProse = budget.bundles.filter(({ name }) => head[name].prose > 0).map(({ name }) =>
-    `"${name}" includes ${head[name].prose} ${
-      head[name].prose === 1 ? 'string' : 'strings'
-    } of unstripped development prose.`
-  );
-
-  const expectsDevProse = budget.bundles.some(({ name }) => head[name].expectsDevProse);
-  const hasDevProse = budget.bundles.some(({ name }) => (head[name].devProse ?? 1) > 0);
-  if (expectsDevProse && !hasDevProse) {
-    leakedProse.push(
-      'No development prose appeared in __DEV__=true builds despite isDevelopment usage in src/. Check isDevelopment wiring or bundle coverage.',
-    );
+  // the strip check runs both ways, since a check that only looks for absence passes once nothing is left
+  // to look for: development text is present in the development build, and gone from the production one
+  const production = builds[headline.label];
+  const development = builds[overhead.label];
+  const strip = { present: false, folded: false };
+  if (production && development) {
+    const shipped = new Set(sentences(production.text));
+    const devOnly = sentences(development.text).filter((text) => !allowed.has(text));
+    strip.present = devOnly.length > 0;
+    strip.folded = devOnly.some((text) => !shipped.has(text));
   }
+  else {
+    strip.error = `${(production ? overhead : headline).label} did not build`;
+  }
+  strip.ok = strip.present && strip.folded;
 
-  const violations = [];
-  for (const { name, ceiling, br, added } of rows) {
-    if (br > ceiling) { violations.push(`"${name}" exceeds its ceiling by ${formatBytes(br - ceiling)}.`); }
-    if (kind === 'Bug' && added >= budget.bug) {
-      violations.push(
-        `"${name}" grew by ${formatBytes(added)}. Bug fixes aim for 0 bytes and fail at ${formatBytes(budget.bug)}.`,
-      );
-    }
-    if (added > budget.change) {
-      violations.push(
-        `"${name}" grew by ${formatBytes(added)}, exceeding the per-PR limit of ${formatBytes(budget.change)}.`,
-      );
+  // the prose check reads every literal core and the plugins ship, and keeps each sentence with its source line
+  const scanned = rows.filter((row) => row.part === 'headline' || row.part === 'plugin');
+  const survivors = new Map();
+  const held = {};
+  for (const { label, beside } of scanned.filter((row) => builds[row.label])) {
+    const { text, map } = builds[label];
+    const locate = sourceLocator(map, text);
+    held[label] = new Set();
+    for (const { text: literal, offset } of literals(text)) {
+      if (!isProse(literal)) { continue; }
+      const found = locate(offset);
+      const at = found ? `${found.file}:${found.line}:${found.column}` : 'no source mapping';
+      const key = `${literal}\n${at}`;
+      held[label].add(key);
+      // a plugin's bundle holds core too, and a line core carries is core's
+      if (held[beside]?.has(key)) { continue; }
+      if (survivors.has(key)) { survivors.get(key).bundles.push(label); }
+      else { survivors.set(key, { text: literal, at, bundles: [label] }); }
     }
   }
+  const skipped = scanned.filter((row) => !builds[row.label]).map((row) => row.label);
+  const leaked = [...survivors.values()].filter((survivor) => !allowed.has(survivor.text));
+  const carried = new Set([...survivors.values()].map((survivor) => survivor.text));
+  const stale = skipped.length ? [] : [...allowed].filter((text) => !carried.has(text));
 
-  const notes = [];
-  if (priced) { notes.push(`PR description declares: "${priced}"`); }
-  if (kind === 'Feat' && !priced && rows.some((row) => row.added > 0)) {
-    notes.push(
-      'Features are expected to add ~0 bytes unless priced in the PR description with "Expected bytes: <N>".',
-    );
-  }
-  if (['Build', 'Harness', 'Docs', 'Test', 'Chore'].includes(kind) && rows.some((row) => row.moved)) {
-    notes.push(`A ${kind} PR should not change production bundle sizes.`);
-  }
-  return { rows, notes, violations, leakedProse };
+  const weight = headline.sizes?.br ?? null;
+  return {
+    ceiling: {
+      limit: budget.ceiling,
+      headline: weight,
+      distance: weight === null ? null : budget.ceiling - weight,
+      ok: weight !== null && weight <= budget.ceiling,
+    },
+    sizes: budget.sizes,
+    strip,
+    prose: {
+      ok: leaked.length === 0 && skipped.length === 0,
+      survivors: [...survivors.values()],
+      leaked,
+      stale,
+      skipped,
+    },
+    // a build's text and map stay here. the reporter reads bytes and the source files behind them
+    rows,
+  };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
@@ -127,63 +98,37 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     options: {
       head: { type: 'string', default: root },
       base: { type: 'string' },
-      title: { type: 'string' },
-      body: { type: 'string' },
+      title: { type: 'string', default: '' },
       json: { type: 'string' },
     },
   });
-  const measured = {
-    head: await measureBundles(args.head),
-    base: args.base ? await measureBundles(args.base) : undefined,
-  };
-  // store only numeric counts in the JSON artifact so report.yml never renders untrusted PR strings
-  const toCounts = (side) =>
-    side
-    && Object.fromEntries(
-      Object.entries(side).map(([name, size]) => [
-        name,
-        {
-          min: size.min,
-          br: size.br,
-          prose: size.prose.length,
-          devProse: size.devProse.length,
-          expectsDevProse: size.expectsDevProse,
-        },
-      ]),
-    );
-  const head = toCounts(measured.head);
-  const base = toCounts(measured.base);
-  if (args.json) { writeFileSync(args.json, JSON.stringify({ head, base })); }
+  const head = await checkTree(args.head);
+  const base = args.base ? await checkTree(args.base) : null;
+  if (args.json) {
+    mkdirSync(args.json, { recursive: true });
+    writeFileSync(resolve(args.json, 'head.json'), `${JSON.stringify(head)}\n`);
+    if (base) { writeFileSync(resolve(args.json, 'base.json'), `${JSON.stringify(base)}\n`); }
+  }
 
-  const { rows, notes, violations, leakedProse } = evaluateBudget({
-    head,
-    base,
-    title: args.title,
-    body: args.body,
-  });
-  const cell = (text) => text.padStart(10);
-  const width = Math.max('Bundle'.length, ...rows.map((row) => row.name.length)) + 2;
-  const table = [
-    'Bundle'.padEnd(width) + cell('Brotli') + cell('Ceiling') + (base ? cell('Change') : ''),
-    ...rows.map((row) =>
-      row.name.padEnd(width) + cell(formatCount(row.br)) + cell(formatCount(row.ceiling))
-      + (base ? cell(formatSigned(row.added)) : '')
-    ),
-  ];
-  const verdict = [
-    ...(violations.length
-      ? ['Over budget.', ...violations, 'See ai/contributing/budget.md for options when a change exceeds the budget.']
-      : []),
-    ...(leakedProse.length
-      ? [
-        'Development prose check failed.',
-        ...leakedProse,
-        ...Object.entries(measured.head).flatMap(([name, { prose }]) => prose.map((text) => `  ${name}: ${text}`)),
-        'See ai/contributing/standards/legibility/errors-and-logs.md to fold explanations behind isDevelopment.',
-      ]
-      : []),
-    ...(violations.length || leakedProse.length ? [] : ['Within budget.']),
-  ];
-  console.log(`\n${[...table, '', ...notes, ...(notes.length ? [''] : []), ...verdict].join('\n')}\n`);
-  process.exitCode = violations.length || leakedProse.length ? 1 : 0;
+  // the reporter is the one judge, so the check is red exactly when the comment is. with no base the
+  // tree is weighed against itself, and only the ceiling and the two text checks can be red
+  const report = buildReport({ measurements: { head, base: base ?? head, changed: {} }, head: { msg: args.title } });
+  const red = report.state === 'red';
+  printRows(head.rows);
+  console.log(report.summary.ceiling);
+  console.log(report.summary.checks);
+  for (const text of head.prose.stale) { console.warn(`stale prose entry in ai/contributing/budget.md: "${text}"`); }
+  if (red) {
+    console.error(`\n${report.title}\n\n${report.body}\n`);
+    if (report.reason.startsWith('over')) {
+      console.error('See ai/contributing/budget.md for options when a change exceeds the budget.\n');
+    }
+    // an annotation on the run's page, one line by construction
+    if (process.env.GITHUB_ACTIONS) { console.log(`::error::${report.sentence}`); }
+  }
+  else {
+    const moved = base && report.rows.some((row) => row.changed);
+    console.log(`\n${moved ? `${report.sentence}\n` : ''}Within budget.\n`);
+  }
+  process.exitCode = red ? 1 : 0;
 }
