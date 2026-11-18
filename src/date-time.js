@@ -76,7 +76,7 @@ export class DateTime {
     this.millisecond = zoned.millisecond;
     this.zone = zoned.timeZoneId;
     this.offset = zoned.offset;
-    this.epoch = zoned.epochMilliseconds;
+    this.epochMilliseconds = zoned.epochMilliseconds;
     this.text = this.format('text');
     Object.freeze(this);
   }
@@ -198,6 +198,11 @@ export class DateTime {
   }
   get nanosecond() {
     return this.#zoned.nanosecond;
+  }
+  // the three counts since 1970 each say their unit, since the word alone means seconds to a shell
+  // and milliseconds to a browser. whole seconds, rounded down, are what a JWT or a unix api takes
+  get epochSeconds() {
+    return Math.floor(this.epochMilliseconds / 1000);
   }
   // the exact instant as a BigInt, the key two datetimes a nanosecond apart still tell apart on
   get epochNanoseconds() {
@@ -442,15 +447,15 @@ export class DateTime {
   format(spec, locale = this.#locale) {
     const options = intlOptions('datetime', spec);
     return options
-      ? formatIntl('datetime', this.epoch, options, locale, this.zone)
+      ? formatIntl('datetime', this.epochMilliseconds, options, locale, this.zone)
       : formatTokens(this, 'datetime', spec, locale);
   }
 
   // how far this moment is from another, in words: '3 hours ago', 'in 2 days'. from now when no
   // other is given
   from(other, locale = this.#locale) {
-    const reference = other === undefined ? Date.now() : new DateTime(other, this.zone).epoch;
-    return relativeSeconds((this.epoch - reference) / 1000, locale);
+    const reference = other === undefined ? Date.now() : new DateTime(other, this.zone).epochMilliseconds;
+    return relativeSeconds((this.epochMilliseconds - reference) / 1000, locale);
   }
 
   fromNow(locale) {
@@ -469,7 +474,7 @@ export class DateTime {
   }
 
   toJSDate() {
-    return new Date(this.epoch);
+    return new Date(this.epochMilliseconds);
   }
 
   toTemporal() {
@@ -477,12 +482,12 @@ export class DateTime {
   }
 
   valueOf() {
-    return this.epoch;
+    return this.epochMilliseconds;
   }
 
   // + gives the string and < and - the number, the way Date decides
   [Symbol.toPrimitive](hint) {
-    return hint === 'number' ? this.epoch : this.toString();
+    return hint === 'number' ? this.epochMilliseconds : this.toString();
   }
 
   [inspect]() {

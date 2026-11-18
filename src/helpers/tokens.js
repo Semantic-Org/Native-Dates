@@ -120,7 +120,7 @@ const zoneNameOptions = {
 };
 const zoneName = (parts, locale, style) =>
   zonedDateTimeFormat(locale, zoneNameOptions[style], parts.zone)
-    .formatToParts(parts.epoch)
+    .formatToParts(parts.epochMilliseconds)
     .find((part) => part.type === 'timeZoneName')?.value;
 
 // each token with the field it reads, so a date asked for hours refuses instead of printing zeros
@@ -159,8 +159,8 @@ const tokenReaders = {
   zz: ['zone', (subject, locale) => zoneName(subject, locale, 'short')],
   zzz: ['zone', (subject, locale) => zoneName(subject, locale, 'long')],
   zzzz: ['zone', (subject, locale) => zoneName(subject, locale, 'long')],
-  X: ['epoch', (subject) => String(Math.floor(subject.epoch / 1000))],
-  x: ['epoch', (subject) => String(subject.epoch)],
+  X: ['epochSeconds', (subject) => String(subject.epochSeconds)],
+  x: ['epochMilliseconds', (subject) => String(subject.epochMilliseconds)],
   Q: ['month', (subject) => String(Math.ceil(subject.month / 3))],
   W: ['weekOfYear', (subject) => String(subject.weekOfYear)],
   WW: ['weekOfYear', (subject) => pad(subject.weekOfYear)],

@@ -363,7 +363,7 @@ class Range {
     // a time range across midnight is one whose end reads earlier on the same day, and Intl formats
     // that as it stands, in the locale's own range form
     const [start, end] = this.kind === 'datetime'
-      ? [this.start.epoch, this.end.epoch]
+      ? [this.start.epochMilliseconds, this.end.epochMilliseconds]
       : [this.start.toTemporal(), this.end.toTemporal()];
     return formatter(this.kind, options, locale, this.start.zone)
       .formatRange(epochOf(this.kind, start), epochOf(this.kind, end));

@@ -177,8 +177,10 @@ export class DateTime {
   readonly zone: string;
   /** The UTC offset in effect, `'+05:30'` */
   readonly offset: string;
-  /** Epoch milliseconds */
-  readonly epoch: number;
+  /** Whole seconds since the start of 1970 in UTC, rounded down: what a JWT or a Unix API takes */
+  readonly epochSeconds: number;
+  /** Milliseconds since the start of 1970 in UTC: what `Date.now()` and `new Date(ms)` use */
+  readonly epochMilliseconds: number;
   /** The exact instant as epoch nanoseconds, the key two datetimes a nanosecond apart still tell apart on */
   readonly epochNanoseconds: bigint;
   readonly quarter: number;
