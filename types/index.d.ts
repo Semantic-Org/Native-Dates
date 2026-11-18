@@ -243,6 +243,9 @@ export class DateTime {
   /** A range from this moment until another, the end excluded */
   to(end: DateTimeInput | DurationInput): DateTimeRange;
   to(count: number, unit: Unit): DateTimeRange;
+  /** A range that starts at this moment and runs for a length, the end excluded: `meeting.for(90, 'minutes')`. The same as `to` given a length */
+  for(length: DurationInput): DateTimeRange;
+  for(count: number, unit: Unit): DateTimeRange;
   /** The unit containing this moment as a half-open range, its start until the next start */
   range(unit: Unit, firstDay?: DayOfWeek): DateTimeRange;
 
@@ -356,6 +359,9 @@ export class CalendarDate {
   /** A range from this date through another, both included */
   to(end: CalendarDateInput | DurationInput): DateRange;
   to(count: number, unit: Unit): DateRange;
+  /** A range that starts on this date and runs for a length, its last day included: `checkIn.for(3, 'days')` from the 6th is the 6th, 7th and 8th. The same as `to` given a length */
+  for(length: DurationInput): DateRange;
+  for(count: number, unit: Unit): DateRange;
   /** Alias for `to`, on a date alone, since a date range runs through its last day */
   through(end: CalendarDateInput | DurationInput): DateRange;
   through(count: number, unit: Unit): DateRange;
@@ -487,6 +493,9 @@ export class Time {
   /** A range from this time until another, the end excluded */
   to(end: TimeInput | DurationInput): TimeRange;
   to(count: number, unit: Unit): TimeRange;
+  /** A range that starts at this time and runs for a length, the end excluded: `time('9am').for(8, 'hours')`. The same as `to` given a length */
+  for(length: DurationInput): TimeRange;
+  for(count: number, unit: Unit): TimeRange;
   as(kind: 'time'): Time;
 
   format(spec?: FormatSpec, locale?: Locale): string;

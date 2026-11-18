@@ -384,6 +384,8 @@ export class Time {
 Time.prototype.add = Time.prototype.plus;
 Time.prototype.subtract = Time.prototype.minus;
 Time.prototype.lang = Time.prototype.locale;
+// for is to given a length, the word that reads aloud: start.for(90, 'minutes')
+Time.prototype.for = Time.prototype.to;
 
 export const time = (input, minuteOrOptions, second) => {
   const build = () =>

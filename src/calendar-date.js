@@ -468,6 +468,8 @@ export class CalendarDate {
 CalendarDate.prototype.add = CalendarDate.prototype.plus;
 CalendarDate.prototype.subtract = CalendarDate.prototype.minus;
 CalendarDate.prototype.lang = CalendarDate.prototype.locale;
+// for is to given a length, the word that reads aloud: start.for(90, 'minutes')
+CalendarDate.prototype.for = CalendarDate.prototype.to;
 CalendarDate.prototype.formatRelative = CalendarDate.prototype.from;
 // through is to for a date alone, since a date range runs through its last day and the other kinds stop short of theirs
 CalendarDate.prototype.through = CalendarDate.prototype.to;

@@ -498,6 +498,8 @@ export class DateTime {
 DateTime.prototype.add = DateTime.prototype.plus;
 DateTime.prototype.subtract = DateTime.prototype.minus;
 DateTime.prototype.lang = DateTime.prototype.locale;
+// for is to given a length, the word that reads aloud: start.for(90, 'minutes')
+DateTime.prototype.for = DateTime.prototype.to;
 DateTime.prototype.formatRelative = DateTime.prototype.from;
 
 // with { loose: true } (via plugins/loose) an unreadable input is null, never a throw
