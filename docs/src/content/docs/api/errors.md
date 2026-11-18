@@ -110,8 +110,8 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | Code | Thrown by | Cause |
 |---|---|---|
 | `unknownUnit` | Arithmetic, rounding, `set()`, `duration()` | Unrecognized unit name or abbreviation. |
-| `unknownWeekday` | `weekday()`, `next()`, `previous()`, `configure()` | Weekday string is not recognized or weekday number is outside 1 to 7. |
-| `unknownWidth` | `configure()` | A `weekdays` entry names a width other than `narrow`, `short`, or `long`, or leaves the width out. |
+| `unknownDayOfWeek` | `dayOfWeek()`, `next()`, `previous()`, `configure()` | Day name is not recognized, or the day of the week as a number is outside 1 to 7. |
+| `unknownWidth` | `configure()` | A `weekdayNames` entry names a width other than `narrow`, `short`, or `long`, or leaves the width out. |
 | `unknownZone` | Factories, `in()`, `configure()` | Unknown IANA time zone ID, non-string zone, or malformed UTC offset. |
 | `invalidZoneAliases` | `configure()` | `zoneAliases` is neither a plain object nor `null`. |
 | `unknownLocale` | `locale()`, factories, `format()`, `monthNames()`, `weekdayNames()`, `configure()` | Locale tag, tag list, or `Accept-Language` header contains an invalid language tag. |
@@ -125,7 +125,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 |---|---|---|
 | `unsupportedUnit` | `CalendarDate`, `Time`, `YearMonth` | Using clock units on a `CalendarDate`, calendar units on a `Time`, or units smaller than a month on a `YearMonth`. |
 | `cannotAdd` | `plus()`, `add()` | Addition overflows Temporal's representable date range. |
-| `cannotSubtract` | `minus()`, `subtract()`, `remove()` | Subtraction overflows Temporal's representable date range. |
+| `cannotSubtract` | `minus()`, `subtract()` | Subtraction overflows Temporal's representable date range. |
 | `cannotSet` | `set()` | Field value is fractional or out of range for that calendar month or clock unit. |
 | `cannotRound` | `round()`, `floor()`, `ceil()`, `Time.startOf()` | Unsupported rounding unit, or step increment does not divide evenly into the next unit. |
 | `missingAnchor` | `Duration.balance()`, `total()`, `compare()` | Unanchored duration requires a calendar start date to convert months or years into weeks, days, or clock units. |

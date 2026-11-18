@@ -33,9 +33,6 @@ export class MonthDay {
   constructor(input: MonthDayInput, options?: Zone | MonthDayOptions);
   constructor(month: number | string, day: number | string);
 
-  /** The presets `format()` reads by name, open to more: `'short'` `10/17`, `'medium'` `Oct 17`, `'long'` `October 17` */
-  static presets: Record<string, Intl.DateTimeFormatOptions>;
-
   /** The value in the configured locale's common form, `'Oct 17'`, what `format()` prints */
   readonly text: string;
   readonly month: number;
@@ -51,6 +48,8 @@ export class MonthDay {
   next(day?: CalendarDateInput): CalendarDate;
   /** The most recent occurrence, counted from today or from a day */
   previous(day?: CalendarDateInput): CalendarDate;
+  /** Alias for `previous`: `birthday.last()` */
+  last(day?: CalendarDateInput): CalendarDate;
   as(kind: 'monthDay'): MonthDay;
 
   /**
@@ -64,6 +63,8 @@ export class MonthDay {
    * Feb 28, 2027 and not on Feb 28, 2028
    */
   fallsOn(day: CalendarDateInput): boolean;
+  /** Alias for `fallsOn` */
+  isOn(day: CalendarDateInput): boolean;
   /** Whether it falls on today. Today depends on where you stand, so these take the zone to judge from */
   isToday(zone?: Zone): boolean;
   isTomorrow(zone?: Zone): boolean;

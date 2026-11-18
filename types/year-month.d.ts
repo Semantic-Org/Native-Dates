@@ -34,8 +34,6 @@ export class YearMonth {
   constructor(input: YearMonthInput, options?: Zone | ReadOptions);
   constructor(year: number | string, month: number | string);
 
-  /** The presets `format()` reads by name, open to more: `'short'` `11/2026`, `'medium'` `Nov 2026`, `'long'` `November 2026` */
-  static presets: Record<string, Intl.DateTimeFormatOptions>;
   /** The century a two-digit year is read in by `monthYear()` (default: 2000) */
   static century: number;
 
@@ -59,8 +57,6 @@ export class YearMonth {
   minus(amount: DurationInput, unit?: Unit): YearMonth;
   /** Alias for `minus` */
   subtract(amount: DurationInput, unit?: Unit): YearMonth;
-  /** Alias for `minus` */
-  remove(amount: DurationInput, unit?: Unit): YearMonth;
 
   set(fields: Partial<YearMonthFields>): YearMonth;
   set(unit: Unit, value: number): YearMonth;
@@ -74,6 +70,8 @@ export class YearMonth {
   isAfter(other: YearMonthInput): boolean;
   /** Whether a day falls in this month */
   contains(day: CalendarDateInput): boolean;
+  /** Alias for `contains` */
+  includes(day: CalendarDateInput): boolean;
   /** Past once its last day is, and future until its first, judged from the zone */
   isPast(zone?: Zone): boolean;
   isFuture(zone?: Zone): boolean;

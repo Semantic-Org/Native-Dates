@@ -19,7 +19,7 @@ Import only the functions you call. Bundlers tree-shake everything else automati
 ```js title="app.js"
 import { date, monthDay, now, today, yearMonth } from 'native-dates';
 
-const sprint = today().to(2, 'weeks');
+const sprint = today().for(2, 'weeks');
 const current = now('Europe/Berlin');
 const standup = date('2026-11-16').at('9:30am', 'America/New_York');
 standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'

@@ -39,11 +39,11 @@ const d = date('2026-11-16');
 d.year; // 2026
 d.month; // 11, November
 d.day; // 16
-d.weekday; // 1, Monday
+d.dayOfWeek; // 1, Monday
 ```
 
 :::warning[Check month and weekday numbers]
-Day.js numbers months from 0 to 11 and starts weekdays on Sunday at 0. Here, `month` runs from 1 through 12, and `weekday` runs from 1 on Monday through 7 on Sunday.
+Day.js numbers months from 0 to 11 and starts weekdays on Sunday at 0. Here, `month` runs from 1 through 12, and `dayOfWeek` runs from 1 on Monday through 7 on Sunday.
 :::
 
 ## Time zones, durations, and ranges built in
@@ -99,6 +99,8 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 |---|---|---|
 | `dayjs()` | `now()` or `today()` | Choose an exact moment or a calendar day |
 | `d.month()`, `d.date()` | `d.month`, `d.day` | Plain properties with months from 1 to 12 |
+| `d.day()`, `d.isoWeekday()` | `d.dayOfWeek` | ISO day of the week from 1 on Monday to 7 on Sunday |
+| `d.unix()`, `d.valueOf()` | `dt.epochSeconds`, `dt.epochMilliseconds` | Each count since 1970 names its unit |
 | `d.add(2, 'day')` | `d.plus(2, 'days')` | `add()` and `subtract()` aliases also work |
 | `dayjs.tz(x, zone)` | `datetime(x, zone)` | Built into core with no `timezone` plugin |
 | `d.tz(zone)` | `dt.in(zone)` | Views the same moment in another IANA zone |
@@ -107,6 +109,6 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `dayjs.duration(90, 'm')` | `minutes(90)` or `duration('90m')` | Built into core with no `duration` plugin |
 | `d.format('LLL')` | `dt.format('LLL')` | Localized presets from `'LT'` to `'llll'` in core |
 | `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) built directly into core |
-| `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) built into core with `to()` and `overlaps()` |
+| `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) built into core with `to()`, `for()`, and `overlaps()` |
 | `d.fromNow()`, `d.from(other)` | `d.fromNow()`, `d.from(other)` | Built into core with no `relativeTime` plugin |
 | `customParseFormat` | `{ loose: true }` | Provided by [`@native-dates/plugins/loose`](/plugins/loose/) |

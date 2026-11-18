@@ -14,7 +14,7 @@ import {
 } from './helpers/fields.js';
 import { IS_DURATION } from './helpers/identity.js';
 import { durationFormat, unitFormat } from './helpers/intl.js';
-import { inspect, isTemporalDuration, unit } from './helpers/units.js';
+import { alias, inspect, isTemporalDuration, unit } from './helpers/units.js';
 import { checkedLocale, locale as pickLocale } from './helpers/zones.js';
 
 /*
@@ -368,11 +368,7 @@ export class Duration {
   }
 }
 
-Duration.prototype.add = Duration.prototype.plus;
-Duration.prototype.subtract = Duration.prototype.minus;
-Duration.prototype.remove = Duration.prototype.minus;
-Duration.prototype.lang = Duration.prototype.locale;
-Duration.prototype.as = Duration.prototype.total;
+alias(Duration, { add: 'plus', subtract: 'minus', lang: 'locale', as: 'total' });
 
 // duration(input, unit), or duration(input, { loose, locale })
 export const duration = (input, unitOrOptions) => {

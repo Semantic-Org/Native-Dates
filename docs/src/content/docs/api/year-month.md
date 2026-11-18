@@ -41,7 +41,6 @@ Properties read the ISO year, month, and surrounding calendar bounds.
 | `daysInMonth`, `daysInYear` | `number` | Days in this month from 28 to 31, and days in this year as 365 or 366. |
 | `start`, `end` | `CalendarDate` | First and last calendar day of this month. |
 | `YearMonth.century` | `number` | Base century added to two-digit years in `monthYear()`, defaulting to `2000`. |
-| `YearMonth.presets` | `object` | Named format presets read by `format()`, open to custom entries. |
 
 ## Arithmetic and fields
 
@@ -94,10 +93,9 @@ billing.plus('1 year').toString(); // '2027-11'
 ```js signature
 ym.minus(amount, unit?): YearMonth
 ym.subtract(amount, unit?): YearMonth
-ym.remove(amount, unit?): YearMonth
 ```
 
-Moves backward by years, quarters, or months and returns a new instance. Accepts the same inputs as [`plus()`](#plus), with `subtract()` and `remove()` as aliases.
+Moves backward by years, quarters, or months and returns a new instance. Accepts the same inputs as [`plus()`](#plus), with `subtract()` as an alias.
 
 **Parameters**
 
@@ -274,9 +272,10 @@ yearMonth('2026-12').isAfter('2026-11'); // true
 
 ```js signature
 ym.contains(day): boolean
+ym.includes(day): boolean
 ```
 
-Returns `true` when the given calendar date or timestamp falls inside this year and month.
+Returns `true` when the given calendar date or timestamp falls inside this year and month. It is also aliased as `includes()`.
 
 **Parameters**
 
@@ -410,7 +409,7 @@ ym.format(spec?, locale?): string
 
 Formats the year and month using named presets, `Intl` options objects, or built-in token patterns such as `'MM/YY'`. Shared options objects drop day, clock, and zone keys automatically.
 
-Standard and localized presets print only the year and month, and custom styles can be added on `YearMonth.presets`. See [Formatting](/guides/formatting/) for the full preset and token tables.
+Standard and localized presets print only the year and month, and formats an app names in [`configure()`](/api/configure/) print here too. See [Formatting](/guides/formatting/) for the full preset and token tables.
 
 **Parameters**
 
