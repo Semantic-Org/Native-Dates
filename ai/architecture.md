@@ -40,6 +40,18 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"
 | `@native-dates/plugins/loose` | `{ loose: true, dayFirst }` `Date.parse` fallback and `null` on unreadable input | Supplies the loose parser and `loosely` wrapper in `helpers/errors.js` across factories and ranges |
 | `@native-dates/plugins/legacy-date` | `Date.prototype` read methods (`getFullYear`, `getUTC*`, `toISOString`, `toLocale*`) and `set*` refusals on `DateTime` | Attaches prototype methods onto `DateTime` (`.toJSDate()` stays in core) |
 
+## Testing
+
+`npm test` runs one suite with Vitest as three projects (`vitest.config.js`), because behaviour can differ from source in two places: on a polyfilled Temporal and in a minified build.
+
+| Project | Runs the suite on | Set up by |
+|---|---|---|
+| `native` | `src/` on the runtime's own Temporal | |
+| `polyfill` | `src/` on `temporal-polyfill`, loaded through `@native-dates/polyfill` with native Temporal removed | `test/setup/polyfill.js` |
+| `bundle` | A minified production build of core and every plugin in `dist/test/`, with the package names pointed at it | `test/setup/bundle.js` |
+
+A test in `test/` or `packages/*/test/` runs in all three. A check that holds in only one of them goes in `test/<project>/` and runs in that project alone, such as a development explanation in `test/native/` or a production build that carries none in `test/bundle/`. Tests import `native-dates` and `@native-dates/plugins/*` by package name, assert a refusal by `error.code` and `error.at`, never by its explanation, and pass every zone and locale they depend on, so the suite gives the same answer on any machine.
+
 ## Measuring Size
 
 Run `npm run size` (`tools/size.js`) after any change to `src/`. It bundles with `esbuild` (`minify: true`, `NODE_ENV=production` so `isDevelopment` explanations fold out) and compresses at Brotli quality 11, reporting core, each plugin (with core external), and the combined total.
