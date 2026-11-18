@@ -9,7 +9,7 @@ import { each } from 'native-dates/helpers/utils';
 
 const reads = {
   getTime() {
-    return this.epoch;
+    return this.epochMilliseconds;
   },
   getFullYear() {
     return this.year;
