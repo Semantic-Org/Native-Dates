@@ -30,6 +30,11 @@ import {
 import { zoneId } from './helpers/zones.js';
 import { TimeRange } from './range.js';
 
+/*
+  a wall-clock time with no date and no zone (Temporal.PlainTime).
+  Arithmetic wraps modulo 24 hours and rejects calendar units until anchored to a date via .on()
+*/
+
 const clock = /^(\d{1,2})(?::(\d{2}))?(?::(\d{2})(?:\.(\d{1,9}))?)?\s*([ap]\.?m\.?)?$/i;
 
 export class Time {
@@ -63,9 +68,7 @@ export class Time {
       isPlainTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
         : Time.#read(input, isNumber(minuteOrOptions) ? minuteOrOptions : undefined, second, settings);
-    // the parts are own properties, so a value prints them in a console without a click. the text is
-    // keyed first so a preview leads with it, and filled once the parts it reads are in
-    this.text = undefined;
+    this.text = undefined; // keep text first in console previews
     const plain = this.#plain;
     this.hour = plain.hour;
     this.minute = plain.minute;
@@ -106,7 +109,7 @@ export class Time {
     if (input instanceof Time) {
       return input.toTemporal();
     }
-    // a moment falls on a different day and clock in each zone, so it is read in the zone asked for
+    // instants and zoned inputs resolve their wall-clock time in the requested (or default) zone
     if (
       input instanceof DateTime || isDate(input) || isZonedDateTime(input) || isInstant(input)
       || (isString(input) && namesInstant(input))
@@ -145,7 +148,7 @@ export class Time {
     });
   }
 
-  // '9am', '5:30 pm', '09:00', '17:30:15'. anything else goes to Temporal's ISO reader
+  // custom regex handles 12-hour '9am' / '5:30 pm' forms before falling back to Temporal's strict ISO parser
   static #parse(text) {
     const match = clock.exec(text.trim());
     if (match) {
@@ -187,7 +190,6 @@ export class Time {
     );
   }
 
-  // the locale this value is written in, or the same value written in another. an unset tag clears it
   locale(...tag) {
     return tag.length ? new Time(this.#plain, { locale: tag[0] }) : this.#locale;
   }
@@ -211,14 +213,13 @@ export class Time {
             Arithmetic
   *******************************/
 
-  // arithmetic wraps like a clock face: 23:00 plus two hours is 01:00
   plus(amount, name) {
     return this.#next(
       guard(() => this.#plain.add(Time.#clockFields(amount, name)), 'cannotAdd', `${amount} ${name ?? ''}`),
     );
   }
 
-  // a clock has no calendar, so a day added to a time is refused rather than wrapped away
+  // Temporal.PlainTime.add({ days: 1 }) silently wraps to a no-op, so reject calendar units explicitly
   static #clockFields(amount, name) {
     const fields = fieldsFrom(amount, name);
     const calendar = ['years', 'months', 'weeks', 'days'].find((field) => fields[field]);
@@ -283,7 +284,6 @@ export class Time {
     );
   }
 
-  // a range from this time until another, the end excluded
   to(end, name) {
     return new TimeRange(this, name === undefined ? end : duration(end, name));
   }
@@ -319,7 +319,7 @@ export class Time {
              Measure
   *******************************/
 
-  // within the day, signed: 22:00 until 02:00 is minus twenty hours, not four
+  // measures within a single 00:00..23:59 day (22:00 to 02:00 is -20h, whereas TimeRange wraps overnight)
   until(other, name) {
     const span = anchored(
       this.#plain.until(new Time(other).toTemporal(), { largestUnit: 'hour' }),
@@ -350,7 +350,7 @@ export class Time {
     return options ? formatIntl('time', this.#plain, options, locale) : formatTokens(this, 'time', spec, locale);
   }
 
-  // a fraction prints in groups of three, the width its precision needs, so one precision is one width
+  // pad sub-second precision to 3, 6, or 9 digits rather than Temporal's unpadded '.5'
   toString() {
     const digits = this.nanosecond ? 9 : this.microsecond ? 6 : this.millisecond ? 3 : 0;
     return this.#plain.toString({ fractionalSecondDigits: digits });
@@ -372,7 +372,7 @@ export class Time {
     });
   }
 
-  // + gives the string, while < and - still refuse through valueOf
+  // '+' sends hint 'default', which would call valueOf() and throw without this
   [Symbol.toPrimitive](hint) {
     return hint === 'number' ? this.valueOf() : this.toString();
   }
@@ -382,7 +382,6 @@ export class Time {
   }
 }
 
-// for is to given a length, the word that reads aloud: start.for(8, 'hours')
 alias(Time, { add: 'plus', subtract: 'minus', lang: 'locale', for: 'to' });
 
 export const time = (input, minuteOrOptions, second) => {

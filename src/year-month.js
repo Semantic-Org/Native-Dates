@@ -24,29 +24,22 @@ import {
 import { zoneId } from './helpers/zones.js';
 
 /*
-  a year and a month with no day: a billing period, a card's expiry, what a month picker holds. it
-  counts in months and years, and hands over any one of its days as a date
+  a calendar year and month with no day (Temporal.PlainYearMonth), such as a billing period or card expiry.
+  Arithmetic accepts only months, quarters, and years, and .on(day) clamps overflow days like 31 to the month's end
 */
 
-// '2026-11', '2026/11', '2026.11', or '2026-5': a four-digit (or signed six-digit) year first
 const noDay = /^([+-]\d{6}|\d{4})[-/.](\d{1,2})$/;
-
-// a month and a year in the order a card prints them, '11/26' or '11/2026'
 const monthFirst = /^(\d{1,2})[-/.](\d{2}|\d{4})$/;
-
-// a month by its name and a year, in either order: 'Nov 2026', '2026 November', 'novembre 2026'
 const nameAndYear = /^(?:([\p{L}\p{M}]{3,})\.?,?\s+(?:de\s+)?(\d{4})|(\d{4})\s+([\p{L}\p{M}]{3,})\.?)$/iu;
 
-// what each preset name prints of a year and a month
 const presets = {
-  // four digits, since 11/26 reads as a day beside a month
+  // 4-digit year so '11/2026' isn't misread as Nov 26 alongside MonthDay
   short: Object.freeze({ year: 'numeric', month: 'numeric' }),
   medium: Object.freeze({ year: 'numeric', month: 'short' }),
   long: Object.freeze({ year: 'numeric', month: 'long' }),
   full: Object.freeze({ year: 'numeric', month: 'long' }),
 };
 
-// the units below a month, which a year-month has no room for
 const smaller = units.slice(2);
 
 export class YearMonth {
@@ -58,7 +51,7 @@ export class YearMonth {
     return !!value?.[IS_YEAR_MONTH];
   }
 
-  // the century a two-digit year is read in: monthYear('11/26') is November 2026
+  // base century added to two-digit years in monthYear('11/26')
   static century = 2000;
 
   #plain;
@@ -68,16 +61,13 @@ export class YearMonth {
   constructor(input, monthOrOptions) {
     this.#plain = YearMonth.#read(input, monthOrOptions);
     this.#locale = localeOf(monthOrOptions, input);
-    // the parts are own properties, so a value prints them in a console without a click. the text is
-    // keyed first so a preview leads with it, and filled once the parts it reads are in
-    this.text = undefined;
+    this.text = undefined; // keep text first in console previews
     this.month = this.#plain.month;
     this.year = this.#plain.year;
     this.text = this.format();
     Object.freeze(this);
   }
 
-  // a value with a day in it reads as a date and loses the day. one without reads as a year-month
   static #read(input, monthOrOptions) {
     if (isCount(input) && isCount(monthOrOptions)) {
       return YearMonth.#fromFields({ year: input, month: monthOrOptions });
@@ -87,7 +77,6 @@ export class YearMonth {
       : isString(monthOrOptions)
       ? { zone: monthOrOptions }
       : {};
-    // the zone resolves first so a bad one throws even when the input turns out unreadable
     if (settings.zone !== undefined) {
       zoneId(settings.zone);
     }
@@ -127,13 +116,11 @@ export class YearMonth {
           () => Temporal.PlainYearMonth.from(`${year}-${month.padStart(2, '0')}`),
           'invalidYearMonth',
           input,
-          // isDevelopment leads, so a production build folds the whole line away, test and all
+          // put isDevelopment first so minifiers dead-code-eliminate the range test too
           isDevelopment && (month < 1 || month > 12) ? "month must be between 01 and 12, such as '2026-11'" : 0,
         );
       }
-      // text that opens on a whole date is a date. no other text is ever put to Date, which makes up
-      // the parts text leaves out: 2001 for a missing year, January for a missing month. when loose,
-      // a year-month is also a month by name and a year
+      // avoid Date.parse() on partial strings: V8 silently fills in a default day or year (2001)
       if (!opensOnDate(text)) {
         const named = settings.loose ? nameAndYear.exec(text) : null;
         const month = named && monthNamed(named[1] ?? named[4], settings.locale);
@@ -152,8 +139,6 @@ export class YearMonth {
         return YearMonth.#fromFields(fields, JSON.stringify(input));
       }
     }
-    // anything else is whatever a date reads, a date's own refusals included. a Temporal date needs
-    // no reading, and date() refuses one beside a zone
     const plain = isPlainDate(input)
       ? input
       : (input instanceof CalendarDate ? input : new CalendarDate(input, { zone: settings.zone })).toTemporal();
@@ -184,7 +169,6 @@ export class YearMonth {
   isLeapYear() {
     return this.#plain.inLeapYear;
   }
-  // the first and the last day, the two a range of this month runs between
   get start() {
     return this.on(1);
   }
@@ -219,8 +203,7 @@ export class YearMonth {
     return temporalDurationOf(fields);
   }
 
-  // Temporal folds days added to a year-month into whole months and drops the rest, so a unit smaller
-  // than a month is refused before it gets there, the way a date refuses hours
+  // Temporal.PlainYearMonth.add({ days: 5 }) silently drops sub-month remainders, so reject units below month
   static #refuseSmaller(name) {
     if (name) {
       refuse('unsupportedUnit', name, {
@@ -239,7 +222,6 @@ export class YearMonth {
     );
   }
 
-  // the date of one of its days. the 31st is the last day of a month without one, as Temporal places it
   on(day) {
     const count = isDigits(day) ? Number(day) : day;
     if (!Number.isInteger(count) || count < 1 || count > 31) {
@@ -254,7 +236,7 @@ export class YearMonth {
             Comparison
   *******************************/
 
-  // a sort comparator. a date beside a year-month reads as the month it falls in
+  // coerces CalendarDate and DateTime to their year-month (top-level compare() rejects mixed kinds first)
   compare(other) {
     const rival = other instanceof YearMonth ? other : new YearMonth(other);
     return Temporal.PlainYearMonth.compare(this.#plain, rival.toTemporal());
@@ -272,13 +254,11 @@ export class YearMonth {
     return this.compare(other) > 0;
   }
 
-  // whether a day falls in this month
+  // parse through CalendarDate first so contains('2026-11') rejects a dayless year-month string
   contains(day) {
     return this.equals(new CalendarDate(day));
   }
 
-  // past once its last day is, and future until its first. this month depends on where you stand,
-  // so these take the zone to judge from
   isPast(zone) {
     return this.isBefore(today(zone));
   }
@@ -291,8 +271,6 @@ export class YearMonth {
              Measure
   *******************************/
 
-  // the months from this one to another, as a duration that remembers where it started. with a
-  // unit, the total as a number
   until(other, name) {
     const rival = other instanceof YearMonth ? other : new YearMonth(other);
     return this.start.until(rival.start, name);
@@ -314,12 +292,10 @@ export class YearMonth {
               Output
   *******************************/
 
-  // the locale this value is written in, or the same value written in another. an unset tag clears it
   locale(...tag) {
     return tag.length ? new YearMonth(this.#plain, { locale: tag[0] }) : this.#locale;
   }
 
-  // with nothing named it is the built-in medium form, which no format an app names can change
   format(spec, locale = this.#locale) {
     const options = partOptions(spec, ['year', 'month', 'era'], presets);
     return options
@@ -347,7 +323,7 @@ export class YearMonth {
     });
   }
 
-  // + gives the string, while < and - still refuse through valueOf
+  // '+' sends hint 'default', which would call valueOf() and throw without this
   [Symbol.toPrimitive](hint) {
     return hint === 'number' ? this.valueOf() : this.toString();
   }
@@ -361,15 +337,12 @@ alias(YearMonth, { add: 'plus', subtract: 'minus', lang: 'locale', includes: 'co
 
 const unread = new Set([...unreadable.point, 'invalidYearMonth', 'missingYearMonth', 'unsupportedCalendar']);
 
-// with { loose: true } (via plugins/loose) an unreadable input is null, never a throw
 export const yearMonth = (input, monthOrOptions) => {
   const build = () =>
     input instanceof YearMonth && monthOrOptions === undefined ? input : new YearMonth(input, monthOrOptions);
   return isPlainObject(monthOrOptions) && monthOrOptions.loose ? loosely(build, unread) : build();
 };
 
-// the same value read month first, the order a card prints it: monthYear('11/26') is
-// yearMonth('2026-11'). ISO's '2026-11' is year first under both words
 export const monthYear = (input, yearOrOptions) => {
   if (isCount(input) && isCount(yearOrOptions)) {
     return yearMonth(inCentury(yearOrOptions), input);
@@ -380,8 +353,7 @@ export const monthYear = (input, yearOrOptions) => {
     : yearMonth(input, yearOrOptions);
 };
 
-// only a year written in two digits is short for one in the century: 26 is 2026, where 0043 and -43
-// are the years they say
+// expand 1- or 2-digit positive years ('26' -> 2026) while keeping 4-digit '0043' and negative '-43' literal
 const inCentury = (year) => {
   const count = Number(year);
   return count >= 0 && count < 100 && String(year).trim().length <= 2 ? YearMonth.century + count : count;

@@ -1,14 +1,13 @@
 import { setLooseExtension } from 'native-dates/helpers/errors';
 import { dayFirst as readsDayFirst, zoneId } from 'native-dates/helpers/zones';
 
-// a loose string that names an instant: Z, GMT, UTC or an offset at its end
+// trailing offset or zone marker, allowing Date.toString()'s parenthesized '(Pacific Daylight Time)' suffix
 const namesInstant = /(GMT|UTC|Z|[+-]\d{2}(?::?\d{2})?)(?:\s*\([^)]*\))?\s*$/i;
 
-// the date-only ISO shapes, '2026', '2026-09' and '2026-02-30', which the engine reads at UTC midnight
-// where every other wall clock reads in the machine's zone
+// ES5 parses ISO date-only strings ('2026', '2026-09', '2026-09-06') at UTC midnight instead of local time
 const dateOnly = /^[+-]?\d{4,6}(?:-\d{2}(?:-\d{2})?)?$/;
 
-// a numeric date like '7/9/26'. the engine reads it month first, so the two parts swap when the app says so
+// engines parse numeric '7/9/26' month-first, so swap the first two fields when dayFirst is enabled
 const numeric = /^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})(\b.*)$/;
 const engineOrder = (text, dayFirst) => {
   const parts = numeric.exec(text);
@@ -19,7 +18,6 @@ const engineOrder = (text, dayFirst) => {
   return dayFirst ? `${second}/${first}/${year}${rest}` : `${first}/${second}/${year}${rest}`;
 };
 
-// the zone the text was written in: UTC for a date-only shape, the offset it ends on, or else the machine's
 const writtenZone = (text) => {
   const [, offset] = dateOnly.test(text) ? [0, 'Z'] : namesInstant.exec(text) ?? [];
   if (!offset) {
@@ -29,8 +27,8 @@ const writtenZone = (text) => {
   return /\d/.test(digits) ? `${digits.slice(0, 3)}:${digits.slice(3) || '00'}` : 'UTC';
 };
 
-// the engine reads February 30th as March 2nd. put back as the 28th, a day that then reads in the month
-// before was written and never existed. a 29 that is the year, 'Mar 1, 29', reads the same month either way
+// Date.parse silently rolls nonexistent days like 'Feb 30' into March 1-3. Swap the overflow day
+// (e.g. 30) to 28 and re-parse to check whether the month moves back (leaving 2-digit years like 'Mar 1, 29' intact)
 const rolledForward = (text, read, wallClock) => {
   if (read.day > 3) {
     return false;
@@ -40,8 +38,8 @@ const rolledForward = (text, read, wallClock) => {
   return !Number.isNaN(epoch) && wallClock(epoch).month !== read.month;
 };
 
-// whatever this engine's Date reads that Temporal refuses. a string naming an instant reads in the zone
-// asked for. any other is a wall clock stood in that zone, so the day and the clock the person wrote stay
+// Date.parse returns epoch ms after interpreting text in UTC, a trailing offset, or the host's local zone.
+// Read the wall clock back in that same zone first so local inputs don't shift when placed into `zone`
 export const looseZoned = (text, zone, dayFirst) => {
   const trimmed = engineOrder(text.trim(), readsDayFirst(dayFirst));
   const epoch = Date.parse(trimmed);
