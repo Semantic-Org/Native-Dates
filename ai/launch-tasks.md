@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 13.97 kB for all of `native-dates`, 12.47 kB for `import { now }`, 15.35 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-17 (`npm run size`, Brotli): 13.99 kB for all of `native-dates`, 12.50 kB for `import { now }`, 15.36 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -18,6 +18,12 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 - [x] **Error codes** use the six condition words of the sync repo (`missing`, `unknown`, `invalid`, `unsupported`, `duplicate`, `conflicting`), and every explanation was rewritten in its register and reviewed. All of them fold out of a production build. Still open for a read: the `invalid*` codes are thrown as a `TypeError` in some places and a `RangeError` in others.
 - [x] **Relative time** is in core as `from(other)` and `fromNow()`, the words moment and day.js use, with `formatRelative()` kept as a second spelling. It cost 0.29 kB of floor, the size the plugin was.
 - [ ] **Names worth one last read.** `monthDay.in(2027)` beside `datetime.in(zone)`. `after()` and `before()` beside `next()` and `previous()`. `as()` reaches five kinds where `kindOf()` reports more, so there is no `as('dateRange')`.
+
+### Decided in the naming room
+
+Public names go through a blind naming pass before 1.0 (`../next/ai/skills/contributing/name-public-api.md`): a room that has never seen the names proposes them from a description of the behaviour, and the maintainer rules. The brief and its key are in `ai/workspace/naming/`. Rulings so far:
+
+- **The count since 1970 always says its unit**: `epochSeconds`, `epochMilliseconds`, `epochNanoseconds`, and no bare `epoch`. The field cannot agree what the bare word means: seconds to a shell, Python and a JWT, milliseconds to `Date.now()`. `timestamp`, the room's pick, commits to no unit and often is not a number at all. `epochSeconds` is whole seconds rounded down, what the `X` token already printed. `epochMilliseconds` stays the own property a console shows, and the other two are read on demand.
 
 ### Decided: a locale rides on the value
 
