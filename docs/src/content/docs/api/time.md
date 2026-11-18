@@ -518,9 +518,9 @@ time('22:00').to('06:00').duration.hours; // 8
 t.format(spec?, locale?): string
 ```
 
-Formats the time of day using named presets, `'LT'` and `'LTS'` localized presets, options objects, or token patterns.
+Formats the time of day using built-in presets, custom names from [`configure()`](/api/configure/), options objects, or token patterns.
 
-Options objects ignore date and zone keys, so one shared options object can format moments, dates, and times alike. See [Formatting](/guides/formatting/) for the full preset and token reference.
+Localized `'LT'` and `'LTS'` presets are built in, and options objects ignore date and zone keys automatically. See [Formatting](/guides/formatting/) for the full preset and token reference.
 
 **Parameters**
 
@@ -528,7 +528,7 @@ Options objects ignore date and zone keys, so one shared options object can form
 - name: spec
   type: FormatSpec
   default: "'short'"
-  description: Preset name such as `'short'` or `'LTS'`, `Intl` options object, or token pattern.
+  description: Built-in or configured format name, `Intl` options object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding this time's or the configured locale for one call.

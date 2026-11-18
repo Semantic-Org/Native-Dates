@@ -713,7 +713,7 @@ event.range('day').toString();
 dt.format(spec?, locale?): string
 ```
 
-Formats the date and time in its active zone using presets, `Intl` options objects, or token patterns such as `'YYYY-MM-DD HH:mm'`.
+Formats the date and time in its active zone using built-in presets, custom names from [`configure()`](/api/configure/), `Intl` options objects, or token patterns.
 
 Localized presets from `'LT'` through `'llll'` are built in alongside `[brackets]` for literal words. See [Formatting](/guides/formatting/) for the full preset and token reference.
 
@@ -723,7 +723,7 @@ Localized presets from `'LT'` through `'llll'` are built in alongside `[brackets
 - name: spec
   type: FormatSpec
   default: "'medium'"
-  description: Preset name such as `'medium'` or `'LLL'`, `Intl` options object, or token pattern.
+  description: Built-in or configured format name, `Intl` options object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding this moment's or the configured locale for one call.
@@ -757,6 +757,7 @@ standup.format(
 
 ```js signature
 dt.from(other?, locale?): string
+dt.formatRelative(other?, locale?): string
 ```
 
 Formats the elapsed distance from another moment to this one as a localized phrase via `Intl.RelativeTimeFormat`, such as `'3 hours ago'` or `'in 2 days'`.

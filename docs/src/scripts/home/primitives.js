@@ -73,7 +73,7 @@ export function primitivesFor(locale = 'en') {
     {
       id: 'range',
       built: '2 × Temporal.PlainDate',
-      ours: "date('2026-09-01').to(2, 'weeks')",
+      ours: "date('2026-09-01').for(2, 'weeks')",
       temporal: "Temporal.PlainDate.from('2026-09-01')\nTemporal.PlainDate.from('2026-09-14')",
       legacy: '[new Date(2026, 8, 1), new Date(2026, 8, 14)] // 8 is September',
       stored: '2 × Date',
