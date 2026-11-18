@@ -85,7 +85,7 @@ export class Time {
     if (input === undefined || input === null) {
       return refuseType('missingTime', String(input), {
         explanation: isDevelopment
-          ? 'a time value is required. use `now().time` for the current time of day'
+          ? 'a time value is required. Use `now().time` for the current time of day'
           : 0,
       });
     }
@@ -156,7 +156,7 @@ export class Time {
         if (hour < 1 || hour > 12) {
           refuse('invalidTime', text, {
             explanation: isDevelopment
-              ? "12-hour times with 'am' or 'pm' must use hours from 1 to 12. drop 'am' or 'pm' for 24-hour time like '13:00', or use '1pm'"
+              ? "12-hour times with 'am' or 'pm' must use hours from 1 to 12. Drop 'am' or 'pm' for 24-hour time like '13:00', or use '1pm'"
               : 0,
           });
         }
@@ -225,7 +225,7 @@ export class Time {
     if (calendar) {
       refuse('unsupportedUnit', calendar, {
         explanation: isDevelopment
-          ? "a `Time` has no calendar date, so it only accepts clock units like hours, minutes, or seconds. attach a date first with `.on('2026-11-06', zone)` to add or subtract calendar units"
+          ? "a `Time` has no calendar date, so it only accepts clock units like hours, minutes, or seconds. Attach a date first with `.on('2026-11-06', zone)` to add or subtract calendar units"
           : 0,
       });
     }
@@ -367,7 +367,7 @@ export class Time {
   valueOf() {
     return refuse('unsupportedComparison', String(this), {
       explanation: isDevelopment
-        ? 'a `Time` cannot be converted to a number for `<`, `>`, or `-`. compare times with `isBefore()`, `isAfter()`, or `equals()`, or measure the difference with `until()`'
+        ? 'a `Time` cannot be converted to a number for `<`, `>`, or `-`. Compare times with `isBefore()`, `isAfter()`, or `equals()`, or measure the difference with `until()`'
         : 0,
     });
   }

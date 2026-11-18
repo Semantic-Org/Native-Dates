@@ -90,7 +90,7 @@ export class MonthDay {
     if (input === undefined || input === null) {
       return refuseType('missingMonthDay', String(input), {
         explanation: isDevelopment
-          ? "a month-day value is required. use `today().monthDay` for today's month and day"
+          ? "a month-day value is required. Use `today().monthDay` for today's month and day"
           : 0,
       });
     }
@@ -110,7 +110,7 @@ export class MonthDay {
         ? Temporal.PlainMonthDay.from({ monthCode: input.monthCode, day: input.day })
         : refuseType('unsupportedCalendar', String(input), {
           explanation: isDevelopment
-            ? 'a `MonthDay` only stores dates in the ISO 8601 calendar. pass `input.toPlainDate({ year })` to convert for a specific year, or use `.in(year)` before formatting an ISO month-day in another calendar'
+            ? 'a `MonthDay` only stores dates in the ISO 8601 calendar. Pass `input.toPlainDate({ year })` to convert for a specific year, or use `.in(year)` before formatting an ISO month-day in another calendar'
             : 0,
         });
     }
@@ -166,7 +166,7 @@ export class MonthDay {
       ? MonthDay.#fromParts({ month, day: named[2] ?? named[3] }, input)
       : refuse('invalidMonthDay', input, {
         explanation: isDevelopment
-          ? "expected a month-day string like '10-17' or '10/17', or an ISO date like '1990-10-17'. use `dayMonth('17/10')` for day-first strings, or pass `{ loose: true }` with '@native-dates/plugins/loose' for month names like 'Oct 17'"
+          ? "expected a month-day string like '10-17' or '10/17', or an ISO date like '1990-10-17'. Use `dayMonth('17/10')` for day-first strings, or pass `{ loose: true }` with '@native-dates/plugins/loose' for month names like 'Oct 17'"
           : 0,
       });
   }
@@ -252,7 +252,7 @@ export class MonthDay {
     if (isString(other) && twoParts.test(other.trim()) && !isoParts.test(other.trim())) {
       refuse('invalidMonthDay', other, {
         explanation: isDevelopment
-          ? "slash and dot strings like '05/10' are ambiguous between month-first and day-first. pass an ISO string like '10-17', or wrap the string with `monthDay()` or `dayMonth()` first"
+          ? "slash and dot strings like '05/10' are ambiguous between month-first and day-first. Pass an ISO string like '10-17', or wrap the string with `monthDay()` or `dayMonth()` first"
           : 0,
       });
     }
@@ -311,7 +311,7 @@ export class MonthDay {
   valueOf() {
     return refuse('unsupportedComparison', String(this), {
       explanation: isDevelopment
-        ? 'a `MonthDay` cannot be converted to a number or ordered with `<`, `>`, or `-`. check equality with `equals()`, or attach a year with `.in(2027)` to compare dates'
+        ? 'a `MonthDay` cannot be converted to a number or ordered with `<`, `>`, or `-`. Check equality with `equals()`, or attach a year with `.in(2027)` to compare dates'
         : 0,
     });
   }
