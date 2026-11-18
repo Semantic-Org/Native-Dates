@@ -102,7 +102,7 @@ each(setters, (name) => {
   proto[name] = function refuseSetter() {
     return refuse('immutable', name, {
       explanation: isDevelopment
-        ? "a `DateTime` is immutable and cannot be modified in place. return a new instance with `.set('hour', 9)` or `.plus(1, 'day')` instead"
+        ? "a `DateTime` is immutable and cannot be modified in place. Return a new instance with `.set('hour', 9)` or `.plus(1, 'day')` instead"
         : 0,
     });
   };

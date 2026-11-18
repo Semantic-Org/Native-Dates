@@ -92,7 +92,7 @@ const sameKind = (left, right) => {
   if (kindOf(left) !== kindOf(right)) {
     refuseType('conflictingKinds', `${kindOf(left)} with ${kindOf(right)}`, {
       explanation: isDevelopment
-        ? "cannot compare values of different types. convert one side first with `.date`, `.time`, or `.at('00:00', zone)`"
+        ? "cannot compare values of different types. Convert one side first with `.date`, `.time`, or `.at('00:00', zone)`"
         : 0,
     });
   }

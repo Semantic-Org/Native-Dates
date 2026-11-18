@@ -66,7 +66,7 @@ export const requireLoose = (at = 'loose') => {
   if (!looseParser) {
     refuse('missingPlugin', at, {
       explanation: isDevelopment
-        ? "`{ loose: true }` and `dayFirst` require the loose plugin. import '@native-dates/plugins/loose' once at startup"
+        ? "`{ loose: true }` and `dayFirst` require the loose plugin. Import '@native-dates/plugins/loose' once at startup"
         : 0,
     });
   }
