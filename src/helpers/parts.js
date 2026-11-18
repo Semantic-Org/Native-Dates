@@ -14,7 +14,7 @@ export const wholeParts = (fields, names) => {
   each(fields, (value, name) => {
     if (!names.includes(name)) {
       throw new RangeError(
-        isDevelopment ? `\`${name}\` is not accepted here. expected only [${names.join(', ')}]` : '',
+        isDevelopment ? `\`${name}\` is not accepted here. Expected only [${names.join(', ')}]` : '',
       );
     }
     if (!isCount(value) || !Number.isInteger(Number(value))) {
