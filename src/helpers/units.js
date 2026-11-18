@@ -113,11 +113,11 @@ export const dayOfWeek = (input) => {
   const key = isString(input) ? input.trim().toLowerCase().slice(0, 3) : '';
   const index = key.length === 3 ? weekdays.findIndex((name) => name.startsWith(key)) : -1;
   return index === -1
-    ? refuse('unknownWeekday', String(input), {
+    ? refuse('unknownDayOfWeek', String(input), {
       explanation: isDevelopment
         ? `expected a weekday in [${
           weekdays.join(', ')
-        }] (or 3-letter shorthand like 'mon'), or an ISO weekday number from 1 (Monday) to 7 (Sunday)`
+        }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday)`
         : 0,
     })
     : index + 1;
