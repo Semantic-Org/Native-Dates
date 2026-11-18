@@ -5,7 +5,7 @@ import { anchored, duration } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
-import { formatIntl, intlOptions } from './helpers/format.js';
+import { formatIntl, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
 import { yearFirst } from './helpers/parts.js';
 import { relativeSeconds } from './helpers/relative.js';
@@ -78,7 +78,7 @@ export class DateTime {
     this.zone = zoned.timeZoneId;
     this.offset = zoned.offset;
     this.epochMilliseconds = zoned.epochMilliseconds;
-    this.text = this.format('text');
+    this.text = this.format(textFormat);
     Object.freeze(this);
   }
 

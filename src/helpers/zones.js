@@ -130,13 +130,10 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
     }
   });
   // a format an app names once and asks for everywhere, a preset of its own: an options bag or a
-  // token pattern. a bag is copied and frozen, so its formatter is found by identity as a built-in
-  // preset's is. null takes them all away
+  // token pattern. a bag is kept as it was written and finds its formatter by its fields, so naming
+  // the same formats again builds nothing new. null takes them all away
   if (formats !== undefined) {
-    settings.formats = formats && { __proto__: null };
-    each(formats, (format, name) => {
-      settings.formats[name] = isString(format) ? format : Object.freeze({ ...format });
-    });
+    settings.formats = formats && { __proto__: null, ...formats };
   }
   if (dayFirst !== undefined) {
     requireLoose('dayFirst');

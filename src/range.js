@@ -6,7 +6,7 @@ import { days, duration, hours } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { isUnreadable, loosely, readAs, refuse, refuseType, unreadable } from './helpers/errors.js';
 import { isDurationFields } from './helpers/fields.js';
-import { epochOf, formatter, intlOptions } from './helpers/format.js';
+import { epochOf, formatter, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_RANGE, IS_DATE_TIME_RANGE, IS_DURATION, IS_RANGE, IS_TIME_RANGE } from './helpers/identity.js';
 import { alias, inspect, isDigits, isTemporalDuration, stepOf, unit, zoneOptions } from './helpers/units.js';
 import { Time } from './time.js';
@@ -69,7 +69,7 @@ class Range {
           : 0,
       });
     }
-    this.text = kind === 'datetime' ? this.format('text') : this.format();
+    this.text = kind === 'datetime' ? this.format(textFormat) : this.format();
     Object.freeze(this);
   }
 
