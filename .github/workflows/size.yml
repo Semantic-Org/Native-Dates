@@ -1,0 +1,81 @@
+name: Size
+
+# measures a pull request and its base in one job, with one copy of tools/gates/budget.js, and fails
+# over the ceiling set there. it builds pull request code, so its token cannot post: size-report.yml
+# posts the comment
+
+on:
+  pull_request:
+    paths:
+      # the sources the bundles are built from, and each package's exports and sideEffects
+      - 'src/**'
+      - 'packages/**'
+      # the measurement, the gate and the comment
+      - 'tools/size.js'
+      - 'tools/gates/**'
+      - 'tools/ci/**'
+      # the bundler's version, and the node whose zlib compresses
+      - 'package.json'
+      - 'package-lock.json'
+      - '.node-version'
+      - '.github/workflows/size.yml'
+
+concurrency:
+  group: size-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  size:
+    name: Size
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # the checkout is the pull request merged onto its base branch, so the merge's first parent is
+      # the base the pull request is read against, and never an older commit of that branch
+      - uses: actions/checkout@v7
+        with:
+          path: head
+          fetch-depth: 2
+      - name: Check out the base
+        run: git -C head worktree add ../base HEAD^1
+      # the library needs a Node that ships Temporal, and the same zlib compresses both sides
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: 'head/.node-version'
+
+      # the bundler resolves native-dates and its plugins through each checkout's workspace links
+      - name: Install both checkouts
+        run: |
+          (cd base && npm ci --ignore-scripts --no-audit --no-fund)
+          (cd head && npm ci --ignore-scripts --no-audit --no-fund)
+
+      # the base's copy measures both sides, so a pull request cannot move its own ceiling. the pull
+      # request that first adds the gate has none on its base and measures itself
+      - name: Choose the measuring copy
+        id: tools
+        run: |
+          if [ -f base/tools/gates/budget.js ]; then echo "dir=base" >> "$GITHUB_OUTPUT"; else echo "dir=head" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Measure both sides
+        env:
+          TOOLS: ${{ steps.tools.outputs.dir }}
+        run: |
+          mkdir -p results
+          node "$TOOLS/tools/gates/budget.js" --head head --base base --json results/size.json
+
+      # these two run after a red measure too, so a run over the ceiling still hands its numbers on
+      - name: Write job summary
+        if: ${{ !cancelled() }}
+        env:
+          TOOLS: ${{ steps.tools.outputs.dir }}
+        run: node "$TOOLS/tools/ci/size-comment.js" --sizes results/size.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload size results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: size-results
+          path: results/

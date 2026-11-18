@@ -1,0 +1,126 @@
+name: Size Report
+
+# posts the size comment after a Size run, whatever its conclusion, so a run over the ceiling still
+# gets its comment. workflow_run gives it the base repository's token and secrets and main's
+# tools/ci, so it posts on a pull request from a fork and a pull request never authors the tool
+# that judges it
+
+on:
+  workflow_run:
+    workflows: [Size]
+    types: [completed]
+
+permissions:
+  contents: read
+
+# a group per run: GitHub keeps one waiting run per group and cancels the one before it
+concurrency:
+  group: size-report-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  report:
+    name: Post Size Report
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      actions: read
+    steps:
+      - name: Check Bot Secrets
+        id: bot
+        env:
+          HAS_BOT: ${{ secrets.SEMANTIC_BUNDLE_BOT_CLIENT_ID != '' && secrets.SEMANTIC_BUNDLE_BOT_PRIVATE_KEY != '' }}
+        run: echo "has=$HAS_BOT" >> "$GITHUB_OUTPUT"
+      # continue-on-error on purpose: the comment posts under the workflow token when the app is missing or down
+      - name: Create Bot Token
+        id: bot-token
+        if: steps.bot.outputs.has == 'true'
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.SEMANTIC_BUNDLE_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.SEMANTIC_BUNDLE_BOT_PRIVATE_KEY }}
+      # sticky-bot-comment finds the prior comment by this login
+      - name: Choose Token
+        id: token
+        env:
+          BOT_TOKEN: ${{ steps.bot-token.outputs.token }}
+          BOT_SLUG: ${{ steps.bot-token.outputs.app-slug }}
+          WORKFLOW_TOKEN: ${{ github.token }}
+        run: |
+          echo "value=${BOT_TOKEN:-$WORKFLOW_TOKEN}" >> "$GITHUB_OUTPUT"
+          if [ -n "$BOT_TOKEN" ] && [ -n "$BOT_SLUG" ]; then echo "login=$BOT_SLUG[bot]" >> "$GITHUB_OUTPUT"; else echo "login=github-actions[bot]" >> "$GITHUB_OUTPUT"; fi
+
+      # main, for the tool. the reported run comes from the event, and nothing is installed:
+      # tools/ci/size-comment.js imports only node
+      - name: Checkout Main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      # github.token, not the app's: the app holds pull requests alone and cannot list another run's artifacts.
+      # it lands in a scratch folder and not the workspace, since a pull request's build wrote it
+      - name: Download Size Results
+        uses: dawidd6/action-download-artifact@v24
+        with:
+          github_token: ${{ github.token }}
+          workflow: ${{ github.event.workflow.id }}
+          run_id: ${{ github.event.workflow_run.id }}
+          name: size-results
+          path: ${{ runner.temp }}/size
+          if_no_artifact_found: warn
+
+      - name: Check Size Results
+        id: results
+        run: |
+          if [ ! -f "$RUNNER_TEMP/size/size.json" ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"; echo "no measurement uploaded, nothing to report"; exit 0
+          fi
+          echo "found=true" >> "$GITHUB_OUTPUT"
+
+      # a pull request from a fork leaves pull_requests empty, so its branch name finds it, and the
+      # head commit confirms it is the one this run measured
+      - name: Find Pull Request
+        id: pr
+        if: steps.results.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.value }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          NUMBER='${{ github.event.workflow_run.pull_requests[0].number }}'
+          if [ -z "$NUMBER" ] || [ "$NUMBER" = "null" ]; then
+            NUMBER=$(gh pr list --repo "$REPO" --head "$HEAD_BRANCH" --state open --json number --jq '.[0].number // ""')
+          fi
+          if [ -n "$NUMBER" ]; then
+            HEAD=$(gh pr view "$NUMBER" --repo "$REPO" --json headRefOid --jq .headRefOid)
+            if [ "$HEAD" != "$HEAD_SHA" ]; then echo "#$NUMBER has moved on to ${HEAD:0:7}, so this run on ${HEAD_SHA:0:7} leaves the comment to it"; NUMBER=''; fi
+          fi
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Resolved PR number: $NUMBER"
+
+      - name: Render Size Report
+        if: steps.results.outputs.found == 'true'
+        run: |
+          node tools/ci/size-comment.js --sizes "$RUNNER_TEMP/size/size.json" > "$RUNNER_TEMP/size-comment.md"
+          cat "$RUNNER_TEMP/size-comment.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post Comment
+        if: steps.results.outputs.found == 'true' && steps.pr.outputs.number != ''
+        uses: ./.github/actions/sticky-bot-comment
+        with:
+          token: ${{ steps.token.outputs.value }}
+          repo: ${{ github.repository }}
+          pr-number: ${{ steps.pr.outputs.number }}
+          bot-login: ${{ steps.token.outputs.login }}
+          body-file: ${{ runner.temp }}/size-comment.md
+          marker: '<!-- size-report -->'
