@@ -8,7 +8,7 @@ updated: 2026-11-14
 
 ## Range classes
 
-Create ranges from existing points with [`to()`](#to) and [`range()`](#range), or parse endpoints and interval strings with standalone factories on [`dateRange()`](/api/range-fn/). Every range instance is immutable.
+Create ranges from existing points with [`for()`](#to) and [`to()`](#to), enclose a calendar or clock unit, or parse intervals with the [range factories](/api/range-fn/). Every range instance is immutable.
 
 :::note[Inclusive dates vs half-open clocks]
 Calendar date ranges include their final day, because September 1 through September 7 means all seven days. Moment and clock ranges exclude their end so back-to-back slots meet without overlapping.
@@ -43,7 +43,7 @@ new DateTimeRange(start, end, options?)
 new DateTimeRange(interval, options?)
 ```
 
-Spans two [moments](/api/date-time/), including `start` and excluding `end`. When the end input carries no explicit time zone, it is read in the start moment's zone, and backwards endpoints throw a `RangeError`.
+Spans two [moments](/api/date-time/), including its start and excluding its end. When the end input carries no explicit time zone, it is read in the start moment's zone, and backwards endpoints throw a `RangeError`.
 
 ```js
 import { datetime, datetimeRange } from 'native-dates';
@@ -64,7 +64,7 @@ new TimeRange(start, end, options?)
 new TimeRange(interval, options?)
 ```
 
-Spans two [times of day](/api/time/), including `start` and excluding `end`. When the end time is earlier on the clock than the start time, the range wraps across midnight to model overnight hours.
+Spans two [times of day](/api/time/), including its start and excluding its end. When the end time is earlier on the clock than the start time, the range wraps across midnight to model overnight hours.
 
 ```js
 import { time, timeRange } from 'native-dates';
@@ -94,20 +94,18 @@ Every range exposes its formatted label, typed endpoints, kind tag, and measured
 ### `to()` :kind[method]
 
 ```js signature
-d.to(end): DateRange
-d.to(count, unit): DateRange
-d.through(end): DateRange
-d.through(count, unit): DateRange
-dt.to(end): DateTimeRange
-dt.to(count, unit): DateTimeRange
-t.to(end): TimeRange
-t.to(count, unit): TimeRange
-d.for(count, unit): DateRange
-dt.for(count, unit): DateTimeRange
-t.for(count, unit): TimeRange
+d.to(end, unit?): DateRange
+d.through(end, unit?): DateRange
+d.for(length, unit?): DateRange
+dt.to(end, unit?): DateTimeRange
+dt.for(length, unit?): DateTimeRange
+t.to(end, unit?): TimeRange
+t.for(length, unit?): TimeRange
 ```
 
-Builds a range from this point to an end point or across a duration. On a [calendar date](/api/calendar-date/), passing a length of 7 days lands six days after `start` because both endpoints are included. A calendar date also answers to `through()`, since its range includes the last day. Given a length, the same call is also spelled `for()`.
+Builds a range from this point to an end point or across a duration. On a [calendar date](/api/calendar-date/), passing a length of 7 days lands six days after the start day because both endpoints are included.
+
+Given a length, the same call is also spelled `for()`. A calendar date also answers to `through()`, since its range includes the last day.
 
 **Parameters**
 
@@ -412,9 +410,9 @@ dateRange('2026-09-01', '2026-09-03').in('UTC').toString();
 range.format(spec?, locale?): string
 ```
 
-Formats the range with localized `Intl` range formatting for presets and options objects, collapsing shared dates or months automatically. Token patterns like `'YYYY-MM-DD'` format each endpoint with the pattern and join them with `' – '`.
+Formats the range with localized `Intl` range formatting for presets and options objects, collapsing shared dates or months automatically. Token patterns format each endpoint and join them with `' – '`.
 
-See [Formatting](/guides/formatting/) for preset and token details.
+Custom formats named in [`configure()`](/api/configure/) print here too. See [Formatting](/guides/formatting/) for preset and token details.
 
 **Parameters**
 

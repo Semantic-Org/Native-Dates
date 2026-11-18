@@ -1,10 +1,10 @@
 ---
 title: configure()
 kind: function
-lede: Read or update process-wide defaults for time zone, locale, week start, token names, and plugins.
-import: import { configure } from 'native-dates'
+lede: Read or update process-wide defaults for time zone, locale, week start, formats, token names, and plugins.
+import: import { configure, dayOfWeek } from 'native-dates'
 size: core
-updated: 2026-11-16
+updated: 2026-11-17
 ---
 
 ## Global defaults

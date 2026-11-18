@@ -79,6 +79,7 @@ export const SECTIONS = [
           { title: 'dateRange()', slug: 'api/range-fn', symbol: true },
           { title: 'monthNames()', slug: 'api/month-names', symbol: true },
           { title: 'weekdayNames()', slug: 'api/month-names#weekdaynames', symbol: true },
+          { title: 'dayOfWeek()', slug: 'api/configure#dayofweek', symbol: true },
           { title: 'compare()', slug: 'api/compare', symbol: true },
           { title: 'earliest()', slug: 'api/compare#earliest', symbol: true },
           { title: 'latest()', slug: 'api/compare#latest', symbol: true },

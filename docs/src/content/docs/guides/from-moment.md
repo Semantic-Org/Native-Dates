@@ -88,11 +88,13 @@ quarter.overlaps(date('2026-12-15').to('2027-01-15')); // true
 | `m.clone().add(7, 'days')` | `d.plus(7, 'days')` | Always immutable, and `add()` alias works too |
 | `m.tz('Europe/Berlin')` | `dt.in('Europe/Berlin')` | Views the same moment in another zone |
 | `m.month()`, `m.date()` | `d.month`, `d.day` | Plain properties with months from 1 to 12 |
+| `m.day()`, `m.isoWeekday()` | `d.dayOfWeek` | ISO day of the week from 1 on Monday to 7 on Sunday |
+| `m.unix()`, `m.valueOf()` | `dt.epochSeconds`, `dt.epochMilliseconds` | Each count since 1970 names its unit |
 | `b.diff(a, 'hours', true)` | `a.until(b, 'hours')` | Fractional total in the requested unit |
 | `moment.duration(2, 'h')` | `hours(2)` or `duration('2h')` | Built into core |
 | `m.format('LLL')` | `dt.format('LLL')` | Localized presets from `'LT'` to `'llll'` with zero locale files |
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) built directly into core |
-| `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) built into core with `to()` and `overlaps()` |
+| `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) built into core with `to()`, `for()`, and `overlaps()` |
 | `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [Relative phrases](/guides/formatting/#relative-phrases) built into core |
 | Non-ISO string parsing | `{ loose: true }` | Load [`@native-dates/plugins/loose`](/plugins/loose/) for `Date.parse` fallback |
 

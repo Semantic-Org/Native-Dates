@@ -683,9 +683,9 @@ halves.map(String);
 d.format(spec?, locale?): string
 ```
 
-Formats the date using named presets, localized presets from `'L'` through `'LLLL'`, options objects, or token patterns.
+Formats the date using built-in presets, custom names from [`configure()`](/api/configure/), options objects, or token patterns.
 
-Options objects ignore clock and zone keys, so one shared options object can format moments, dates, and times alike. See [Formatting](/guides/formatting/) for the full preset and token reference.
+Localized presets from `'L'` through `'LLLL'` are built in, and options objects ignore clock and zone keys automatically. See [Formatting](/guides/formatting/) for the full preset and token reference.
 
 **Parameters**
 
@@ -693,7 +693,7 @@ Options objects ignore clock and zone keys, so one shared options object can for
 - name: spec
   type: FormatSpec
   default: "'medium'"
-  description: Preset name such as `'medium'` or `'LL'`, `Intl` options object, or token pattern.
+  description: Built-in or configured format name, `Intl` options object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding this date's or the configured locale for one call.
@@ -725,6 +725,7 @@ day.format({ weekday: 'long' }, 'en-US'); // 'Monday'
 
 ```js signature
 d.from(other?, locale?): string
+d.formatRelative(other?, locale?): string
 ```
 
 Formats the calendar distance from another date to this one as a localized phrase via `Intl.RelativeTimeFormat`, such as `'yesterday'` or `'in 3 weeks'`.

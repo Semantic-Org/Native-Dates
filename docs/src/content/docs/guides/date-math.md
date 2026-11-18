@@ -130,7 +130,7 @@ monday.next(birthday).toString(); // '2027-10-17'
 
 ## Building and stepping ranges
 
-Call `to()` on any date, time, or moment to build a [range](/api/ranges/). Walk across its steps with `points()`, or divide it into smaller sub-ranges:
+Call `for()` with a length or `to()` with an end on any date, time, or moment to build a [range](/api/ranges/). Walk across its steps or divide it into smaller sub-ranges:
 
 ```js
 const sprint = date('2026-11-02').for(2, 'weeks');
