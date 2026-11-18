@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-17 (`npm run size`, Brotli): 14.09 kB for all of `native-dates`, 12.53 kB for `import { now }`, 15.50 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-17 (`npm run size`, Brotli): 14.06 kB for all of `native-dates`, 12.53 kB for `import { now }`, 15.41 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -32,7 +32,7 @@ Public names go through a blind naming pass before 1.0 (`../next/ai/skills/contr
 - **A year-month's `start` and `end` stay.** They are the two a range of that month runs between, the words a range's own ends have.
 - **`range('week')` stays**, where the room offered `rangeOf`.
 - **The century a two-digit year is read into stays on `YearMonth.century`.** As a `configure` key it measured 19 B, and the ruling was configure only if it cost nothing: nobody is known to change it outside a legacy import.
-- **An app names its own formats in `configure({ formats })`**: `{ invoice: 'YYYY-MM-DD', receipt: { dateStyle: 'long' } }`, then `value.format('invoice')` on a datetime, a date, a time, a month-day, a year-month and a range. It took the place of two statics, `MonthDay.presets` and `YearMonth.presets`, which were open to more for those two kinds only and are private tables now. A name is read before the built-in presets, so an app can give `'short'` its own meaning. Setting `formats` again replaces the set, as `weekdayNames` and `ordinals` do. A duration keeps its own four styles. 90 B, 17 B of it floor.
+- **An app names its own formats in `configure({ formats })`**: `{ invoice: 'YYYY-MM-DD', receipt: { dateStyle: 'long' } }`, then `value.format('invoice')` on a datetime, a date, a time, a month-day, a year-month and a range. It took the place of two statics, `MonthDay.presets` and `YearMonth.presets`, which were open to more for those two kinds only and are private tables now. A name is read before the built-in presets, so an app can give `'short'` its own meaning. Setting `formats` again replaces the set, as `weekdayNames` and `ordinals` do. A duration keeps its own four styles. A value's own `text` and a bare `format()` are the built-in forms whatever an app names, as a date's already were, so a format named `medium` or `text` can never stop a value being made. A named bag is kept as the app wrote it. About 70 B, 14 B of it floor.
 - **Second spellings taken from the room**: `includes` beside `contains` on a range and a year-month, `splitBy` beside `split` on a range and a date, `last` beside `previous` on a month-day, and `through` beside `to` on a date alone, since a date range runs through its last day where a datetime or time range stops short of its end. 53 B together.
 - **`balance` stands alone.** The room's first guess was `normalize`, and it asked for it as a second spelling. Luxon is the one library with `normalize()` on a duration, and there it never moves into a larger unit: 90 minutes stays 90 minutes, where `balance()` here gives 1 hour 30 minutes. The developers who would reach for the word are the ones it would give a different answer to.
 - **`points` stands alone**, where the room offered `every`. `every` and `each` are verbs that promise a loop or a test, as they do on an array, and `points()` hands back a plain array of what the library already calls points: the `Point` type, `invalidPoint`, `missingPoints`.
@@ -99,7 +99,7 @@ Cost: 0.35 kB, 0.32 kB of it floor. Not taken, from the same list: zone spelling
 
 The docs will carry examples for each language, and may show a homepage section only to a reader who has picked that language. Those pages put every English-shaped corner on display, so find them first. The method that found the last two bugs is cheap: print one value in twenty locales and read the column.
 
-- [ ] **Sweep every output path across locales**: each preset on each noun, ranges of each kind, durations in each style, `text`, and token patterns. Include a right-to-left locale, one with its own digits, and one with its own calendar.
+- [x] **Sweep every output path across locales**: each preset on each noun, ranges of each kind, durations in each style, `text`, and token patterns. Include a right-to-left locale, one with its own digits, and one with its own calendar.
 - [x] **Token `Do` prints English.** `format('Do', 'de')` gives `17th`. This is wrong output, so fix it if `Intl` can supply the ordinal cheaply, and otherwise decide what `Do` means outside English.
 - [x] **Tokens `a` and `A` always print `am` and `pm`.** The presets print the locale's own. Same call as `Do`.
 - [x] **Token `dd` is the first two letters of the short weekday name**, which is right in English and arbitrary elsewhere.
@@ -184,7 +184,7 @@ The repo has had no tests on purpose, so nothing pinned the API while it moved. 
 
 Everything so far ran on Node 26 with native Temporal and was bundled with esbuild.
 
-- [ ] **Browsers.** Chrome and Firefox on native Temporal. Safari through `@native-dates/polyfill` was checked on 2026-11-14, Safari 27.2 on iOS, which has no Temporal of its own: ranges, token patterns, durations, month-days and year-months all printed correctly. The docs playground in Safari is still to check.
+- [x] **Browsers.** Chrome and Firefox on native Temporal. Safari through `@native-dates/polyfill` was checked on 2026-11-14, Safari 27.2 on iOS, which has no Temporal of its own: ranges, token patterns, durations, month-days and year-months all printed correctly. The docs playground in Safari is still to check. The maintainer checked everything in Safari on a phone on 2026-11-17 and closed this.
 - [ ] **Bundlers.** One small app each on Vite, Rollup and webpack, checking the size and that nothing is dropped.
 - [ ] **Types in a consumer project** under both `nodenext` and `bundler` resolution, and through the `@native-dates/core` alias. The type files re-export each other with `.js` specifiers.
 - [ ] **Performance.** No benchmark is in the repo. The tachometer and bundle-size setup from `../next` is being ported, and is the standard: scratch timings in Node are a loose signal only. Measure parsing, arithmetic and formatting against Day.js once it lands. Found while naming, and waiting for that suite:
@@ -194,10 +194,10 @@ Everything so far ran on Node 26 with native Temporal and was bundled with esbui
 ## 5. Release mechanics
 
 - [ ] **Versions.** All four packages say `0.0.6`. Nobody depends on the published ones, so there is nothing to migrate, but core, plugins, polyfill and the `@native-dates/core` alias need one number and matching peer ranges.
-- [ ] **Docs.** The site has to say the measured size and three plugins everywhere. Core is 13.97 kB, so "14 kB" is the honest headline and "13 kB" is not, and show one import for ranges, tokens and the two date nouns. The root README is written by the maintainer by hand.
+- [ ] **Docs.** The site has to say the measured size and three plugins everywhere. Core is 14.06 kB, so "14 kB" is the honest headline and "13 kB" is not, and show one import for ranges, tokens and the two date nouns. The root README is written by the maintainer by hand.
 - [ ] **`@see` links in the type files.** An editor shows a declaration's doc comment in autocomplete and on hover, so each public class, factory and method in `types/*.d.ts` and `packages/plugins/types/*.d.ts` gets a doc comment ending in a `@see {@link ...}` to its page on the live site, `https://nativedates.dev`, never the staging domain. None has one today. The conventions are in `../next/ai/skills/contributing/types.md`: the URL is the docs page's path (`docs/src/content/docs/api/calendar-date.md` is `https://nativedates.dev/api/calendar-date/`, with the trailing slash the site serves), a method links to its heading's anchor, and internal types are marked `@internal` and get no link. Do this after the docs pages for ranges, month-days and year-months have settled, since the links follow those paths, and check every anchor against the built page.
-- [ ] **When the polyfill is needed.** Node 26 is the first Node with Temporal and `engines` says so. The install page has to say plainly which browsers need `@native-dates/polyfill`.
-- [ ] **Locales on a server.** `configure({ locale })` is process-wide, which suits a browser and is a trap for a server answering many users. A value now carries its own: `datetime(row.at, zone).locale(request.locale)` sets it once, and every value made from it keeps it. The docs should teach that for servers, and `configure()` for an app with one reader.
+- [x] **When the polyfill is needed.** Node 26 is the first Node with Temporal and `engines` says so. The install page has to say plainly which browsers need `@native-dates/polyfill`.
+- [x] **Locales on a server.** `configure({ locale })` is process-wide, which suits a browser and is a trap for a server answering many users. A value now carries its own: `datetime(row.at, zone).locale(request.locale)` sets it once, and every value made from it keeps it. The docs should teach that for servers, and `configure()` for an app with one reader.
 
 ## When the polyfill is dropped
 
