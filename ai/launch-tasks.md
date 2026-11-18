@@ -36,6 +36,7 @@ Public names go through a blind naming pass before 1.0 (`../next/ai/skills/contr
 - **Second spellings taken from the room**: `includes` beside `contains` on a range and a year-month, `splitBy` beside `split` on a range and a date, `last` beside `previous` on a month-day, and `through` beside `to` on a date alone, since a date range runs through its last day where a datetime or time range stops short of its end. 53 B together.
 - **`balance` stands alone.** The room's first guess was `normalize`, and it asked for it as a second spelling. Luxon is the one library with `normalize()` on a duration, and there it never moves into a larger unit: 90 minutes stays 90 minutes, where `balance()` here gives 1 hour 30 minutes. The developers who would reach for the word are the ones it would give a different answer to.
 - **`points` stands alone**, where the room offered `every`. `every` and `each` are verbs that promise a loop or a test, as they do on an array, and `points()` hands back a plain array of what the library already calls points: the `Point` type, `invalidPoint`, `missingPoints`.
+- **A month-day keeps every way of asking for its next occurrence**: `birthday.next()`, `birthday.next(day)`, `birthday.after(day)` and `day.next(birthday)`, and the same four backwards. The room, told `next()` took nothing, argued for that split. It stays as it is because the extra spelling costs nothing, a wrong guess such as `birthday.next('friday')` refuses, and the day is how `next()` counts from another zone's today.
 
 ### Decided: a locale rides on the value
 
