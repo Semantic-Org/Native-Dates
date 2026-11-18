@@ -57,8 +57,8 @@ export const zoneId = (id) => {
     refuse('unknownZone', id, {
       explanation: isDevelopment
         ? zoneExtension
-          ? "expected an IANA time zone like 'America/New_York', a city like 'Berlin', an abbreviation like 'PT', a fixed offset like '+05:30', or 'UTC'. to add custom names, call `configure({ zoneAliases: { hq: 'Europe/Berlin' } })`"
-          : "expected an IANA time zone like 'America/New_York', a fixed offset like '+05:30', or 'UTC'. import '@native-dates/plugins/zones' to use city names like 'Berlin', abbreviations like 'PT', or `zoneAliases`"
+          ? "expected an IANA time zone like 'America/New_York', a city like 'Berlin', an abbreviation like 'PT', a fixed offset like '+05:30', or 'UTC'. To add custom names, call `configure({ zoneAliases: { hq: 'Europe/Berlin' } })`"
+          : "expected an IANA time zone like 'America/New_York', a fixed offset like '+05:30', or 'UTC'. Import '@native-dates/plugins/zones' to use city names like 'Berlin', abbreviations like 'PT', or `zoneAliases`"
         : 0,
     });
   }
@@ -71,7 +71,7 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
         explanation: isDevelopment
-          ? "`zoneAliases` requires the zones plugin. import '@native-dates/plugins/zones' once at startup"
+          ? "`zoneAliases` requires the zones plugin. Import '@native-dates/plugins/zones' once at startup"
           : 0,
       });
     }
@@ -112,7 +112,7 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
       if (!weekdayWidths[width]) {
         refuse('unknownWidth', width, {
           explanation: isDevelopment
-            ? "`weekdayNames` are written by language, then width, then day, like `{ lv: { narrow: { fri: 'Pk' } } }`. expected a width in [narrow, short, long]"
+            ? "`weekdayNames` are written by language, then width, then day, like `{ lv: { narrow: { fri: 'Pk' } } }`. Expected a width in [narrow, short, long]"
             : 0,
         });
       }

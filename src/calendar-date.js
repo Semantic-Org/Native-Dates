@@ -92,7 +92,7 @@ export class CalendarDate {
     if (input === undefined || input === null) {
       return refuseType('missingDate', String(input), {
         explanation: isDevelopment
-          ? 'a date value is required. use `today()` for the current date'
+          ? 'a date value is required. Use `today()` for the current date'
           : 0,
       });
     }
@@ -101,7 +101,7 @@ export class CalendarDate {
       if (day === undefined) {
         return refuse('missingDay', `${input}-${month}`, {
           explanation: isDevelopment
-            ? 'numeric dates require a year, month, and day like `date(2026, 11, 16)`. for a year and month without a day, use `yearMonth(2026, 11)`'
+            ? 'numeric dates require a year, month, and day like `date(2026, 11, 16)`. For a year and month without a day, use `yearMonth(2026, 11)`'
             : 0,
         });
       }
@@ -129,7 +129,7 @@ export class CalendarDate {
     if (isNumber(input)) {
       return refuseType('invalidDate', String(input), {
         explanation: isDevelopment
-          ? 'a single number is ambiguous between a year and epoch milliseconds. use `datetime(ms).date` for a timestamp, or `date(2026, 9, 6)` for a year, month, and day'
+          ? 'a single number is ambiguous between a year and epoch milliseconds. Use `datetime(ms).date` for a timestamp, or `date(2026, 9, 6)` for a year, month, and day'
           : 0,
       });
     }
@@ -249,7 +249,7 @@ export class CalendarDate {
     if (clock) {
       refuse('unsupportedUnit', `${clock}s`, {
         explanation: isDevelopment
-          ? "a `CalendarDate` has no time of day, so it only accepts calendar units like days, weeks, months, or years. attach a time first with `.at('00:00', zone)` to add or subtract clock units"
+          ? "a `CalendarDate` has no time of day, so it only accepts calendar units like days, weeks, months, or years. Attach a time first with `.at('00:00', zone)` to add or subtract clock units"
           : 0,
       });
     }
@@ -279,7 +279,7 @@ export class CalendarDate {
       default:
         return refuse('unsupportedUnit', String(name), {
           explanation: isDevelopment
-            ? "expected a calendar unit in [year, quarter, month, week, day]. attach a time first with `.at('00:00', zone)` for clock units"
+            ? "expected a calendar unit in [year, quarter, month, week, day]. Attach a time first with `.at('00:00', zone)` for clock units"
             : 0,
         });
     }
@@ -451,7 +451,7 @@ export class CalendarDate {
   valueOf() {
     return refuse('unsupportedComparison', String(this), {
       explanation: isDevelopment
-        ? 'a `CalendarDate` cannot be converted to a number for `<`, `>`, or `-`. compare dates with `isBefore()`, `isAfter()`, or `equals()`, or measure the difference with `until()`'
+        ? 'a `CalendarDate` cannot be converted to a number for `<`, `>`, or `-`. Compare dates with `isBefore()`, `isAfter()`, or `equals()`, or measure the difference with `until()`'
         : 0,
     });
   }

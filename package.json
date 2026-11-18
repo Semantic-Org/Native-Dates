@@ -33,6 +33,8 @@
   ],
   "scripts": {
     "test": "vitest",
+    "errors": "node tools/gates/errors.js --all",
+    "comments": "node tools/gates/comments.js --all",
     "size": "node tools/size.js && node tools/gates/budget.js",
     "check": "npm test && npm run size",
     "format": "npx dprint fmt",
@@ -47,6 +49,7 @@
     "jsdom": "^31.0.1",
     "playwright": "^1.65.1",
     "simple-git-hooks": "^2.14.0",
+    "typescript": "^6.0.3",
     "vitest": "^5.1.1",
     "yaml": "^2.9.1"
   },
