@@ -1,15 +1,8 @@
-import type {
-  CalendarDate,
-  CalendarDateInput,
-  FormatSpec,
-  Duration,
-  DurationInput,
-  Locale,
-  ReadOptions,
-  TemporalValue,
-  Unit,
-  Zone,
-} from './index.js';
+import type { CalendarDate, CalendarDateInput } from './calendar-date.js';
+import type { Duration, DurationInput } from './duration.js';
+import type { FormatSpec } from './helpers/format.js';
+import type { TemporalValue, Unit } from './helpers/units.js';
+import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
 
 /** A year and a month, singular, as Temporal's `with()` spells them */
 export interface YearMonthFields {

@@ -1,4 +1,7 @@
-import type { CalendarDate, CalendarDateInput, FormatSpec, Locale, ReadOptions, TemporalValue, Zone } from './index.js';
+import type { CalendarDate, CalendarDateInput } from './calendar-date.js';
+import type { FormatSpec } from './helpers/format.js';
+import type { TemporalValue } from './helpers/units.js';
+import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
 
 /** A month and a day, singular, as Temporal's `with()` spells them */
 export interface MonthDayFields {
