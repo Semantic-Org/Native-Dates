@@ -357,6 +357,7 @@ export class YearMonth {
 YearMonth.prototype.add = YearMonth.prototype.plus;
 YearMonth.prototype.subtract = YearMonth.prototype.minus;
 YearMonth.prototype.lang = YearMonth.prototype.locale;
+YearMonth.prototype.includes = YearMonth.prototype.contains;
 
 const unread = new Set([...unreadable.point, 'invalidYearMonth', 'missingYearMonth', 'unsupportedCalendar']);
 

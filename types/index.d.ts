@@ -356,6 +356,9 @@ export class CalendarDate {
   /** A range from this date through another, both included */
   to(end: CalendarDateInput | DurationInput): DateRange;
   to(count: number, unit: Unit): DateRange;
+  /** Alias for `to`, on a date alone, since a date range runs through its last day */
+  through(end: CalendarDateInput | DurationInput): DateRange;
+  through(count: number, unit: Unit): DateRange;
   /** Every day of the unit containing this date, first through last */
   range(unit: DateUnit, firstDay?: DayOfWeek): DateRange;
   /** The day's points by a step, as datetimes in the zone */
@@ -364,6 +367,9 @@ export class CalendarDate {
   /** The day cut into ranges by a step, as datetime ranges in the zone */
   split(step: Unit | DurationInput, zone?: Zone): DateTimeRange[];
   split(count: number | string, unit: Unit, zone?: Zone): DateTimeRange[];
+  /** Alias for `split` */
+  splitBy(step: Unit | DurationInput, zone?: Zone): DateTimeRange[];
+  splitBy(count: number | string, unit: Unit, zone?: Zone): DateTimeRange[];
 
   equals(other: CalendarDateInput): boolean;
   isBefore(other: CalendarDateInput): boolean;

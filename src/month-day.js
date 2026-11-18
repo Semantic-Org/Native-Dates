@@ -316,6 +316,8 @@ export class MonthDay {
 }
 
 MonthDay.prototype.lang = MonthDay.prototype.locale;
+MonthDay.prototype.isOn = MonthDay.prototype.fallsOn;
+MonthDay.prototype.last = MonthDay.prototype.previous;
 
 const unread = new Set([...unreadable.point, 'invalidMonthDay', 'missingMonthDay', 'unsupportedCalendar']);
 

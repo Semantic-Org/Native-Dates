@@ -429,6 +429,8 @@ export class TimeRange extends Range {
 }
 
 Range.prototype.lang = Range.prototype.locale;
+Range.prototype.includes = Range.prototype.contains;
+Range.prototype.splitBy = Range.prototype.split;
 
 const byKind = { date: DateRange, datetime: DateTimeRange, time: TimeRange };
 
