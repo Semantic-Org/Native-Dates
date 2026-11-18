@@ -1,19 +1,10 @@
-import type {
-  CalendarDate,
-  CalendarDateInput,
-  DateTime,
-  DateTimeInput,
-  DateUnit,
-  Duration,
-  DurationInput,
-  FormatSpec,
-  Locale,
-  ReadOptions,
-  Time,
-  TimeInput,
-  Unit,
-  Zone,
-} from './index.js';
+import type { CalendarDate, CalendarDateInput } from './calendar-date.js';
+import type { DateTime, DateTimeInput } from './date-time.js';
+import type { Duration, DurationInput } from './duration.js';
+import type { FormatSpec } from './helpers/format.js';
+import type { Unit } from './helpers/units.js';
+import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
+import type { Time, TimeInput } from './time.js';
 
 // keeps BaseRange out of the module's exports, which a declaration file would otherwise add
 export {};

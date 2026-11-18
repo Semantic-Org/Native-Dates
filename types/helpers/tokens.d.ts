@@ -1,4 +1,5 @@
-import type { DayOfWeek, Locale } from './index.js';
+import type { DayOfWeek } from './units.js';
+import type { Locale } from './zones.js';
 
 /**
  * The weekday names in the locale, starting on the locale's first day or on `firstDay`. `'narrow'` is the
