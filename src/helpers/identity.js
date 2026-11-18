@@ -1,6 +1,5 @@
-// Symbol.for keys survive cross-realm boundaries (bundles, iframes), so
-// `instanceof DateTime` works against any realm's class definition. marked pure so a bundle drops
-// the brand of a noun it never imports
+// global registry keys keep `instanceof` working across realms and duplicate bundles.
+// @__PURE__ lets bundlers tree-shake brands for unused classes
 export const IS_DATE_TIME = /* @__PURE__ */ Symbol.for('native-dates/DateTime');
 export const IS_CALENDAR_DATE = /* @__PURE__ */ Symbol.for('native-dates/CalendarDate');
 export const IS_TIME = /* @__PURE__ */ Symbol.for('native-dates/Time');

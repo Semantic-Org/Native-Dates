@@ -5,15 +5,12 @@ import { dayOfWeek, pad } from './units.js';
 import { each } from './utils.js';
 import { locale as pickLocale, namedFormat, settings, weekStart } from './zones.js';
 
-// configure() empties this when an app writes weekday names or ordinals its own way
+// cleared by configure() when custom weekdayNames or ordinals change
 export const nameCache = new Map();
 
-// the token each width of weekday name prints as, the widths weekdayNames() takes
 export const weekdayWidths = { narrow: 'dd', short: 'ddd', long: 'dddd' };
 
-// month and weekday names come from Intl for the locale, so tokens stay legible outside English. the
-// tokens print the ISO calendar's numbers, so the names are the Gregorian ones even where the locale
-// keeps another calendar: a Persian locale would otherwise name November's 6th as Aban's
+// force calendar: 'gregory' because token numbers are ISO/Gregorian (otherwise 'fa' pairs Gregorian day 6 with Persian month Aban)
 export const names = (locale) => {
   const key = String(locale ?? '');
   if (!nameCache.has(key)) {
@@ -23,22 +20,22 @@ export const names = (locale) => {
     const monthIn = (options, stamp) => parts(options, stamp).find((part) => part.type === 'month').value;
     const clock = plainDateTimeFormat(locale, { hour: 'numeric', hour12: true });
     const language = clock.resolvedOptions().locale;
-    // greek is the one language Intl hands the beside-a-day form when asked for a long month alone,
-    // Νοεμβρίου for Νοέμβριος. beside a year it gives the plain one, so that is where greek reads it
+    // Greek ('el') is the one ICU locale where standalone { month: 'long' } returns the genitive (Νοεμβρίου).
+    // Pairing with year yields the nominative (Νοέμβριος)
     const alone = (style) =>
       stamps.map((stamp) =>
         language.startsWith('el') && style === 'long'
           ? monthIn({ month: style, year: 'numeric' }, stamp)
           : plainDateTimeFormat(locale, { month: style, calendar: 'gregory' }).format(stamp)
       );
-    // many languages write a month differently beside a day: 6 ноября where the month alone is
-    // ноябрь. a locale that writes the month as a number there keeps its name
+    // capture inflected month forms used beside a day (e.g. Russian '6 ноября' vs standalone 'ноябрь'),
+    // falling back to standalone when day+month formats numerically
     const besideDay = (style, plain) =>
       stamps.map((stamp, index) => {
         const name = monthIn({ day: 'numeric', month: style }, stamp);
         return /\p{N}/u.test(name) ? plain[index] : name;
       });
-    // 2024-01-01 fell on a monday, so index 0 is monday, the day ISO numbers first
+    // 2024-01-01 was a Monday, aligning index 0..6 with ISO dayOfWeek 1..7
     const weekday = (style) =>
       Array.from(
         { length: 7 },
@@ -48,18 +45,15 @@ export const names = (locale) => {
       clock.formatToParts(hour * 36e5).find((part) => part.type === 'dayPeriod')?.value ?? (hour < 12 ? 'AM' : 'PM');
     const [MMM, MMMM] = [alone('short'), alone('long')];
     const [short, long, narrow] = [weekday('short'), weekday('long'), weekday('narrow')];
-    // the shortest weekday. two letters are a real abbreviation only in a script with letter case,
-    // and only where the full name holds them and they tell the seven days apart: Mo, lu, пн. turkish
-    // Pz for Pazartesi reads as Pazar, and cutting a thai or hindi name splits a syllable, so
-    // everything else takes the locale's narrow form: 月, 一, จ, सो. where that form is not the
-    // language's own, english M T W T F S S in urdu and swahili or 1 to 7 in azerbaijani, the short
-    // name stands whole
+    // slice 2-letter `dd` abbreviations only in bicameral scripts where all 7 prefixes are unique and match
+    // the full name (avoids Turkish Pz colliding on Pazar/Pazartesi and avoids splitting Thai or Hindi syllables).
+    // Otherwise use Intl 'narrow', unless ICU falls back to English MTWTFSS or 1-7 digits (e.g. Urdu, Azerbaijani)
     const cut = short.map((name) => name.slice(0, 2));
     const cuts = /\p{Lu}|\p{Ll}/u.test(short[0]) && new Set(cut).size === 7
       && short.every((name, day) =>
         name.replace('.', '').length < 3 || long[day].toLowerCase().includes(cut[day].toLowerCase())
       );
-    // what the locale writes straight after a day in a date: the dot in 6. November, 日 in 6日
+    // extract trailing day punctuation for non-English `Do` (e.g. '.' in German '6. November', '日' in Japanese '6日')
     const written = parts({ day: 'numeric', month: 'long' }, stamps[10]);
     const afterDay = written[written.findIndex((part) => part.type === 'day') + 1];
     const table = {
@@ -73,8 +67,7 @@ export const names = (locale) => {
       dayMark: afterDay?.type === 'literal' ? afterDay.value.match(/^[^\s,،]*/)[0] : '',
       isEnglish: language.startsWith('en'),
     };
-    // what the app configured is laid over that, the language first and each longer tag over it:
-    // en, then en-US. Intl has no ordinals, so a configured one is all there is: 1er in French
+    // layer app overrides from base language to specific region (e.g. 'pt' then 'pt-br')
     const subtags = language.toLowerCase().split('-');
     each(subtags, (_, index) => {
       const tag = subtags.slice(0, index + 1).join('-');
@@ -92,15 +85,13 @@ export const names = (locale) => {
 const monthName = (subject, locale, token, besideDay) =>
   (besideDay ? names(locale).besideDay : names(locale))[token][subject.month - 1];
 
-// am and pm in the case the token asks for in English, and as the locale writes them anywhere else
+// honor a/A casing in English while preserving native script/casing elsewhere (e.g. 午後)
 const dayPeriod = (subject, locale, cased) => {
   const { dayPeriods, isEnglish } = names(locale);
   const period = dayPeriods[subject.hour < 12 ? 0 : 1];
   return isEnglish ? period[cased]() : period;
 };
 
-// 6th in English. any other language gets the day as its dates write it: 6. in German, 6日 in Japanese.
-// an ordinal the app configured is asked first
 const ordinal = (number, locale) => {
   const { dayMark, isEnglish, ordinal: own } = names(locale);
   if (own) {
@@ -123,7 +114,7 @@ const zoneName = (parts, locale, style) =>
     .formatToParts(parts.epochMilliseconds)
     .find((part) => part.type === 'timeZoneName')?.value;
 
-// each token with the field it reads, so a date asked for hours refuses instead of printing zeros
+// pair each token with its required property so unsupported tokens (e.g. 'HH' on CalendarDate) fail fast
 const tokenReaders = {
   YYYY: ['year', (subject) => (subject.year < 0 ? '-' : '') + pad(subject.year, 4)],
   YY: ['year', (subject) => pad(subject.year % 100)],
@@ -136,7 +127,7 @@ const tokenReaders = {
   Do: ['day', (subject, locale) => ordinal(subject.day, locale)],
   DDD: ['dayOfYear', (subject) => String(subject.dayOfYear)],
   DDDD: ['dayOfYear', (subject) => pad(subject.dayOfYear, 3)],
-  d: ['dayOfWeek', (subject) => String(subject.dayOfWeek % 7)],
+  d: ['dayOfWeek', (subject) => String(subject.dayOfWeek % 7)], // Sunday = 0 (Moment/Day.js convention)
   dd: ['dayOfWeek', (subject, locale) => names(locale).dd[subject.dayOfWeek - 1]],
   ddd: ['dayOfWeek', (subject, locale) => names(locale).ddd[subject.dayOfWeek - 1]],
   dddd: ['dayOfWeek', (subject, locale) => names(locale).dddd[subject.dayOfWeek - 1]],
@@ -166,18 +157,14 @@ const tokenReaders = {
   WW: ['weekOfYear', (subject) => pad(subject.weekOfYear)],
 };
 
-// longest spelling first so MMMM never reads as four Ms. text in brackets passes through as written.
-// a letter that is no token is caught last, so a misspelled preset refuses instead of printing
-// 'meduim' as minutes and letters. T passes, the way 'YYYY-MM-DDTHH:mm' writes it
+// sort longest-first so MMMM matches before M. [A-SU-Za-z] rejects unescaped letters (catching typos
+// like 'meduim') while letting literal ISO 'T' pass through in 'YYYY-MM-DDTHH:mm'
 const tokenPattern = new RegExp(
   `\\[([^\\]]*)\\]|${Object.keys(tokenReaders).sort((a, b) => b.length - a.length).join('|')}|([A-SU-Za-z])`,
   'g',
 );
 
-// the tables the tokens read, for a picker's headers and a month dropdown. weekdays start where the
-// week does, so the header row matches the grid
 export const weekdayNames = (style = 'short', firstDay, locale) => {
-  // 'narrow' is the shortest form, the one the dd token prints, for a compact calendar header
   const table = names(pickLocale(locale))[weekdayWidths[style] ?? 'ddd'];
   const first = weekStart(firstDay, locale) - 1;
   return [...table.slice(first), ...table.slice(0, first)];
@@ -191,8 +178,7 @@ export const monthNames = (
 export const formatTokens = (subject, kind, named, locale) => {
   const pattern = namedFormat(named);
   const resolved = pickLocale(locale);
-  // a month straight after a day takes the form it has beside one, the rule moment keeps. a month
-  // with text bracketed onto it, MMMM[ta], is being inflected by hand and stays plain
+  // use genitive month only right after a day token, skipping MMMM[ta] where suffixes are bracketed by hand (e.g. Finnish)
   const besideDay = /D[oD]?\.?(\[[^\]]*\]|\s)+MMMM?(?![M[])/.test(pattern);
   return pattern.replace(tokenPattern, (token, literal, stray) => {
     if (literal !== undefined) {

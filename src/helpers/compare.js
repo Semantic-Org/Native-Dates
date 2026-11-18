@@ -22,10 +22,8 @@ import { isInstant, isPlainDate, isPlainDateTime, isPlainTime, isZonedDateTime }
 const looksLikeTime = /^\d{1,2}(?::\d{2}){0,2}(?:\.\d+)?\s*(?:[ap]\.?m\.?)?$/i;
 const looksLikeDateTime = /[T ]\d|[zZ]$|\[[^\]]+\]$/;
 
-// a string reads by its shape: a clock is a time, anything carrying a time or zone is a datetime, the
-// rest is a date. every other input already knows what it is
 export const point = (input) => {
-  // a year-month has an order too, so earliest() and latest() pick among them
+  // YearMonth is ordered on the timeline too, so earliest() and latest() accept it
   if (input?.[IS_DATE_TIME] || input?.[IS_CALENDAR_DATE] || input?.[IS_TIME] || input?.[IS_YEAR_MONTH]) {
     return input;
   }
@@ -39,8 +37,8 @@ export const point = (input) => {
     }
     return new CalendarDate(text);
   }
-  // a bare number standing first is epoch milliseconds, what Date.now() and a database timestamp
-  // hand over. beside a time or a date it still reads as that kind reads it, an hour or a refusal
+  // bare numbers default to epoch ms when first (compare(Date.now(), dt)), whereas asKindOf() below
+  // coerces a trailing number to match the leading argument (compare(time('09:00'), 9))
   if (isDate(input) || isNumber(input) || isZonedDateTime(input) || isInstant(input) || isPlainDateTime(input)) {
     return new DateTime(input);
   }
@@ -98,26 +96,23 @@ const sameKind = (left, right) => {
   }
 };
 
-// a raw value beside a point reads as that point's kind, the way the point's own methods read it
 const asKindOf = (left, value) => {
   if (kindOf(value) !== undefined) {
     return value;
   }
   const kind = kindOf(left);
   if (kind === 'datetime') {
+    // parse wall-clock strings in left's zone rather than the default zone
     return new DateTime(value, left.zone);
   }
   return kind === 'date' ? new CalendarDate(value) : new Time(value);
 };
 
-// a sort comparator. both sides must be the same kind of thing, a raw value reads as the first's kind.
-// ranges order by their start, then by their end, the order a database gives its range types
 export const compare = (a, b) => {
   if (a?.[IS_DURATION]) {
     return a.compare(b);
   }
-  // a year-month is no point either and brings its own order. a raw value beside it reads as one,
-  // where a date or a datetime beside it is two kinds, whichever side it stands on
+  // YearMonth.compare() coerces CalendarDate and DateTime, so reject other branded kinds here first
   if (a?.[IS_YEAR_MONTH]) {
     if (kindOf(b) !== undefined) {
       sameKind(a, b);
