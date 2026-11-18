@@ -47,7 +47,7 @@ export type { DurationFields, DurationInput } from './duration.js';
 export type { Point, Range, RangeMap } from './helpers/compare.js';
 export type { FormatSpec } from './helpers/format.js';
 export type { DateUnit, DayOfWeek, TemporalValue, Unit } from './helpers/units.js';
-export type { Locale, ReadOptions, Settings, Zone } from './helpers/zones.js';
+export type { ActiveSettings, Locale, ReadOptions, Settings, Zone } from './helpers/zones.js';
 export type { MonthDayFields, MonthDayFormat, MonthDayInput, MonthDayOptions } from './month-day.js';
 export type { TimeInput } from './time.js';
 export type { YearMonthFields, YearMonthFormat, YearMonthInput } from './year-month.js';

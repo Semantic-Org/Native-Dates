@@ -5,6 +5,7 @@ import { datetime as coreDatetime } from '@native-dates/core';
 import { looseZoned } from '@native-dates/plugins/loose';
 import { timezones } from '@native-dates/plugins/zones';
 import {
+  type ActiveSettings,
   CalendarDate,
   compare,
   configure,
@@ -20,6 +21,7 @@ import {
   type FormatSpec,
   hours,
   IS_DATE_TIME,
+  IS_RANGE,
   isDateTime,
   kindOf,
   type MonthDay,
@@ -27,6 +29,7 @@ import {
   monthNames,
   monthYear,
   now,
+  type Range,
   type ReadOptions,
   type Settings,
   type Time,
@@ -66,6 +69,8 @@ export const order: -1 | 0 | 1 = compare(meeting, viaCore);
 export const first: DateTime = earliest(meeting, viaCore, now());
 export const kind: string | undefined = kindOf(stay);
 export const brand: symbol = IS_DATE_TIME;
+export const brandedInstance: true = meeting[IS_DATE_TIME];
+export const brandedRange: true = stay[IS_RANGE];
 export const sunday: number = dayOfWeek('sunday');
 export const names: string[] = [...monthNames('long', 'fr'), ...weekdayNames('narrow', 'monday')];
 export const text: string = `${meeting.format(spec)} ${due.text} ${length.format('narrow')} ${meeting.fromNow()}`;
@@ -77,6 +82,13 @@ export const epochs: [number, number, bigint] = [
 
 export function checkGuard(input: unknown): DateTime | null {
   return isDateTime(input) ? input : null;
+}
+
+export function narrowRange(range: Range): CalendarDate | DateTime | Time {
+  if (range.kind === 'date') {
+    return range.start;
+  }
+  return range.end;
 }
 
 // legacy-date adds the read methods of Date to a datetime
@@ -95,7 +107,8 @@ export const zoned: unknown = looseZoned('Sep 7 2026', zone);
 // zones adds zoneAliases to the settings and exports its abbreviation table
 timezones.IST = 'Asia/Jerusalem';
 const settings: Settings = { zoneAliases: { hq: 'Europe/Berlin' }, dayFirst: true, weekStart: 'monday' };
-export const configured: Record<string, string> = configure(settings).zoneAliases;
+const active: ActiveSettings = configure(settings);
+export const configured: Record<string, string> = active.zoneAliases;
 
 // @ts-expect-error epoch became epochMilliseconds
 meeting.epoch;
