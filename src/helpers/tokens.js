@@ -38,7 +38,7 @@ export const names = (locale) => {
         const name = monthIn({ day: 'numeric', month: style }, stamp);
         return /\p{N}/u.test(name) ? plain[index] : name;
       });
-    // 2024-01-01 fell on a monday, so index 0 is monday to match ISO weekday numbering
+    // 2024-01-01 fell on a monday, so index 0 is monday, the day ISO numbers first
     const weekday = (style) =>
       Array.from(
         { length: 7 },
