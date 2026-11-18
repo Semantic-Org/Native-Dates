@@ -370,7 +370,6 @@ export class Duration {
 
 Duration.prototype.add = Duration.prototype.plus;
 Duration.prototype.subtract = Duration.prototype.minus;
-Duration.prototype.remove = Duration.prototype.minus;
 Duration.prototype.lang = Duration.prototype.locale;
 Duration.prototype.as = Duration.prototype.total;
 
