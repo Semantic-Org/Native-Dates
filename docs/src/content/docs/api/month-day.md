@@ -37,7 +37,6 @@ Properties read the 1-indexed month and day of the month.
 |---|---|---|
 | `text` | `string` | Locale-formatted month and day, such as `'Oct 17'`. |
 | `month`, `day` | `number` | Calendar month from 1 through 12, and day of the month from 1 through 31. |
-| `MonthDay.presets` | `object` | Named format presets read by `format()`, open to custom entries. |
 
 ## Placing in a year and stepping
 
@@ -121,9 +120,10 @@ date('2026-11-16').next(birthday).toString(); // '2027-10-17'
 
 ```js signature
 md.previous(day?): CalendarDate
+md.last(day?): CalendarDate
 ```
 
-Returns the most recent occurrence strictly before a reference date, defaulting to `today()`. Calendar dates and moments also accept a month-day directly in `previous()`.
+Returns the most recent occurrence strictly before a reference date, defaulting to `today()`. Calendar dates and moments also accept a month-day directly in `previous()`. It is also aliased as `last()`.
 
 **Parameters**
 
@@ -208,9 +208,10 @@ Use `fallsOn()` to check whether a calendar date is that year's observance, sinc
 
 ```js signature
 md.fallsOn(day): boolean
+md.isOn(day): boolean
 ```
 
-Returns `true` when the given date is this month-day's occurrence in that date's own year. In a common year, February 29 falls on February 28, whereas in a leap year it falls only on February 29.
+Returns `true` when the given date is this month-day's occurrence in that date's own year. In a common year, February 29 falls on February 28, whereas in a leap year it falls only on February 29. It is also aliased as `isOn()`.
 
 **Parameters**
 
@@ -332,7 +333,7 @@ md.format(spec?, locale?): string
 
 Formats the month and day in the locale's own order, or with a built-in token pattern such as `'MMM Do'`. Shared options objects ignore year, clock, and zone keys automatically.
 
-Custom named presets can be added on `MonthDay.presets`, and non-Gregorian locales format Gregorian month names so annual dates stay stable. See [Formatting](/guides/formatting/) for all preset and token options.
+Formats an app names in [`configure()`](/api/configure/) print here too, and non-Gregorian locales format Gregorian month names so annual dates stay stable. See [Formatting](/guides/formatting/) for all preset and token options.
 
 **Parameters**
 

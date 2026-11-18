@@ -96,13 +96,15 @@ Every range exposes its formatted label, typed endpoints, kind tag, and measured
 ```js signature
 d.to(end): DateRange
 d.to(count, unit): DateRange
+d.through(end): DateRange
+d.through(count, unit): DateRange
 dt.to(end): DateTimeRange
 dt.to(count, unit): DateTimeRange
 t.to(end): TimeRange
 t.to(count, unit): TimeRange
 ```
 
-Builds a range from this point to an end point or across a duration. On a [calendar date](/api/calendar-date/), passing a length of 7 days lands six days after `start` because both endpoints are included.
+Builds a range from this point to an end point or across a duration. On a [calendar date](/api/calendar-date/), passing a length of 7 days lands six days after `start` because both endpoints are included. A calendar date also answers to `through()`, since its range includes the last day.
 
 **Parameters**
 
@@ -178,9 +180,10 @@ datetime('2026-11-16T14:20Z', 'UTC').range('hour').toString(); // '2026-11-16T14
 
 ```js signature
 range.contains(value): boolean
+range.includes(value): boolean
 ```
 
-Checks whether a point or another range of the same kind lies inside this range. Date ranges include `end`, moment and clock ranges exclude it, and overnight clock ranges match times on either side of midnight.
+Checks whether a point or another range of the same kind lies inside this range. Date ranges include `end`, moment and clock ranges exclude it, and overnight clock ranges match times on either side of midnight. It is also aliased as `includes()`.
 
 **Parameters**
 
@@ -352,9 +355,11 @@ timeRange('22:00', '02:00').points(1, 'hour').map(String);
 ```js signature
 range.split(step): Range[]
 range.split(count, unit): Range[]
+range.splitBy(step): Range[]
+range.splitBy(count, unit): Range[]
 ```
 
-Divides the range into contiguous sub-ranges of the given step size, clamping the final chunk to the range's end. Accepts the same step arguments as [`points()`](#points).
+Divides the range into contiguous sub-ranges of the given step size, clamping the final chunk to the range's end. Accepts the same step arguments as [`points()`](#points), and is also aliased as `splitBy()`.
 
 ```js
 dateRange('2026-09-01', '2026-09-10').split(4, 'days').map(String);
