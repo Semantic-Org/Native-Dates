@@ -150,7 +150,7 @@ Returns the full calendar or clock unit enclosing a date or moment. Date ranges 
   required: true
   description: Enclosing unit such as `'week'`, `'month'`, or `'day'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`, overriding `configure()` and the active locale.
 ```
 

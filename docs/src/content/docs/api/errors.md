@@ -110,7 +110,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | Code | Thrown by | Cause |
 |---|---|---|
 | `unknownUnit` | Arithmetic, rounding, `set()`, `duration()` | Unrecognized unit name or abbreviation. |
-| `unknownWeekday` | `dayOfWeek()`, `next()`, `previous()`, `configure()` | Weekday string is not recognized or weekday number is outside 1 to 7. |
+| `unknownDayOfWeek` | `dayOfWeek()`, `next()`, `previous()`, `configure()` | Day name is not recognized, or the day of the week as a number is outside 1 to 7. |
 | `unknownWidth` | `configure()` | A `weekdayNames` entry names a width other than `narrow`, `short`, or `long`, or leaves the width out. |
 | `unknownZone` | Factories, `in()`, `configure()` | Unknown IANA time zone ID, non-string zone, or malformed UTC offset. |
 | `invalidZoneAliases` | `configure()` | `zoneAliases` is neither a plain object nor `null`. |
