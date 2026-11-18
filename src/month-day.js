@@ -7,7 +7,16 @@ import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_MONTH_DAY } from './helpers/identity.js';
 import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
 import { formatTokens } from './helpers/tokens.js';
-import { inspect, isCount, isDigits, isPlainDate, localeOf, singularKeys, zoneOptions } from './helpers/units.js';
+import {
+  alias,
+  inspect,
+  isCount,
+  isDigits,
+  isPlainDate,
+  localeOf,
+  singularKeys,
+  zoneOptions,
+} from './helpers/units.js';
 import { zoneId } from './helpers/zones.js';
 
 /*
@@ -316,9 +325,7 @@ export class MonthDay {
   }
 }
 
-MonthDay.prototype.lang = MonthDay.prototype.locale;
-MonthDay.prototype.isOn = MonthDay.prototype.fallsOn;
-MonthDay.prototype.last = MonthDay.prototype.previous;
+alias(MonthDay, { lang: 'locale', isOn: 'fallsOn', last: 'previous' });
 
 const unread = new Set([...unreadable.point, 'invalidMonthDay', 'missingMonthDay', 'unsupportedCalendar']);
 

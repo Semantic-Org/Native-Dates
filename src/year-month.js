@@ -9,6 +9,7 @@ import { IS_YEAR_MONTH } from './helpers/identity.js';
 import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
+  alias,
   inspect,
   isCount,
   isDigits,
@@ -355,10 +356,7 @@ export class YearMonth {
   }
 }
 
-YearMonth.prototype.add = YearMonth.prototype.plus;
-YearMonth.prototype.subtract = YearMonth.prototype.minus;
-YearMonth.prototype.lang = YearMonth.prototype.locale;
-YearMonth.prototype.includes = YearMonth.prototype.contains;
+alias(YearMonth, { add: 'plus', subtract: 'minus', lang: 'locale', includes: 'contains' });
 
 const unread = new Set([...unreadable.point, 'invalidYearMonth', 'missingYearMonth', 'unsupportedCalendar']);
 

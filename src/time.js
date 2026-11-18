@@ -10,6 +10,7 @@ import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
+  alias,
   endPrecision,
   inspect,
   isCount,
@@ -381,11 +382,8 @@ export class Time {
   }
 }
 
-Time.prototype.add = Time.prototype.plus;
-Time.prototype.subtract = Time.prototype.minus;
-Time.prototype.lang = Time.prototype.locale;
-// for is to given a length, the word that reads aloud: start.for(90, 'minutes')
-Time.prototype.for = Time.prototype.to;
+// for is to given a length, the word that reads aloud: start.for(8, 'hours')
+alias(Time, { add: 'plus', subtract: 'minus', lang: 'locale', for: 'to' });
 
 export const time = (input, minuteOrOptions, second) => {
   const build = () =>
