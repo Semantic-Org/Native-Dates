@@ -51,6 +51,8 @@ export class MonthDay {
   next(day?: CalendarDateInput): CalendarDate;
   /** The most recent occurrence, counted from today or from a day */
   previous(day?: CalendarDateInput): CalendarDate;
+  /** Alias for `previous`: `birthday.last()` */
+  last(day?: CalendarDateInput): CalendarDate;
   as(kind: 'monthDay'): MonthDay;
 
   /**
@@ -64,6 +66,8 @@ export class MonthDay {
    * Feb 28, 2027 and not on Feb 28, 2028
    */
   fallsOn(day: CalendarDateInput): boolean;
+  /** Alias for `fallsOn` */
+  isOn(day: CalendarDateInput): boolean;
   /** Whether it falls on today. Today depends on where you stand, so these take the zone to judge from */
   isToday(zone?: Zone): boolean;
   isTomorrow(zone?: Zone): boolean;

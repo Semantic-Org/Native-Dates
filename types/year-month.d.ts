@@ -72,6 +72,8 @@ export class YearMonth {
   isAfter(other: YearMonthInput): boolean;
   /** Whether a day falls in this month */
   contains(day: CalendarDateInput): boolean;
+  /** Alias for `contains` */
+  includes(day: CalendarDateInput): boolean;
   /** Past once its last day is, and future until its first, judged from the zone */
   isPast(zone?: Zone): boolean;
   isFuture(zone?: Zone): boolean;
