@@ -1,4 +1,4 @@
-// measures production min + brotli-11 sizes for core, tree-shaken entry, each plugin delta, and all combined
+// measures production minified + Brotli-11 sizes for core, named entry, each plugin delta, and all plugins
 
 import { build } from 'esbuild';
 import { readdirSync } from 'node:fs';
@@ -8,25 +8,28 @@ import { brotliCompressSync, constants } from 'node:zlib';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-// resolveDir is passed by callers whose bundler moves this file, so import.meta.url no longer finds the repo
-export async function measure(contents, resolveDir = root) {
+// pass explicit resolveDir when imported by Astro's bundled build pipeline
+export async function measure(contents, resolveDir = root, { dev = false } = {}) {
   const result = await build({
     bundle: true,
     minify: true,
     format: 'esm',
     write: false,
     logLevel: 'silent',
-    define: { 'process.env.NODE_ENV': '"production"' },
+    // NODE_ENV: 'production' folds isDevelopment in src/helpers/environment.js so dev explanations strip out
+    define: {
+      'process.env.NODE_ENV': dev ? '"development"' : '"production"',
+      __DEV__: dev ? 'true' : 'false',
+    },
     stdin: { contents, resolveDir },
   });
   const raw = result.outputFiles[0].contents;
   const br = brotliCompressSync(raw, {
     params: { [constants.BROTLI_PARAM_QUALITY]: 11 },
   });
-  return { min: raw.length, br: br.length };
+  return { min: raw.length, br: br.length, text: result.outputFiles[0].text };
 }
 
-// logging the namespace keeps every export, so this is all of core plus the named plugins
 export const entryWith = (plugins = []) =>
   [
     `import * as core from 'native-dates';`,
@@ -61,8 +64,10 @@ async function report() {
     ]);
   }
 
-  const everything = await measure(entryWith(plugins));
-  rows.push(['core + all plugins', kb(everything.min), kb(everything.br)]);
+  if (plugins.length) {
+    const everything = await measure(entryWith(plugins));
+    rows.push(['core + all plugins', kb(everything.min), kb(everything.br)]);
+  }
 
   console.log('\nTarget'.padEnd(28) + 'Minified'.padStart(12) + 'Brotli (q11)'.padStart(15));
   console.log('-'.repeat(54));

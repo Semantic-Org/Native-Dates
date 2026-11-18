@@ -97,7 +97,7 @@ export class YearMonth {
     if (input === undefined || input === null) {
       return refuseType('missingYearMonth', String(input), {
         explanation: isDevelopment
-          ? 'a year-month value is required. use `today().yearMonth` for the current year and month'
+          ? 'a year-month value is required. Use `today().yearMonth` for the current year and month'
           : 0,
       });
     }
@@ -114,7 +114,7 @@ export class YearMonth {
     if (input instanceof Temporal.PlainYearMonth) {
       return input.calendarId === 'iso8601' ? input : refuseType('unsupportedCalendar', String(input), {
         explanation: isDevelopment
-          ? "a `YearMonth` only stores dates in the ISO 8601 calendar. pass `input.toPlainDate({ day: 1 })` to convert a specific day's month, or use `.on(day)` before formatting an ISO year-month in another calendar"
+          ? "a `YearMonth` only stores dates in the ISO 8601 calendar. Pass `input.toPlainDate({ day: 1 })` to convert a specific day's month, or use `.on(day)` before formatting an ISO year-month in another calendar"
           : 0,
       });
     }
@@ -141,7 +141,7 @@ export class YearMonth {
           ? YearMonth.#fromFields({ year: named[2] ?? named[3], month }, input)
           : refuse('invalidYearMonth', input, {
             explanation: isDevelopment
-              ? "expected a year-month string like '2026-11' or '2026/11', or an ISO date like '2026-11-16'. use `monthYear('11/26')` for month-first strings, or pass `{ loose: true }` with '@native-dates/plugins/loose' for month names like 'Nov 2026'"
+              ? "expected a year-month string like '2026-11' or '2026/11', or an ISO date like '2026-11-16'. Use `monthYear('11/26')` for month-first strings, or pass `{ loose: true }` with '@native-dates/plugins/loose' for month names like 'Nov 2026'"
               : 0,
           });
       }
@@ -225,7 +225,7 @@ export class YearMonth {
     if (name) {
       refuse('unsupportedUnit', name, {
         explanation: isDevelopment
-          ? 'a `YearMonth` has no day or clock fields, so it only accepts months or years. choose a day first with `.on(15)` to work with smaller units'
+          ? 'a `YearMonth` has no day or clock fields, so it only accepts months or years. Choose a day first with `.on(15)` to work with smaller units'
           : 0,
       });
     }
@@ -342,7 +342,7 @@ export class YearMonth {
   valueOf() {
     return refuse('unsupportedComparison', String(this), {
       explanation: isDevelopment
-        ? 'a `YearMonth` cannot be converted to a number for `<`, `>`, or `-`. compare values with `isBefore()`, `isAfter()`, or `equals()`, or measure the difference with `until()`'
+        ? 'a `YearMonth` cannot be converted to a number for `<`, `>`, or `-`. Compare values with `isBefore()`, `isAfter()`, or `equals()`, or measure the difference with `until()`'
         : 0,
     });
   }
