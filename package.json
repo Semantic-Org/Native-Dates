@@ -32,14 +32,17 @@
     "docs"
   ],
   "scripts": {
+    "test": "vitest",
     "size": "node tools/size.js",
     "format": "npx dprint fmt",
     "setup": "npx simple-git-hooks"
   },
   "devDependencies": {
     "dprint": "^0.50.0",
-    "esbuild": "^0.25.0",
-    "simple-git-hooks": "^2.11.1"
+    "esbuild": "^0.28.2",
+    "simple-git-hooks": "^2.11.1",
+    "temporal-polyfill": "^1.0.8",
+    "vitest": "^5.1.0"
   },
   "simple-git-hooks": {
     "pre-commit": "bash tools/hooks/pre-commit",
