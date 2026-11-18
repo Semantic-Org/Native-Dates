@@ -40,3 +40,6 @@ export { isMonthDay } from './month-day.js';
 export { isDateRange, isDateTimeRange, isTimeRange } from './range.js';
 export { isTime } from './time.js';
 export { isYearMonth } from './year-month.js';
+
+// throwaway export for a dry run of the bundle bot, never merged
+export const botTest = (a, b) => (a > b ? a - b : b - a) % 7;
