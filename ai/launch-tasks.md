@@ -23,7 +23,7 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 
 Public names go through a blind naming pass before 1.0 (`../next/ai/skills/contributing/name-public-api.md`): a room that has never seen the names proposes them from a description of the behaviour, and the maintainer rules. The brief and its key are in `ai/workspace/naming/`. Rulings so far:
 
-- **The count since 1970 always says its unit**: `epochSeconds`, `epochMilliseconds`, `epochNanoseconds`, and no bare `epoch`. The field cannot agree what the bare word means: seconds to a shell, Python and a JWT, milliseconds to `Date.now()`. `timestamp`, the room's pick, commits to no unit and often is not a number at all. `epochSeconds` is whole seconds rounded down, what the `X` token already printed. `epochMilliseconds` stays the own property a console shows, and the other two are read on demand.
+- **The count since 1970 always says its unit**: `epochSeconds`, `epochMilliseconds`, `epochNanoseconds`, and no bare `epoch`. The field cannot agree what the bare word means: seconds to a shell, Python and a JWT, milliseconds to `Date.now()`. `timestamp`, the room's pick, commits to no unit and often is not a number at all. `epochSeconds` is whole seconds rounded down, what the `X` token already printed. `epochMilliseconds` stays the own property a console shows, and the other two are read on demand. A bare `epoch` for the default was weighed and turned down: it would round-trip through `datetime(n)`, which reads milliseconds, and every JavaScript date library leaves milliseconds unqualified, but the unit in the name is what stops `token.exp = date.epoch` at a boundary that counts in seconds.
 
 ### Decided: a locale rides on the value
 
