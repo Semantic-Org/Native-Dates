@@ -164,10 +164,9 @@ time('23:00').plus('2h').toString(); // '01:00:00'
 ```js signature
 t.minus(amount, unit?): Time
 t.subtract(amount, unit?): Time
-t.remove(amount, unit?): Time
 ```
 
-Moves backward on the 24-hour clock, wrapping before midnight when needed. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()` and `remove()`.
+Moves backward on the 24-hour clock, wrapping before midnight when needed. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()`.
 
 **Parameters**
 

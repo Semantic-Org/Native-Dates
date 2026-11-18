@@ -125,7 +125,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 |---|---|---|
 | `unsupportedUnit` | `CalendarDate`, `Time`, `YearMonth` | Using clock units on a `CalendarDate`, calendar units on a `Time`, or units smaller than a month on a `YearMonth`. |
 | `cannotAdd` | `plus()`, `add()` | Addition overflows Temporal's representable date range. |
-| `cannotSubtract` | `minus()`, `subtract()`, `remove()` | Subtraction overflows Temporal's representable date range. |
+| `cannotSubtract` | `minus()`, `subtract()` | Subtraction overflows Temporal's representable date range. |
 | `cannotSet` | `set()` | Field value is fractional or out of range for that calendar month or clock unit. |
 | `cannotRound` | `round()`, `floor()`, `ceil()`, `Time.startOf()` | Unsupported rounding unit, or step increment does not divide evenly into the next unit. |
 | `missingAnchor` | `Duration.balance()`, `total()`, `compare()` | Unanchored duration requires a calendar start date to convert months or years into weeks, days, or clock units. |

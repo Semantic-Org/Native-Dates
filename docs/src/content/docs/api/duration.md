@@ -82,10 +82,9 @@ days(1).plus('6h').toString(); // 'P1DT6H'
 ```js signature
 dur.minus(other, unit?): Duration
 dur.subtract(other, unit?): Duration
-dur.remove(other, unit?): Duration
 ```
 
-Subtracts another duration, borrowing across years and months or weeks and days when needed. Incompatible opposite-sign pairs like days minus hours throw a `RangeError`, and `subtract()` and `remove()` work as aliases.
+Subtracts another duration, borrowing across years and months or weeks and days when needed. Incompatible opposite-sign pairs like days minus hours throw a `RangeError`, and `subtract()` works as an alias.
 
 **Parameters**
 
