@@ -3,7 +3,7 @@ import { each, isPlainObject, isString } from './utils.js';
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import { cached, plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
-import { locale as pickLocale } from './zones.js';
+import { locale as pickLocale, namedFormat } from './zones.js';
 
 const presets = {
   datetime: {
@@ -65,8 +65,13 @@ const ownOptions = (kind, bag) => {
   return namesOwnPart ? options : { ...intlOptions(kind), ...options };
 };
 
+// what a datetime's text prints. handed over as the bag itself, so a value is written the same
+// whatever an app has named 'text', and making one can never refuse
+export const textFormat = presets.datetime.text;
+
 // a preset name or an Intl options bag resolves to Intl options, anything else resolves to undefined
-export const intlOptions = (kind, spec) => {
+export const intlOptions = (kind, named) => {
+  const spec = namedFormat(named);
   if (spec === undefined) {
     return presets[kind].default ?? presets[kind].medium;
   }
@@ -156,7 +161,8 @@ const parts = [
 // a part of a date prints only the parts it has, so the presets and the options bag that format a
 // datetime format it too. a format that names none of its parts prints its medium form. what is no
 // part, a calendar or a numbering system, goes to Intl as written
-export const partOptions = (spec, names, styles) => {
+export const partOptions = (named, names, styles) => {
+  const spec = namedFormat(named);
   if (isString(spec) && Object.hasOwn(styles, spec)) {
     return styles[spec];
   }

@@ -164,10 +164,9 @@ time('23:00').plus('2h').toString(); // '01:00:00'
 ```js signature
 t.minus(amount, unit?): Time
 t.subtract(amount, unit?): Time
-t.remove(amount, unit?): Time
 ```
 
-Moves backward on the 24-hour clock, wrapping before midnight when needed. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()` and `remove()`.
+Moves backward on the 24-hour clock, wrapping before midnight when needed. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()`.
 
 **Parameters**
 
@@ -478,9 +477,11 @@ time('5:00pm').since('9:00am', 'hours'); // 8
 ```js signature
 t.to(end): TimeRange
 t.to(count, unit): TimeRange
+t.for(length): TimeRange
+t.for(count, unit): TimeRange
 ```
 
-Creates a half-open [`TimeRange`](/api/ranges/) from this time until the target time or elapsed duration. An end earlier than the start wraps overnight across midnight.
+Creates a half-open [`TimeRange`](/api/ranges/) from this time until the target time or elapsed duration. An end earlier than the start wraps overnight across midnight. Given a length, it is also spelled `for()`.
 
 **Parameters**
 
@@ -503,7 +504,7 @@ description: A half-open `TimeRange` starting at this time.
 
 ```js
 time('9:00am').to('5:00pm').duration.hours; // 8
-time('9:00am').to(90, 'minutes').end.toString(); // '10:30:00'
+time('9:00am').for(90, 'minutes').end.toString(); // '10:30:00'
 time('22:00').to('06:00').duration.hours; // 8
 ```
 :::
@@ -517,9 +518,9 @@ time('22:00').to('06:00').duration.hours; // 8
 t.format(spec?, locale?): string
 ```
 
-Formats the time of day using named presets, `'LT'` and `'LTS'` localized presets, options objects, or token patterns.
+Formats the time of day using built-in presets, custom names from [`configure()`](/api/configure/), options objects, or token patterns.
 
-Options objects ignore date and zone keys, so one shared options object can format moments, dates, and times alike. See [Formatting](/guides/formatting/) for the full preset and token reference.
+Localized `'LT'` and `'LTS'` presets are built in, and options objects ignore date and zone keys automatically. See [Formatting](/guides/formatting/) for the full preset and token reference.
 
 **Parameters**
 
@@ -527,7 +528,7 @@ Options objects ignore date and zone keys, so one shared options object can form
 - name: spec
   type: FormatSpec
   default: "'short'"
-  description: Preset name such as `'short'` or `'LTS'`, `Intl` options object, or token pattern.
+  description: Built-in or configured format name, `Intl` options object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding this time's or the configured locale for one call.

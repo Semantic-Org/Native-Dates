@@ -129,7 +129,7 @@ Month and weekday names inside token patterns come from `Intl` in the active loc
 | `Do` | `'16th'` | Day of the month with English ordinals, the locale's day marker like `'6.'` or `'6日'`, or custom [`ordinals`](/api/configure/). |
 | `DDD`, `DDDD` | `'320'`, `'045'` | Day of the year, unpadded or zero-padded to three digits. |
 | `d` | `'1'` | Day of the week from 0 to 6, starting on Sunday at 0. |
-| `dd`, `ddd`, `dddd` | `'Mo'`, `'Mon'`, `'Monday'` | Localized shortest, abbreviated, or full weekday name, customizable via [`weekdays`](/api/configure/). |
+| `dd`, `ddd`, `dddd` | `'Mo'`, `'Mon'`, `'Monday'` | Localized shortest, abbreviated, or full weekday name, customizable via [`weekdayNames`](/api/configure/). |
 | `W`, `WW` | `'47'`, `'05'` | ISO week of the year, unpadded or zero-padded. |
 | `H`, `HH` | `'9'`, `'09'` | Hour on the 24-hour clock, unpadded or zero-padded. |
 | `h`, `hh` | `'9'`, `'09'` | Hour on the 12-hour clock from 1 through 12. |
@@ -157,6 +157,29 @@ monthNames('short', 'en-US'); // ['Jan', 'Feb', 'Mar', ...]
 weekdayNames('short', undefined, 'en-US'); // ['Sun', 'Mon', 'Tue', ...]
 weekdayNames('narrow', 'monday', 'en-US'); // ['Mo', 'Tu', 'We', ...]
 ```
+
+## Naming your own formats
+
+An app that prints the same shape in many places can name it once in [`configure()`](/api/configure/) and ask for it by name. A named format is a token pattern or an options bag:
+
+```js
+import { configure, date } from 'native-dates';
+
+configure({
+  formats: {
+    invoice: 'YYYY-MM-DD',
+    receipt: { dateStyle: 'long' },
+  },
+});
+
+date('2026-11-06').format('invoice'); // '2026-11-06'
+date('2026-11-06').format('receipt'); // 'November 6, 2026'
+date('2026-11-06').to('2026-11-20').format('invoice'); // '2026-11-06 – 2026-11-20'
+
+configure({ formats: null });
+```
+
+A name is read before the built-in presets, so naming a format `'short'` changes what that preset prints across the app. Durations keep their own four styles and do not read named formats.
 
 ## Formatting ranges
 

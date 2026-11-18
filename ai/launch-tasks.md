@@ -2,7 +2,7 @@
 
 What is left before `native-dates` tags 1.0, written 2026-11-14 after ranges, token patterns, `MonthDay` and `YearMonth` moved into core. Work the sections in order: sections 1 and 2 decide the surface and what it prints, and everything after them tests, documents or measures the result.
 
-Sizes on 2026-11-16 (`npm run size`, Brotli): 13.97 kB for all of `native-dates`, 12.47 kB for `import { now }`, 15.35 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
+Sizes on 2026-11-17 (`npm run size`, Brotli): 14.06 kB for all of `native-dates`, 12.53 kB for `import { now }`, 15.41 kB with the three plugins (`zones`, `loose`, `legacy-date`) on top.
 
 ## How to decide
 
@@ -17,7 +17,27 @@ Three rules the maintainer set while this list was drawn up. They outrank habit.
 - [ ] **`native-dates/helpers/*` is a public entry.** The exports map serves every file in `src/helpers/` because the plugins import from it. Either say in writing that the path is unstable, or narrow it to what the three plugins use (`environment`, `errors`, `utils`, `zones`).
 - [x] **Error codes** use the six condition words of the sync repo (`missing`, `unknown`, `invalid`, `unsupported`, `duplicate`, `conflicting`), and every explanation was rewritten in its register and reviewed. All of them fold out of a production build. Still open for a read: the `invalid*` codes are thrown as a `TypeError` in some places and a `RangeError` in others.
 - [x] **Relative time** is in core as `from(other)` and `fromNow()`, the words moment and day.js use, with `formatRelative()` kept as a second spelling. It cost 0.29 kB of floor, the size the plugin was.
-- [ ] **Names worth one last read.** `monthDay.in(2027)` beside `datetime.in(zone)`. `after()` and `before()` beside `next()` and `previous()`. `as()` reaches five kinds where `kindOf()` reports more, so there is no `as('dateRange')`.
+- [x] **Names had their last read**, in the naming room below: two blind rooms proposed names from descriptions of the behaviour, and every blank was ruled on. `monthDay.in(2027)` beside `datetime.in(zone)` stood, `after()` and `before()` stay beside `next()` and `previous()`, and `as()` reaches kinds on a point and units on a length.
+
+### Decided in the naming room
+
+Public names go through a blind naming pass before 1.0 (`../next/ai/skills/contributing/name-public-api.md`): a room that has never seen the names proposes them from a description of the behaviour, and the maintainer rules. The brief and its key are in `ai/workspace/naming/`. Rulings so far:
+
+- **The count since 1970 always says its unit**: `epochSeconds`, `epochMilliseconds`, `epochNanoseconds`, and no bare `epoch`. The field cannot agree what the bare word means: seconds to a shell, Python and a JWT, milliseconds to `Date.now()`. `timestamp`, the room's pick, commits to no unit and often is not a number at all. `epochSeconds` is whole seconds rounded down, what the `X` token already printed. `epochMilliseconds` stays the own property a console shows, and the other two are read on demand. A bare `epoch` for the default was weighed and turned down: it would round-trip through `datetime(n)`, which reads milliseconds, and every JavaScript date library leaves milliseconds unqualified, but the unit in the name is what stops `token.exp = date.epoch` at a boundary that counts in seconds.
+- **The number of a day in its week is `dayOfWeek`**, on a date and a datetime, and the exported helper is `dayOfWeek('sunday')`. "Weekday" is left with two meanings a reader already has: the name of a day, as in `weekdayNames()` and a format's `weekday: 'long'`, and Monday to Friday, as in `isWeekday()`. The number no longer says Sunday is a weekday while `isWeekday()` says it is not. The type that takes a day by name or number is `DayOfWeek`, and a day that cannot be read throws `unknownDayOfWeek`. That a format's options key is `weekday` was weighed and set aside: a key in `Intl`'s bag is `Intl` speaking, not the library.
+- **The `configure` key for an app's own day names is `weekdayNames`**, the word the `weekdayNames()` function already uses for what it changes. It was `weekdays`.
+- **Taking away has two spellings, `minus` and `subtract`.** A third, `remove`, is gone: `date.remove(2, 'days')` reads as deleting something, and the room, asked blind for other words, never offered it. Adding stays `plus` and `add`.
+- **A length counted in one unit is `total(unit)`, with `as(unit)` beside it.** The room preferred `hours(36).in('days')`, which reads best aloud. `total` leads because it is the one word of the three the library uses for nothing else, so what comes back can be guessed: `in` gives a value of the library everywhere else (`datetime.in(zone)`, `monthDay.in(year)`, `range.in(zone)`), and beside `balance('day')`, which takes the same argument and gives a duration, `total` and `balance` say which is the number. Nothing changed in the code.
+- **`fallsOn` stays, with `isOn` beside it.** `birthday.fallsOn(day)` is the idiom, and `isOn` is the spelling the house's `is*` rule would guess.
+- **A year-month's `start` and `end` stay.** They are the two a range of that month runs between, the words a range's own ends have.
+- **`range('week')` stays**, where the room offered `rangeOf`.
+- **The century a two-digit year is read into stays on `YearMonth.century`.** As a `configure` key it measured 19 B, and the ruling was configure only if it cost nothing: nobody is known to change it outside a legacy import.
+- **An app names its own formats in `configure({ formats })`**: `{ invoice: 'YYYY-MM-DD', receipt: { dateStyle: 'long' } }`, then `value.format('invoice')` on a datetime, a date, a time, a month-day, a year-month and a range. It took the place of two statics, `MonthDay.presets` and `YearMonth.presets`, which were open to more for those two kinds only and are private tables now. A name is read before the built-in presets, so an app can give `'short'` its own meaning. Setting `formats` again replaces the set, as `weekdayNames` and `ordinals` do. A duration keeps its own four styles. A value's own `text` and a bare `format()` are the built-in forms whatever an app names, as a date's already were, so a format named `medium` or `text` can never stop a value being made. A named bag is kept as the app wrote it. About 70 B, 14 B of it floor.
+- **Second spellings taken from the room**: `includes` beside `contains` on a range and a year-month, `splitBy` beside `split` on a range and a date, `last` beside `previous` on a month-day, and `through` beside `to` on a date alone, since a date range runs through its last day where a datetime or time range stops short of its end. 53 B together.
+- **`balance` stands alone.** The room's first guess was `normalize`, and it asked for it as a second spelling. Luxon is the one library with `normalize()` on a duration, and there it never moves into a larger unit: 90 minutes stays 90 minutes, where `balance()` here gives 1 hour 30 minutes. The developers who would reach for the word are the ones it would give a different answer to.
+- **`points` stands alone**, where the room offered `every`. `every` and `each` are verbs that promise a loop or a test, as they do on an array, and `points()` hands back a plain array of what the library already calls points: the `Point` type, `invalidPoint`, `missingPoints`.
+- **A month-day keeps every way of asking for its next occurrence**: `birthday.next()`, `birthday.next(day)`, `birthday.after(day)` and `day.next(birthday)`, and the same four backwards. The room, told `next()` took nothing, argued for that split. It stays as it is because the extra spelling costs nothing, a wrong guess such as `birthday.next('friday')` refuses, and the day is how `next()` counts from another zone's today.
+- **A range from a start and a length is `for`**: `meeting.for(90, 'minutes')`, `time('9am').for(hours(8))`, `checkIn.for(3, 'days')`. The first room had judged `to` only on `monday.to(friday)`, and "Monday to two weeks" is not a sentence. A second room, given one blank and never told `to` already took a length, guessed `for` first, ranked it first, and read `start.to(3, 'days')` cold as a conversion. On a date it is also the form that counts right: working out the end by hand is a day too many, since a date range includes its last day. `for` is a second name for `to`, which keeps taking a length. The stricter shape, `to` taking only an end, was measured and turned down: `time('9am').to(8, 'hours')` would read the 8 as eight o'clock and hand back 23 hours without a word. `lasting`, the room's second spelling, was not taken. 10 B.
 
 ### Decided: a locale rides on the value
 
@@ -79,7 +99,7 @@ Cost: 0.35 kB, 0.32 kB of it floor. Not taken, from the same list: zone spelling
 
 The docs will carry examples for each language, and may show a homepage section only to a reader who has picked that language. Those pages put every English-shaped corner on display, so find them first. The method that found the last two bugs is cheap: print one value in twenty locales and read the column.
 
-- [ ] **Sweep every output path across locales**: each preset on each noun, ranges of each kind, durations in each style, `text`, and token patterns. Include a right-to-left locale, one with its own digits, and one with its own calendar.
+- [x] **Sweep every output path across locales**: each preset on each noun, ranges of each kind, durations in each style, `text`, and token patterns. Include a right-to-left locale, one with its own digits, and one with its own calendar.
 - [x] **Token `Do` prints English.** `format('Do', 'de')` gives `17th`. This is wrong output, so fix it if `Intl` can supply the ordinal cheaply, and otherwise decide what `Do` means outside English.
 - [x] **Tokens `a` and `A` always print `am` and `pm`.** The presets print the locale's own. Same call as `Do`.
 - [x] **Token `dd` is the first two letters of the short weekday name**, which is right in English and arbitrary elsewhere.
@@ -128,7 +148,7 @@ A fourth pass, after asking readers of the languages and a review across every l
 
 ```js
 configure({
-  weekdays: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
+  weekdayNames: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
   ordinals: { fr: (day) => (day === 1 ? '1er' : day) },
 });
 ```
@@ -164,18 +184,20 @@ The repo has had no tests on purpose, so nothing pinned the API while it moved. 
 
 Everything so far ran on Node 26 with native Temporal and was bundled with esbuild.
 
-- [ ] **Browsers.** Chrome and Firefox on native Temporal. Safari through `@native-dates/polyfill` was checked on 2026-11-14, Safari 27.2 on iOS, which has no Temporal of its own: ranges, token patterns, durations, month-days and year-months all printed correctly. The docs playground in Safari is still to check.
+- [x] **Browsers.** Chrome and Firefox on native Temporal. Safari through `@native-dates/polyfill` was checked on 2026-11-14, Safari 27.2 on iOS, which has no Temporal of its own: ranges, token patterns, durations, month-days and year-months all printed correctly. The docs playground in Safari is still to check. The maintainer checked everything in Safari on a phone on 2026-11-17 and closed this.
 - [ ] **Bundlers.** One small app each on Vite, Rollup and webpack, checking the size and that nothing is dropped.
 - [ ] **Types in a consumer project** under both `nodenext` and `bundler` resolution, and through the `@native-dates/core` alias. The type files re-export each other with `.js` specifiers.
-- [ ] **Performance.** No benchmark is in the repo. The tachometer and bundle-size setup from `../next` is being ported, and is the standard: scratch timings in Node are a loose signal only. Measure parsing, arithmetic and formatting against Day.js once it lands.
+- [ ] **Performance.** No benchmark is in the repo. The tachometer and bundle-size setup from `../next` is being ported, and is the standard: scratch timings in Node are a loose signal only. Measure parsing, arithmetic and formatting against Day.js once it lands. Found while naming, and waiting for that suite:
+  - `range.points()` builds three values for each point, the point and two that are thrown away: the step as a duration, which is most of the cost, and a second copy of the point read only to test it is in range. A loose Node timing put it at 38 microseconds a point, so a week by the minute takes about 460 ms. Building one value per point gave the same results in ten cases and was about seven times faster. The sketch is in `ai/workspace/bench/points-one-value-per-point.diff`. Every point keeps its `text`, which is under four microseconds of it.
+  - Comparing two dates builds a throwaway date each time, so `compare()` sorts 2,000 dates in about 46 ms where 2,000 datetimes take 10 ms.
 
 ## 5. Release mechanics
 
 - [ ] **Versions.** All four packages say `0.0.6`. Nobody depends on the published ones, so there is nothing to migrate, but core, plugins, polyfill and the `@native-dates/core` alias need one number and matching peer ranges.
-- [ ] **Docs.** The site has to say the measured size and three plugins everywhere. Core is 13.97 kB, so "14 kB" is the honest headline and "13 kB" is not, and show one import for ranges, tokens and the two date nouns. The root README is written by the maintainer by hand.
+- [ ] **Docs.** The site has to say the measured size and three plugins everywhere. Core is 14.06 kB, so "14 kB" is the honest headline and "13 kB" is not, and show one import for ranges, tokens and the two date nouns. The root README is written by the maintainer by hand.
 - [ ] **`@see` links in the type files.** An editor shows a declaration's doc comment in autocomplete and on hover, so each public class, factory and method in `types/*.d.ts` and `packages/plugins/types/*.d.ts` gets a doc comment ending in a `@see {@link ...}` to its page on the live site, `https://nativedates.dev`, never the staging domain. None has one today. The conventions are in `../next/ai/skills/contributing/types.md`: the URL is the docs page's path (`docs/src/content/docs/api/calendar-date.md` is `https://nativedates.dev/api/calendar-date/`, with the trailing slash the site serves), a method links to its heading's anchor, and internal types are marked `@internal` and get no link. Do this after the docs pages for ranges, month-days and year-months have settled, since the links follow those paths, and check every anchor against the built page.
-- [ ] **When the polyfill is needed.** Node 26 is the first Node with Temporal and `engines` says so. The install page has to say plainly which browsers need `@native-dates/polyfill`.
-- [ ] **Locales on a server.** `configure({ locale })` is process-wide, which suits a browser and is a trap for a server answering many users. A value now carries its own: `datetime(row.at, zone).locale(request.locale)` sets it once, and every value made from it keeps it. The docs should teach that for servers, and `configure()` for an app with one reader.
+- [x] **When the polyfill is needed.** Node 26 is the first Node with Temporal and `engines` says so. The install page has to say plainly which browsers need `@native-dates/polyfill`.
+- [x] **Locales on a server.** `configure({ locale })` is process-wide, which suits a browser and is a trap for a server answering many users. A value now carries its own: `datetime(row.at, zone).locale(request.locale)` sets it once, and every value made from it keeps it. The docs should teach that for servers, and `configure()` for an app with one reader.
 
 ## When the polyfill is dropped
 
@@ -192,7 +214,8 @@ Known, weighed, and not worth their bytes or their churn. Reopen one only with a
 - `monthDay(10, 17).format({ dateStyle: 'bogus' })` throws a plain `TypeError`. It is a mistyped option that already fails loudly.
 - Loose parsing tells a rolled-forward day from a real one by a rule of thumb for month names, and `'Mar 1 29'` style two-digit years are read by asking the engine again. Both are rare and both fail toward `null`.
 - `src/range.js` holds the shared `Range` and its three kinds in one file.
-- Tokens the cohort has and nobody asked for: `k`, `w`, `GGGG`, `Mo`, more than three `S`.
+- Tokens the cohort has and nobody asked for: `k`, `w`, `E`, `GGGG`, `Mo`, more than three `S`.
+- The `d` token counts Sunday as 0, as Moment and Day.js do, where `dayOfWeek` counts it as 7. A token pattern speaks Moment's vocabulary and keeps Moment's numbering, and the 1-to-7 token `E` waits for someone to ask.
 - An unknown kind passed to `as()` lists the kinds that noun reaches, and no others.
 
 ## Done since the move into core

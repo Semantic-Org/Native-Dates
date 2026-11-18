@@ -39,7 +39,7 @@ Properties read the ISO calendar fields directly.
 | `year`, `month`, `day` | `number` | Calendar year, month (1–12), and day of month (1–31). |
 | `yearMonth` | `YearMonth` | Calendar year and month with the day dropped. |
 | `monthDay` | `MonthDay` | Calendar month and day with the year dropped. |
-| `weekday` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
+| `dayOfWeek` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
 | `weekStart` | `number` | First day of this date's weeks from 1 to 7, following `configure()` or its locale. |
 | `quarter` | `number` | Calendar quarter (1–4). |
 | `weekOfYear`, `dayOfYear` | `number` | ISO week number (1–53) and day of the year (1–366). |
@@ -173,10 +173,9 @@ billing.plus('2 weeks').toString(); // '2026-02-14'
 ```js signature
 d.minus(amount, unit?): CalendarDate
 d.subtract(amount, unit?): CalendarDate
-d.remove(amount, unit?): CalendarDate
 ```
 
-Moves backward by a calendar duration. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()` and `remove()`.
+Moves backward by a calendar duration. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()`.
 
 **Parameters**
 
@@ -222,7 +221,7 @@ Returns the first day of the calendar unit containing this date. Week boundaries
   required: true
   description: Calendar unit from `'year'` down to `'day'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when rounding to a week, such as `'sunday'` or `7`.
 ```
 
@@ -260,7 +259,7 @@ Returns the final day of the calendar unit containing this date.
   required: true
   description: Calendar unit from `'year'` down to `'day'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 
@@ -290,7 +289,7 @@ Moves forward to the next given weekday or [`MonthDay`](/api/month-day/) after t
 
 ```params
 - name: target
-  type: Weekday | MonthDay
+  type: DayOfWeek | MonthDay
   required: true
   description: Weekday name such as `'friday'`, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
@@ -326,7 +325,7 @@ Moves back to the most recent given weekday or [`MonthDay`](/api/month-day/) bef
 
 ```params
 - name: target
-  type: Weekday | MonthDay
+  type: DayOfWeek | MonthDay
   required: true
   description: Weekday name, three-letter prefix, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
@@ -433,7 +432,7 @@ Checks whether another date falls in the same calendar unit, such as the same mo
   type: DateUnit
   description: Calendar unit to compare, from `'year'` down to `'day'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 
@@ -525,9 +524,13 @@ date('2026-11-16').since('2026-11-02', 'weeks'); // 2
 ```js signature
 d.to(end): DateRange
 d.to(count, unit): DateRange
+d.through(end): DateRange
+d.through(count, unit): DateRange
+d.for(length): DateRange
+d.for(count, unit): DateRange
 ```
 
-Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included.
+Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included. It is also aliased as `through()`. Given a length, it is also spelled `for()`.
 
 **Parameters**
 
@@ -550,7 +553,7 @@ description: An inclusive `DateRange` starting on this date.
 
 ```js
 date('2026-11-01').to('2026-11-07').duration.days; // 7
-date('2026-11-01').to(7, 'days').toString(); // '2026-11-01/2026-11-07'
+date('2026-11-01').for(7, 'days').toString(); // '2026-11-01/2026-11-07'
 ```
 :::
 
@@ -571,7 +574,7 @@ Returns an inclusive [`DateRange`](/api/ranges/) covering every day of the calen
   required: true
   description: Calendar unit from `'year'` down to `'day'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 
@@ -635,9 +638,11 @@ slots[1].toString(); // '2026-11-16T06:00:00.000Z'
 ```js signature
 d.split(step, zone?): DateTimeRange[]
 d.split(count, unit, zone?): DateTimeRange[]
+d.splitBy(step, zone?): DateTimeRange[]
+d.splitBy(count, unit, zone?): DateTimeRange[]
 ```
 
-Divides this calendar day into contiguous half-open [`DateTimeRange`](/api/ranges/) intervals in the given or configured time zone.
+Divides this calendar day into contiguous half-open [`DateTimeRange`](/api/ranges/) intervals in the given or configured time zone. It is also aliased as `splitBy()`.
 
 **Parameters**
 
@@ -678,9 +683,9 @@ halves.map(String);
 d.format(spec?, locale?): string
 ```
 
-Formats the date using named presets, localized presets from `'L'` through `'LLLL'`, options objects, or token patterns.
+Formats the date using built-in presets, custom names from [`configure()`](/api/configure/), options objects, or token patterns.
 
-Options objects ignore clock and zone keys, so one shared options object can format moments, dates, and times alike. See [Formatting](/guides/formatting/) for the full preset and token reference.
+Localized presets from `'L'` through `'LLLL'` are built in, and options objects ignore clock and zone keys automatically. See [Formatting](/guides/formatting/) for the full preset and token reference.
 
 **Parameters**
 
@@ -688,7 +693,7 @@ Options objects ignore clock and zone keys, so one shared options object can for
 - name: spec
   type: FormatSpec
   default: "'medium'"
-  description: Preset name such as `'medium'` or `'LL'`, `Intl` options object, or token pattern.
+  description: Built-in or configured format name, `Intl` options object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding this date's or the configured locale for one call.
@@ -720,6 +725,7 @@ day.format({ weekday: 'long' }, 'en-US'); // 'Monday'
 
 ```js signature
 d.from(other?, locale?): string
+d.formatRelative(other?, locale?): string
 ```
 
 Formats the calendar distance from another date to this one as a localized phrase via `Intl.RelativeTimeFormat`, such as `'yesterday'` or `'in 3 weeks'`.

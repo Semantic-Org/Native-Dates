@@ -43,13 +43,14 @@ Properties read the date and time in the instance's time zone.
 | `millisecond`, `microsecond`, `nanosecond` | `number` | Sub-second clock fields (0–999). |
 | `zone` | `string` | Canonical IANA zone ID or fixed offset, such as `'America/Los_Angeles'` or `'UTC'`. |
 | `offset` | `string` | Active UTC offset at this instant, such as `'-08:00'`. |
-| `epoch` | `number` | Milliseconds since the Unix epoch. |
+| `epochSeconds` | `number` | Whole seconds since the Unix epoch, rounded down. |
+| `epochMilliseconds` | `number` | Milliseconds since the Unix epoch. |
 | `epochNanoseconds` | `bigint` | Exact nanoseconds since the Unix epoch. |
 | `date` | `CalendarDate` | Calendar date in this time zone. |
 | `time` | `Time` | Time of day in this time zone. |
 | `yearMonth` | `YearMonth` | Calendar year and month in this time zone. |
 | `monthDay` | `MonthDay` | Calendar month and day in this time zone. |
-| `weekday` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
+| `dayOfWeek` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
 | `weekStart` | `number` | First day of this moment's weeks from 1 to 7, following `configure()` or its locale. |
 | `quarter` | `number` | Calendar quarter (1–4). |
 | `weekOfYear`, `dayOfYear` | `number` | ISO week number (1–53) and day of the year (1–366). |
@@ -212,10 +213,9 @@ sat.plus('1h 30m').format('time', 'en-US'); // '10:30 AM'
 ```js signature
 dt.minus(amount, unit?): DateTime
 dt.subtract(amount, unit?): DateTime
-dt.remove(amount, unit?): DateTime
 ```
 
-Moves backward by a duration in the same time zone. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()` and `remove()`.
+Moves backward by a duration in the same time zone. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()`.
 
 **Parameters**
 
@@ -261,7 +261,7 @@ Moves back to the start of a calendar or clock unit in this time zone. Week boun
   required: true
   description: Calendar or clock unit from `'year'` down to `'millisecond'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when rounding to a week, such as `'sunday'` or `7`.
 ```
 
@@ -298,7 +298,7 @@ Moves to the final millisecond of a calendar or clock unit in this time zone.
   required: true
   description: Calendar or clock unit from `'year'` down to `'nanosecond'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 
@@ -329,7 +329,7 @@ Moves forward to the next given weekday or [`MonthDay`](/api/month-day/) at the 
 
 ```params
 - name: target
-  type: Weekday | MonthDay
+  type: DayOfWeek | MonthDay
   required: true
   description: Weekday name such as `'friday'`, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
@@ -365,7 +365,7 @@ Moves back to the most recent given weekday or [`MonthDay`](/api/month-day/) bef
 
 ```params
 - name: target
-  type: Weekday | MonthDay
+  type: DayOfWeek | MonthDay
   required: true
   description: Weekday name, three-letter prefix, ISO number from 1 to 7, or recurring `MonthDay`.
 ```
@@ -541,7 +541,7 @@ Checks whether another moment falls in the same calendar or clock unit when both
   type: Unit
   description: Calendar or clock unit to compare, such as `'day'` or `'month'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 
@@ -635,9 +635,11 @@ standup.since('2026-11-16T08:00', 'minutes'); // 90
 ```js signature
 dt.to(end): DateTimeRange
 dt.to(count, unit): DateTimeRange
+dt.for(length): DateTimeRange
+dt.for(count, unit): DateTimeRange
 ```
 
-Creates a half-open [`DateTimeRange`](/api/ranges/) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start.
+Creates a half-open [`DateTimeRange`](/api/ranges/) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start. Given a length, it is also spelled `for()`.
 
 **Parameters**
 
@@ -662,7 +664,7 @@ description: A half-open `DateTimeRange` in this instance's time zone.
 const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 
 standup.to('2026-11-16T10:00').duration.minutes; // 30
-standup.to(2, 'hours').end.hour; // 11
+standup.for(2, 'hours').end.hour; // 11
 ```
 :::
 
@@ -683,7 +685,7 @@ Returns the half-open [`DateTimeRange`](/api/ranges/) for the calendar or clock 
   required: true
   description: Calendar or clock unit from `'year'` down to `'nanosecond'`.
 - name: firstDay
-  type: Weekday
+  type: DayOfWeek
   description: First day of the week when `unit` is `'week'`.
 ```
 
@@ -711,7 +713,7 @@ event.range('day').toString();
 dt.format(spec?, locale?): string
 ```
 
-Formats the date and time in its active zone using presets, `Intl` options objects, or token patterns such as `'YYYY-MM-DD HH:mm'`.
+Formats the date and time in its active zone using built-in presets, custom names from [`configure()`](/api/configure/), `Intl` options objects, or token patterns.
 
 Localized presets from `'LT'` through `'llll'` are built in alongside `[brackets]` for literal words. See [Formatting](/guides/formatting/) for the full preset and token reference.
 
@@ -721,7 +723,7 @@ Localized presets from `'LT'` through `'llll'` are built in alongside `[brackets
 - name: spec
   type: FormatSpec
   default: "'medium'"
-  description: Preset name such as `'medium'` or `'LLL'`, `Intl` options object, or token pattern.
+  description: Built-in or configured format name, `Intl` options object, or token pattern.
 - name: locale
   type: string
   description: BCP 47 locale tag overriding this moment's or the configured locale for one call.
@@ -755,6 +757,7 @@ standup.format(
 
 ```js signature
 dt.from(other?, locale?): string
+dt.formatRelative(other?, locale?): string
 ```
 
 Formats the elapsed distance from another moment to this one as a localized phrase via `Intl.RelativeTimeFormat`, such as `'3 hours ago'` or `'in 2 days'`.

@@ -7,7 +7,16 @@ import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_MONTH_DAY } from './helpers/identity.js';
 import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
 import { formatTokens } from './helpers/tokens.js';
-import { inspect, isCount, isDigits, isPlainDate, localeOf, singularKeys, zoneOptions } from './helpers/units.js';
+import {
+  alias,
+  inspect,
+  isCount,
+  isDigits,
+  isPlainDate,
+  localeOf,
+  singularKeys,
+  zoneOptions,
+} from './helpers/units.js';
 import { zoneId } from './helpers/zones.js';
 
 /*
@@ -27,6 +36,14 @@ const twoParts = /^(\d{1,2})[-/.](\d{1,2})$/;
 const nameAndDay =
   /^(?:([\p{L}\p{M}]{3,})\.?,?\s+(\d{1,2})(?:st|nd|rd|th|\.)?|(\d{1,2})(?:st|nd|rd|th|\.)?\s+(?:de\s+)?([\p{L}\p{M}]{3,})\.?),?$/iu;
 
+// what each preset name prints of a month and a day
+const presets = {
+  short: Object.freeze({ month: 'numeric', day: 'numeric' }),
+  medium: Object.freeze({ month: 'short', day: 'numeric' }),
+  long: Object.freeze({ month: 'long', day: 'numeric' }),
+  full: Object.freeze({ month: 'long', day: 'numeric' }),
+};
+
 // a leap year to stand on, so Feb 29 has a day in it. Temporal keeps 1972 for the same reason
 const leapYear = 1972;
 
@@ -38,13 +55,6 @@ export class MonthDay {
   static [Symbol.hasInstance](value) {
     return !!value?.[IS_MONTH_DAY];
   }
-
-  static presets = {
-    short: Object.freeze({ month: 'numeric', day: 'numeric' }),
-    medium: Object.freeze({ month: 'short', day: 'numeric' }),
-    long: Object.freeze({ month: 'long', day: 'numeric' }),
-    full: Object.freeze({ month: 'long', day: 'numeric' }),
-  };
 
   #plain;
   #locale;
@@ -278,8 +288,9 @@ export class MonthDay {
     return tag.length ? new MonthDay(this.#plain, { locale: tag[0] }) : this.#locale;
   }
 
-  format(spec = 'medium', locale = this.#locale) {
-    const options = partOptions(spec, ['month', 'day'], MonthDay.presets);
+  // with nothing named it is the built-in medium form, which no format an app names can change
+  format(spec, locale = this.#locale) {
+    const options = partOptions(spec, ['month', 'day'], presets);
     return options
       ? partFormatter(options, locale).format(epochOf('date', { year: leapYear, month: this.month, day: this.day }))
       : formatTokens(this, 'month-day', spec, locale);
@@ -315,7 +326,7 @@ export class MonthDay {
   }
 }
 
-MonthDay.prototype.lang = MonthDay.prototype.locale;
+alias(MonthDay, { lang: 'locale', isOn: 'fallsOn', last: 'previous' });
 
 const unread = new Set([...unreadable.point, 'invalidMonthDay', 'missingMonthDay', 'unsupportedCalendar']);
 

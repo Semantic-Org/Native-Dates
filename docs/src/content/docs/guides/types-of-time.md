@@ -123,10 +123,10 @@ February 29 lands on February 28 in non-leap years automatically when you call `
 
 ## Ranges
 
-Use [Ranges](/api/ranges/) for a span between two dates, times, or moments. Build one from any starting point with `to()`, or call [`dateRange()`](/api/range-fn/) directly:
+Use [Ranges](/api/ranges/) for a span between two dates, times, or moments. Build one from any starting point with `for()` across a length or `to()` an endpoint:
 
 ```js
-const sprint = date('2026-11-02').to(2, 'weeks');
+const sprint = date('2026-11-02').for(2, 'weeks');
 const shift = time('9:00am').to('5:00pm');
 
 sprint.contains('2026-11-10'); // true

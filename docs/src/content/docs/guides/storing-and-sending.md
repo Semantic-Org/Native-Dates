@@ -34,11 +34,12 @@ JSON.stringify({
 | [`MonthDay`](/api/month-day/) | `'10-17'` | Recurring birthdays and annual holidays without a birth year |
 | [Ranges](/api/ranges/) | `'2026-11-01/2026-11-07'` | Booking windows, sprints, and ISO 8601 slash intervals |
 
-When an external API, cache key, or integer column expects a number, read `epoch` on a moment or `toMilliseconds()` on a duration:
+When an external API, cache key, or integer column expects a number, read the count since 1970 in the unit it wants. Each property names its unit, since some systems count in seconds and others in milliseconds:
 
 ```js
 standup.toString(); // '2026-11-16T17:30:00.000Z'
-standup.epoch; // 1794850200000
+standup.epochSeconds; // 1794850200
+standup.epochMilliseconds; // 1794850200000
 duration('1h 30m').toMilliseconds(); // 5400000
 ```
 

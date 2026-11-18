@@ -104,19 +104,20 @@ export const plural = (name) => `${name}s`;
 
 const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-// ISO numbering, monday is 1 and sunday is 7
-export const weekdayNumber = (input) => {
+// the number of a day of the week from its name or its number. ISO numbering, monday is 1 and
+// sunday is 7
+export const dayOfWeek = (input) => {
   if (isNumber(input) && Number.isInteger(input) && input >= 1 && input <= 7) {
     return input;
   }
   const key = isString(input) ? input.trim().toLowerCase().slice(0, 3) : '';
   const index = key.length === 3 ? weekdays.findIndex((name) => name.startsWith(key)) : -1;
   return index === -1
-    ? refuse('unknownWeekday', String(input), {
+    ? refuse('unknownDayOfWeek', String(input), {
       explanation: isDevelopment
         ? `expected a weekday in [${
           weekdays.join(', ')
-        }] (or 3-letter shorthand like 'mon'), or an ISO weekday number from 1 (Monday) to 7 (Sunday)`
+        }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday)`
         : 0,
     })
     : index + 1;
@@ -169,6 +170,14 @@ export const endPrecision = (name) =>
   name === 'microsecond' || name === 'nanosecond' ? { nanoseconds: 1 } : { milliseconds: 1 };
 
 export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(name)]: 1 });
+
+// a second spelling is the same function under another word, so a class lists its own in one table,
+// each new word beside the method it stands for: alias(DateTime, { add: 'plus' })
+export const alias = (Class, names) => {
+  each(names, (method, word) => {
+    Class.prototype[word] = Class.prototype[method];
+  });
+};
 
 // the locale a new value is written in: the one its options name, or else the one carried by the
 // value it is made from, so a date taken from a Spanish datetime is Spanish too

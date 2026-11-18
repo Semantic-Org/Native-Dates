@@ -1,10 +1,10 @@
 ---
 title: configure()
 kind: function
-lede: Read or update process-wide defaults for time zone, locale, week start, token names, and plugins.
-import: import { configure } from 'native-dates'
+lede: Read or update process-wide defaults for time zone, locale, week start, formats, token names, and plugins.
+import: import { configure, dayOfWeek } from 'native-dates'
 size: core
-updated: 2026-11-16
+updated: 2026-11-17
 ---
 
 ## Global defaults
@@ -54,14 +54,17 @@ configure({ zone: null, locale: null, weekStart: null });
       type: Locale | null
       description: Default locale tag, tag list, or `Accept-Language` header for formatting and week boundaries. Pass `null` or `''` to reset to the runtime's locale.
     - name: weekStart
-      type: Weekday | null
+      type: DayOfWeek | null
       description: First day of the week for week boundaries and `weekdayNames()`, from 1 for Monday through 7 for Sunday. Unset or `null` follows the active locale.
-    - name: weekdays
+    - name: weekdayNames
       type: "Record<Locale, { narrow?, short?, long? }> | null"
       description: "Custom weekday labels keyed by language, width (`narrow`, `short`, or `long`), and day name. Regional tags layer over their base language, and an empty value restores runtime names."
     - name: ordinals
       type: "Record<Locale, (day: number) => string | number> | null"
       description: "Custom `Do` day-of-month formatter keyed by language tag. Pass `null` to restore built-in English suffixes and locale day markers."
+    - name: formats
+      type: "Record<string, string | Intl.DateTimeFormatOptions> | null"
+      description: "Formats named once and printed anywhere with `format(name)`, each a token pattern or an options bag. A name is read before the built-in presets, and `null` removes them all."
     - name: dayFirst
       type: boolean
       default: 'false'
@@ -74,24 +77,42 @@ configure({ zone: null, locale: null, weekStart: null });
 **Returns**
 
 ```returns
-type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdays, ordinals }"
+type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
 description: A shallow copy of the active settings after applying updates. Unset keys return `undefined`.
 ```
 
-Custom `weekdays` and `ordinals` customize token patterns and [`weekdayNames()`](/api/month-names/#weekdaynames) without plugins:
+The `weekdayNames` and `ordinals` settings change what token patterns and [`weekdayNames()`](/api/month-names/#weekdaynames) print, without plugins:
 
 ```js
 import { configure, date, weekdayNames } from 'native-dates';
 
 configure({
-  weekdays: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
+  weekdayNames: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
   ordinals: { fr: (day) => (day === 1 ? '1er' : day) },
 });
 
 date('2026-11-01').format('Do MMMM', 'fr'); // '1er novembre'
 weekdayNames('narrow', 'monday', 'lv'); // ['P', 'O', 'T', 'C', 'Pk', 'S', 'Sv']
 
-configure({ weekdays: null, ordinals: null });
+configure({ weekdayNames: null, ordinals: null });
+```
+
+Named formats give an app its own presets on every kind of value that prints a date or a clock:
+
+```js
+import { configure, date, datetime } from 'native-dates';
+
+configure({
+  formats: {
+    invoice: 'YYYY-MM-DD',
+    receipt: { weekday: 'long', month: 'long', day: 'numeric' },
+  },
+});
+
+date('2026-11-06').format('invoice'); // '2026-11-06'
+datetime('2026-11-06T09:05', 'Europe/Berlin').format('receipt'); // 'Friday, November 6'
+
+configure({ formats: null });
 ```
 
 Plugins extend `configure()` with their own options once imported. Setting a plugin option before importing its plugin throws a `RangeError`:
@@ -117,15 +138,15 @@ configure({ dayFirst: false });
 Global configuration updates shared state across the entire JavaScript process. Set defaults once when your server boots, and attach each user's zone and [`locale()`](/api/date-time/#locale) to the value inside request handlers. See [Internationalization](/guides/internationalization/).
 :::
 
-## Weekday helper
+## Day of week helper
 
-Check or normalize weekday names and numbers using the same ISO convention used across the library.
+Turn the name of a day into its number, using the same ISO numbering as the rest of the library.
 
 :::entry
-### `weekday()` :kind[function]
+### `dayOfWeek()` :kind[function]
 
 ```js signature
-weekday(day): number
+dayOfWeek(day): number
 ```
 
 Converts a weekday name, three-letter prefix, or ISO number into an integer from 1 for Monday through 7 for Sunday. Unrecognized names or numbers outside that range throw a `RangeError`.
@@ -134,7 +155,7 @@ Converts a weekday name, three-letter prefix, or ISO number into an integer from
 
 ```params
 - name: day
-  type: Weekday
+  type: DayOfWeek
   required: true
   description: Weekday name such as `'monday'`, case-insensitive prefix such as `'Fri'`, or integer from 1 to 7.
 ```
@@ -143,15 +164,15 @@ Converts a weekday name, three-letter prefix, or ISO number into an integer from
 
 ```returns
 type: number
-description: ISO weekday number from 1 for Monday through 7 for Sunday.
+description: Day of the week from 1 for Monday through 7 for Sunday.
 ```
 
 ```js
-import { weekday } from 'native-dates';
+import { dayOfWeek } from 'native-dates';
 
-weekday('monday'); // 1
-weekday('Fri'); // 5
-weekday('sunday'); // 7
-weekday(3); // 3
+dayOfWeek('monday'); // 1
+dayOfWeek('Fri'); // 5
+dayOfWeek('sunday'); // 7
+dayOfWeek(3); // 3
 ```
 :::

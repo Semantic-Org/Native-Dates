@@ -5,12 +5,14 @@ import { anchored, duration } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
-import { formatIntl, intlOptions } from './helpers/format.js';
+import { formatIntl, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
 import { yearFirst } from './helpers/parts.js';
 import { relativeSeconds } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
+  alias,
+  dayOfWeek,
   endPrecision,
   hasOffset,
   hasTime,
@@ -26,7 +28,6 @@ import {
   singularKeys,
   stepOf,
   unit,
-  weekdayNumber,
   withParts,
   zoneOptions,
 } from './helpers/units.js';
@@ -69,15 +70,15 @@ export class DateTime {
     this.month = zoned.month;
     this.day = zoned.day;
     this.year = zoned.year;
-    this.weekday = zoned.dayOfWeek;
+    this.dayOfWeek = zoned.dayOfWeek;
     this.hour = zoned.hour;
     this.minute = zoned.minute;
     this.second = zoned.second;
     this.millisecond = zoned.millisecond;
     this.zone = zoned.timeZoneId;
     this.offset = zoned.offset;
-    this.epoch = zoned.epochMilliseconds;
-    this.text = this.format('text');
+    this.epochMilliseconds = zoned.epochMilliseconds;
+    this.text = this.format(textFormat);
     Object.freeze(this);
   }
 
@@ -199,6 +200,11 @@ export class DateTime {
   get nanosecond() {
     return this.#zoned.nanosecond;
   }
+  // the three counts since 1970 each say their unit, since the word alone means seconds to a shell
+  // and milliseconds to a browser. whole seconds, rounded down, are what a JWT or a unix api takes
+  get epochSeconds() {
+    return Math.floor(this.epochMilliseconds / 1000);
+  }
   // the exact instant as a BigInt, the key two datetimes a nanosecond apart still tell apart on
   get epochNanoseconds() {
     return this.#zoned.epochNanoseconds;
@@ -303,7 +309,7 @@ export class DateTime {
         return this.#next(this.#zoned.with({ day: 1 }).startOfDay());
       case 'week':
         return this.#next(
-          this.#zoned.subtract({ days: (this.weekday - weekStart(firstDay, this.#locale) + 7) % 7 }).startOfDay(),
+          this.#zoned.subtract({ days: (this.dayOfWeek - weekStart(firstDay, this.#locale) + 7) % 7 }).startOfDay(),
         );
       case 'day':
         return this.#next(this.#zoned.startOfDay());
@@ -346,7 +352,7 @@ export class DateTime {
     if (target?.[IS_MONTH_DAY]) {
       return this.date.next(target).at(this.time, this.zone);
     }
-    const delta = (weekdayNumber(target) - this.weekday + 7) % 7 || 7;
+    const delta = (dayOfWeek(target) - this.dayOfWeek + 7) % 7 || 7;
     return this.plus({ days: delta });
   }
 
@@ -354,7 +360,7 @@ export class DateTime {
     if (target?.[IS_MONTH_DAY]) {
       return this.date.previous(target).at(this.time, this.zone);
     }
-    const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
+    const delta = (this.dayOfWeek - dayOfWeek(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
   }
 
@@ -442,15 +448,15 @@ export class DateTime {
   format(spec, locale = this.#locale) {
     const options = intlOptions('datetime', spec);
     return options
-      ? formatIntl('datetime', this.epoch, options, locale, this.zone)
+      ? formatIntl('datetime', this.epochMilliseconds, options, locale, this.zone)
       : formatTokens(this, 'datetime', spec, locale);
   }
 
   // how far this moment is from another, in words: '3 hours ago', 'in 2 days'. from now when no
   // other is given
   from(other, locale = this.#locale) {
-    const reference = other === undefined ? Date.now() : new DateTime(other, this.zone).epoch;
-    return relativeSeconds((this.epoch - reference) / 1000, locale);
+    const reference = other === undefined ? Date.now() : new DateTime(other, this.zone).epochMilliseconds;
+    return relativeSeconds((this.epochMilliseconds - reference) / 1000, locale);
   }
 
   fromNow(locale) {
@@ -469,7 +475,7 @@ export class DateTime {
   }
 
   toJSDate() {
-    return new Date(this.epoch);
+    return new Date(this.epochMilliseconds);
   }
 
   toTemporal() {
@@ -477,12 +483,12 @@ export class DateTime {
   }
 
   valueOf() {
-    return this.epoch;
+    return this.epochMilliseconds;
   }
 
   // + gives the string and < and - the number, the way Date decides
   [Symbol.toPrimitive](hint) {
-    return hint === 'number' ? this.epoch : this.toString();
+    return hint === 'number' ? this.epochMilliseconds : this.toString();
   }
 
   [inspect]() {
@@ -490,11 +496,8 @@ export class DateTime {
   }
 }
 
-DateTime.prototype.add = DateTime.prototype.plus;
-DateTime.prototype.subtract = DateTime.prototype.minus;
-DateTime.prototype.remove = DateTime.prototype.minus;
-DateTime.prototype.lang = DateTime.prototype.locale;
-DateTime.prototype.formatRelative = DateTime.prototype.from;
+// for is to given a length, the word that reads aloud: start.for(90, 'minutes')
+alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative: 'from', for: 'to' });
 
 // with { loose: true } (via plugins/loose) an unreadable input is null, never a throw
 export const datetime = (input, options) => {

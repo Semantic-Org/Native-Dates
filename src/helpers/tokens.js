@@ -1,11 +1,11 @@
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
-import { pad, weekdayNumber } from './units.js';
+import { dayOfWeek, pad } from './units.js';
 import { each } from './utils.js';
-import { locale as pickLocale, settings, weekStart } from './zones.js';
+import { locale as pickLocale, namedFormat, settings, weekStart } from './zones.js';
 
-// configure() empties this when an app writes weekdays or ordinals its own way
+// configure() empties this when an app writes weekday names or ordinals its own way
 export const nameCache = new Map();
 
 // the token each width of weekday name prints as, the widths weekdayNames() takes
@@ -38,7 +38,7 @@ export const names = (locale) => {
         const name = monthIn({ day: 'numeric', month: style }, stamp);
         return /\p{N}/u.test(name) ? plain[index] : name;
       });
-    // 2024-01-01 fell on a monday, so index 0 is monday to match ISO weekday numbering
+    // 2024-01-01 fell on a monday, so index 0 is monday, the day ISO numbers first
     const weekday = (style) =>
       Array.from(
         { length: 7 },
@@ -79,9 +79,9 @@ export const names = (locale) => {
     each(subtags, (_, index) => {
       const tag = subtags.slice(0, index + 1).join('-');
       table.ordinal = settings.ordinals?.[tag] ?? table.ordinal;
-      each(settings.weekdays?.[tag], (days, width) =>
+      each(settings.weekdayNames?.[tag], (days, width) =>
         each(days, (name, day) => {
-          table[weekdayWidths[width]][weekdayNumber(day) - 1] = name;
+          table[weekdayWidths[width]][dayOfWeek(day) - 1] = name;
         }));
     });
     nameCache.set(key, table);
@@ -120,7 +120,7 @@ const zoneNameOptions = {
 };
 const zoneName = (parts, locale, style) =>
   zonedDateTimeFormat(locale, zoneNameOptions[style], parts.zone)
-    .formatToParts(parts.epoch)
+    .formatToParts(parts.epochMilliseconds)
     .find((part) => part.type === 'timeZoneName')?.value;
 
 // each token with the field it reads, so a date asked for hours refuses instead of printing zeros
@@ -136,10 +136,10 @@ const tokenReaders = {
   Do: ['day', (subject, locale) => ordinal(subject.day, locale)],
   DDD: ['dayOfYear', (subject) => String(subject.dayOfYear)],
   DDDD: ['dayOfYear', (subject) => pad(subject.dayOfYear, 3)],
-  d: ['weekday', (subject) => String(subject.weekday % 7)],
-  dd: ['weekday', (subject, locale) => names(locale).dd[subject.weekday - 1]],
-  ddd: ['weekday', (subject, locale) => names(locale).ddd[subject.weekday - 1]],
-  dddd: ['weekday', (subject, locale) => names(locale).dddd[subject.weekday - 1]],
+  d: ['dayOfWeek', (subject) => String(subject.dayOfWeek % 7)],
+  dd: ['dayOfWeek', (subject, locale) => names(locale).dd[subject.dayOfWeek - 1]],
+  ddd: ['dayOfWeek', (subject, locale) => names(locale).ddd[subject.dayOfWeek - 1]],
+  dddd: ['dayOfWeek', (subject, locale) => names(locale).dddd[subject.dayOfWeek - 1]],
   H: ['hour', (subject) => String(subject.hour)],
   HH: ['hour', (subject) => pad(subject.hour)],
   h: ['hour', (subject) => String(subject.hour % 12 || 12)],
@@ -159,8 +159,8 @@ const tokenReaders = {
   zz: ['zone', (subject, locale) => zoneName(subject, locale, 'short')],
   zzz: ['zone', (subject, locale) => zoneName(subject, locale, 'long')],
   zzzz: ['zone', (subject, locale) => zoneName(subject, locale, 'long')],
-  X: ['epoch', (subject) => String(Math.floor(subject.epoch / 1000))],
-  x: ['epoch', (subject) => String(subject.epoch)],
+  X: ['epochSeconds', (subject) => String(subject.epochSeconds)],
+  x: ['epochMilliseconds', (subject) => String(subject.epochMilliseconds)],
   Q: ['month', (subject) => String(Math.ceil(subject.month / 3))],
   W: ['weekOfYear', (subject) => String(subject.weekOfYear)],
   WW: ['weekOfYear', (subject) => pad(subject.weekOfYear)],
@@ -188,7 +188,8 @@ export const monthNames = (
   locale,
 ) => [...names(pickLocale(locale))[style === 'short' ? 'MMM' : 'MMMM']];
 
-export const formatTokens = (subject, kind, pattern, locale) => {
+export const formatTokens = (subject, kind, named, locale) => {
+  const pattern = namedFormat(named);
   const resolved = pickLocale(locale);
   // a month straight after a day takes the form it has beside one, the rule moment keeps. a month
   // with text bracketed onto it, MMMM[ta], is being inflected by hand and stays plain

@@ -113,7 +113,7 @@ import { date, earliest, time } from 'native-dates';
 
 earliest(date('2026-11-20'), date('2026-11-04'), date('2026-11-16')).toString(); // '2026-11-04'
 earliest([time('5:30pm'), time('9:00am'), time('12:15pm')]).toString(); // '09:00:00'
-earliest(1794850200000, 1794840000000).epoch; // 1794840000000
+earliest(1794850200000, 1794840000000).epochMilliseconds; // 1794840000000
 ```
 :::
 

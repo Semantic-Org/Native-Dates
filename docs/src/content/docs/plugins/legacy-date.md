@@ -36,7 +36,7 @@ All standard read getters are available on every `DateTime` instance.
 
 | Method | Return | Behavior on DateTime |
 |---|---|---|
-| `getTime()` | `number` | Epoch milliseconds, identical to `dt.epoch`. |
+| `getTime()` | `number` | Epoch milliseconds, identical to `dt.epochMilliseconds`. |
 | `getFullYear()` | `number` | Four-digit calendar year in `dt.zone`. |
 | `getMonth()` | `number` | Zero-based month from 0 for January through 11 for December in `dt.zone`. |
 | `getDate()` | `number` | Day of the month from 1 through 31 in `dt.zone`. |

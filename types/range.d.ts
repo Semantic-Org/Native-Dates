@@ -12,7 +12,6 @@ import type {
   Time,
   TimeInput,
   Unit,
-  Weekday,
   Zone,
 } from './index.js';
 
@@ -32,6 +31,8 @@ declare abstract class BaseRange<Point, Input> {
   as(kind: 'duration'): Duration;
 
   contains(value: Input | this): boolean;
+  /** Alias for `contains` */
+  includes(value: Input | this): boolean;
   overlaps(other: this | string): boolean;
   intersection(other: this | string): this | null;
   equals(other: this | string): boolean;
@@ -39,6 +40,9 @@ declare abstract class BaseRange<Point, Input> {
   points(count: number | string, unit: Unit): Point[];
   split(step: Unit | DurationInput): this[];
   split(count: number | string, unit: Unit): this[];
+  /** Alias for `split` */
+  splitBy(step: Unit | DurationInput): this[];
+  splitBy(count: number | string, unit: Unit): this[];
   format(spec?: FormatSpec, locale?: Locale): string;
   /** The locale this value is written in, when one was set on it or on the value it came from */
   locale(): Locale | undefined;

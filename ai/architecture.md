@@ -25,7 +25,7 @@ Every instance freezes on construction and sets `text` first among its own prope
 Core holds what nearly every caller needs:
 
 - Core nouns (`DateTime`, `CalendarDate`, `Time`, `Duration`, `MonthDay`, `YearMonth`, and the three ranges) and their lowercase factories (`datetime`, `date`, `time`, `duration`, `now`, `today`, `tomorrow`, `yesterday`, `hours`..`years`, `monthDay`, `dayMonth`, `yearMonth`, `monthYear`, `dateRange`, `datetimeRange`, `timeRange`)
-- Plain-English arithmetic (`plus`/`minus`, with zero-cost `add`/`subtract`/`remove` prototype aliases), rounding, weekday stepping (`next`/`previous`), comparisons, and `until`/`since`
+- Plain-English arithmetic (`plus`/`minus`, with zero-cost `add`/`subtract` prototype aliases), rounding, weekday stepping (`next`/`previous`), comparisons, and `until`/`since`
 - `Intl` preset formatting (`short`, `medium`, `long`, `full`, `date`, `time`, `month`, `text`), `Intl` options bags, and token patterns (`YYYY-MM-DD HH:mm`) with `monthNames()` and `weekdayNames()`
 - Relative phrases (`fromNow()`, `from(other)`: `'3 hours ago'`, `'in 2 days'`, `'yesterday'`) through `Intl.RelativeTimeFormat`
 - Ranges from any point (`.to()`, `.range()`, `.points()`, `.split()`) with `contains`, `overlaps` and `intersection`

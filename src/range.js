@@ -6,9 +6,9 @@ import { days, duration, hours } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { isUnreadable, loosely, readAs, refuse, refuseType, unreadable } from './helpers/errors.js';
 import { isDurationFields } from './helpers/fields.js';
-import { epochOf, formatter, intlOptions } from './helpers/format.js';
+import { epochOf, formatter, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_RANGE, IS_DATE_TIME_RANGE, IS_DURATION, IS_RANGE, IS_TIME_RANGE } from './helpers/identity.js';
-import { inspect, isDigits, isTemporalDuration, stepOf, unit, zoneOptions } from './helpers/units.js';
+import { alias, inspect, isDigits, isTemporalDuration, stepOf, unit, zoneOptions } from './helpers/units.js';
 import { Time } from './time.js';
 
 /*
@@ -69,7 +69,7 @@ class Range {
           : 0,
       });
     }
-    this.text = kind === 'datetime' ? this.format('text') : this.format();
+    this.text = kind === 'datetime' ? this.format(textFormat) : this.format();
     Object.freeze(this);
   }
 
@@ -363,7 +363,7 @@ class Range {
     // a time range across midnight is one whose end reads earlier on the same day, and Intl formats
     // that as it stands, in the locale's own range form
     const [start, end] = this.kind === 'datetime'
-      ? [this.start.epoch, this.end.epoch]
+      ? [this.start.epochMilliseconds, this.end.epochMilliseconds]
       : [this.start.toTemporal(), this.end.toTemporal()];
     return formatter(this.kind, options, locale, this.start.zone)
       .formatRange(epochOf(this.kind, start), epochOf(this.kind, end));
@@ -428,7 +428,7 @@ export class TimeRange extends Range {
   static kind = 'time';
 }
 
-Range.prototype.lang = Range.prototype.locale;
+alias(Range, { lang: 'locale', includes: 'contains', splitBy: 'split' });
 
 const byKind = { date: DateRange, datetime: DateTimeRange, time: TimeRange };
 
