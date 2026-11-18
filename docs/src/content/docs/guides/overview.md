@@ -36,7 +36,7 @@ import { date, datetime, monthDay, now, yearMonth } from 'native-dates';
 const deadline = datetime('2027-01-01T00:00:00Z');
 now().until(deadline).format('long');
 
-const sprint = date('2026-11-02').to(2, 'weeks');
+const sprint = date('2026-11-02').for(2, 'weeks');
 sprint.contains('2026-11-10'); // true
 sprint.start.format('YYYY-MM-DD'); // '2026-11-02'
 

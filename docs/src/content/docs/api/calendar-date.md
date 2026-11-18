@@ -526,9 +526,11 @@ d.to(end): DateRange
 d.to(count, unit): DateRange
 d.through(end): DateRange
 d.through(count, unit): DateRange
+d.for(length): DateRange
+d.for(count, unit): DateRange
 ```
 
-Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included. It is also aliased as `through()`.
+Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included. It is also aliased as `through()`. Given a length, it is also spelled `for()`.
 
 **Parameters**
 
@@ -551,7 +553,7 @@ description: An inclusive `DateRange` starting on this date.
 
 ```js
 date('2026-11-01').to('2026-11-07').duration.days; // 7
-date('2026-11-01').to(7, 'days').toString(); // '2026-11-01/2026-11-07'
+date('2026-11-01').for(7, 'days').toString(); // '2026-11-01/2026-11-07'
 ```
 :::
 

@@ -48,7 +48,7 @@ Spans two [moments](/api/date-time/), including `start` and excluding `end`. Whe
 ```js
 import { datetime, datetimeRange } from 'native-dates';
 
-const standup = datetime('2026-09-01T09:00', 'America/New_York').to('30m');
+const standup = datetime('2026-09-01T09:00', 'America/New_York').for('30m');
 const block = datetimeRange('2026-09-01T09:00', '2026-09-01T10:30', 'America/New_York');
 
 standup.duration.minutes; // 30
@@ -102,9 +102,12 @@ dt.to(end): DateTimeRange
 dt.to(count, unit): DateTimeRange
 t.to(end): TimeRange
 t.to(count, unit): TimeRange
+d.for(count, unit): DateRange
+dt.for(count, unit): DateTimeRange
+t.for(count, unit): TimeRange
 ```
 
-Builds a range from this point to an end point or across a duration. On a [calendar date](/api/calendar-date/), passing a length of 7 days lands six days after `start` because both endpoints are included. A calendar date also answers to `through()`, since its range includes the last day.
+Builds a range from this point to an end point or across a duration. On a [calendar date](/api/calendar-date/), passing a length of 7 days lands six days after `start` because both endpoints are included. A calendar date also answers to `through()`, since its range includes the last day. Given a length, the same call is also spelled `for()`.
 
 **Parameters**
 
@@ -128,8 +131,8 @@ description: A range matching the receiver's kind.
 ```js
 import { date, datetime, time } from 'native-dates';
 
-date('2026-09-01').to(7, 'days').toString(); // '2026-09-01/2026-09-07'
-datetime('2026-09-01T09:00Z', 'UTC').to(90, 'minutes').toString(); // '2026-09-01T09:00:00.000Z/2026-09-01T10:30:00.000Z'
+date('2026-09-01').for(7, 'days').toString(); // '2026-09-01/2026-09-07'
+datetime('2026-09-01T09:00Z', 'UTC').for(90, 'minutes').toString(); // '2026-09-01T09:00:00.000Z/2026-09-01T10:30:00.000Z'
 time('9:00am').to('5:00pm').toString(); // '09:00:00/17:00:00'
 ```
 :::

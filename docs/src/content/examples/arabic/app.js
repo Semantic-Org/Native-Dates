@@ -30,7 +30,7 @@ function render() {
     [
       'Maghrebi locale',
       ".locale('ar-MA')",
-      `${rtl(maghreb.format('long'))} <span class="muted">·</span> ${rtl(maghreb.to(5, 'days').format('long'))}`,
+      `${rtl(maghreb.format('long'))} <span class="muted">·</span> ${rtl(maghreb.for(5, 'days').format('long'))}`,
     ],
     [
       'Umm al-Qura Hijri',
