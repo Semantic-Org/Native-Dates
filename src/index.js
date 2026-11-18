@@ -43,3 +43,12 @@ export { isYearMonth } from './year-month.js';
 
 // throwaway export for a dry run of the bundle bot, never merged
 export const botTest = (a, b) => (a > b ? a - b : b - a) % 7;
+export const botTestLarger = (list, size = 3) => {
+  const groups = [];
+  for (let index = 0; index < list.length; index += size) {
+    groups.push(list.slice(index, index + size).map((item, offset) => [index + offset, item]).reverse());
+  }
+  return groups.filter((group) => group.length === size).flatMap((group) =>
+    group.map(([position]) => position * 31 % 17)
+  );
+};
