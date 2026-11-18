@@ -3,7 +3,7 @@ import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 import { DateTime } from './date-time.js';
 import { anchored, duration } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
-import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
@@ -108,7 +108,7 @@ export class CalendarDate {
       return guard(
         () => {
           if (!wholeNumbers([input, month, day])) {
-            throw new RangeError(isDevelopment ? 'year, month, and day must be whole numbers' : '');
+            fail(isDevelopment ? 'year, month, and day must be whole numbers' : '');
           }
           return Temporal.PlainDate.from({ year: input, month, day }, { overflow: 'reject' });
         },
@@ -175,8 +175,8 @@ export class CalendarDate {
       // text in the right shape that still fails names a day the calendar lacks, February 30th
       isDevelopment
         ? /^\d{4}-\d{2}-\d{2}$/.test(iso)
-          ? 'this calendar date does not exist. check the year, month, and day'
-          : "expected an ISO date string like '2026-09-06'. use `yearMonth('2026-11')` for a year and month, or pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
+          ? 'this calendar date does not exist. Check the year, month, and day'
+          : "expected an ISO date string like '2026-09-06'. Use `yearMonth('2026-11')` for a year and month, or pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
         : 0,
     );
   }

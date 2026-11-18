@@ -162,8 +162,8 @@ export class DateTime {
         isDevelopment
           ? /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:[zZ]|[+-](?:[01]\d|2[0-3]):[0-5]\d)?)?$/
               .test(trimmed)
-            ? 'this date or time does not exist. check the year, month, day, and time fields'
-            : "expected an ISO string like '2026-09-06T14:30:00Z', '2026-09-06T14:30', or '2026-09-06'. pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
+            ? 'this date or time does not exist. Check the year, month, day, and time fields'
+            : "expected an ISO string like '2026-09-06T14:30:00Z', '2026-09-06T14:30', or '2026-09-06'. Pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
           : 0,
       );
     }

@@ -370,7 +370,6 @@ export class Duration {
 
 alias(Duration, { add: 'plus', subtract: 'minus', lang: 'locale', as: 'total' });
 
-// duration(input, unit), or duration(input, { loose, locale })
 export const duration = (input, unitOrOptions) => {
   const hasOptions = isPlainObject(unitOrOptions);
   const name = hasOptions ? undefined : unitOrOptions;
