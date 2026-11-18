@@ -73,6 +73,10 @@ const WHY = [
   /\bkeep in sync\b/i,
   /\bcompat/i,
   /\btrade-?off\b/i,
+  /\b(?:Temporal|Intl|ICU|CLDR|IANA|ISO|RFC|BCP|POSIX|IEEE|ECMA|ES\d+|DST|UTC)\b/,
+  /\b(?:Date|Object|Symbol|String|Number|Math|Error|Array|JSON|Promise)\.\w+/,
+  /\b(?:tree-?shak|dead-?code|minif|inline[ds]?|bundle[rs]?|cross-realm|realm|polyfill|memoiz)\w*/i,
+  /\b(?:rather than|instead of|without this)\b/i,
 ];
 
 const FUNC = new Set((
@@ -103,8 +107,8 @@ const DEFAULT_STOP_WORDS = [
   'chartered',
   'stamped',
   'docket',
-  'sitting',
-  'ruling',
+  '/\\bsittings?\\b(?!\\s+(?:in|on|at|next|beside|between|above|below)\\b)/',
+  '/\\brulings?\\b(?!\\s+out\\b)/',
   'ruled',
   'naming pass',
   'naming-pass',
@@ -138,7 +142,7 @@ const DEFAULTS = {
   maxExplainRatio: 12,
   maxDocRatio: false,
   maxFileRatio: 20,
-  minLinesForRatio: 25,
+  minLinesForRatio: 60,
   maxRun: 6,
   maxDoc: 20,
   maxWords: 100,
@@ -147,6 +151,7 @@ const DEFAULTS = {
   maxOverlap: 0.6,
   minWhyShare: 22,
   noDeadCode: true,
+  houseProse: true,
   stopWords: DEFAULT_STOP_WORDS,
   stopWordScope: ['comments'],
   failOnParseError: true,
@@ -162,6 +167,45 @@ const TYPE_TAG =
   /^@(type|typedef|template|import|satisfies|extends|augments|overload|callback|property|prop|typeParam|module|namespace)\b/;
 const SIGNATURE_TAG = /^@(param|arg|argument|returns?|yields?|throws?)\b/;
 const ROW = /^[A-Za-z_$][\w$.]*(?:\([^)]*\))?[ \t]+(?=\S)/;
+
+const AI_PROSE_TELLS = [
+  { rx: /\brides?\s+(?:along|on|in|through|with|the)\b/i, label: 'figurative "rides"' },
+  { rx: /\bstay(?:s|ed)\s+behind\b/i, label: 'figurative "stayed behind"' },
+  { rx: /\b(?:serves|acts|stands)\s+as\s+an?\b/i, label: 'copula dodge ("serves/acts as")' },
+  { rx: /\b(?:genuinely|load-bearing)\b/i, label: 'AI intensifier ("genuinely" / "load-bearing")' },
+  {
+    rx: /\b(?:teaches?\b|knows?\s+(?:what|how|which|whether)|wants?\s+to\b|is\s+honest\b|honest\s+answer\b)/i,
+    label: 'anthropomorphism',
+  },
+];
+
+function maskCodeSpans(text) {
+  return text
+    .replace(/https?:\/\/\S+/g, 'url')
+    .replace(/`[^`]*`/g, '`…`')
+    .replace(/(?<![\w])'[^'\n]*'(?![\w])/g, "'…'")
+    .replace(/(?<![\w])"[^"\n]*"(?![\w])/g, '"…"');
+}
+
+function checkCommentProse(unit, scope) {
+  const masked = maskCodeSpans(scope);
+  if (masked.includes('\u2014')) { return 'em-dash in prose (use a period, comma, or parentheses)'; }
+  if (masked.includes('\u2192')) { return 'unicode arrow in prose (use ASCII "->")'; }
+  if (masked.includes(';')) { return 'semicolon in prose (split into sentences or use a comma)'; }
+  if (
+    unit.cat === 'inline'
+    && unit.lines === 1
+    && /\.$/.test(scope)
+    && !/\.\.\.$/.test(scope)
+    && !/\b(?:e\.g|i\.e|etc|vs|cf)\.$/i.test(scope)
+  ) {
+    return 'trailing period on one-line comment';
+  }
+  for (const tell of AI_PROSE_TELLS) {
+    if (tell.rx.test(masked)) { return tell.label; }
+  }
+  return null;
+}
 
 function body(raw) {
   if (raw.startsWith('//')) { return raw.slice(2).trim(); }
@@ -444,6 +488,7 @@ export function analyzeComments(ts, text, file) {
   const counted = new Uint8Array(text.length);
   const docMask = new Uint8Array(text.length);
   const expMask = new Uint8Array(text.length);
+  const fileExpMask = new Uint8Array(text.length);
   for (const range of raws) {
     for (let i = range.pos; i < range.end && i < text.length; i++) { any[i] = 1; }
   }
@@ -504,10 +549,12 @@ export function analyzeComments(ts, text, file) {
     }
     if (COUNTED.has(unit.cat)) {
       const mask = unit.cat === 'doc' ? docMask : expMask;
+      const countInFileRatio = unit.cat !== 'doc' && !SANCTIONED.has(unit.cat);
       for (const range of unit.ranges) {
         for (let i = range.pos; i < range.end && i < text.length; i++) {
           counted[i] = 1;
           mask[i] = 1;
+          if (countInFileRatio) { fileExpMask[i] = 1; }
         }
       }
     }
@@ -522,6 +569,7 @@ export function analyzeComments(ts, text, file) {
     let cmt = false;
     let doc = false;
     let exp = false;
+    let fileExp = false;
     let bare = '';
     for (let i = start; i < end; i++) {
       const ch = text.charCodeAt(i);
@@ -531,10 +579,11 @@ export function analyzeComments(ts, text, file) {
         if (counted[i]) { cmt = true; }
         if (docMask[i]) { doc = true; }
         if (expMask[i]) { exp = true; }
+        if (fileExpMask[i]) { fileExp = true; }
       }
       else { code = true; }
     }
-    kinds.push({ code, cmt, doc, exp });
+    kinds.push({ code, cmt, doc, exp, fileExp });
     codeText.push(bare.trim());
   }
 
@@ -711,7 +760,7 @@ async function run() {
   const perFile = [];
   const shape = { 1: 0, 2: 0, '3-6': 0, '7+': 0, n: 0, lines: 0, why: 0, whyOf: 0 };
   const sanctioned = { preamble: 0, table: 0 };
-  const seen = { run: 0, doc: 0, words: 0, overlap: 0, fileRatio: 0, dead: 0, stop: 0, parse: 0 };
+  const seen = { run: 0, doc: 0, words: 0, overlap: 0, fileRatio: 0, dead: 0, stop: 0, prose: 0, parse: 0 };
 
   for (const [gitPath, hunks] of targets) {
     const abs = hunks ? path.resolve(repoRoot, gitPath) : path.resolve(root, gitPath);
@@ -762,12 +811,14 @@ async function run() {
     let fCmt = 0;
     let fDoc = 0;
     let fExp = 0;
+    let fBodyExp = 0;
     for (let i = 0; i < analyzed.kinds.length; i++) {
       if (added && !added.lines.has(i + 1)) { continue; }
       if (analyzed.kinds[i].code) { fCode++; }
       if (analyzed.kinds[i].cmt) { fCmt++; }
       if (analyzed.kinds[i].doc) { fDoc++; }
       if (analyzed.kinds[i].exp) { fExp++; }
+      if (analyzed.kinds[i].fileExp) { fBodyExp++; }
     }
     if (fCode || fCmt) { files++; }
     if (added) {
@@ -778,6 +829,7 @@ async function run() {
       fCmt -= cut;
       const expCut = Math.min(fExp, cut);
       fExp -= expCut;
+      fBodyExp = Math.max(0, fBodyExp - expCut);
       fDoc = Math.max(0, fDoc - (cut - expCut));
     }
     codeLines += fCode;
@@ -795,13 +847,24 @@ async function run() {
 
       if (rules.length && cfg.stopWordScope.includes('comments')) {
         const scope = addedText(unit);
-        const found = rules.filter((rule) => rule.rx.test(scope)).map((rule) => rule.word);
+        const found = [];
+        for (const rule of rules) {
+          const match = rule.rx.exec(scope);
+          if (match) { found.push(match[0]); }
+        }
         if (found.length) {
           seen.stop++;
           add(unit, 'stop-word', found.map((word) => `"${word}"`).join(', '));
         }
       }
       if (unit.cat === 'types') { continue; }
+      if (cfg.houseProse && unit.cat !== 'doc' && unit.cat !== 'dead') {
+        const proseIssue = checkCommentProse(unit, addedText(unit));
+        if (proseIssue) {
+          seen.prose++;
+          add(unit, 'prose', proseIssue);
+        }
+      }
       if (unit.cat === 'dead') {
         seen.dead++;
         if (cfg.noDeadCode) {
@@ -839,13 +902,14 @@ async function run() {
           add(unit, 'comment-length', `${wordCount} words in one comment`);
         }
       }
-      if (on(cfg.maxOverlap) && !unit.why && unit.words.length >= 4 && unit.overlap >= cfg.maxOverlap) {
+      const overlapLimit = unit.why ? Math.max(cfg.maxOverlap, 0.85) : cfg.maxOverlap;
+      if (on(cfg.maxOverlap) && unit.words.length >= 4 && unit.overlap >= overlapLimit) {
         add(unit, 'restatement', `${Math.round(100 * unit.overlap)}% of its words are in the code below it`);
       }
     }
 
-    const fileRatio = fCode ? (100 * fExp / fCode) : 0;
-    perFile.push({ rel, code: fCode, cmt: fCmt, ratio: fileRatio });
+    const fileRatio = fCode ? (100 * fBodyExp / fCode) : 0;
+    perFile.push({ rel, code: fCode, cmt: fBodyExp, ratio: fileRatio });
     if (fCode >= cfg.minLinesForRatio) {
       seen.fileRatio = Math.max(seen.fileRatio, fileRatio);
       if (on(cfg.maxFileRatio) && fileRatio > cfg.maxFileRatio) {
@@ -854,7 +918,7 @@ async function run() {
           line: 1,
           col: 1,
           rule: 'file-ratio',
-          msg: `${fileRatio.toFixed(1)} explanation lines per 100 (${fExp}/${fCode})`,
+          msg: `${fileRatio.toFixed(1)} body explanation lines per 100 (${fBodyExp}/${fCode})`,
         });
       }
     }
@@ -948,6 +1012,13 @@ async function run() {
     `min ${cfg.minWhyShare}% (corpus ${REFERENCE.why.share}%)`,
   );
   gate('dead-code', 'noDeadCode', !cfg.noDeadCode ? 'off' : seen.dead ? 'fail' : 'pass', `${seen.dead} found`, 'max 0');
+  gate(
+    'prose',
+    'houseProse',
+    !cfg.houseProse ? 'off' : seen.prose ? 'fail' : 'pass',
+    `${seen.prose} violations`,
+    'max 0',
+  );
   gate(
     'stop-word',
     'stopWords',

@@ -1,9 +1,8 @@
 import { cached } from './intl.js';
 import { locale as pickLocale } from './zones.js';
 
-// 'auto' lets Intl say 'yesterday' and 'last month', which are claims about the calendar. a rounded
-// length of time cannot make them: 22 hours ago can be earlier today, and 26 days ago the same month.
-// so a phrase counts, '1 day ago', except where the calendar is what was measured
+// elapsed seconds use numeric: 'always' ('1 day ago') because 'yesterday' can be wrong 22h before 11pm.
+// Use numeric: 'auto' only for 0 ('now') and whole-day CalendarDate diffs ('yesterday', 'tomorrow')
 const relativeTimeFormat = cached((locale, numeric) => new Intl.RelativeTimeFormat(locale, { numeric }));
 
 const minuteSeconds = 60;
@@ -12,7 +11,7 @@ const daySeconds = 86400;
 const monthSeconds = 30.436875 * daySeconds;
 const yearSeconds = 365.2425 * daySeconds;
 
-// thresholds: 44 seconds is seconds, 44 minutes is minutes, 21 hours is hours, 25 days is days
+// Moment / Day.js relative-time cutoffs (45s, 45m, 22h, 26d, 320d)
 const pickUnit = (seconds) => {
   const size = Math.abs(seconds);
   if (size < 45) {
@@ -33,17 +32,15 @@ const pickUnit = (seconds) => {
   return ['year', yearSeconds];
 };
 
-// Math.round sends a negative half toward zero, so the past rounds as the future does
+// JS Math.round(-1.5) rounds toward +Infinity (-1), so round magnitude first for symmetric past/future output
 const roundAway = (value) => Math.sign(value) * Math.round(Math.abs(value));
 
 export const relativeSeconds = (seconds, locale) => {
   const [name, size] = pickUnit(seconds);
   const value = roundAway(seconds / size);
-  // nothing apart is 'now', never 'in 0 seconds'
   return relativeTimeFormat(pickLocale(locale), value === 0 ? 'auto' : 'always').format(value, name);
 };
 
-// whole calendar days, so Intl supplies today, yesterday and tomorrow. weeks and up are counted
 export const relativeDays = (days, locale) => {
   const size = Math.abs(days);
   const [name, value] = size < 7

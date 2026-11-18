@@ -38,10 +38,10 @@ import { Time } from './time.js';
 import { YearMonth } from './year-month.js';
 
 /*
-  an exact moment with a zone to read it in. one type for timestamps, appointments and deadlines.
-  an explicit zone wins, then a bracketed zone in the string, then the default. a Z or an offset in
-  the string fixes the instant only, it never becomes the zone: the offset a database prints is a
-  view, and arithmetic across a DST boundary needs the real zone
+  an exact instant paired with an IANA zone (Temporal.ZonedDateTime).
+  Explicit `zone` wins, then a bracketed `[Zone]` in the input string, then the configured or system zone.
+  Trailing `Z` or numeric offsets (`-05:00`) fix the instant without setting `this.zone`, so arithmetic across
+  DST transitions uses real zone rules rather than a frozen offset
 */
 
 export class DateTime {
@@ -63,9 +63,7 @@ export class DateTime {
       isZonedDateTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
         : DateTime.#read(input, settings);
-    // the parts are own properties, so a value prints them in a console without a click and reads them without a call,
-    // in the order a preview reads: the text first, filled once the parts it reads are in, then month, day, year
-    this.text = undefined;
+    this.text = undefined; // keep text first in console previews
     const zoned = this.#zoned;
     this.month = zoned.month;
     this.day = zoned.day;
@@ -83,7 +81,7 @@ export class DateTime {
   }
 
   static #read(input, { zone, loose, dayFirst } = {}) {
-    // the zone resolves first so a bad one throws even when the input turns out unreadable
+    // validate zone up front so a bad zone throws even when loose: true returns null on bad input
     const timeZone = zoneId(zone);
     if (loose || dayFirst !== undefined) {
       requireLoose(loose ? 'loose' : 'dayFirst');
@@ -108,7 +106,7 @@ export class DateTime {
           explanation: isDevelopment ? 'expected a finite timestamp or a valid `Date` instance' : 0,
         });
       }
-      // a timer hands over fractions of a millisecond, which Date drops and Temporal refuses
+      // performance.now() and arithmetic can produce fractional ms, which Date truncates and Temporal rejects
       return Temporal.Instant.fromEpochMilliseconds(Math.trunc(epoch)).toZonedDateTimeISO(timeZone);
     }
     if (isString(input)) {
@@ -158,12 +156,12 @@ export class DateTime {
         },
         'invalidDateTime',
         text,
-        // text in the right shape that still fails names a day or a clock that does not exist
+        // separate out-of-range fields (like Feb 30) from malformed string syntax
         isDevelopment
           ? /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:[zZ]|[+-](?:[01]\d|2[0-3]):[0-5]\d)?)?$/
               .test(trimmed)
-            ? 'this date or time does not exist. check the year, month, day, and time fields'
-            : "expected an ISO string like '2026-09-06T14:30:00Z', '2026-09-06T14:30', or '2026-09-06'. pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
+            ? 'this date or time does not exist. Check the year, month, day, and time fields'
+            : "expected an ISO string like '2026-09-06T14:30:00Z', '2026-09-06T14:30', or '2026-09-06'. Pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
           : 0,
       );
     }
@@ -179,9 +177,6 @@ export class DateTime {
     }
   }
 
-  // the locale this value is written in, or the same value written in another. it rides along through
-  // every method, so a chain names its language once: now().locale('es').plus(1, 'week').format('long').
-  // an unset tag clears it, so locale(preferences.language) chains whether or not there is one
   locale(...tag) {
     return tag.length ? new DateTime(this.#zoned, { locale: tag[0] }) : this.#locale;
   }
@@ -200,16 +195,13 @@ export class DateTime {
   get nanosecond() {
     return this.#zoned.nanosecond;
   }
-  // the three counts since 1970 each say their unit, since the word alone means seconds to a shell
-  // and milliseconds to a browser. whole seconds, rounded down, are what a JWT or a unix api takes
+  // floor rather than trunc so pre-1970 timestamps step back to the preceding whole second
   get epochSeconds() {
     return Math.floor(this.epochMilliseconds / 1000);
   }
-  // the exact instant as a BigInt, the key two datetimes a nanosecond apart still tell apart on
   get epochNanoseconds() {
     return this.#zoned.epochNanoseconds;
   }
-  // the day this value's weeks start on, 1 for monday through 7 for sunday
   get weekStart() {
     return weekStart(undefined, this.#locale);
   }
@@ -297,7 +289,7 @@ export class DateTime {
     return this.#next(this.#zoned.withTimeZone(zoneId(zone)));
   }
 
-  // a week starts on the configured first day, or on the one given: a picker's first day is a prop
+  // startOfDay() handles zones where midnight itself is skipped by a DST transition (e.g. Havana)
   startOf(name, firstDay) {
     const target = unit(name);
     switch (target) {
@@ -318,7 +310,7 @@ export class DateTime {
     }
   }
 
-  // the last millisecond, the precision of Date and of now(). for a query bound prefer range(unit)
+  // inclusive last ms (or ns for sub-ms units). Prefer range(unit) for half-open query bounds
   endOf(name, firstDay) {
     const target = unit(name);
     return this.startOf(target, firstDay).plus(stepOf(target)).minus(endPrecision(target));
@@ -347,7 +339,6 @@ export class DateTime {
     );
   }
 
-  // steps to a weekday, or to a month-day's occurrence, at this time of day in this zone
   next(target) {
     if (target?.[IS_MONTH_DAY]) {
       return this.date.next(target).at(this.time, this.zone);
@@ -364,7 +355,6 @@ export class DateTime {
     return this.minus({ days: delta });
   }
 
-  // a range from this moment until another, the end excluded, or the unit this moment falls in
   to(end, name) {
     return new DateTimeRange(this, name === undefined ? end : duration(end, name));
   }
@@ -382,7 +372,7 @@ export class DateTime {
     return this.#compare(other) === 0;
   }
 
-  // exact time only, so another DateTime compares as it is and never re-zones
+  // compare exact instants across zones, parsing raw wall-clock inputs in this.zone
   #compare(other) {
     const rival = other instanceof DateTime ? other : new DateTime(other, this.zone);
     return Temporal.ZonedDateTime.compare(this.#zoned, rival.toTemporal());
@@ -400,7 +390,7 @@ export class DateTime {
     if (name === undefined) {
       return this.equals(other);
     }
-    // one first day for both sides, this value's, so the question is asked of one week
+    // align both values to this instance's weekStart so differing locales test the same week boundaries
     const first = weekStart(firstDay, this.#locale);
     return this.startOf(name, first).equals(new DateTime(other, this.zone).startOf(name, first));
   }
@@ -429,8 +419,6 @@ export class DateTime {
              Measure
   *******************************/
 
-  // a duration balanced from years down, remembering this moment so it can total in any unit.
-  // with a unit, the total as a number
   until(other, name) {
     const end = new DateTime(other, this.zone);
     const span = anchored(this.#zoned.until(end.toTemporal(), { largestUnit: 'year' }), this.#zoned, this.#locale);
@@ -452,8 +440,6 @@ export class DateTime {
       : formatTokens(this, 'datetime', spec, locale);
   }
 
-  // how far this moment is from another, in words: '3 hours ago', 'in 2 days'. from now when no
-  // other is given
   from(other, locale = this.#locale) {
     const reference = other === undefined ? Date.now() : new DateTime(other, this.zone).epochMilliseconds;
     return relativeSeconds((this.epochMilliseconds - reference) / 1000, locale);
@@ -463,7 +449,8 @@ export class DateTime {
     return this.from(undefined, locale);
   }
 
-  // the instant in UTC, the form every database and API reads. the zone is a view and does not travel
+  // serialize as standard UTC '...Z' (databases and Date.parse reject Temporal's '[Zone]' suffix),
+  // defaulting to .sssZ like Date.toISOString() unless µs or ns digits are nonzero
   toString() {
     const nanos = this.#zoned.epochNanoseconds % 1_000_000n;
     const digits = nanos === 0n ? 3 : nanos % 1000n === 0n ? 6 : 9;
@@ -486,7 +473,7 @@ export class DateTime {
     return this.epochMilliseconds;
   }
 
-  // + gives the string and < and - the number, the way Date decides
+  // '+' sends hint 'default', which would return ms instead of toString() without this
   [Symbol.toPrimitive](hint) {
     return hint === 'number' ? this.epochMilliseconds : this.toString();
   }
@@ -496,10 +483,8 @@ export class DateTime {
   }
 }
 
-// for is to given a length, the word that reads aloud: start.for(90, 'minutes')
 alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative: 'from', for: 'to' });
 
-// with { loose: true } (via plugins/loose) an unreadable input is null, never a throw
 export const datetime = (input, options) => {
   const settings = zoneOptions(options);
   const build = () =>
@@ -510,11 +495,10 @@ export const datetime = (input, options) => {
   return settings.loose ? loosely(build) : build();
 };
 
-// millisecond precision, the precision of Date, so a value survives a JSON round trip unchanged
+// use Date.now() ms precision rather than Temporal.Now ns so values survive a JSON or Date round trip unchanged
 export const now = (zone) =>
   new DateTime(Temporal.Instant.fromEpochMilliseconds(Date.now()).toZonedDateTimeISO(zoneId(zone)));
 
-// the two bounds a query for today writes most
 export const startOfToday = (zone) => now(zone).startOf('day');
 export const endOfToday = (zone) => now(zone).endOf('day');
 
