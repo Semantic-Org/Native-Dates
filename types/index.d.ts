@@ -668,6 +668,13 @@ export interface Settings {
    * Null goes back to the built-in English suffixes and the mark the runtime writes after a day
    */
   ordinals?: Record<Locale, (day: number) => string | number> | null;
+  /**
+   * Formats an app names once and asks for everywhere: `{ invoice: 'YYYY-MM-DD', receipt: { dateStyle: 'long' } }`,
+   * then `value.format('invoice')`. Each is a token pattern or an `Intl.DateTimeFormat` options bag, and prints
+   * on a datetime, a date, a time, a month-day, a year-month and a range. A name is asked before the built-in
+   * presets, so an app can give `'short'` its own meaning. Null takes them all away
+   */
+  formats?: Record<string, string | Intl.DateTimeFormatOptions> | null;
 }
 
 /** Sets package-wide defaults once at app boot. Returns the settings in effect */
@@ -679,4 +686,5 @@ export function configure(settings?: Settings): {
   zoneAliases: Record<string, string>;
   weekdayNames?: Settings['weekdayNames'];
   ordinals?: Settings['ordinals'];
+  formats?: Settings['formats'];
 };

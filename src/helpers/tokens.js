@@ -3,7 +3,7 @@ import { refuse } from './errors.js';
 import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
 import { dayOfWeek, pad } from './units.js';
 import { each } from './utils.js';
-import { locale as pickLocale, settings, weekStart } from './zones.js';
+import { locale as pickLocale, namedFormat, settings, weekStart } from './zones.js';
 
 // configure() empties this when an app writes weekday names or ordinals its own way
 export const nameCache = new Map();
@@ -188,7 +188,8 @@ export const monthNames = (
   locale,
 ) => [...names(pickLocale(locale))[style === 'short' ? 'MMM' : 'MMMM']];
 
-export const formatTokens = (subject, kind, pattern, locale) => {
+export const formatTokens = (subject, kind, named, locale) => {
+  const pattern = namedFormat(named);
   const resolved = pickLocale(locale);
   // a month straight after a day takes the form it has beside one, the rule moment keeps. a month
   // with text bracketed onto it, MMMM[ta], is being inflected by hand and stays plain
