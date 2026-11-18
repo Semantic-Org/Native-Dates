@@ -201,7 +201,7 @@ export const formatTokens = (subject, kind, named, locale) => {
     if (stray) {
       refuse('unknownFormat', pattern, {
         explanation: isDevelopment
-          ? `'${stray}' is not a format token. wrap literal text in brackets like '[at]', or pass a preset like 'medium' or an \`Intl.DateTimeFormat\` options object`
+          ? `'${stray}' is not a format token. Wrap literal text in brackets like '[at]', or pass a preset like 'medium' or an \`Intl.DateTimeFormat\` options object`
           : 0,
       });
     }
@@ -209,7 +209,7 @@ export const formatTokens = (subject, kind, named, locale) => {
     if (subject[field] === undefined) {
       refuse('unsupportedToken', `${token} in '${pattern}'`, {
         explanation: isDevelopment
-          ? `a ${kind} does not include ${field} information. remove that token from the format pattern`
+          ? `a ${kind} does not include ${field} information. Remove that token from the format pattern`
           : 0,
       });
     }

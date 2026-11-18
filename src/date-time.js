@@ -91,7 +91,7 @@ export class DateTime {
     if (input === undefined || input === null) {
       return refuseType('missingDateTime', String(input), {
         explanation: isDevelopment
-          ? 'a datetime value is required. use `now()` for the current moment'
+          ? 'a datetime value is required. Use `now()` for the current moment'
           : 0,
       });
     }
