@@ -4,7 +4,7 @@ import { CalendarDate } from './calendar-date.js';
 import { DateTime } from './date-time.js';
 import { anchored, duration } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
-import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
@@ -93,7 +93,7 @@ export class Time {
       return guard(
         () => {
           if (!wholeNumbers([input, minute, second])) {
-            throw new RangeError(isDevelopment ? 'hour, minute, and second must be whole numbers' : '');
+            fail(isDevelopment ? 'hour, minute, and second must be whole numbers' : '');
           }
           return Temporal.PlainTime.from({ hour: input, minute: minute ?? 0, second: second ?? 0 }, {
             overflow: 'reject',
@@ -182,7 +182,7 @@ export class Time {
       'invalidTime',
       text,
       isDevelopment
-        ? "expected a clock time like '09:00', '5:30pm', or '17:30:15'. pass `{ loose: true }` with '@native-dates/plugins/loose' to extract the time from an informal date-time string"
+        ? "expected a clock time like '09:00', '5:30pm', or '17:30:15'. Pass `{ loose: true }` with '@native-dates/plugins/loose' to extract the time from an informal date-time string"
         : 0,
     );
   }

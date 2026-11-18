@@ -1,7 +1,7 @@
 import { each, isNumber, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
-import { refuse } from './errors.js';
+import { fail, refuse } from './errors.js';
 import {
   IS_CALENDAR_DATE,
   IS_DATE_TIME,
@@ -147,7 +147,7 @@ export const wholeNumbers = (values) => values.every((value) => !isNumber(value)
 // set() replaces parts as strictly as a factory reads them: whole numbers, in range
 export const withParts = (temporal, changes) => {
   if (!wholeNumbers(Object.values(changes))) {
-    throw new RangeError(isDevelopment ? 'each value passed to `set()` must be a whole number' : '');
+    fail(isDevelopment ? 'each value passed to `set()` must be a whole number' : '');
   }
   return temporal.with(changes, { overflow: 'reject' });
 };

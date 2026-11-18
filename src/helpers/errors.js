@@ -20,6 +20,11 @@ export const guard = (attempt, code, at, explanation) => {
   }
 };
 
+// a reason found partway through an attempt. guard() gives it the code and the input being read
+export const fail = (explanation) => {
+  throw new RangeError(explanation);
+};
+
 // value.as('date') is the call spelling of crossing to another kind, so a chain never stops at a
 // property. each noun lists the kinds it can be read as, and any other kind is refused
 export const readAs = (kind, readings) => {
