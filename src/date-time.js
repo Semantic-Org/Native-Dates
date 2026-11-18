@@ -497,7 +497,6 @@ export class DateTime {
 
 DateTime.prototype.add = DateTime.prototype.plus;
 DateTime.prototype.subtract = DateTime.prototype.minus;
-DateTime.prototype.remove = DateTime.prototype.minus;
 DateTime.prototype.lang = DateTime.prototype.locale;
 DateTime.prototype.formatRelative = DateTime.prototype.from;
 

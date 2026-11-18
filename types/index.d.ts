@@ -216,8 +216,6 @@ export class DateTime {
   minus(amount: DurationInput, unit?: Unit): DateTime;
   /** Alias for `minus` */
   subtract(amount: DurationInput, unit?: Unit): DateTime;
-  /** Alias for `minus` */
-  remove(amount: DurationInput, unit?: Unit): DateTime;
 
   set(fields: DateTimeFields): DateTime;
   set(unit: Unit, value: number): DateTime;
@@ -341,8 +339,6 @@ export class CalendarDate {
   minus(amount: DurationInput, unit?: Unit): CalendarDate;
   /** Alias for `minus` */
   subtract(amount: DurationInput, unit?: Unit): CalendarDate;
-  /** Alias for `minus` */
-  remove(amount: DurationInput, unit?: Unit): CalendarDate;
 
   set(fields: Pick<DateTimeFields, 'year' | 'month' | 'day'>): CalendarDate;
   set(unit: Unit, value: number): CalendarDate;
@@ -458,8 +454,6 @@ export class Time {
   minus(amount: DurationInput, unit?: Unit): Time;
   /** Alias for `minus` */
   subtract(amount: DurationInput, unit?: Unit): Time;
-  /** Alias for `minus` */
-  remove(amount: DurationInput, unit?: Unit): Time;
 
   set(fields: Partial<Record<'hour' | 'minute' | 'second' | 'millisecond', number>>): Time;
   set(unit: Unit, value: number): Time;
@@ -547,8 +541,6 @@ export class Duration {
   minus(other: DurationInput, unit?: Unit): Duration;
   /** Alias for `minus` */
   subtract(other: DurationInput, unit?: Unit): Duration;
-  /** Alias for `minus` */
-  remove(other: DurationInput, unit?: Unit): Duration;
 
   times(factor: number): Duration;
   negated(): Duration;

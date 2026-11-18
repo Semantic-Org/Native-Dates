@@ -383,7 +383,6 @@ export class Time {
 
 Time.prototype.add = Time.prototype.plus;
 Time.prototype.subtract = Time.prototype.minus;
-Time.prototype.remove = Time.prototype.minus;
 Time.prototype.lang = Time.prototype.locale;
 
 export const time = (input, minuteOrOptions, second) => {

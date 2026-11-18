@@ -467,7 +467,6 @@ export class CalendarDate {
 
 CalendarDate.prototype.add = CalendarDate.prototype.plus;
 CalendarDate.prototype.subtract = CalendarDate.prototype.minus;
-CalendarDate.prototype.remove = CalendarDate.prototype.minus;
 CalendarDate.prototype.lang = CalendarDate.prototype.locale;
 CalendarDate.prototype.formatRelative = CalendarDate.prototype.from;
 

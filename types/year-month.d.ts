@@ -59,8 +59,6 @@ export class YearMonth {
   minus(amount: DurationInput, unit?: Unit): YearMonth;
   /** Alias for `minus` */
   subtract(amount: DurationInput, unit?: Unit): YearMonth;
-  /** Alias for `minus` */
-  remove(amount: DurationInput, unit?: Unit): YearMonth;
 
   set(fields: Partial<YearMonthFields>): YearMonth;
   set(unit: Unit, value: number): YearMonth;
