@@ -8,7 +8,7 @@ import { isUnreadable, loosely, readAs, refuse, refuseType, unreadable } from '.
 import { isDurationFields } from './helpers/fields.js';
 import { epochOf, formatter, intlOptions } from './helpers/format.js';
 import { IS_DATE_RANGE, IS_DATE_TIME_RANGE, IS_DURATION, IS_RANGE, IS_TIME_RANGE } from './helpers/identity.js';
-import { inspect, isDigits, isTemporalDuration, stepOf, unit, zoneOptions } from './helpers/units.js';
+import { alias, inspect, isDigits, isTemporalDuration, stepOf, unit, zoneOptions } from './helpers/units.js';
 import { Time } from './time.js';
 
 /*
@@ -428,9 +428,7 @@ export class TimeRange extends Range {
   static kind = 'time';
 }
 
-Range.prototype.lang = Range.prototype.locale;
-Range.prototype.includes = Range.prototype.contains;
-Range.prototype.splitBy = Range.prototype.split;
+alias(Range, { lang: 'locale', includes: 'contains', splitBy: 'split' });
 
 const byKind = { date: DateRange, datetime: DateTimeRange, time: TimeRange };
 

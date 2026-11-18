@@ -171,6 +171,14 @@ export const endPrecision = (name) =>
 
 export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(name)]: 1 });
 
+// a second spelling is the same function under another word, so a class lists its own in one table,
+// each new word beside the method it stands for: alias(DateTime, { add: 'plus' })
+export const alias = (Class, names) => {
+  each(names, (method, word) => {
+    Class.prototype[word] = Class.prototype[method];
+  });
+};
+
 // the locale a new value is written in: the one its options name, or else the one carried by the
 // value it is made from, so a date taken from a Spanish datetime is Spanish too
 const nouns = [IS_DATE_TIME, IS_CALENDAR_DATE, IS_TIME, IS_DURATION, IS_MONTH_DAY, IS_YEAR_MONTH, IS_RANGE];
