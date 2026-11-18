@@ -3,7 +3,7 @@ import { each, isPlainObject, isString } from './utils.js';
 import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
 import { nameCache, weekdayWidths } from './tokens.js';
-import { weekdayNumber } from './units.js';
+import { dayOfWeek } from './units.js';
 
 // process-wide defaults, zoneAliases being the names a zone answers to when plugins/zones is loaded
 export const settings = {
@@ -12,7 +12,7 @@ export const settings = {
   weekStart: undefined,
   dayFirst: false,
   zoneAliases: {},
-  weekdays: undefined,
+  weekdayNames: undefined,
   ordinals: undefined,
 };
 const resolved = new Map([['UTC', 'UTC']]);
@@ -65,7 +65,7 @@ export const zoneId = (id) => {
   return found;
 };
 
-export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, weekdays, ordinals } = {}) => {
+export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals } = {}) => {
   if (zoneAliases !== undefined) {
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
@@ -103,23 +103,23 @@ export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, week
     settings.locale = locale ? checkedLocale(locale) : undefined;
   }
   if (weekStart !== undefined) {
-    settings.weekStart = weekStart === null ? undefined : weekdayNumber(weekStart);
+    settings.weekStart = weekStart === null ? undefined : dayOfWeek(weekStart);
   }
   // a width left out or misspelled would otherwise fail far from here, at the first format
-  each(weekdays, (widths) =>
+  each(weekdayNames, (widths) =>
     each(widths, (days, width) => {
       if (!weekdayWidths[width]) {
         refuse('unknownWidth', width, {
           explanation: isDevelopment
-            ? "`weekdays` are written by language, then width, then day, like `{ lv: { narrow: { fri: 'Pk' } } }`. expected a width in [narrow, short, long]"
+            ? "`weekdayNames` are written by language, then width, then day, like `{ lv: { narrow: { fri: 'Pk' } } }`. expected a width in [narrow, short, long]"
             : 0,
         });
       }
-      each(days, (name, day) => weekdayNumber(day));
+      each(days, (name, day) => dayOfWeek(day));
     }));
   // names and ordinals an app writes its own way, by language. a tag is kept in lower case, so
   // 'pt-br' and 'pt-BR' are one, and null goes back to what Intl has
-  each({ weekdays, ordinals }, (table, noun) => {
+  each({ weekdayNames, ordinals }, (table, noun) => {
     if (table !== undefined) {
       settings[noun] = table === null ? undefined : {};
       each(table, (entry, tag) => {
@@ -173,7 +173,7 @@ export const dayFirst = (override) => (override === undefined ? settings.dayFirs
 const firstDays = new Map();
 export const weekStart = (override, tag = settings.locale) => {
   if (override !== undefined) {
-    return weekdayNumber(override);
+    return dayOfWeek(override);
   }
   if (settings.weekStart !== undefined) {
     return settings.weekStart;

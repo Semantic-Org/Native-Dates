@@ -34,7 +34,7 @@ export {
   IS_YEAR_MONTH,
 } from './helpers/identity.js';
 export { monthNames, weekdayNames } from './helpers/tokens.js';
-export { weekdayNumber as weekday } from './helpers/units.js';
+export { dayOfWeek } from './helpers/units.js';
 export { configure } from './helpers/zones.js';
 export { isMonthDay } from './month-day.js';
 export { isDateRange, isDateTimeRange, isTimeRange } from './range.js';

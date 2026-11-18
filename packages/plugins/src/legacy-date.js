@@ -21,7 +21,7 @@ const reads = {
     return this.day;
   },
   getDay() {
-    return this.weekday % 7;
+    return this.dayOfWeek % 7;
   },
   getHours() {
     return this.hour;

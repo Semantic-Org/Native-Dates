@@ -11,6 +11,7 @@ import { yearFirst } from './helpers/parts.js';
 import { relativeSeconds } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
+  dayOfWeek,
   endPrecision,
   hasOffset,
   hasTime,
@@ -26,7 +27,6 @@ import {
   singularKeys,
   stepOf,
   unit,
-  weekdayNumber,
   withParts,
   zoneOptions,
 } from './helpers/units.js';
@@ -69,7 +69,7 @@ export class DateTime {
     this.month = zoned.month;
     this.day = zoned.day;
     this.year = zoned.year;
-    this.weekday = zoned.dayOfWeek;
+    this.dayOfWeek = zoned.dayOfWeek;
     this.hour = zoned.hour;
     this.minute = zoned.minute;
     this.second = zoned.second;
@@ -308,7 +308,7 @@ export class DateTime {
         return this.#next(this.#zoned.with({ day: 1 }).startOfDay());
       case 'week':
         return this.#next(
-          this.#zoned.subtract({ days: (this.weekday - weekStart(firstDay, this.#locale) + 7) % 7 }).startOfDay(),
+          this.#zoned.subtract({ days: (this.dayOfWeek - weekStart(firstDay, this.#locale) + 7) % 7 }).startOfDay(),
         );
       case 'day':
         return this.#next(this.#zoned.startOfDay());
@@ -351,7 +351,7 @@ export class DateTime {
     if (target?.[IS_MONTH_DAY]) {
       return this.date.next(target).at(this.time, this.zone);
     }
-    const delta = (weekdayNumber(target) - this.weekday + 7) % 7 || 7;
+    const delta = (dayOfWeek(target) - this.dayOfWeek + 7) % 7 || 7;
     return this.plus({ days: delta });
   }
 
@@ -359,7 +359,7 @@ export class DateTime {
     if (target?.[IS_MONTH_DAY]) {
       return this.date.previous(target).at(this.time, this.zone);
     }
-    const delta = (this.weekday - weekdayNumber(target) + 7) % 7 || 7;
+    const delta = (this.dayOfWeek - dayOfWeek(target) + 7) % 7 || 7;
     return this.minus({ days: delta });
   }
 

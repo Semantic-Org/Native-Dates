@@ -104,8 +104,9 @@ export const plural = (name) => `${name}s`;
 
 const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-// ISO numbering, monday is 1 and sunday is 7
-export const weekdayNumber = (input) => {
+// the number of a day of the week from its name or its number. ISO numbering, monday is 1 and
+// sunday is 7
+export const dayOfWeek = (input) => {
   if (isNumber(input) && Number.isInteger(input) && input >= 1 && input <= 7) {
     return input;
   }

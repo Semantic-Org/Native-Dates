@@ -164,7 +164,7 @@ export class DateTime {
   readonly day: number;
   readonly year: number;
   /** ISO, 1 for monday through 7 for sunday */
-  readonly weekday: number;
+  readonly dayOfWeek: number;
   /** The day this value's weeks start on, 1 for monday through 7 for sunday: the configured `weekStart`, else its locale's own */
   readonly weekStart: number;
   readonly hour: number;
@@ -321,7 +321,7 @@ export class CalendarDate {
   readonly day: number;
   readonly year: number;
   /** ISO, 1 for monday through 7 for sunday */
-  readonly weekday: number;
+  readonly dayOfWeek: number;
   /** The day this value's weeks start on, 1 for monday through 7 for sunday: the configured `weekStart`, else its locale's own */
   readonly weekStart: number;
   readonly quarter: number;
@@ -646,8 +646,8 @@ export const IS_DATE_TIME_RANGE: unique symbol;
 export const IS_TIME_RANGE: unique symbol;
 export const IS_YEAR_MONTH: unique symbol;
 
-/** The ISO number of a weekday from its name, `weekday('sunday')` is 7, a number passing through */
-export function weekday(day: Weekday): number;
+/** The number of a day of the week from its name, `dayOfWeek('sunday')` is 7, a number passing through */
+export function dayOfWeek(day: Weekday): number;
 
 export interface Settings {
   /** The default zone every factory reads in. Null resets to the machine's zone */
@@ -664,7 +664,7 @@ export interface Settings {
    * `narrow` is what the `dd` token prints, `short` is `ddd`, `long` is `dddd`, and `weekdayNames()` follows. A regional
    * tag reads its language's names with its own laid over them. Null goes back to the runtime's names
    */
-  weekdays?: Record<Locale, Partial<Record<'narrow' | 'short' | 'long', Record<string, string>>>> | null;
+  weekdayNames?: Record<Locale, Partial<Record<'narrow' | 'short' | 'long', Record<string, string>>>> | null;
   /**
    * What the `Do` token writes for a day of the month, by language: `{ fr: (day) => (day === 1 ? '1er' : day) }`.
    * Null goes back to the built-in English suffixes and the mark the runtime writes after a day
@@ -679,6 +679,6 @@ export function configure(settings?: Settings): {
   weekStart: number | undefined;
   dayFirst: boolean;
   zoneAliases: Record<string, string>;
-  weekdays?: Settings['weekdays'];
+  weekdayNames?: Settings['weekdayNames'];
   ordinals?: Settings['ordinals'];
 };
