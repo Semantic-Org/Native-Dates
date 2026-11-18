@@ -35,7 +35,7 @@
     "test": "vitest",
     "errors": "node tools/gates/errors.js --all",
     "comments": "node tools/gates/comments.js --all",
-    "size": "node tools/size.js && node tools/gates/budget.js",
+    "size": "node tools/gates/budget.js",
     "check": "npm test && npm run size",
     "format": "npx dprint fmt",
     "setup": "npx simple-git-hooks"
