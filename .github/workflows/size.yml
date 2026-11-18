@@ -1,0 +1,66 @@
+name: Size
+
+# Compares PR bundle sizes against ai/contributing/budget.md using scripts and ceilings from base.
+# Uncomment the pull_request trigger in forks once configured (see ai/contributing/reference/setup.md).
+on:
+  workflow_dispatch:
+  # pull_request:
+  #   paths:
+  #     - 'src/**'
+  #     - 'packages/**'
+  #     - 'integrations/**'
+  #     - 'tools/size.js'
+  #     - 'tools/gates/budget.js'
+  #     - 'tools/gates/prose.js'
+  #     - 'ai/contributing/budget.md'
+  #     - 'package.json'
+  #     - 'package-lock.json'
+  #     - '.github/workflows/size.yml'
+
+concurrency:
+  group: size-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  size:
+    name: Size budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TITLE: ${{ github.event.pull_request.title }}
+      BODY: ${{ github.event.pull_request.body }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: head
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: 'head/.node-version'
+
+      - name: Install both checkouts
+        run: |
+          (cd base && npm ci --ignore-scripts --no-audit --no-fund)
+          (cd head && npm ci --ignore-scripts --no-audit --no-fund)
+
+      - name: Measure bundle sizes
+        run: |
+          mkdir -p results
+          node base/tools/gates/budget.js --head head --base base --title "$TITLE" --body "$BODY" --json results/size.json
+
+      - name: Write job summary
+        if: ${{ !cancelled() }}
+        run: node base/tools/ci/size-comment.js --sizes results/size.json --title "$TITLE" --body "$BODY" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload size artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: size
+          path: results/
