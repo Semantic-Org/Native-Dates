@@ -20,23 +20,19 @@ import {
 import { zoneId } from './helpers/zones.js';
 
 /*
-  a month and a day with no year: a birthday, an anniversary, a holiday. it comes around once a year,
-  and Feb 29 falls on Feb 28 in a year without one, the way Temporal places it
+  a recurring month and day with no year (Temporal.PlainMonthDay), such as a birthday or annual holiday.
+  Feb 29 resolves to Feb 28 in non-leap years (Temporal's default 'constrain' overflow), and instances have
+  no linear order so only equals() and fallsOn() compare them
 */
 
-// ISO's month and day, two digits a side across a dash: '10-17'. it is month first whoever reads it,
-// so what toJSON() writes reads back under either word
+// two-digit 'MM-DD' with a hyphen is ISO 8601 and stays month-first even under dayMonth()
 const isoParts = /^(\d{2})-(\d{2})$/;
 
-// a month and a day as people write them, across a dash, a slash or a dot: '10/17', '17.10', '5-6'.
-// which part leads is for the word that reads it to say
 const twoParts = /^(\d{1,2})[-/.](\d{1,2})$/;
 
-// a month by its name and a day, in either order: 'Oct 17', '17th October', '17. Oktober', '17 de octubre'
 const nameAndDay =
   /^(?:([\p{L}\p{M}]{3,})\.?,?\s+(\d{1,2})(?:st|nd|rd|th|\.)?|(\d{1,2})(?:st|nd|rd|th|\.)?\s+(?:de\s+)?([\p{L}\p{M}]{3,})\.?),?$/iu;
 
-// what each preset name prints of a month and a day
 const presets = {
   short: Object.freeze({ month: 'numeric', day: 'numeric' }),
   medium: Object.freeze({ month: 'short', day: 'numeric' }),
@@ -44,7 +40,7 @@ const presets = {
   full: Object.freeze({ month: 'long', day: 'numeric' }),
 };
 
-// a leap year to stand on, so Feb 29 has a day in it. Temporal keeps 1972 for the same reason
+// reference leap year for epochOf() so Feb 29 formats without rolling into March (matches Temporal's 1972)
 const leapYear = 1972;
 
 export class MonthDay {
@@ -63,24 +59,19 @@ export class MonthDay {
   constructor(input, dayOrOptions) {
     this.#plain = MonthDay.#read(input, dayOrOptions);
     this.#locale = localeOf(dayOrOptions, input);
-    // the parts are own properties, so a value prints them in a console without a click. the text is
-    // keyed first so a preview leads with it, and filled once the parts it reads are in
-    this.text = undefined;
-    // Temporal names this month by its code, since a number means nothing without a year in a
-    // lunisolar calendar. in the ISO calendar the code is the number
+    this.text = undefined; // keep text first in console previews
+    // PlainMonthDay omits .month because lunisolar month numbers shift with leap months, so read monthCode ('M10')
     this.month = Number(this.#plain.monthCode.slice(1));
     this.day = this.#plain.day;
     this.text = this.format();
     Object.freeze(this);
   }
 
-  // a value with a year in it is a date, and reads as the month and day it falls on
   static #read(input, dayOrOptions) {
     if (isCount(input) && isCount(dayOrOptions)) {
       return MonthDay.#fromParts({ month: input, day: dayOrOptions });
     }
     const settings = zoneOptions(dayOrOptions);
-    // the zone resolves first so a bad one throws even when the input turns out unreadable
     if (settings.zone !== undefined) {
       zoneId(settings.zone);
     }
@@ -105,7 +96,7 @@ export class MonthDay {
       return input.toTemporal();
     }
     if (input instanceof Temporal.PlainMonthDay) {
-      // rebuilt from its parts, so the year Temporal keeps behind one never tells two apart
+      // rebuild via PlainMonthDay.from() to normalize custom referenceISOYear slots that would break .equals()
       return input.calendarId === 'iso8601'
         ? Temporal.PlainMonthDay.from({ monthCode: input.monthCode, day: input.day })
         : refuseType('unsupportedCalendar', String(input), {
@@ -137,7 +128,7 @@ export class MonthDay {
 
   static #fromText(input, settings) {
     const text = input.trim();
-    // ISO marks a month-day with two dashes, '--10-17' or '--1017', and Temporal reads both
+    // legacy RFC 3339 / ISO 8601 '--MM-DD' and '--MMDD' forms accepted by Temporal
     if (text.startsWith('--')) {
       return guard(() => Temporal.PlainMonthDay.from(text), 'invalidMonthDay', input);
     }
@@ -153,13 +144,10 @@ export class MonthDay {
           : 0,
       );
     }
-    // text that opens on a whole ISO date is a date, read as strictly as date() reads one
     if (opensOnDate(text)) {
       return MonthDay.#dayOf(input, settings.zone).toPlainMonthDay();
     }
-    // no text is ever put to Date, which makes up the parts text leaves out: a year with no Feb 29
-    // in it, the 1st, the month after a day too many. when loose, a month-day is also a month by
-    // name and a day
+    // avoid Date.parse() here: V8 defaults yearless strings like 'Feb 29' to 2001 and rolls them into March
     const named = settings.loose ? nameAndDay.exec(text) : null;
     const month = named && monthNamed(named[1] ?? named[4], settings.locale);
     return month
@@ -171,8 +159,7 @@ export class MonthDay {
       });
   }
 
-  // the ISO date of anything a date reads, a date's own refusals included. a Temporal date needs no
-  // reading, and date() refuses one beside a zone
+  // convert non-ISO PlainDates to iso8601 before extracting month and day
   static #dayOf(value, zone) {
     if (isPlainDate(value)) {
       return value.withCalendar('iso8601');
@@ -181,8 +168,7 @@ export class MonthDay {
     return day.toTemporal().withCalendar('iso8601');
   }
 
-  // where Temporal places a month-day in a year, or nothing in the first and the last year it
-  // counts, where its dates run out partway through
+  // PlainDate's min/max years (-271821 and +275760) cut off mid-year, where toPlainDate() throws RangeError
   static #placed(plain, year) {
     try {
       return plain.toPlainDate({ year });
@@ -196,7 +182,6 @@ export class MonthDay {
             Arithmetic
   *******************************/
 
-  // the date this falls on in a year
   in(year) {
     const count = isDigits(year) ? Number(year) : year;
     if (!Number.isInteger(count)) {
@@ -210,8 +195,6 @@ export class MonthDay {
     );
   }
 
-  // the occurrence strictly after a day, or strictly before it. the day itself never counts, the way
-  // next('monday') on a monday is a week away. date.next(monthDay) and date.previous(monthDay) ask here
   after(day) {
     const from = MonthDay.#dayOf(day);
     const thisYear = MonthDay.#placed(this.#plain, from.year);
@@ -228,7 +211,6 @@ export class MonthDay {
       : this.in(from.year - 1);
   }
 
-  // the same two counted from today when no day is given: birthday.next() is the one coming up
   next(day = today()) {
     return this.after(day);
   }
@@ -245,10 +227,8 @@ export class MonthDay {
             Comparison
   *******************************/
 
-  // the same month and day. a date beside a month-day reads as the month and day it falls on, so
-  // two birthdays are equal or not whichever one asks. whether a date is the occurrence is fallsOn()
+  // exact month/day match (unlike fallsOn(), Feb 29 != Feb 28). Slash and dot strings are rejected as order-ambiguous
   equals(other) {
-    // text as people write it has an order only under the word that read it, and equals has none
     if (isString(other) && twoParts.test(other.trim()) && !isoParts.test(other.trim())) {
       refuse('invalidMonthDay', other, {
         explanation: isDevelopment
@@ -259,14 +239,11 @@ export class MonthDay {
     return this.#plain.equals(MonthDay.#read(other));
   }
 
-  // whether a date is this month-day's occurrence in the date's own year, so Feb 29 falls on Feb 28
-  // in a year without one
   fallsOn(day) {
     const date = MonthDay.#dayOf(day);
     return !!MonthDay.#placed(this.#plain, date.year)?.equals(date);
   }
 
-  // today depends on where you stand, so these take the zone to judge from
   isToday(zone) {
     return this.fallsOn(today(zone));
   }
@@ -283,12 +260,10 @@ export class MonthDay {
               Output
   *******************************/
 
-  // the locale this value is written in, or the same value written in another. an unset tag clears it
   locale(...tag) {
     return tag.length ? new MonthDay(this.#plain, { locale: tag[0] }) : this.#locale;
   }
 
-  // with nothing named it is the built-in medium form, which no format an app names can change
   format(spec, locale = this.#locale) {
     const options = partOptions(spec, ['month', 'day'], presets);
     return options
@@ -316,7 +291,7 @@ export class MonthDay {
     });
   }
 
-  // + gives the string, while < and - still refuse through valueOf
+  // '+' sends hint 'default', which would call valueOf() and throw without this
   [Symbol.toPrimitive](hint) {
     return hint === 'number' ? this.valueOf() : this.toString();
   }
@@ -330,15 +305,13 @@ alias(MonthDay, { lang: 'locale', isOn: 'fallsOn', last: 'previous' });
 
 const unread = new Set([...unreadable.point, 'invalidMonthDay', 'missingMonthDay', 'unsupportedCalendar']);
 
-// with { loose: true } (via plugins/loose) an unreadable input is null, never a throw
 export const monthDay = (input, dayOrOptions) => {
   const build = () =>
     input instanceof MonthDay && dayOrOptions === undefined ? input : new MonthDay(input, dayOrOptions);
   return isPlainObject(dayOrOptions) && dayOrOptions.loose ? loosely(build, unread) : build();
 };
 
-// the same value read day first, the order most of the world writes it: dayMonth('17/10') is
-// monthDay('10/17'). the word decides the order, whatever dayFirst is configured for loose dates
+// forces day-first order on numeric strings and (day, month) pairs regardless of configure({ dayFirst })
 export const dayMonth = (input, monthOrOptions) =>
   isCount(input) && isCount(monthOrOptions)
     ? monthDay(monthOrOptions, input)

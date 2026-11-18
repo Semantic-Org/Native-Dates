@@ -3,9 +3,9 @@ import { isDevelopment } from 'native-dates/helpers/environment';
 import { refuse } from 'native-dates/helpers/errors';
 import { each } from 'native-dates/helpers/utils';
 
-// what a Date caller reads, with Date's own conventions kept: a month from 0, sunday as 0,
-// the offset in minutes west of UTC. so code that never heard of Temporal keeps working on a
-// DateTime, and the local family answers in the value's zone rather than the machine's
+// attaches Date.prototype read methods onto DateTime for callers expecting a JS Date.
+// Local getters (getHours, getDay, getTimezoneOffset) read in this.zone rather than the host machine's zone,
+// preserving Date's 0-indexed months, Sunday = 0, and positive-west-of-UTC offset sign
 
 const reads = {
   getTime() {
@@ -62,7 +62,7 @@ const reads = {
   getUTCMilliseconds() {
     return this.toJSDate().getUTCMilliseconds();
   },
-  // Date's millisecond form, where toString() keeps the finer digits a value has
+  // match Date's fixed .sssZ format (DateTime.toString() expands to 6 or 9 digits for sub-ms values)
   toISOString() {
     return this.toJSDate().toISOString();
   },
@@ -97,7 +97,6 @@ const setters = [
 
 const proto = DateTime.prototype;
 Object.assign(proto, reads);
-// a DateTime never changes in place, so every setter a Date has refuses and names the way
 each(setters, (name) => {
   proto[name] = function refuseSetter() {
     return refuse('immutable', name, {

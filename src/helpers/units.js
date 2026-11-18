@@ -1,7 +1,7 @@
 import { each, isNumber, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
-import { refuse } from './errors.js';
+import { fail, refuse } from './errors.js';
 import {
   IS_CALENDAR_DATE,
   IS_DATE_TIME,
@@ -15,7 +15,6 @@ import { checkedLocale } from './zones.js';
 
 export const inspect = Symbol.for('nodejs.util.inspect.custom');
 
-// every common unit spelling plus the calendar units duration arithmetic refuses to guess at
 const spellings = {
   y: 'year',
   yr: 'year',
@@ -81,13 +80,11 @@ export const units = [
 ];
 export const timeUnits = ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'];
 
-// a number written as text, the way a form or a query string carries one
 export const isDigits = (value) => isString(value) && /^\s*[-+]?\d+(?:\.\d+)?\s*$/.test(value);
 
-// a count is a number, or one written as text
 export const isCount = (value) => isNumber(value) || isDigits(value);
 
-// day.js keeps M for month and m for minute, and token patterns do too, so the one capital is kept
+// preserve uppercase 'M' as month before lowercasing ('m' is minute, matching Moment and Day.js)
 export const unit = (input) => {
   const key = input === 'M' ? 'month' : isString(input) ? input.trim().toLowerCase() : '';
   const found = Object.hasOwn(spellings, key) && spellings[key];
@@ -104,8 +101,6 @@ export const plural = (name) => `${name}s`;
 
 const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-// the number of a day of the week from its name or its number. ISO numbering, monday is 1 and
-// sunday is 7
 export const dayOfWeek = (input) => {
   if (isNumber(input) && Number.isInteger(input) && input >= 1 && input <= 7) {
     return input;
@@ -126,7 +121,7 @@ export const dayOfWeek = (input) => {
 export const isZonedDateTime = (value) => value instanceof Temporal.ZonedDateTime;
 export const isInstant = (value) => value instanceof Temporal.Instant;
 
-// a string with a clock and a Z, an offset or a bracketed zone names a moment, not a wall clock
+// true only when text includes both a clock time and an offset or bracketed zone, pinning an exact instant
 export const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;
 export const hasOffset = /(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$/;
 export const hasZoneName = /\[[^\]]+\]$/;
@@ -141,18 +136,16 @@ export const isTemporalDuration = (value) => value instanceof Temporal.Duration;
 
 export const pad = (value, width = 2) => String(Math.abs(value)).padStart(width, '0');
 
-// Temporal truncates 9.5 to 9 before it checks a range, so a fraction is refused before it gets there
+// Temporal.PlainDate/PlainTime.from() silently truncates floats (9.5 -> 9) before range checking
 export const wholeNumbers = (values) => values.every((value) => !isNumber(value) || Number.isInteger(value));
 
-// set() replaces parts as strictly as a factory reads them: whole numbers, in range
 export const withParts = (temporal, changes) => {
   if (!wholeNumbers(Object.values(changes))) {
-    throw new RangeError(isDevelopment ? 'each value passed to `set()` must be a whole number' : '');
+    fail(isDevelopment ? 'each value passed to `set()` must be a whole number' : '');
   }
   return temporal.with(changes, { overflow: 'reject' });
 };
 
-// singular keys, the shape Temporal's with() takes, from any spelling a caller wrote
 export const singularKeys = (fields) => {
   const out = {};
   each(fields, (value, key) => {
@@ -163,35 +156,28 @@ export const singularKeys = (fields) => {
 
 export const quarterStart = (month) => Math.floor((month - 1) / 3) * 3 + 1;
 
-// one whole unit as duration fields
-// an end is the last millisecond of its unit, the precision of Date and of now(). a unit finer than a
-// millisecond ends on its last nanosecond, so the end never falls before the start
+// endOf() steps back 1ms to match Date and now() precision, dropping to 1ns only for sub-millisecond units
 export const endPrecision = (name) =>
   name === 'microsecond' || name === 'nanosecond' ? { nanoseconds: 1 } : { milliseconds: 1 };
 
 export const stepOf = (name) => (name === 'quarter' ? { months: 3 } : { [plural(name)]: 1 });
 
-// a second spelling is the same function under another word, so a class lists its own in one table,
-// each new word beside the method it stands for: alias(DateTime, { add: 'plus' })
+// share prototype method references directly so aliases add near-zero bundle bytes
 export const alias = (Class, names) => {
   each(names, (method, word) => {
     Class.prototype[word] = Class.prototype[method];
   });
 };
 
-// the locale a new value is written in: the one its options name, or else the one carried by the
-// value it is made from, so a date taken from a Spanish datetime is Spanish too
+// check brand before calling .locale() so plain field bags with a `locale` key aren't invoked as methods
 const nouns = [IS_DATE_TIME, IS_CALENDAR_DATE, IS_TIME, IS_DURATION, IS_MONTH_DAY, IS_YEAR_MONTH, IS_RANGE];
 export const localeOf = (options, input) => {
-  // a value from an older copy of the package carries the brand and no locale to ask for
   const tag = options?.locale ?? (nouns.some((brand) => input?.[brand]) ? input.locale?.() : undefined);
-  // kept as it was read, so 'en_US' hands back en-US, a tag Intl takes
   return tag ? checkedLocale(tag) : undefined;
 };
 
-// the second argument of a factory is a zone, or an options bag { zone, loose }
 export const zoneOptions = (value) => (isPlainObject(value) ? value : { zone: value });
 
-// points('hour', zone), or points(30, 'minutes', zone): a count brings its unit before the zone
+// disambiguate points('hour', zone) from points(30, 'minutes', zone)
 export const stepArguments = (step, [second, third]) =>
   isNumber(step) || isDigits(step) ? [second, third] : [undefined, second];
