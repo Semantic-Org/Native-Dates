@@ -12,7 +12,6 @@ import type {
   Time,
   TimeInput,
   Unit,
-  Weekday,
   Zone,
 } from './index.js';
 

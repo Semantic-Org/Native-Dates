@@ -42,8 +42,8 @@ export type Unit =
 /** A unit a calendar date can start, end or step by */
 export type DateUnit = 'year' | 'quarter' | 'month' | 'week' | 'day' | (string & {});
 
-/** A weekday by name (`'monday'`, `'Fri'`) or ISO number, 1 for monday through 7 for sunday */
-export type Weekday =
+/** A day of the week by name (`'monday'`, `'Fri'`) or ISO number, 1 for monday through 7 for sunday */
+export type DayOfWeek =
   | 'monday'
   | 'tuesday'
   | 'wednesday'
@@ -224,18 +224,18 @@ export class DateTime {
   /** The same instant read in another zone */
   in(zone: Zone): DateTime;
   /** The first instant of the unit around this value. A week starts on the configured first day, or on `firstDay` */
-  startOf(unit: Unit, firstDay?: Weekday): DateTime;
+  startOf(unit: Unit, firstDay?: DayOfWeek): DateTime;
   /** The last millisecond of the unit */
-  endOf(unit: Unit, firstDay?: Weekday): DateTime;
+  endOf(unit: Unit, firstDay?: DayOfWeek): DateTime;
   round(unit: Unit): DateTime;
   round(increment: number, unit: Unit): DateTime;
   floor(unit: Unit): DateTime;
   floor(increment: number, unit: Unit): DateTime;
   ceil(unit: Unit): DateTime;
   ceil(increment: number, unit: Unit): DateTime;
-  /** The next such weekday strictly after this one, at the same time of day */
-  next(weekday: Weekday): DateTime;
-  previous(weekday: Weekday): DateTime;
+  /** The next such day of the week strictly after this one, at the same time of day */
+  next(dayOfWeek: DayOfWeek): DateTime;
+  previous(dayOfWeek: DayOfWeek): DateTime;
   /** The next occurrence of a month-day strictly after this one, at the same time of day */
   next(monthDay: MonthDay): DateTime;
   previous(monthDay: MonthDay): DateTime;
@@ -244,14 +244,14 @@ export class DateTime {
   to(end: DateTimeInput | DurationInput): DateTimeRange;
   to(count: number, unit: Unit): DateTimeRange;
   /** The unit containing this moment as a half-open range, its start until the next start */
-  range(unit: Unit, firstDay?: Weekday): DateTimeRange;
+  range(unit: Unit, firstDay?: DayOfWeek): DateTimeRange;
 
   /** The same instant, whatever zone each side reads it in */
   equals(other: DateTimeInput): boolean;
   isBefore(other: DateTimeInput): boolean;
   isAfter(other: DateTimeInput): boolean;
   /** Same to the unit, judged in this datetime's zone */
-  isSame(other: DateTimeInput, unit?: Unit, firstDay?: Weekday): boolean;
+  isSame(other: DateTimeInput, unit?: Unit, firstDay?: DayOfWeek): boolean;
   isPast(): boolean;
   isFuture(): boolean;
   isToday(): boolean;
@@ -343,12 +343,12 @@ export class CalendarDate {
   set(fields: Pick<DateTimeFields, 'year' | 'month' | 'day'>): CalendarDate;
   set(unit: Unit, value: number): CalendarDate;
   /** The first day of the unit around this value. A week starts on the configured first day, or on `firstDay` */
-  startOf(unit: DateUnit, firstDay?: Weekday): CalendarDate;
+  startOf(unit: DateUnit, firstDay?: DayOfWeek): CalendarDate;
   /** The last day of the unit, so `endOf('month')` is the 28th, 30th or 31st */
-  endOf(unit: DateUnit, firstDay?: Weekday): CalendarDate;
-  /** The next such weekday strictly after this one */
-  next(weekday: Weekday): CalendarDate;
-  previous(weekday: Weekday): CalendarDate;
+  endOf(unit: DateUnit, firstDay?: DayOfWeek): CalendarDate;
+  /** The next such day of the week strictly after this one */
+  next(dayOfWeek: DayOfWeek): CalendarDate;
+  previous(dayOfWeek: DayOfWeek): CalendarDate;
   /** The next occurrence of a month-day strictly after this date */
   next(monthDay: MonthDay): CalendarDate;
   previous(monthDay: MonthDay): CalendarDate;
@@ -357,7 +357,7 @@ export class CalendarDate {
   to(end: CalendarDateInput | DurationInput): DateRange;
   to(count: number, unit: Unit): DateRange;
   /** Every day of the unit containing this date, first through last */
-  range(unit: DateUnit, firstDay?: Weekday): DateRange;
+  range(unit: DateUnit, firstDay?: DayOfWeek): DateRange;
   /** The day's points by a step, as datetimes in the zone */
   points(step: Unit | DurationInput, zone?: Zone): DateTime[];
   points(count: number | string, unit: Unit, zone?: Zone): DateTime[];
@@ -368,7 +368,7 @@ export class CalendarDate {
   equals(other: CalendarDateInput): boolean;
   isBefore(other: CalendarDateInput): boolean;
   isAfter(other: CalendarDateInput): boolean;
-  isSame(other: CalendarDateInput, unit?: DateUnit, firstDay?: Weekday): boolean;
+  isSame(other: CalendarDateInput, unit?: DateUnit, firstDay?: DayOfWeek): boolean;
   /** Today depends on where you stand, so these take the zone to judge from */
   isPast(zone?: Zone): boolean;
   isFuture(zone?: Zone): boolean;
@@ -639,7 +639,7 @@ export const IS_TIME_RANGE: unique symbol;
 export const IS_YEAR_MONTH: unique symbol;
 
 /** The number of a day of the week from its name, `dayOfWeek('sunday')` is 7, a number passing through */
-export function dayOfWeek(day: Weekday): number;
+export function dayOfWeek(day: DayOfWeek): number;
 
 export interface Settings {
   /** The default zone every factory reads in. Null resets to the machine's zone */
@@ -650,7 +650,7 @@ export interface Settings {
    * The first day of the week for `startOf('week')`, `range('week')` and `weekdayNames()`. Unset, it is the
    * locale's own: sunday in the United States, monday in most of Europe. Null goes back to following the locale
    */
-  weekStart?: Weekday | null;
+  weekStart?: DayOfWeek | null;
   /**
    * Weekday names written your own way, by language, then width, then day: `{ lv: { narrow: { fri: 'Pk', sun: 'Sv' } } }`.
    * `narrow` is what the `dd` token prints, `short` is `ddd`, `long` is `dddd`, and `weekdayNames()` follows. A regional
