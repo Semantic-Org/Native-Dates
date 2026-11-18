@@ -129,7 +129,7 @@ Month and weekday names inside token patterns come from `Intl` in the active loc
 | `Do` | `'16th'` | Day of the month with English ordinals, the locale's day marker like `'6.'` or `'6日'`, or custom [`ordinals`](/api/configure/). |
 | `DDD`, `DDDD` | `'320'`, `'045'` | Day of the year, unpadded or zero-padded to three digits. |
 | `d` | `'1'` | Day of the week from 0 to 6, starting on Sunday at 0. |
-| `dd`, `ddd`, `dddd` | `'Mo'`, `'Mon'`, `'Monday'` | Localized shortest, abbreviated, or full weekday name, customizable via [`weekdays`](/api/configure/). |
+| `dd`, `ddd`, `dddd` | `'Mo'`, `'Mon'`, `'Monday'` | Localized shortest, abbreviated, or full weekday name, customizable via [`weekdayNames`](/api/configure/). |
 | `W`, `WW` | `'47'`, `'05'` | ISO week of the year, unpadded or zero-padded. |
 | `H`, `HH` | `'9'`, `'09'` | Hour on the 24-hour clock, unpadded or zero-padded. |
 | `h`, `hh` | `'9'`, `'09'` | Hour on the 12-hour clock from 1 through 12. |

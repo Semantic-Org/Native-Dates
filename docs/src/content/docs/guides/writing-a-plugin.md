@@ -18,7 +18,7 @@ Every instance is frozen on construction. Plugin methods must stay pure and retu
 import { CalendarDate, date } from 'native-dates';
 
 CalendarDate.prototype.nextBusinessDay = function nextBusinessDay() {
-  const step = this.weekday === 5 ? 3 : this.weekday === 6 ? 2 : 1;
+  const step = this.dayOfWeek === 5 ? 3 : this.dayOfWeek === 6 ? 2 : 1;
   return this.plus(step, 'days');
 };
 
