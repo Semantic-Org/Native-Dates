@@ -173,10 +173,9 @@ billing.plus('2 weeks').toString(); // '2026-02-14'
 ```js signature
 d.minus(amount, unit?): CalendarDate
 d.subtract(amount, unit?): CalendarDate
-d.remove(amount, unit?): CalendarDate
 ```
 
-Moves backward by a calendar duration. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()` and `remove()`.
+Moves backward by a calendar duration. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()`.
 
 **Parameters**
 

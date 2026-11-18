@@ -94,10 +94,9 @@ billing.plus('1 year').toString(); // '2027-11'
 ```js signature
 ym.minus(amount, unit?): YearMonth
 ym.subtract(amount, unit?): YearMonth
-ym.remove(amount, unit?): YearMonth
 ```
 
-Moves backward by years, quarters, or months and returns a new instance. Accepts the same inputs as [`plus()`](#plus), with `subtract()` and `remove()` as aliases.
+Moves backward by years, quarters, or months and returns a new instance. Accepts the same inputs as [`plus()`](#plus), with `subtract()` as an alias.
 
 **Parameters**
 

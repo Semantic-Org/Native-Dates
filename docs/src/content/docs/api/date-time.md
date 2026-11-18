@@ -213,10 +213,9 @@ sat.plus('1h 30m').format('time', 'en-US'); // '10:30 AM'
 ```js signature
 dt.minus(amount, unit?): DateTime
 dt.subtract(amount, unit?): DateTime
-dt.remove(amount, unit?): DateTime
 ```
 
-Moves backward by a duration in the same time zone. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()` and `remove()`.
+Moves backward by a duration in the same time zone. Accepts the same inputs as [`plus()`](#plus), and is also aliased as `subtract()`.
 
 **Parameters**
 
