@@ -1,12 +1,9 @@
-// the hero's sentence in the browser: tabs pick a sentence, a phrase turns through its options, and
-// the values under each call are read again from the library for the reader's own day and zone.
-// the page arrives with the build's answers in place, so nothing here is needed to read it
-
 import { ui } from '../strings.js';
 import { read, sentencesFor } from './sentences.js';
 
 const still = matchMedia('(prefers-reduced-motion: reduce)');
 
+// re-run hero chains in the browser so values reflect the visitor's local day and zone
 export function mountSay(root, library) {
   const locale = root.dataset.say || 'en';
   const sentences = sentencesFor(locale);
@@ -18,7 +15,6 @@ export function mountSay(root, library) {
     const picks = sentence.steps.map(() => 0);
     const cells = (step) => [...panel.querySelectorAll(`[data-step="${step}"]`)];
 
-    // every value from a link on is read again; the ones that changed say so with a flash
     const fill = (from = 0, flash = false) => {
       read(sentence, picks, library, locale).forEach((value, step) => {
         const cell = panel.querySelector(`[data-value][data-step="${step}"]`);
@@ -51,7 +47,6 @@ export function mountSay(root, library) {
         turn(step, by);
       });
     });
-    // a call is its phrase's other face: clicking it turns the phrase too
     panel.querySelectorAll('.say-code').forEach((code) => {
       const step = Number(code.dataset.step);
       if (sentence.steps[step].length > 1) { code.addEventListener('click', () => turn(step, 1)); }
@@ -77,7 +72,6 @@ export function mountSay(root, library) {
     show(tab);
   });
 
-  // where the answers were worked out: the reader's own zone
   const where = root.querySelector('[data-say-where]');
   where.textContent = ui('home.say.where', { zone: library.now().zone });
   where.hidden = false;

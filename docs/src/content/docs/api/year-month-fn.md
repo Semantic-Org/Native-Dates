@@ -63,7 +63,7 @@ type: YearMonth
 description: "A `YearMonth` with no day, or `null` when loose mode cannot read `input`."
 ```
 
-When the [loose plugin](/plugins/loose/) is loaded, loose mode parses month names in English or the active `locale` beside a four-digit year and returns `null` on unreadable strings:
+When the [loose plugin](/plugins/loose/) is loaded, loose mode parses month names in English or the active `locale` paired with a four-digit year and returns `null` on unreadable strings:
 
 ```js
 import { yearMonth } from 'native-dates';
@@ -127,7 +127,7 @@ Months run from 1 for January through 12 for December across numbers, strings, a
 | Two numbers | `yearMonth(2026, 11)`, `monthYear(11, 26)` | Takes whole numbers in year-then-month or month-then-year order. |
 | Fields object | `{ year: 2026, month: 11 }` | Reads 1-indexed calendar fields and rejects months outside 1 through 12. |
 | Date or timestamp | `'2026-11-16'`, `datetime(...)`, `new Date()` | Extracts the calendar month in the given zone or configured default and drops the day. |
-| Loose month name | `'Nov 2026'`, `'février 2026'` | Reads English or active-locale month names beside a 4-digit year in loose mode. |
+| Loose month name | `'Nov 2026'`, `'février 2026'` | Reads English or active-locale month names alongside a 4-digit year in loose mode. |
 | Temporal value | `Temporal.PlainYearMonth`, `Temporal.PlainDate` | Wraps ISO 8601 Temporal values directly. |
 
 :::tip[Reading the current month]

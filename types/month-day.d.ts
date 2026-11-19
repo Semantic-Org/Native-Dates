@@ -32,7 +32,7 @@ export type MonthDayInput = MonthDay | MonthDayFields | CalendarDateInput;
 export interface MonthDayOptions extends ReadOptions {
   /**
    * Read slash, dot, or single-digit dash strings such as `'17/10'` day-first, matching `dayMonth()`.
-   * Two-digit ISO strings across a dash (`'10-17'`) always read month-first so JSON values round-trip cleanly.
+   * Two-digit ISO strings with a hyphen (`'10-17'`) always read month-first so JSON values round-trip cleanly.
    *
    * @default false
    */
@@ -50,8 +50,8 @@ export type MonthDayFormat = FormatSpec;
 /**
  * A recurring calendar month and day with no year, for birthdays, anniversaries, and annual holidays.
  *
- * February 29 is preserved and lands on February 28 in common years when calling `in()` or `fallsOn()`.
- * Because an annual date repeats every year rather than sitting at one point on a timeline,
+ * February 29 is preserved and resolves to February 28 in common years when calling `in()` or `fallsOn()`.
+ * Because an annual date repeats every year rather than representing a single calendar date,
  * ordering methods like `isBefore()` do not apply.
  *
  * @example
@@ -201,12 +201,12 @@ export class MonthDay {
   as(kind: 'monthDay'): MonthDay;
 
   /**
-   * Returns true when both values write the exact same month and day numbers,
+   * Returns `true` when both values have the exact same month and day numbers,
    * extracting the month and day when given a full date or timestamp.
    * Ambiguous slash or dot strings like `'05/10'` throw a `RangeError`.
    *
    * @param other - Another `MonthDay`, ISO `'10-17'` string, fields object, or date value
-   * @returns `true` if both values carry the exact same month and day numbers
+   * @returns `true` if both values have the exact same month and day numbers
    *
    * @example
    * ```ts
@@ -444,7 +444,7 @@ export function monthDay(month: number | string, day: number | string): MonthDay
 export function dayMonth(input: unknown, options: MonthDayOptions & { loose: true; }): MonthDay | null;
 /**
  * Reads day-first strings such as `'17/10'` into a `MonthDay` regardless of global settings.
- * Two-digit ISO strings across a dash (`'10-17'`) still read month-first so JSON output round-trips cleanly.
+ * Two-digit ISO strings with a hyphen (`'10-17'`) still read month-first so JSON output round-trips cleanly.
  *
  * @param input - Day-first string, fields object, `MonthDay`, or date/timestamp value
  * @param options - Time zone (for timestamps) or `MonthDayOptions`

@@ -78,7 +78,7 @@ Type errors indicate that a required input is missing, has the wrong JavaScript 
 | `invalidTime` | `time()`, `Time` | Input is an unsupported type. |
 | `invalidYearMonth` | `yearMonth()`, `monthYear()`, `YearMonth` | Input is a single number or an unsupported type. |
 | `invalidMonthDay` | `monthDay()`, `dayMonth()`, `MonthDay` | Input is a single number or an unsupported type. |
-| `invalidDuration` | `duration()`, `Duration`, `plus()`, `minus()` | Input is `null`, `undefined`, an unsupported type, or a unit passed beside a duration that already carries units. |
+| `invalidDuration` | `duration()`, `Duration`, `plus()`, `minus()` | Input is `null`, `undefined`, an unsupported type, or a unit passed alongside a duration that already has units. |
 | `unsupportedCalendar` | `yearMonth()`, `monthDay()`, `YearMonth`, `MonthDay` | Input is a `Temporal.PlainYearMonth` or `PlainMonthDay` with a non-ISO calendar. |
 | `invalidPoint` | `compare()`, `earliest()`, `latest()` | Value is not a `DateTime`, `CalendarDate`, `Time`, `YearMonth`, `Date`, epoch timestamp, Temporal point, or parseable string. |
 | `conflictingKinds` | `compare()`, `earliest()`, `latest()` | Comparing values of different kinds, such as a `CalendarDate` with a `DateTime`. |

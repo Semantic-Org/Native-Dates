@@ -1,7 +1,3 @@
-// the plugins landing: pick plugins, or a preset of them, to build a ready setup with its size, filter
-// as you type (and from a category tag), cards or rows. picks ride the url as ?use=, the filter as ?q=, so either can be
-// shared; the view is remembered
-
 import { sampleFor } from '../lib/plugins.js';
 import { formatSizeBytes } from './format.js';
 import { highlight } from './site.js';
@@ -69,7 +65,6 @@ export function mountPlugins() {
     catch {}
   };
   toggles.forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
-  // a radio group moves with the arrow keys
   document.querySelector('.view-toggle')?.addEventListener('keydown', (e) => {
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) { return; }
     e.preventDefault();
@@ -85,7 +80,7 @@ export function mountPlugins() {
   const sample = document.querySelector('[data-plugin-sample] pre');
   const clear = document.querySelector('[data-clear-picks]');
   const stats = document.querySelector('.plugins-stats');
-  // the measured size of every set of plugins, by which are in it (bit n is plugin n)
+  // precomputed bundle sizes indexed by bitmask so plugin combinations use measured totals
   const sizes = JSON.parse(stats.dataset.sizes);
   const presets = [...document.querySelectorAll('[data-preset]')];
   const pickedCount = stats.querySelector('[data-picked-count]');
@@ -113,7 +108,6 @@ export function mountPlugins() {
   list.addEventListener('change', (e) => {
     if (e.target.matches('.plugin-pick')) { render(); }
   });
-  // a preset is its plugins, picked at once; picking it again clears them
   presets.forEach((button) => button.addEventListener('click', () => {
     const set = button.getAttribute('aria-pressed') === 'true' ? [] : button.dataset.preset.split(',');
     picks.forEach((p) => {
@@ -146,6 +140,6 @@ function setParam(key, value) {
   const url = new URL(location.href);
   if (value) { url.searchParams.set(key, value); }
   else { url.searchParams.delete(key); }
-  // commas stay literal, so a shared ?use=head,announcer reads as what it is
+  // keep commas unescaped so shared URLs read as ?use=zones,loose
   history.replaceState(history.state, '', `${url.pathname}${url.search.replace(/%2C/gi, ',')}${url.hash}`);
 }

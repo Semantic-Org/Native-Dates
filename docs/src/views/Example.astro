@@ -1,5 +1,4 @@
 ---
-// one live example: what it shows and what to try, the playground, then what just happened
 import { getCollection, render } from 'astro:content';
 
 import Playground from '../components/Playground.astro';
@@ -11,7 +10,6 @@ import { inline } from '../lib/markdown/inline.js';
 import { SECTIONS } from '../lib/nav.js';
 
 const { entry } = Astro.props;
-// the example in the reader's language: its translation where there is one, else english
 const locale = Astro.currentLocale;
 const { page, translated, stale, draft } = await inLanguage(entry, locale);
 const english = translated ? {} : englishIn(locale);
@@ -20,7 +18,6 @@ const { Content } = await render(page);
 const { title, description, tabs, try: steps, related } = page.data;
 const files = filesFor(entry.id);
 
-// previous and next in the section's order
 const order = SECTIONS.find((s) => s.key === 'examples').groups.flatMap((g) => g.items)
   .map((it) => it.slug).filter((slug) => slug.startsWith('examples/'));
 const at = order.indexOf(`examples/${entry.id}`);
@@ -30,9 +27,8 @@ const prev = order[at - 1];
 const next = order[at + 1];
 const group = SECTIONS.find((s) => s.key === 'examples').groups.find((g) => g.items.some((it) => it.slug === `examples/${entry.id}`));
 const groupLabel = group && t(locale, group.name);
-// a related page goes by its title in the language, where it has been translated
+// skip page title lookup on hash links so section anchors keep their explicit label
 const titleIn = (r) => (r.href.includes('#') ? null : titles.get(r.href.replace(/^\/|\/$/g, ''))) ?? r.title;
-// the related pages as one list, joined as the language joins one, to sit inside the sentence
 const links = new Intl.ListFormat(locale, { type: 'unit', style: 'short' })
   .format(related.map((r) => `<a href="${localePath(r.href, locale)}">${inline(titleIn(r))}</a>`));
 ---

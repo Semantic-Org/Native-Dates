@@ -1,43 +1,35 @@
-/* native-dates — shared design tokens. dark first; light is a full redefinition, not an inversion. */
-
-/* fonts are self-hosted (fontsource, imported in Base.astro), no third-party request */
+/* shared design tokens. Dark theme is default, and light theme redefines each token explicitly. */
 
 :root {
   color-scheme: dark;
 
-  /* surfaces: SUI's pure black base, lifted in small cool steps */
   --bg: #000;
   --surface-1: #05070b;
   --surface-2: #0a0d14;
   --surface-3: #111522;
-  /* code is neutral black, so the cool tones (the info callout, the accent) stand apart from it */
+  /* neutral black keeps code blocks visually distinct from cool-tinted callouts and accents */
   --code-bg: oklch(0.155 0 0);
   --code-head: oklch(0.12 0 0);
 
-  /* text: white at stepped opacity, as SUI does it */
   --text: oklch(1 0 0 / 0.92);
   --text-2: oklch(1 0 0 / 0.70);
   --text-3: oklch(1 0 0 / 0.50);
-  --text-4: oklch(1 0 0 / 0.47);  /* the faintest text still reads at 4.5:1 on black */
+  --text-4: oklch(1 0 0 / 0.47);  /* 4.5:1 contrast floor on black */
 
-  /* lines: SUI's lavender-tinted hairlines */
   --line: oklch(0.96 0.01 279.32 / 0.09);
   --line-2: oklch(0.96 0.01 279.32 / 0.15);
   --line-3: oklch(0.96 0.01 279.32 / 0.26);
 
-  /* one action color */
   --accent: oklch(0.74 0.15 295);
-  /* a card's surface: light from the upper left on a cool dark, in the accent's hue */
   --sheen: linear-gradient(140deg, oklch(0.17 0.025 295), oklch(0 0 0) 55%, oklch(0.13 0.02 295));
   --sheen-hover: linear-gradient(140deg, oklch(0.21 0.03 295), oklch(0.05 0.008 295) 55%, oklch(0.16 0.025 295));
-  /* a small raised mark (a step number, a logo tile), lit from the same corner; laid over its fill */
   --bevel: linear-gradient(140deg, oklch(1 0 0 / 0.1), oklch(0 0 0 / 0.2));
-  --bevel-soft: linear-gradient(140deg, oklch(1 0 0 / 0.06), oklch(0 0 0 / 0.1));  /* inline code */
+  --bevel-soft: linear-gradient(140deg, oklch(1 0 0 / 0.06), oklch(0 0 0 / 0.1));
   --accent-strong: oklch(0.80 0.13 295);
   --accent-wash: oklch(0.74 0.15 295 / 0.12);
   --accent-line: oklch(0.74 0.15 295 / 0.35);
 
-  /* phase colors, shared by syntax and the trace */
+  /* syntax and status palette */
   --c-blue: #79c0ff;
   --c-cyan: rgb(115 185 225);
   --c-violet: #d2a8ff;
@@ -47,18 +39,15 @@
   --c-string: #a5d6ff;
   --c-comment: #7d8590;
 
-  /* status */
   --info: var(--c-cyan);
   --tip: var(--c-green);
   --warn: var(--c-amber);
   --danger: var(--c-coral);
 
-  /* type */
   --font-sans: 'Schibsted Grotesk Variable', 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Fragment Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* type scale: whole-pixel size / line-height pairs, so no line box or glyph lands on a subpixel.
-     t-shirt names so values can change without renaming. fluid sizes step at breakpoints, never vw */
+  /* whole-pixel size and line-height pairs prevent subpixel line boxes */
   --fs-3xs: 11px;  --lh-3xs: 16px;
   --fs-2xs: 12px;  --lh-2xs: 18px;
   --fs-xs: 13px;  --lh-xs: 20px;
@@ -70,36 +59,29 @@
   --fs-3xl: 40px;  --lh-3xl: 44px;
   --fs-4xl: 72px;  --lh-4xl: 72px;
 
-  /* code: Fragment Mono runs large for its size, so code sits a step under body text.
-     13 on 22 in blocks, 12 on 20 in compact blocks */
+  /* Fragment Mono has a tall x-height, so code blocks step one size below body text */
   --code-fs: var(--fs-xs); --code-lh: 22px;
   --code-sm-fs: var(--fs-2xs); --code-sm-lh: 20px;
 
-  /* display sizes, stepped */
   --display: 52px; --display-lh: 56px; --display-track: -2px;
   --heading: var(--fs-3xl); --heading-lh: var(--lh-3xl); --heading-track: -1px;
 
-  /* spacing, stepped */
   --section-y: 120px;
   --hero-top: 88px;
   --hero-bottom: 104px;
 
-  /* shape: radius steps with hierarchy — controls 6, panels 10, frames 14 */
   --r-1: 4px;
   --r-2: 6px;
   --r-3: 10px;
   --r-4: 14px;
 
   --container: 1440px;
-  /* the page's side margin grows with the window, so a laptop gets a frame too: 32px where the
-     narrower layout hands over (1080), 86px at 1440, and 96px from 1507. past 1632 the container's
-     own centering takes over. whole pixels at every width */
+  /* whole-pixel horizontal gutter scaling from 32px at 1080px up to 96px above 1507px */
   --gutter: clamp(32px, round(down, 15vw - 130px, 1px), 96px);
 
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-/* the wide homepage container gives the hero headline room to step up */
 @media (min-width: 1360px) {
   :root { --display: 56px; --display-lh: 60px; --display-track: -2px; }
 }
@@ -112,8 +94,6 @@
 }
 @media (max-width: 600px) {
   :root {
-    /* a phone's usable height is the screen less the browser's bars: the pitch has to finish
-       well inside it, so the type steps down to the scale other tool homepages use there */
     --display: 32px; --display-lh: 36px; --display-track: -1px;
     --heading: var(--fs-2xl); --heading-lh: var(--lh-2xl); --heading-track: 0px;
     --section-y: 72px; --hero-top: 28px; --hero-bottom: 64px;
@@ -174,23 +154,17 @@ body {
 h1, h2, h3, h4 { color: var(--text); margin: 0; font-weight: 600; }
 p { margin: 0; }
 
-/* wrapping: headings balance their lines; running text avoids orphans; labels and code never wrap mid-token */
 h1, h2, h3, h4, h5, h6, caption, legend { text-wrap: balance; }
 p, li, dd, dt, figcaption, blockquote, td, th,
 .pt-row > span { text-wrap: pretty; }
 button, kbd, .btn, .code-tab, .version, .url { text-wrap: nowrap; }
-/* abbreviations: a quiet dotted rule, the expansion on hover */
 abbr[title] { text-decoration: underline dotted var(--line-3); text-underline-offset: 4px; cursor: help; }
 
-/* ---------- inline code in prose ----------
-   one treatment everywhere. Fragment Mono is wide with a tall x-height, so it sits at ~0.86 of the
-   surrounding text, rounded to a whole pixel (18 → 15, 16 → 14, 14 → 12). the chip is quiet: a tint
-   and a hairline, text at the prose's own color stepped up once, never brighter than a heading.
-   :where() keeps specificity at zero so a context can restyle it without fighting */
+/* inline code in prose: scale Fragment Mono to 0.86em rounded to whole pixels, using :where() for zero specificity */
 :where(p, li, dd, dt, td, th, figcaption, blockquote, h1, h2, h3, h4, h5, h6) code:not(pre code) {
   font-size: 0.86em;
   font-size: round(nearest, 0.86em, 1px);
-  line-height: 1;  /* mono on its own baseline would grow the line box by a pixel; this keeps prose on its grid */
+  line-height: 1;  /* prevent monospace baseline metrics from expanding surrounding prose line boxes */
   padding: 4px 6px;
   margin: 0 3px;
   border-radius: var(--r-3);
@@ -199,19 +173,16 @@ abbr[title] { text-decoration: underline dotted var(--line-3); text-underline-of
   color: var(--text);
   white-space: nowrap;
 }
-/* an option or setting name: tied to the accent, as the trace's guides are */
 :where(p, li, dd, td, figcaption) code.setting { color: var(--accent-strong); background: var(--accent-wash); box-shadow: inset 0 0 0 1px oklch(0.74 0.15 295 / 0.18); }
 :root[data-theme='light'] :where(p, li, dd, td, figcaption) code.setting { box-shadow: inset 0 0 0 1px var(--accent-line); }
-/* a chip joined with the punctuation that touches it: kept on one line, the touching side unpadded */
+/* keep inline code chips attached to adjacent punctuation without wrapping */
 .code-join { white-space: nowrap; }
 code.joined-start { margin-inline-start: 0; }
 code.joined-end { margin-inline-end: 0; }
-/* inside a link, the link color carries through */
 :where(a) > code { color: inherit; }
 a { color: inherit; }
 code, kbd, pre { font-family: var(--font-mono); font-variant-ligatures: none; font-feature-settings: 'liga' 0, 'calt' 0; }
 
-/* quiet scrollbars for code and panels */
 * { scrollbar-width: thin; scrollbar-color: var(--line-3) transparent; }
 
 :focus-visible {
@@ -241,7 +212,7 @@ code, kbd, pre { font-family: var(--font-mono); font-variant-ligatures: none; fo
   text-decoration: none; color: var(--text); white-space: nowrap;
   font-weight: 650; font-size: 17px; line-height: 24px;
 }
-/* the mark: a clock face whose hands turn about its center (scripts/mark-clock.js) */
+/* clock hands animated around the SVG center in scripts/mark-clock.js */
 .wordmark svg { width: 22px; height: 22px; flex: none; }
 .mark-hand { transform-origin: 12px 12px; }
 
@@ -293,14 +264,12 @@ kbd {
 .icon-btn:hover { color: var(--text); background: var(--surface-2); border-color: var(--line); }
 .icon-btn svg { width: 17px; height: 17px; }
 
-/* ---------- swap: switchable content that reserves the size of its largest option ----------
-   every option shares one grid cell; inactive ones keep their box but are invisible and out of
-   the accessibility tree, so a menu never changes the size of what it controls */
+/* stack switchable options in one grid cell so the container reserves the largest option's dimensions */
 .swap { display: grid; min-width: 0; }
 .swap > * { grid-area: 1 / 1; min-width: 0; }
 .swap > [hidden] { display: block; visibility: hidden; }
 
-/* ---------- search (⌘K) ---------- */
+/* search dialog */
 
 dialog.search {
   width: min(640px, calc(100vw - 32px)); max-width: none; max-height: none;
@@ -367,12 +336,11 @@ dialog.search::backdrop { background: oklch(0 0 0 / 0.6); backdrop-filter: blur(
   .search-foot span:not(.search-by) { display: none; }
 }
 
-/* the theme toggle shows what a click switches to */
 [data-theme-toggle] .i-moon { display: none; }
 :root[data-theme='light'] [data-theme-toggle] .i-sun { display: none; }
 :root[data-theme='light'] [data-theme-toggle] .i-moon { display: block; }
 
-/* ---------- code ---------- */
+/* code blocks */
 
 .code {
   position: relative;
@@ -391,11 +359,10 @@ dialog.search::backdrop { background: oklch(0 0 0 / 0.6); backdrop-filter: blur(
 .code pre.is-line { padding-block: 10px; }
 .code-head {
   display: flex; align-items: center; gap: 2px;
-  min-height: 43px;  /* 42 inside the 1px border: tabs center on a whole pixel */ padding-block: 0; padding-inline: 6px 8px;
+  min-height: 43px;  /* 42px inner height inside 1px border keeps 30px tabs pixel-aligned */ padding-block: 0; padding-inline: 6px 8px;
   border-bottom: 1px solid var(--line);
   background: var(--code-head);
 }
-/* a header's tabs keep their size; anything beside them gives way first */
 .code-head [role=tablist] { display: flex; flex: none; gap: 2px; }
 .code-tab {
   height: 30px; padding: 0 10px;
@@ -416,8 +383,7 @@ dialog.search::backdrop { background: oklch(0 0 0 / 0.6); backdrop-filter: blur(
 .copy svg { width: 15px; height: 15px; }
 .copy[data-copied] { color: var(--c-green); }
 
-/* shiki (build-time highlighting) writes these variables; they map onto the same syntax colors as
-   the inline highlighter, so code in blocks and code in prose read alike, in both themes */
+/* map build-time Shiki CSS variables onto the same token palette used by runtime syntax highlighting */
 :root {
   --shiki-foreground: var(--text);
   --shiki-background: var(--code-bg);
@@ -427,7 +393,7 @@ dialog.search::backdrop { background: oklch(0 0 0 / 0.6); backdrop-filter: blur(
   --shiki-token-comment: var(--c-comment);
   --shiki-token-constant: var(--c-blue);
   --shiki-token-function: var(--c-violet);
-  --shiki-token-parameter: var(--c-blue);  /* object keys and parameters, as the inline highlighter reads keys */
+  --shiki-token-parameter: var(--c-blue);
   --shiki-token-punctuation: var(--text-2);
   --shiki-token-link: var(--c-blue);
 }
@@ -438,7 +404,6 @@ pre.astro-code .line.highlighted {
   border-inline-start: 3px solid var(--accent); background: var(--accent-wash);
 }
 
-/* syntax */
 .tk-k { color: var(--c-coral); }
 .tk-s { color: var(--c-string); }
 .tk-c { color: var(--c-comment); font-style: italic; }
@@ -453,8 +418,7 @@ pre.astro-code .line.highlighted {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-/* ---------- pop menu (page actions, versions) ----------
-   a small menu that drops under its trigger, aligned to the trigger's right edge */
+/* popover menus */
 .pop-menu {
   position: absolute; z-index: 20; inset-inline-end: 0; top: calc(100% + 6px); width: 288px; padding: 6px;
   background: var(--bg); border: 1px solid var(--line-2); border-radius: var(--r-3);
@@ -478,7 +442,6 @@ pre.astro-code .line.highlighted {
 .pop-archived { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); }
 .pop-archived[hidden] { display: none; }
 
-/* the version and its menu, in either topbar */
 .version-menu { position: relative; }
 .version-button {
   display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 8px;
@@ -490,7 +453,6 @@ pre.astro-code .line.highlighted {
 .version-button[aria-expanded='true'] svg { rotate: 180deg; }
 .version-menu .pop-menu { width: 220px; }
 
-/* on a frozen vN site, once newer docs exist */
 .archive-banner {
   display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 8px 16px;
   background: var(--surface-2); border-bottom: 1px solid var(--line-2);
@@ -498,8 +460,6 @@ pre.astro-code .line.highlighted {
 }
 .archive-banner a { color: var(--accent-strong); }
 
-/* the offer of a reader's language, and the question after a switch: a bar that floats at the foot of
-   the window, so nothing on the page moves for it */
 .language-toast {
   position: fixed; z-index: 60; inset-inline: 16px; bottom: 16px; margin-inline: auto; width: fit-content; max-width: calc(100% - 32px);
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 10px 12px; padding-inline-start: 16px;
@@ -511,7 +471,6 @@ pre.astro-code .line.highlighted {
 .language-toast p { margin: 0; margin-inline-end: 4px; }
 .language-toast .btn { height: 32px; padding-inline: 12px; font-size: var(--fs-sm); }
 
-/* the language choice where the topbar has no room for its menu: a row in the menu drawer */
 .language-select { display: none; }
 @media (max-width: 900px) {
   .language-select {
@@ -524,30 +483,22 @@ pre.astro-code .line.highlighted {
     min-width: 0; height: 28px; padding-inline: 6px; border: 0; border-radius: var(--r-2);
     background: transparent; color: var(--text); font: inherit; font-weight: 500; text-align: end; cursor: pointer;
   }
-  /* the list a browser opens takes its colors from here: left to itself it can pair the page's light
-     text with its own white list */
+  /* force explicit option colors so native OS dropdown menus stay legible in dark mode */
   .language-select option { background: var(--bg); color: var(--text); }
   .home-menu .language-select { margin: 8px 0 0; }
 }
 
-/* ---------- right-to-left ----------
-   layout runs on logical properties, so a page in a right-to-left language mirrors on its own. code,
-   and the graphics that read as code or as time, keep reading left to right inside it */
+/* keep code, timelines, and playground panes LTR inside RTL layouts while restoring RTL on prose captions */
 :where(pre, code, kbd, .keys, .code, .pg, .say-code, .console, .year-strip, .xr) { direction: ltr; }
 :where(code, kbd) { unicode-bidi: isolate; }
-/* inside those graphics, a sentence and a mock app's own interface still read as the page does */
 :dir(rtl) :is(.xr-count, .pg-status, .console-miss) { direction: rtl; }
-/* a number with its unit, or anything else that must keep its order inside a sentence */
 .ltr { direction: ltr; unicode-bidi: isolate; }
 
-/* ---------- arabic ----------
-   its letters join, so tracking would pull words apart; and words set in the mono face (labels, not
-   code) take the sans's arabic, since the mono has none and a system mono's arabic reads as typed */
+/* disable letter-spacing so joined Arabic glyphs do not separate, and fall back to sans-serif Arabic outside code */
 :root:lang(ar) { --font-mono: 'Fragment Mono', ui-sans-serif, system-ui, sans-serif; }
 :root:lang(ar) :is(pre, code, kbd) { --font-mono: 'Fragment Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
 :root:lang(ar) * { letter-spacing: 0 !important; }
 
-/* a preset: a set of plugins picked at once, on the plugins landing and the homepage's size bar */
 .preset {
   display: inline-flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px;
   border: 1px solid var(--line-2); border-radius: var(--r-2); background: var(--surface-1);

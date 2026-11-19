@@ -234,7 +234,7 @@ declare module 'native-dates' {
     toLocaleTimeString(locales?: Locale, options?: Intl.DateTimeFormatOptions): string;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Pass epoch milliseconds to `datetime()` instead.
      *
      * @param value - Epoch milliseconds
@@ -244,7 +244,7 @@ declare module 'native-dates' {
     setTime(value: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Replace local fields with `set()` to return a new instance.
      *
      * @param year - Calendar year
@@ -256,7 +256,7 @@ declare module 'native-dates' {
     setFullYear(year: number, month?: number, date?: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Replace 1-indexed months with `set()` to return a new instance.
      *
      * @param month - Zero-based month
@@ -267,7 +267,7 @@ declare module 'native-dates' {
     setMonth(month: number, date?: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Replace the day of the month with `set()` to return a new instance.
      *
      * @param date - Day of the month
@@ -277,7 +277,7 @@ declare module 'native-dates' {
     setDate(date: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Replace clock fields with `set()` to return a new instance.
      *
      * @param hours - Clock hour
@@ -290,7 +290,7 @@ declare module 'native-dates' {
     setHours(hours: number, minutes?: number, seconds?: number, milliseconds?: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Replace the minute with `set()` to return a new instance.
      *
      * @param minutes - Clock minute
@@ -302,7 +302,7 @@ declare module 'native-dates' {
     setMinutes(minutes: number, seconds?: number, milliseconds?: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Replace the second with `set()` to return a new instance.
      *
      * @param seconds - Clock second
@@ -313,7 +313,7 @@ declare module 'native-dates' {
     setSeconds(seconds: number, milliseconds?: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Replace the millisecond with `set()` to return a new instance.
      *
      * @param milliseconds - Millisecond
@@ -323,7 +323,7 @@ declare module 'native-dates' {
     setMilliseconds(milliseconds: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Switch to UTC first with `in('UTC').set()`.
      *
      * @param year - UTC year
@@ -335,7 +335,7 @@ declare module 'native-dates' {
     setUTCFullYear(year: number, month?: number, date?: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Switch to UTC first with `in('UTC').set()`, passing a 1-indexed month.
      *
      * @param month - Zero-based UTC month
@@ -346,7 +346,7 @@ declare module 'native-dates' {
     setUTCMonth(month: number, date?: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Switch to UTC first with `in('UTC').set()`.
      *
      * @param date - UTC day of the month
@@ -356,7 +356,7 @@ declare module 'native-dates' {
     setUTCDate(date: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Switch to UTC first with `in('UTC').set()`.
      *
      * @param hours - UTC hour
@@ -369,7 +369,7 @@ declare module 'native-dates' {
     setUTCHours(hours: number, minutes?: number, seconds?: number, milliseconds?: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Switch to UTC first with `in('UTC').set()`.
      *
      * @param minutes - UTC minute
@@ -381,7 +381,7 @@ declare module 'native-dates' {
     setUTCMinutes(minutes: number, seconds?: number, milliseconds?: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Switch to UTC first with `in('UTC').set()`.
      *
      * @param seconds - UTC second
@@ -392,7 +392,7 @@ declare module 'native-dates' {
     setUTCSeconds(seconds: number, milliseconds?: number): never;
 
     /**
-     * Throws an immutable error because moments cannot be mutated in place.
+     * Throws a `RangeError` (`code: 'immutable'`) because `DateTime` instances cannot be mutated in place.
      * Switch to UTC first with `in('UTC').set()`.
      *
      * @param milliseconds - UTC millisecond

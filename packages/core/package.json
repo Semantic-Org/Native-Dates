@@ -1,7 +1,7 @@
 {
   "name": "@native-dates/core",
   "version": "0.0.6",
-  "description": "Native Dates under its scoped name, a thin re-export of native-dates",
+  "description": "Scoped @native-dates/core alias for native-dates",
   "author": "Jack Lukic",
   "license": "ISC",
   "type": "module",

@@ -1,9 +1,5 @@
 ---
-// what Temporal ships, one line each: a few words on what it is, the shortest call that hands you
-// one, and the Temporal type underneath. a switch shows the same value made on Temporal alone, and,
-// for the comedy in it, how the same thing was kept before either. the build runs every way of
-// writing a row and stops if they don't hold the same thing, so the page can't set a call beside
-// something it isn't
+// evaluate every row in all three modes at build time so equivalent snippets cannot drift
 import * as library from 'native-dates';
 
 import { localePath, t } from '../../lib/i18n.js';
@@ -14,16 +10,14 @@ const locale = Astro.currentLocale;
 const rows = primitivesFor(locale);
 const { date, datetime, duration, IS_RANGE, monthDay, now, time, yearMonth } = library;
 const made = (row) => new Function('date', 'datetime', 'duration', 'monthDay', 'now', 'time', 'yearMonth', `return (${row.ours});`)(date, datetime, duration, monthDay, now, time, yearMonth);
-// a value as Temporal would print it: a range is its two ends, and the current moment is only
-// what it is and where, since two calls can't land on the same instant
 const printed = (value) => {
   const temporal = (v) => (v.toTemporal ? v.toTemporal() : v);
   if (Array.isArray(value)) { return value.map(String).join(' to '); }
   if (value[IS_RANGE]) { return [value.start, value.end].map((end) => String(temporal(end))).join(' to '); }
   return String(temporal(value));
 };
+// compare now() by time zone rather than exact instant since consecutive calls advance the clock
 const momentOf = (text) => text.replace(/^.*\[(.+)\]$/, 'now in $1');
-// whether a legacy value holds what ours does: a Date by its day, a number by what it counts
 const day = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const HOLDS = {
   date: (legacy, ours) => day(legacy) === String(ours),
@@ -37,13 +31,12 @@ const HOLDS = {
 };
 for (const row of rows) {
   const ours = made(row);
-  // more than one line is more than one value
   const lines = row.temporal.split('\n');
   const theirs = printed(new Function(`return (${lines.length > 1 ? `[${lines.join(', ')}]` : row.temporal});`)());
   const same = row.id === 'now' ? momentOf(printed(ours)) === momentOf(theirs) : printed(ours) === theirs;
-  if (!same) { throw new Error(`the homepage sets ${row.ours} beside ${row.temporal}, and they differ: ${printed(ours)} and ${theirs}`); }
+  if (!same) { throw new Error(`Primitives mismatch between ${row.ours} and ${row.temporal}: ${printed(ours)} !== ${theirs}`); }
   if (!HOLDS[row.id](new Function(`return (${row.legacy.replace(/\s*\/\/.*$/, '')});`)(), ours)) {
-    throw new Error(`the homepage sets ${row.ours} beside ${row.legacy}, and they don't hold the same thing`);
+    throw new Error(`Primitives legacy mismatch for ${row.id}: ${row.ours} vs ${row.legacy}`);
   }
 }
 const MODES = [['ours', 'native-dates'], ['temporal', 'Temporal'], ['legacy', t(locale, 'home.prims.legacy')]];

@@ -1,8 +1,7 @@
 name: Release Deploy
 
-# Deploys the docs site to production (nativedates.dev) on a tagged release, so the live docs match
-# the last release while staging shows main. Builds here and ships prebuilt, as staging-deploy.yml
-# does. Run it by hand (Actions > Release Deploy > Run workflow) to ship before the first tag.
+# deploys docs to production (nativedates.dev) on tagged releases so live docs match the latest tag.
+# Trigger manually via workflow_dispatch before the first release tag.
 # Requires: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_NATIVEDATES_PROJECT_ID
 
 on:

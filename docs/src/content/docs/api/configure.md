@@ -64,7 +64,7 @@ configure({ zone: null, locale: null, weekStart: null });
       description: "Custom `Do` day-of-month formatter keyed by language tag. Pass `null` to restore built-in English suffixes and locale day markers."
     - name: formats
       type: "Record<string, string | Intl.DateTimeFormatOptions> | null"
-      description: "Formats named once and printed anywhere with `format(name)`, each a token pattern or an options bag. A name is read before the built-in presets, and `null` removes them all."
+      description: "Reusable custom formats passed to `format(name)`, where each value is a token pattern or `Intl` options object. Custom names take precedence over built-in presets, and `null` clears them."
     - name: dayFirst
       type: boolean
       default: 'false'
@@ -97,7 +97,7 @@ weekdayNames('narrow', 'monday', 'lv'); // ['P', 'O', 'T', 'C', 'Pk', 'S', 'Sv']
 configure({ weekdayNames: null, ordinals: null });
 ```
 
-Named formats give an app its own presets on every kind of value that prints a date or a clock:
+Named formats give an app its own presets on every type that formats a date or time:
 
 ```js
 import { configure, date, datetime } from 'native-dates';

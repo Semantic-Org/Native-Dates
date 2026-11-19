@@ -1,10 +1,5 @@
-// the x-ray's four samples: one common operation each, written in native-dates (`ours`), on
-// Temporal alone (`temporal`) and on Date as it was done before either (`legacy`). they are text,
-// shown as written. a sample is named for the value every way of writing it makes, and a later
-// sample can use what an earlier one made. the build runs them each way and refuses to ship a page
-// where a sample's values differ (components/home/Xray.astro). no line runs past the first
-// sample's in native-dates, which sets how narrow a sample's panel can be (styles/home.css)
-
+// components/home/Xray.astro runs ours, temporal, and legacy in sequence and fails the build if results differ.
+// Keep line lengths within the first sample's width so narrow panels do not overflow (styles/home.css)
 const SAMPLE_ZONES = {
   en: ['America/Los_Angeles', 'Los Angeles', 'Europe/Berlin'],
   ja: ['Asia/Tokyo', 'Tokyo', 'Australia/Sydney'],
@@ -24,14 +19,14 @@ export function samplesFor(locale = 'en') {
       id: 'standup',
       ours: `const standup = today().next('monday').at('9:30am', '${homeZone}');`,
       temporal: `const today = Temporal.Now.plainDateISO();
-// the next monday strictly after today
+// the next Monday after today
 const ahead = (8 - today.dayOfWeek) % 7 || 7;
 const standup = today.add({ days: ahead }).toZonedDateTime({
   timeZone: '${homeZone}',
   plainTime: '09:30',
 });`,
       legacy: `const today = new Date();
-// the next monday strictly after today
+// the next Monday after today
 const ahead = (8 - today.getDay()) % 7 || 7;
 const day = today.getDate() + ahead;
 // Date has no time zones: take 9:30 as UTC, format in ${homeCity},

@@ -1,7 +1,6 @@
 name: Test
 
-# Runs the unit/DOM/browser tests of every package, the size report, the formatting check and the
-# docs build on every pull request and every push to main. Reads the repo only and needs no secrets
+# runs unit, DOM, and browser tests, checks bundle sizes and formatting, and builds docs
 on:
   workflow_dispatch:
   pull_request:

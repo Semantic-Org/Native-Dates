@@ -567,7 +567,7 @@ Zero-argument checks evaluated in the instance's time zone:
 
 | Method | Type | Description |
 |---|---|---|
-| `isPast()`, `isFuture()` | `boolean` | Whether this instant is strictly before or after the current time. |
+| `isPast()`, `isFuture()` | `boolean` | Whether this instant is earlier or later than the current time. |
 | `isToday()`, `isTomorrow()`, `isYesterday()` | `boolean` | Whether the local calendar date matches today, tomorrow, or yesterday in this zone. |
 | `isWeekday()`, `isWeekend()` | `boolean` | Monday through Friday vs. Saturday and Sunday. |
 | `isLeapYear()` | `boolean` | Whether the local year is a leap year. |
@@ -639,7 +639,7 @@ dt.for(length): DateTimeRange
 dt.for(count, unit): DateTimeRange
 ```
 
-Creates a half-open [`DateTimeRange`](/api/ranges/) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start. Given a length, it is also spelled `for()`.
+Creates a half-open [`DateTimeRange`](/api/ranges/) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start. Given a length, it is also aliased as `for()`.
 
 **Parameters**
 
@@ -830,7 +830,7 @@ now().plus(2, 'hours').fromNow('en-US'); // 'in 2 hours'
 dt.formatRelative(other?, locale?): string
 ```
 
-Alias for [`from()`](#from) that formats the elapsed distance from `other` (or now when omitted) as a localized phrase.
+Alias for [`from()`](#from) that formats the elapsed distance from `other`, or from now when omitted, as a localized phrase.
 :::
 
 :::entry

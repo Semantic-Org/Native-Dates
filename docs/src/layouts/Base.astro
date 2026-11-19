@@ -1,32 +1,24 @@
 ---
-// every page: the document, the fonts and tokens, and the theme set before first paint
 import { DEFAULT_LOCALE, languageOffer, localeOf, localePath, scriptStrings, t, unlocalized } from '../lib/i18n.js';
 import { LATEST_ORIGIN } from '../lib/versions.js';
 import '@fontsource-variable/schibsted-grotesk/wght.css';
 import '@fontsource/fragment-mono/400.css';
 import '@fontsource/fragment-mono/400-italic.css';
 import '../styles/tokens.css';
-// the two faces every page sets text in, preloaded so the first paint uses them
 import sansLatin from '@fontsource-variable/schibsted-grotesk/files/schibsted-grotesk-latin-wght-normal.woff2?url';
 import monoLatin from '@fontsource/fragment-mono/files/fragment-mono-latin-400-normal.woff2?url';
 
-// writtenIn: the languages this page is written in, english always. translatedIn: those of them
-// that have been reviewed, which are the ones a search engine is told of
+// writtenIn includes draft translations for the language switcher. translatedIn is restricted to reviewed locales for canonical and hreflang tags.
 const { title, description = t(DEFAULT_LOCALE, 'home.description'), share = true, writtenIn = [DEFAULT_LOCALE], translatedIn = [DEFAULT_LOCALE] } = Astro.props;
-// the page's language, from its url: english at the root, the rest under their path
 const locale = localeOf(Astro.currentLocale);
-// the words the scripts ask for, in this language; < escaped so the text can't close its script
+// escape < so localized UI strings cannot close the script tag
 const strings = JSON.stringify(scriptStrings(locale.code, { home: unlocalized(Astro.url.pathname) === '/' })).replace(/</g, '\\u003c');
-// the page's share card, rendered at build by pages/og/[...slug].png.js; a translated page uses the
-// english page's card until cards are made per language
+// share cards are generated at build time from English routes until localized OG images exist
 const path = unlocalized(Astro.url.pathname);
 const image = new URL(`/og/${path.replace(/^\/|\/$/g, '') || 'index'}.png`, Astro.site);
-// a page shown in english for want of a translation is the english page to a search engine, and
-// the versions it's told about are the ones that are written
 const urlIn = (code) => new URL(localePath(path, code), Astro.site);
 const canonical = urlIn(translatedIn.includes(locale.code) ? locale.code : DEFAULT_LOCALE);
 const alternates = translatedIn.length > 1 ? translatedIn : [];
-// the page in the other languages it's written in, for offering a reader theirs
 const offer = JSON.stringify(languageOffer(Astro.url.pathname, locale.code, writtenIn)).replace(/</g, '\\u003c');
 ---
 <!doctype html>
@@ -42,7 +34,7 @@ const offer = JSON.stringify(languageOffer(Astro.url.pathname, locale.code, writ
   <link rel="preload" href={monoLatin} as="font" type="font/woff2" crossorigin>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  {/* a build for anywhere but production (staging) stays out of search, while link previews still read it */}
+  {/* block search indexing on non-production origins while keeping Open Graph tags intact */}
   {Astro.site?.origin !== LATEST_ORIGIN && <meta name="robots" content="noindex">}
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
@@ -60,7 +52,7 @@ const offer = JSON.stringify(languageOffer(Astro.url.pathname, locale.code, writ
     <meta name="twitter:card" content="summary_large_image">
   </>}
   <script is:inline>
-    // the reader's choice, else the system's, set before first paint
+    // apply saved or system theme before first paint
     (() => {
       let t = null;
       try { t = localStorage.getItem('nd:theme'); } catch {}
@@ -69,10 +61,7 @@ const offer = JSON.stringify(languageOffer(Astro.url.pathname, locale.code, writ
   </script>
   <script is:inline type="application/json" id="language-offer" set:html={offer}></script>
   <script is:inline>
-    // a reader's language. the page never moves a reader on its own account: it offers the page in a
-    // language their browser asks for, and after a reader switches it asks whether to always open
-    // the docs in that language. only a yes to that sends later visits there, and picking another
-    // language takes the yes back
+    // never auto-redirect on browser locale alone. Offer matching translations in a toast, and only redirect future visits if the reader explicitly opts in.
     (() => {
       const data = JSON.parse(document.getElementById('language-offer').textContent);
       const store = (area, key, value) => {
@@ -86,7 +75,6 @@ const offer = JSON.stringify(languageOffer(Astro.url.pathname, locale.code, writ
       store(sessionStorage, 'nd:language-picked', null);
       const always = store(localStorage, 'nd:language');
 
-      // sent here by an earlier yes, unless the reader has just picked this page's language
       if (!picked && always && always !== data.page && data.paths[always]) {
         location.replace(data.paths[always] + location.search + location.hash);
         return;
@@ -113,7 +101,6 @@ const offer = JSON.stringify(languageOffer(Astro.url.pathname, locale.code, writ
       const pick = (code) => store(sessionStorage, 'nd:language-picked', code);
 
       addEventListener('DOMContentLoaded', () => {
-        // every language link says which language was picked, so the page it opens knows it was chosen
         document.addEventListener('click', (event) => {
           const link = event.target.closest?.('[data-language-pick]');
           if (link) { pick(link.dataset.languagePick); }
@@ -121,7 +108,7 @@ const offer = JSON.stringify(languageOffer(Astro.url.pathname, locale.code, writ
 
         const asked = (store(localStorage, 'nd:language-asked') ?? '').split(' ');
         if (picked === data.page) {
-          // english is where a reader lands anyway, so picking it only quiets the offer
+          // choosing English dismisses future language prompts without setting a redirect
           if (data.page === data.english) { store(localStorage, 'nd:language-quiet', '1'); }
           else if (always !== data.page && !asked.includes(data.page)) {
             const answered = () => store(localStorage, 'nd:language-asked', [...asked, data.page].join(' ').trim());
@@ -133,8 +120,6 @@ const offer = JSON.stringify(languageOffer(Astro.url.pathname, locale.code, writ
           return;
         }
         if (always || store(localStorage, 'nd:language-quiet')) { return; }
-        // the first language the browser asks for that this page is in. if that is the page's own,
-        // there is nothing to offer
         const matches = (tag, code) => tag.toLowerCase() === code.toLowerCase() || tag.split('-')[0].toLowerCase() === code.split('-')[0].toLowerCase();
         for (const tag of navigator.languages ?? []) {
           if (matches(tag, data.page)) { return; }

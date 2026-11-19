@@ -1,5 +1,4 @@
 ---
-// a docs page: its header from frontmatter, its body, its footer and pager, in the docs frame
 import { getCollection, render } from 'astro:content';
 
 import LocaleNotice from '../components/LocaleNotice.astro';
@@ -11,17 +10,15 @@ import { markdownFor } from '../lib/page-markdown.js';
 import { formatSize, sizeOf } from '../lib/sizes.js';
 import { REPO_URL } from '../lib/versions.js';
 
-// entry is the english page, which gives the page its place in the docs. page is it in the reader's
-// language: the translation if there is one (stale when the english has moved past it), else english
+// entry is the canonical English doc. inLanguage() resolves a translation when available.
 const { entry } = Astro.props;
 const locale = Astro.currentLocale;
 const { page, translated, stale, draft } = await inLanguage(entry, locale);
 const { Content, headings } = await render(page);
-// an untranslated page shows the english, which reads left to right even in a right-to-left language
+// keep LTR direction on untranslated English fallback pages inside RTL locales
 const english = translated ? {} : englishIn(locale);
-// the languages the page is written in, for search engines
 const { writtenIn, translatedIn } = await languagesOf(entry);
-// section landing pages that live outside the collection
+// include standalone /plugins/ route alongside collection entries
 const ids = [...(await getCollection('docs')).map((e) => e.id), 'plugins'];
 const titles = await titlesIn(locale);
 const section = navFor(ids, entry.id, { code: locale, titles }).find((s) => s.key === entry.id.split('/')[0]);
@@ -29,17 +26,14 @@ const group = section.groups.find((g) => g.items.some((it) => it.slug === entry.
 const { prev, next } = pagerFor(ids, entry.id);
 const { title, lede, kind, import: importLine, size, updated } = page.data;
 const sizeLabel = size ? formatSize(await sizeOf(size)) : null;
-// a heading that is a symbol on its own (navigate(), DateRange), not prose that mentions one
+// style standalone API headings like now() or DateRange in monospace
 const isSymbol = (t) => /^[\w.$-]+\(\)$|^[A-Z][a-z]+[A-Z]\w*$/.test(t) || (kind === 'plugin' && t === title);
 const toc = headings.filter((h) => h.depth === 2 || h.depth === 3)
   .map((h) => ({ depth: h.depth, slug: h.slug, text: h.text.trim(), symbol: isSymbol(h.text.trim()) }));
 const minutes = Math.max(1, Math.round(page.body.split(/\s+/).length / 220));
 const updatedLabel = formatDate(locale, updated);
-// the markdown source, for copy page; < is escaped so the text can never close its script
+// escape < so embedded markdown cannot close the JSON script tag
 const source = JSON.stringify(markdownFor(page)).replace(/</g, '\\u003c');
-// the page handed to an assistant: its markdown, which it reads more cleanly than the html, and a
-// prompt that has it summarize the page and then ask what the reader is building
-// in another language, the page's markdown in that language, and the prompt in it
 const markdownPath = localePath(`/${entry.id}.md`, locale);
 const markdownUrl = new URL(markdownPath, Astro.site).href;
 const prompt = t(locale, 'page.prompt', { url: markdownUrl });

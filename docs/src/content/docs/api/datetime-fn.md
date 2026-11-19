@@ -1,7 +1,7 @@
 ---
 title: datetime()
 kind: function
-lede: Read an existing timestamp, string, or clock reading into a DateTime, or read the current moment.
+lede: Create a DateTime from a timestamp, string, Date, or fields object, or read the current time.
 import: import { datetime, now } from 'native-dates'
 size: core
 updated: 2026-11-16

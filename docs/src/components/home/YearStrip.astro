@@ -1,8 +1,5 @@
 ---
-// one standup, every day of a year: 9:30 in the first city, read on the second city's clock. when the
-// cities change their clocks on different schedules, the second clock moves and moves back, and the
-// strip shows when. every day is worked out by the library at build, for the year the build runs
-// in; the browser only moves the playhead (scripts/home/year.js)
+// precompute the daily offset schedule for the current year at build time so scripts/home/year.js only scrubs the playhead
 import { date, today } from 'native-dates';
 
 import { HOME_LOCALES } from '../../data/home-locales.js';
@@ -26,18 +23,15 @@ for (let day = date(year, 1, 1); day.year === year; day = day.plus(1, 'day')) {
     month: day.month,
     label: day.format({ weekday: 'short', month: 'short', day: 'numeric' }, uiLocale),
     berlin: here.format('time', uiLocale),
-    // the hours between the two clocks, from the offsets in effect that day
     gap: (here.toTemporal().offsetNanoseconds - there.toTemporal().offsetNanoseconds) / 3_600_000_000_000,
   });
 }
 const usual = days.map((d) => d.gap).sort((a, b) => days.filter((d) => d.gap === b).length - days.filter((d) => d.gap === a).length)[0];
-// a run of days with the same gap, and the days the gap changes on
 const runs = days.reduce((all, d, i) => {
   if (all.at(-1)?.gap === d.gap) { all.at(-1).length++; }
   else { all.push({ start: i, length: 1, gap: d.gap, shifted: d.gap !== usual }); }
   return all;
 }, []);
-// a change is named by its month and day; the playhead's own day keeps its weekday
 const changes = runs.slice(1).map((run) => ({ at: run.start, label: date(year, 1, 1).plus(run.start, 'days').format({ month: 'short', day: 'numeric' }, uiLocale) }));
 const shiftedDays = days.filter((d) => d.gap !== usual).length;
 const shifted = days.find((d) => d.gap !== usual);

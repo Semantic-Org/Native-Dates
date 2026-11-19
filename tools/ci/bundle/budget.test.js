@@ -26,7 +26,7 @@ describe('sentences()', () => {
 });
 
 describe('rowsFrom()', () => {
-  it('returns the size table rows and weighs each plugin beside core', () => {
+  it('returns the size table rows and measures each plugin alongside core', () => {
     expect(rowsFrom(['loose', 'zones']).map((row) => [row.label, row.part])).toEqual([
       ['import { now }', 'diagnostic'],
       ['native-dates (full)', 'headline'],
@@ -35,7 +35,7 @@ describe('rowsFrom()', () => {
       ['core + all plugins', 'diagnostic'],
       ['dev-mode overhead (development vs production)', 'overhead'],
     ]);
-    // plugins are measured beside core because consumers import them alongside native-dates
+    // plugins are bundled together with core because consumers always import both
     expect(rowsFrom(['zones']).filter((row) => row.part === 'plugin').map((row) => row.beside)).toEqual([
       'native-dates (full)',
     ]);
@@ -65,7 +65,7 @@ describe('checkTree()', () => {
     expect(row('dev-mode overhead (development vs production)').inputs).toBe(undefined);
   });
 
-  it('weighs each plugin as its addition beside core without duplicating core inputs', () => {
+  it('measures each plugin as its marginal addition to core without duplicating core inputs', () => {
     const core = row('native-dates (full)');
     const plugins = measured.rows.filter((entry) => entry.part === 'plugin');
     expect(plugins.length).toBeGreaterThan(0);

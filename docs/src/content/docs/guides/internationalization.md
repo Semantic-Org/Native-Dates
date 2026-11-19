@@ -84,7 +84,7 @@ formatOrder({ placedAt: '2026-05-15T14:30:00Z' }, { zone: 'Asia/Tokyo', locale: 
 
 Calling `locale()` with no arguments reads back the active tag, or returns `undefined` when none was set. Passing an empty value clears it so `locale(user.locale)` chains cleanly even on an empty database column.
 
-Server values read as handed over. Underscore tags like `'en_US'` normalize automatically, and HTTP Accept-Language headers sort tags by quality weight while dropping zero-weighted entries. Strings that are neither throw [`unknownLocale`](/api/errors/#units-zones-and-formats):
+Raw locale strings and HTTP Accept-Language headers work directly without preprocessing. Underscore tags like `'en_US'` normalize automatically, and header tags sort by quality weight while dropping zero-weighted entries. Invalid locale strings throw [`unknownLocale`](/api/errors/#units-zones-and-formats):
 
 ```js
 datetime('2026-05-15T14:30:00Z').locale('en_US').locale(); // 'en-US'
@@ -95,7 +95,7 @@ datetime('2026-05-15T14:30:00Z').locale('fr-CH;q=0.8, de;q=0.9, es;q=0').locale(
 Global configuration updates shared state across the entire JavaScript process. On a multi-user server, another request can overwrite a `configure()` call across an async boundary. Attach `locale()` to the value instead.
 :::
 
-A carried locale governs localized text and where a week begins. Exact comparisons, sorting, `equals()`, and ISO serialization with `toString()` ignore it:
+An instance locale controls localized text and where a week begins. Exact comparisons, sorting, `equals()`, and ISO serialization with `toString()` ignore it:
 
 ```js
 import { date } from 'native-dates';
@@ -131,9 +131,9 @@ weekdayNames('short', undefined, 'de-DE')[0]; // 'Mo'
 
 Pass an explicit weekday to override one call, or set `weekStart` in [`configure()`](/api/configure/) to pin a start day across every locale. Passing an empty value returns to following the locale, and runtimes without week data fall back to Monday.
 
-A value keeps the locale of whatever it was made from. Pin `weekStart` or pass a day whenever weeks key stored data like reports or billing periods.
+An instance keeps the locale of the value it was derived from. Pin `weekStart` or pass a day whenever weeks key stored data like reports or billing periods.
 
-Every date and datetime reports the day its own weeks start on as `weekStart`, from 1 for Monday through 7 for Sunday. Check it where code depends on one kind of week:
+Every date and datetime reports the day its own weeks start on as `weekStart`, from 1 for Monday through 7 for Sunday. Check it where code depends on a specific start of week:
 
 ```js title="reports.js"
 function weekKey(day) {
@@ -165,7 +165,7 @@ eid.format('long', 'ar-SA-u-ca-islamic-umalqura'); // '١ شوال ١٤٤٧ هـ
 
 Month and weekday names come from the runtime, matching what the reader's own device prints. Two format tokens have no standard platform field: two-letter weekdays with `dd`, and day ordinals with `Do`.
 
-By default, `dd` cuts two letters where the script abbreviates that way, and otherwise uses the single-letter calendar headers from the runtime. `Do` prints English suffixes in English and the locale's own day marker elsewhere, like 6. in German.
+By default, `dd` truncates the short weekday to two letters in scripts that abbreviate that way, and otherwise uses the runtime's narrow weekday. `Do` formats English ordinal suffixes in English and the locale's day marker elsewhere, such as '6.' in German.
 
 Override either in [`configure()`](/api/configure/) once at startup. Key weekday tables by language, width, and day name so you can adjust individual days without listing all seven:
 
@@ -191,7 +191,7 @@ configure({ weekdayNames: null, ordinals: null });
 
 Widths match [weekday names](/api/month-names/#weekdaynames), mapping narrow, short, and long styles to `dd`, `ddd`, and `dddd` tokens.
 
-Regional tags like `'fr-CA'` inherit their base language's entry and layer any overrides of their own on top, matching in any letter case. Presets and options bags come straight from the runtime and are unaffected.
+Regional tags like `'fr-CA'` inherit their base language's entry and layer any overrides of their own on top, matching in any letter case. Presets and `Intl` options objects come straight from the runtime and are unaffected.
 
 ## How locales resolve
 
@@ -204,4 +204,4 @@ When formatting any value, range, duration, or relative phrase, Native Dates che
 | 3 | `configure({ locale })` | Client apps with a global language setting or switcher. |
 | 4 | Runtime `Intl` default | Browser apps following the reader's system language. |
 
-Browse the [language examples](/examples/) to test grammar inflections, plural forms, right-to-left ranges, and local calendars live across nine languages. Next, read [Types of time](/guides/types-of-time/) to pick the right type for each value in your app.
+Browse the [language examples](/examples/) to test grammar inflections, plural forms, right-to-left ranges, and local calendars live across multiple languages. Next, read [Types of time](/guides/types-of-time/) to pick the right type for each value in your app.

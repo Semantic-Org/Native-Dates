@@ -1,4 +1,4 @@
-/* ---------- topbar ---------- */
+/* topbar */
 
 .topbar {
   position: sticky; top: 0; z-index: 20;
@@ -16,13 +16,12 @@
 .topbar-tools { margin-inline-start: auto; display: flex; align-items: center; gap: 6px; }
 .topbar-tools .search-trigger { margin-inline-end: 8px; }
 .version { color: var(--text-3); font: 400 var(--fs-2xs)/1 var(--font-mono); padding: 0 6px; }
-/* named through the topbar so it outranks the shared button style whichever stylesheet loads last */
+/* qualify with .topbar so specificity beats .icon-btn regardless of stylesheet order */
 .topbar .menu-toggle, .home-menu { display: none; }
 
-/* ---------- hero ---------- */
+/* hero */
 
 .hero { padding: var(--hero-top) 0 var(--hero-bottom); position: relative; overflow: clip; }
-/* a faint ruler grid behind the hero */
 .hero::before {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background-image:
@@ -40,7 +39,6 @@
 }
 .hero-copy h1 { grid-column: 1; margin-bottom: 24px; }
 .hero-copy .lede { grid-column: 1; }
-/* the install block stands beside the headline and lede, centered on the pair */
 .hero-side { grid-column: 2; grid-row: 1 / span 2; align-self: center; display: flex; flex-direction: column; align-items: stretch; }
 .hero h1 {
   font-size: var(--display);
@@ -82,7 +80,7 @@
 .hero-actions .btn { --h: 48px; padding: 0 20px; border-radius: var(--r-3); font-size: var(--fs-md); }
 
 
-/* ---------- ribbons ---------- */
+/* ribbons */
 
 .ribbon { padding: var(--section-y) 0; border-top: 1px solid var(--line); }
 .ribbon h2 { font-size: var(--heading); line-height: var(--heading-lh); letter-spacing: var(--heading-track); font-weight: 620; }
@@ -96,7 +94,7 @@
 }
 .text-link:hover { text-decoration-color: var(--accent); }
 
-/* ---------- closer & footer ---------- */
+/* closer and footer */
 
 .closer { border-top: 1px solid var(--line); padding: 96px 0; }
 .closer-inner { display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
@@ -115,9 +113,7 @@
 .footer-cols a:hover { color: var(--text); }
 
 
-/* ---------- the sentence: what you say, the call that says it, what it is by then ----------
-   three rows set in columns, one column per thought. a cell places itself by its column and row,
-   so the same markup stacks thought by thought where the columns don't fit */
+/* hero interactive chain (--col and --row let the same markup reflow from columns to stacked steps) */
 
 .say {
   margin: 64px 0 0;
@@ -141,8 +137,7 @@
   display: grid; grid-template-columns: max-content repeat(4, max-content); justify-content: start;
   column-gap: 28px; padding: 40px 32px 32px; overflow-x: auto;
 }
-/* the sentences share one cell, so the figure keeps the tallest one's height whichever is shown
-   (a call that wraps on a phone, a value that wraps anywhere). the others keep their box, unseen */
+/* stack tab panels in one grid cell so switching tabs preserves the tallest panel's height */
 .say-panels { display: grid; }
 .say-panels > .say-grid { grid-area: 1 / 1; min-width: 0; }
 .say-grid[hidden] { display: grid; visibility: hidden; }
@@ -153,14 +148,11 @@
 .say-label[style*='--row: 2'] { line-height: 52px; }
 .say-label[style*='--row: 3'] { line-height: 44px; }
 .say-cell { grid-column: calc(var(--col) + 2); grid-row: var(--row); min-width: 116px; }
-/* a sentence writes itself as it is shown: each thought steps in after the one before, its words,
-   then its call, then what it is */
 .say-grid:not([hidden]) .say-cell { animation: say-in 0.5s var(--ease) both; animation-delay: calc(0.25s + var(--col) * 0.3s + var(--row) * 0.08s); }
 @keyframes say-in {
   from { opacity: 0; translate: 0 8px; }
 }
 .say-words { justify-self: start; color: var(--text-2); font-size: var(--fs-lg); line-height: var(--lh-lg); text-align: start; white-space: nowrap; }
-/* a phrase with other options is a button: the dotted rule and the arrows say it turns */
 .say-turn {
   display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; cursor: pointer;
   font-family: inherit; color: var(--text);
@@ -173,16 +165,13 @@
   font-size: var(--fs-lg); line-height: var(--lh-lg);
 }
 .say-code:has([data-option='1']) { cursor: pointer; }
-/* a value keeps room for two lines under its noun, so a long one (a date written out in full)
-   wraps without the figure growing: the rule, the padding, the noun, the gap, two lines of text */
+/* reserve height for two wrapped lines under the type badge so long formatted dates do not resize the figure */
 .say-value { min-height: calc(1px + 12px + var(--lh-3xs) + 2px + 2 * var(--lh-sm)); padding-block: 12px 0; padding-inline: 8px; margin-inline: -8px; border-top: 1px solid var(--line-2); border-radius: 0 0 var(--r-2) var(--r-2); max-width: max(116px, 100%); }
 .say-noun { display: block; color: var(--c-green); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); }
 .say-text { display: block; margin-top: 2px; color: var(--text); font-size: var(--fs-sm); line-height: var(--lh-sm); text-wrap: balance; }
 [dir='ltr'] .say-text[dir='rtl'] { text-align: left; }
 
-/* ---------- the primitives Temporal ships, and the call for each ----------
-   a plain list: what it is, the call, and the Temporal type underneath. the switch turns every
-   call to its Temporal spelling, and each row keeps the width of the longer one */
+/* primitives comparison */
 
 .prims { border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); overflow: hidden; }
 .prims-head { display: flex; align-items: center; height: 44px; padding-inline: 8px; border-bottom: 1px solid var(--line); background: var(--code-head); }
@@ -191,51 +180,34 @@
 .prim + .prim { border-top: 1px solid var(--line); }
 .prim-what { flex: none; width: 24%; color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); font-weight: 550; }
 .prim-code { flex: 1; justify-items: start; align-items: center; }
-/* the calls are set as code, not as chips: a line each, like a listing */
 .prim-code code, .prim-type {
   padding: 0; margin: 0; border-radius: 0; background: none; box-shadow: none; white-space: nowrap;
 }
 .prim-code code { color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); }
-/* on Temporal and before it the calls are longer: they are set a size down, whichever is showing,
-   so a row is as tall in one mode as in another */
 .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { font-size: var(--fs-xs); line-height: var(--lh-xs); white-space: pre; }
 .prim-built { flex: none; display: flex; align-items: center; gap: 10px; }
 .prim-type { color: var(--text-3); font-size: var(--fs-2xs); line-height: var(--lh-2xs); }
-/* the label beside a call is the Temporal type under it, or what held it before. a call on
-   Temporal names its own type, so there the label is spare: it keeps its place, unseen */
 .prim-built .swap { justify-items: end; }
 .prim-plugin {
+  order: -1;
   padding: 1px 8px; border: 1px solid var(--line-2); border-radius: 999px;
   color: var(--text-2); font: 500 var(--fs-3xs)/var(--lh-3xs) var(--font-sans); text-decoration: none; white-space: nowrap;
 }
-/* a plugin's tag sits before the label, so every row's label ends on the same edge whether the
-   tag is showing or not */
-.prim-plugin { order: -1; }
 .prim-plugin:hover { color: var(--accent-strong); border-color: var(--accent-line); }
-/* the plugin is what the native-dates call needs: beside the other spellings its tag keeps its place, unseen */
 .prims:not([data-mode='ours']) .prim-plugin { visibility: hidden; }
 
-/* the ribbon's heading runs as any heading does, with two marks drawn on it by hand: a scribble
-   through "wrong", and two lines under "right". each mark is a box laid over its word and stretched
-   to it, so it fits whatever word a language puts there */
 .verdict em { position: relative; font-style: normal; white-space: nowrap; }
 .doodle { position: absolute; overflow: visible; pointer-events: none; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .doodle-scribble { inset-inline-start: -4%; top: 14%; width: 108%; height: 78%; stroke: var(--danger); stroke-width: 3.6; }
 .doodle-underline { inset-inline-start: -3%; top: 90%; width: 106%; height: 0.36em; stroke: var(--tip); stroke-width: 3.2; }
-/* drawn by hand: a line runs out along its own length. will-draw holds them back until the heading
-   is in view, then is-drawn lets them go in turn (scripts/home/verdict.js) */
-/* the paths are named by their element alone: chrome doesn't restyle a path picked out by its
-   pathLength attribute when a class changes above it, so the marks would sometimes not hold back */
+/* target path by tag rather than [pathLength] because Chrome skips restyling attribute-matched SVG paths on ancestor class toggles */
 .doodle path { stroke-dasharray: 1; stroke-dashoffset: 0; }
 .verdict.will-draw .doodle path { stroke-dashoffset: 1; }
 .verdict.is-drawn .doodle-scribble path { stroke-dashoffset: 0; transition: stroke-dashoffset 0.6s cubic-bezier(0.45, 0, 0.25, 1) 0.1s; }
 .verdict.is-drawn .doodle-underline path { stroke-dashoffset: 0; transition: stroke-dashoffset 0.32s cubic-bezier(0.45, 0, 0.25, 1) 0.8s; }
 .verdict.is-drawn .doodle-underline path + path { transition-delay: 1.1s; transition-duration: 0.26s; }
 
-/* ---------- one question at a time, asked of Date and of native-dates ----------
-   the questions down one side, and beside them the two consoles' answers to the one picked, with
-   the reason under both. every question's answers share one cell, so the frame keeps the size of
-   the longest whichever is showing */
+/* Date vs native-dates consoles */
 
 .ask {
   display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 10fr);
@@ -246,13 +218,11 @@
   position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; column-gap: 14px;
   padding: 18px 20px; border: 0; background: none; cursor: pointer; text-align: start;
   color: var(--text-2); font: 550 var(--fs-md)/var(--lh-md) var(--font-sans);
-  /* a question is a sentence: it wraps, where a button's label otherwise never does */
   text-wrap: pretty;
 }
 .ask-tab + .ask-tab { border-top: 1px solid var(--line); }
 .ask-tab:hover { color: var(--text); background: var(--surface-2); }
 .ask-tab:focus-visible { outline-offset: -2px; }
-/* the question being asked: lit, with the accent down its leading edge */
 .ask-tab[aria-selected='true'] { color: var(--text); background: var(--surface-2); }
 .ask-tab[aria-selected='true']::before { content: ''; position: absolute; inset-block: 0; inset-inline-start: 0; width: 2px; background: var(--accent); }
 .ask-tab[aria-selected='true'] .console-number { background: var(--accent-wash); box-shadow: inset 0 0 0 1px var(--accent-line); color: var(--accent-strong); }
@@ -264,7 +234,6 @@
 .ask-answers { min-width: 0; }
 .ask-panel, .ask-answers > .ask-panel[hidden] { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; }
 .ask-consoles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-/* a console keeps a band clear under its answer, where the stamp lands */
 .console { position: relative; min-width: 0; padding: 20px 20px 72px; background: var(--code-bg); }
 .console + .console { border-inline-start: 1px solid var(--line); }
 .console-head { margin-bottom: 14px; color: var(--text-3); font: 400 var(--fs-xs)/var(--lh-xs) var(--font-mono); }
@@ -286,14 +255,11 @@
   background: color-mix(in oklab, var(--danger) 14%, transparent); color: var(--danger);
   font: 500 var(--fs-3xs)/var(--lh-3xs) var(--font-sans); white-space: nowrap;
 }
-/* the reason reads as prose, so its lines stop at a reading measure while its rule runs the full width */
 .ask-why {
   padding-block: 16px; padding-inline: 20px max(20px, calc(100% - 20px - 68ch));
   border-top: 1px solid var(--line); color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-sm);
 }
 .ask-why strong { margin-inline-end: 4px; color: var(--text); font-weight: 600; }
-/* the verdict, stamped: a boxed word in ink, set a little askew. the ink is worn and ragged by the
-   filter the component carries (#stamp-ink), and a second line runs inside the box as on a real stamp */
 .stamp-ink { position: absolute; }
 .stamp {
   position: absolute; inset-inline-end: 22px; bottom: 16px; rotate: -8deg;
@@ -304,16 +270,12 @@
   pointer-events: none; user-select: none;
 }
 .stamp.is-right { color: var(--tip); rotate: 5deg; }
-/* asking: both answers are held back together, then return together. a stamp comes down on each, the
-   wrong one first, and the reason follows the stamps */
 .console-out, .ask-why { transition: opacity 0.3s var(--ease), translate 0.3s var(--ease); }
 .is-stamped .ask-why { transition-delay: 1s; }
 .is-asking .console-out, .is-asking .ask-why { opacity: 0; translate: 0 4px; transition: none; }
 .is-asking .stamp { opacity: 0; }
 .is-stamped .stamp { animation: stamp-down 0.4s both 0.35s; }
 .is-stamped .stamp.is-right { animation-delay: 0.62s; }
-/* down hard from above the page, pressed a touch past flat, then let up: the fall speeds up into
-   the paper and the release eases off */
 @keyframes stamp-down {
   0% { opacity: 0; scale: 2.6; animation-timing-function: cubic-bezier(0.7, 0, 0.95, 0.5); }
   52% { opacity: 1; scale: 0.92; animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
@@ -321,7 +283,7 @@
   100% { opacity: 0.9; scale: 1; }
 }
 
-/* ---------- a year of one standup, read on another city's clock ---------- */
+/* year DST strip */
 
 .year { margin: 0; padding: 32px 32px 20px; border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--sheen); }
 .year-clocks { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 24px; }
@@ -340,26 +302,25 @@
 }
 .year.is-shifted .is-there .year-time { color: var(--accent-strong); }
 .year.is-shifted .year-gap span { border-color: var(--accent-line); background: var(--accent-wash); color: var(--accent-strong); }
-/* the strip: change labels, the bar of days, the playhead's day, the months, each on a line of its own */
 .year-strip { position: relative; height: 112px; margin-top: 48px; cursor: ew-resize; touch-action: pan-y; outline-offset: 8px; }
 .year-runs { position: absolute; inset-inline: 0; top: 24px; height: 28px; border-radius: var(--r-1); overflow: hidden; background: var(--surface-3); }
 .year-run { position: absolute; top: 0; bottom: 0; inset-inline-start: calc(var(--start) / var(--days) * 100%); width: calc(var(--length) / var(--days) * 100%); }
 .year-run.is-shifted { background: var(--accent); }
 .year-change { position: absolute; top: 0; height: 52px; inset-inline-start: calc(var(--at) / var(--days) * 100%); border-inline-start: 1px dashed var(--line-3); }
 .year-change span { position: absolute; top: 0; inset-inline-start: 6px; color: var(--text-3); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); white-space: nowrap; }
-/* a window's two labels face away from each other, so a week-long window keeps both */
+/* alternate label alignment across adjacent DST boundaries so 1-week transition windows do not overlap */
 .year-change:nth-of-type(odd) span { inset-inline: auto 6px; }
 .year-head { position: absolute; top: 18px; height: 40px; width: 2px; margin-inline-start: -1px; inset-inline-start: calc(var(--at) / (var(--days) - 1) * 100%); background: var(--text); border-radius: 1px; }
-/* the playhead's day slides from its start edge to its end edge as it crosses, so it never leaves the strip */
+/* interpolate horizontal anchor from 0% to -100% so the playhead date label stays inside strip bounds at both ends */
 .year-day {
   position: absolute; top: 64px; inset-inline-start: calc(var(--at) / (var(--days) - 1) * 100%); translate: calc(var(--at) / (var(--days) - 1) * -100%);
-  color: var(--text); font: 500 var(--fs-2xs)/var(--lh-2xs) var(--font-sans); white-space: nowrap;
+  color: var(--text); font-size: var(--fs-2xs); line-height: var(--lh-2xs); font-weight: 500; font-family: var(--font-sans); white-space: nowrap;
 }
 .year-months { position: absolute; inset-inline: 0; top: 92px; height: 16px; }
 .year-months span { position: absolute; inset-inline-start: calc(var(--at) / var(--days) * 100%); padding-inline-start: 4px; border-inline-start: 1px solid var(--line-2); color: var(--text-4); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); }
 .year-caption { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
 
-/* ---------- localized proof: one configure() header governing the four native-language proofs ---------- */
+/* localized formatting proof */
 
 .locale-frame {
   border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); overflow: hidden;
@@ -404,7 +365,7 @@
   .locale-proof { padding: 18px 16px; }
 }
 
-/* ---------- what it weighs: core as a bar, and what the plugins switched on add to it ---------- */
+/* bundle size calculator */
 
 .bytes { padding: 28px 32px; border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); }
 .bytes-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 12px; }
@@ -428,7 +389,6 @@
 .bytes-plugin:has(input:checked) code { color: var(--accent-strong); }
 .bytes-adds { color: var(--text-3); font: 400 var(--fs-2xs)/1 var(--font-mono); white-space: nowrap; }
 
-/* the closer tells the time to the second, and reads it again whenever now() is clicked */
 .closer-call { appearance: none; padding: 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; }
 .closer-call code { display: inline-block; padding: 4px 10px; box-shadow: inset 0 0 0 1px var(--accent-line); transition: background 140ms var(--ease), box-shadow 140ms var(--ease), color 140ms var(--ease), transform 80ms var(--ease); }
 .closer-call:hover code { color: var(--accent-strong); background: var(--accent-wash); box-shadow: inset 0 0 0 1px var(--accent); }
@@ -437,22 +397,18 @@
 .closer-call:focus-visible code { outline: 2px solid var(--accent); outline-offset: 3px; }
 .closer-clock { margin-top: 14px; color: var(--text-2); font-size: var(--fs-lg); line-height: var(--lh-lg); min-height: var(--lh-lg); }
 
-/* ---------- responsive ---------- */
+/* responsive */
 
-/* a laptop: the sentence steps down a size so its four columns still sit side by side */
 @media (max-width: 1400px) {
   .say-grid { column-gap: 20px; padding-inline: 24px; }
   .say-words, .say-code { font-size: var(--fs-md); line-height: var(--lh-md); }
   .say-label { line-height: 24px; }
   .say-label[style*='--row: 2'] { line-height: 48px; }
 }
-/* below this the headline column gets too narrow to hold two lines: stack the install block under the lede */
 @media (max-width: 1180px) {
   .hero-copy { grid-template-columns: 1fr; }
   .hero-side { grid-column: 1; grid-row: auto; max-width: 390px; margin-top: 32px; }
 }
-/* the sentence's columns no longer fit side by side: each thought stacks, its words over its call
-   over its value, and the row names step aside */
 @media (max-width: 1180px) {
   .say-grid { grid-template-columns: minmax(0, 1fr); padding: 24px 24px 8px; overflow-x: visible; }
   .say-label { display: none; }
@@ -461,12 +417,9 @@
   .say-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-height: 0; max-width: none; margin-bottom: 20px; padding-block: 10px 0; }
   .say-text { margin-top: 0; }
 }
-/* a row no longer fits on one line (the span's legacy spelling is the first to run out of room): what
-   it is and its type share a line, the call takes the next */
 @media (max-width: 1240px) {
   .prim { flex-wrap: wrap; align-items: flex-start; gap: 6px 16px; }
   .prim-what { flex: 1; width: auto; }
-  /* the label and a plugin's tag stack at the row's far corner, so both stay beside what it is */
   .prim-built { flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 3px; }
   .prim-plugin { order: 0; }
   .prim-code { order: 1; flex: none; width: 100%; }
@@ -474,7 +427,6 @@
 }
 @media (max-width: 900px) {
   .topnav, .version, .version-menu { display: none; }
-  /* the topnav folds into a menu under the topbar */
   .topbar-inner { gap: 16px; }
   .topbar .menu-toggle { display: inline-grid; }
   .home-menu:not([hidden]) {
@@ -488,7 +440,6 @@
   }
   .home-menu a:hover { color: var(--text); background: var(--surface-2); }
   .topbar .search-trigger { min-width: 0; }
-  /* the questions sit above their answers, and the two consoles stack */
   .ask { grid-template-columns: minmax(0, 1fr); }
   .ask-list { border-inline-end: 0; border-bottom: 1px solid var(--line); }
   .ask-tab { padding: 14px 16px; font-size: var(--fs-sm); line-height: var(--lh-sm); }
@@ -508,9 +459,7 @@
   .topbar .search-trigger .keys { display: none; }
   .topbar .search-trigger .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .install-cmd { width: 100%; min-width: 0; font-size: var(--fs-xs); height: 44px; }
-  /* no one installs from a phone: the install lines step aside for the actions */
   .hero .install-cmd, .closer .install-cmd { display: none; }
-  /* the pitch centers on a phone, as a single column reads best there */
   .hero-copy { text-align: center; }
   .hero-copy h1, .hero .lede { margin-inline: auto; text-wrap: balance; }
   .hero-side { align-items: center; max-width: none; margin-top: 20px; }
@@ -539,23 +488,19 @@
   .say-grid:not([hidden]) .say-cell { animation: none; }
 }
 
-/* ---------- try it: a live app ---------- */
+/* embedded playground */
 .ribbon-try .pg { height: 520px; }
 @media (min-width: 1280px) { .ribbon-try .pg { height: 600px; } }
 .ribbon-try .text-link { display: inline-block; margin-top: 20px; }
 @media (max-width: 900px) { .ribbon-try .pg { height: auto; } }
 
 
-/* ---------- x-ray: the same dates in native-dates, on Temporal alone, and on Date ----------
-   four samples, a panel each under its heading, two across while a panel that wide holds the
-   longest line of native-dates. switched off native-dates, a panel turns to film: a cool tint and
-   faint scan lines behind its code */
+/* x-ray code comparison */
 .xrays { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 600px), 1fr)); gap: 32px 16px; align-items: start; }
 .xrays > * { min-width: 0; }
 .xrays h3 { margin: 0 0 12px; color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); font-weight: 600; }
 .xr { --film: oklch(0.13 0.025 240); --film-line: oklch(1 0 0 / 0.025); transition: background-color 0.4s var(--ease); }
 :root[data-theme='light'] .xr { --film: oklch(0.95 0.02 240); --film-line: oklch(0 0 0 / 0.03); }
-/* half the width a code block has elsewhere, so the code is set a size down */
 .xr pre { font-size: var(--code-sm-fs); line-height: var(--code-sm-lh); }
 .xr-switch { display: flex; gap: 2px; }
 .xr-switch button {
@@ -574,7 +519,6 @@
     repeating-linear-gradient(to bottom, var(--film-line) 0 1px, transparent 1px 3px);
 }
 .xr.is-native .code-head { background: transparent; }
-/* the scan: one pass down the panel as it turns */
 .xr-body::after {
   content: ''; position: absolute; inset-inline-start: 0; inset-inline-end: 0; top: 0; height: 96px; pointer-events: none; opacity: 0;
   background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--accent) 22%, transparent) 60%, transparent);
@@ -588,10 +532,8 @@
   .xr, .xr.is-scanning .xr-body::after { transition: none; animation: none; }
 }
 @media (max-width: 600px) {
-  /* the three names fill a phone's panel head, so the count gives way */
   .xr-count { display: none; }
   .xr .code-head .copy { margin-inline-start: auto; }
-  /* a single line is read whole, not scrolled to */
   .xr pre.is-line { white-space: pre-wrap; overflow-wrap: anywhere; }
 }
 

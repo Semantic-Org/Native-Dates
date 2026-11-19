@@ -1,14 +1,8 @@
 import { DEFAULT_LOCALE, localePath, t } from './i18n.js';
 import { PLUGINS } from './plugins.js';
 
-// the docs' order. an item points at a page by slug; a slug with no page yet is listed as a stub,
-// so the shape of the docs is visible before every page exists.
-
-// a section's or group's name is one of the interface's words (nav.… in content/strings.json): name
-// is its key, and label is that name in english, for the pages that are only english
+// slugs without a content entry render with href: null so planned pages appear as unlinked stubs
 const named = (name) => ({ name, label: t(DEFAULT_LOCALE, name) });
-
-// an item that isn't a page of its own (a landing, an anchor) is named the same way
 const titled = (name) => ({ name, title: t(DEFAULT_LOCALE, name) });
 
 export const SECTIONS = [
@@ -157,15 +151,11 @@ export const SECTIONS = [
   },
 ];
 
-// a nav item's href, in a language (english at the root, the rest under their path)
 export const hrefFor = (slug, code) => {
   const [path, hash] = slug.split('#');
   return `${localePath(`/${path}/`, code)}${hash ? `#${hash}` : ''}`;
 };
 
-// the nav for a page, in a language: every item knows whether its page exists and whether it is
-// this page. sections and groups go by their name in the language, and a page translated into it
-// (titles, by slug) goes by its translated title
 export function navFor(ids, currentId, { code = DEFAULT_LOCALE, titles = new Map() } = {}) {
   const exists = new Set(ids);
   const label = (it) => (it.name ? t(code, it.name) : it.label);
@@ -181,6 +171,7 @@ export function navFor(ids, currentId, { code = DEFAULT_LOCALE, titles = new Map
       label: label(g),
       items: g.items.map((it) => {
         const page = it.slug.split('#')[0];
+        // anchor items keep their symbol title instead of inheriting the host page's title
         const title = it.name ? t(code, it.name) : it.slug.includes('#') ? it.title : (titles.get(page) ?? it.title);
         return { ...it, title, href: exists.has(page) ? hrefFor(it.slug, code) : null, current: it.slug === currentId };
       }),
@@ -188,7 +179,6 @@ export function navFor(ids, currentId, { code = DEFAULT_LOCALE, titles = new Map
   }));
 }
 
-// previous and next among the pages that exist, in nav order, within the section
 export function pagerFor(ids, currentId) {
   const exists = new Set(ids);
   const section = SECTIONS.find((s) => s.key === currentId.split('/')[0]);

@@ -1,16 +1,11 @@
-// the version menu, in either topbar. its list of archived majors is built in, and when the menu
-// first opens it reads the latest docs' /versions.json, so a frozen vN site still lists the majors
-// that shipped after it. a vN site also says so in a banner once a newer major exists.
-
 import { ui } from './strings.js';
 const OUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>';
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 
+// fetch live /versions.json from the latest origin so frozen vN sites still list newer majors
 let live;
 const latestVersions = (origin) => (live ??= fetch(`${origin}/versions.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null));
 
-// a topbar menu (the version, the language): opens under its button, arrows move between items, and a
-// pick, Escape or a click outside closes it. onFirstOpen runs once, the first time it opens
 export function wireMenu(host, onFirstOpen) {
   const button = host.querySelector('.version-button');
   const menu = host.querySelector('.pop-menu');
@@ -48,7 +43,7 @@ export function wireMenu(host, onFirstOpen) {
   document.addEventListener('pointerdown', (e) => { if (!menu.hidden && !host.contains(e.target)) { set(false); } });
 }
 
-// a frozen major lives at vN.<domain>: once the latest docs are a newer major, say so above everything
+// archived majors run on vN.<domain> subdomains, so compare against live /versions.json
 async function archiveBanner(origin) {
   const major = location.hostname.match(/^v(\d+)\./)?.[1];
   if (!major) { return; }
@@ -62,7 +57,6 @@ async function archiveBanner(origin) {
   document.body.prepend(banner);
 }
 
-// the version menu: the first open reads the latest docs' versions and lists any archived majors
 function wireVersions(host) {
   const archived = host.querySelector('[data-archived]');
   wireMenu(host, () => latestVersions(host.dataset.latest).then((v) => {
@@ -76,6 +70,5 @@ export function wireVersionMenus(root = document) {
   const hosts = [...root.querySelectorAll('[data-version-menu]')];
   hosts.forEach(wireVersions);
   if (hosts[0]) { archiveBanner(hosts[0].dataset.latest); }
-  // the language menu shares the behavior, with nothing to fetch
   root.querySelectorAll('[data-menu]').forEach((host) => wireMenu(host));
 }

@@ -1,10 +1,6 @@
-// the question ribbon in the browser. picking a question asks it: both consoles hold their answers
-// for a beat, return them together, each is stamped, and the reason follows. the first question is asked as the
-// ribbon comes into view. every answer is also asked again here, of the reader's own Date and of the
-// library on their own Temporal, so what is printed is what this browser says
-
 import { consolesFor, preview } from './consoles.js';
 
+// re-run each snippet in the visitor's browser so console output reflects local Date and Temporal
 export function mountConsoles(root, library) {
   const cases = consolesFor(root.dataset.consoles || 'en');
   root.querySelectorAll('[data-case]').forEach((panel) => {
@@ -14,20 +10,18 @@ export function mountConsoles(root, library) {
   });
 }
 
-// the questions work with or without the library: they only choose which answers are showing
+// wire tab switching separately so question tabs work before the library bundle loads
 export function mountQuestions(root) {
   const tabs = [...root.querySelectorAll('[role=tab]')];
   const still = matchMedia('(prefers-reduced-motion: reduce)');
   let waiting;
 
-  // both answers are held back, then let go at once; the stamps come down on them, and the reason
-  // waits on the stamps (styles/home.css)
   const ask = (panel) => {
     if (still.matches) { return; }
     clearTimeout(waiting);
     root.querySelectorAll('.is-asking, .is-stamped').forEach((other) => other.classList.remove('is-asking', 'is-stamped'));
     panel.classList.add('is-asking');
-    // read a layout value so the held-back state is painted before it is let go
+    // force reflow so the reset state paints before the timer triggers the stamp animation
     void panel.offsetWidth;
     waiting = setTimeout(() => panel.classList.replace('is-asking', 'is-stamped'), 520);
   };
@@ -51,7 +45,6 @@ export function mountQuestions(root) {
     pick(tab);
   });
 
-  // the first question asks itself the first time the ribbon is well inside the screen
   const io = new IntersectionObserver(([entry]) => {
     if (!entry.isIntersecting) { return; }
     io.disconnect();
