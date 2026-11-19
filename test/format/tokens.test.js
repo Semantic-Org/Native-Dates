@@ -332,9 +332,14 @@ describe('monthNames()', () => {
     expect(monthNames('long', 'en-US')[0]).toBe('January');
   });
 
-  it.todo(
-    'throws unknownFormat when monthNames() receives an unrecognized style such as a locale tag in the first argument',
-  );
+  it('throws unknownFormat when monthNames() receives an unrecognized style such as a locale tag in the first argument', () => {
+    expect(() => monthNames('de')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'de' }),
+    );
+    expect(() => monthNames('narrow', 'en-US')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'narrow' }),
+    );
+  });
 
   it('throws unknownLocale when given an invalid locale tag', () => {
     expect(() => monthNames('long', 'not a locale')).toThrowError(
@@ -401,6 +406,15 @@ describe('weekdayNames()', () => {
   it('returns a new array on each call so mutating the result does not affect later calls', () => {
     weekdayNames('long', 'monday', 'en-US').reverse();
     expect(weekdayNames('long', 'monday', 'en-US')[0]).toBe('Monday');
+  });
+
+  it('throws unknownFormat when weekdayNames() receives an unrecognized style such as a locale tag in the first argument', () => {
+    expect(() => weekdayNames('de')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'de' }),
+    );
+    expect(() => weekdayNames('medium', 'monday', 'en-US')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'medium' }),
+    );
   });
 
   it('throws unknownDayOfWeek for an unrecognized weekStart value', () => {
