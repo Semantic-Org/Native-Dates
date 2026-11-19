@@ -71,7 +71,7 @@ Callers activate a plugin with a bare import. List your entry files in `"sideEff
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./index.js"
+      "default": "./index.js"
     }
   },
   "sideEffects": ["./index.js"],
