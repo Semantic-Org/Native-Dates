@@ -157,12 +157,9 @@ const tokenReaders = {
   WW: ['weekOfYear', (subject) => pad(subject.weekOfYear)],
 };
 
-// sort longest-first so MMMM matches before M. [A-SU-Za-z] rejects unescaped letters (catching typos
-// like 'meduim') while letting literal ISO 'T' pass through in 'YYYY-MM-DDTHH:mm'
-const tokenPattern = new RegExp(
-  `\\[([^\\]]*)\\]|${Object.keys(tokenReaders).sort((a, b) => b.length - a.length).join('|')}|([A-SU-Za-z])`,
-  'g',
-);
+// match a whole run of one letter, so a run no token spells is refused: 'SSSSSS' rather than SSS printed twice,
+// and each letter of a typo like 'meduim'. 'T' is left out so it passes as the literal in 'YYYY-MM-DDTHH:mm'
+const tokenPattern = /\[([^\]]*)\]|Do|([A-SU-Za-z])\2*/g;
 
 // refuse a style the table lacks, such as the locale in monthNames('de'), rather than answering with the default
 const tokenOf = (widths, style) =>
@@ -190,14 +187,14 @@ export const formatTokens = (subject, kind, named, locale) => {
   const resolved = pickLocale(locale);
   // use genitive month only right after a day token, skipping MMMM[ta] where suffixes are bracketed by hand (e.g. Finnish)
   const besideDay = /D[oD]?\.?(\[[^\]]*\]|\s)+MMMM?(?![M[])/.test(pattern);
-  return pattern.replace(tokenPattern, (token, literal, stray) => {
+  return pattern.replace(tokenPattern, (token, literal) => {
     if (literal !== undefined) {
       return literal;
     }
-    if (stray) {
+    if (!tokenReaders[token]) {
       refuse('unknownFormat', pattern, {
         explanation: isDevelopment
-          ? `'${stray}' is not a format token. Wrap literal text in brackets like '[at]', or pass a preset like 'medium' or an \`Intl.DateTimeFormat\` options object`
+          ? `'${token}' is not a format token. Wrap literal text in brackets like '[at]', or pass a preset like 'medium' or an \`Intl.DateTimeFormat\` options object`
           : 0,
       });
     }
