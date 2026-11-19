@@ -157,15 +157,22 @@ const tokenReaders = {
   WW: ['weekOfYear', (subject) => pad(subject.weekOfYear)],
 };
 
-// sort longest-first so MMMM matches before M. [A-SU-Za-z] rejects unescaped letters (catching typos
-// like 'meduim') while letting literal ISO 'T' pass through in 'YYYY-MM-DDTHH:mm'
-const tokenPattern = new RegExp(
-  `\\[([^\\]]*)\\]|${Object.keys(tokenReaders).sort((a, b) => b.length - a.length).join('|')}|([A-SU-Za-z])`,
-  'g',
-);
+// match full single-letter runs so overlong tokens like 'SSSSSS' and typos like 'meduim' throw unknownFormat,
+// leaving 'T' unescaped for 'YYYY-MM-DDTHH:mm'
+const tokenPattern = /\[([^\]]*)\]|Do|([A-SU-Za-z])\2*/g;
+
+// reject unrecognized style arguments such as a locale tag passed first in monthNames('de')
+const tokenOf = (widths, style) =>
+  (Object.hasOwn(widths, style) && widths[style]) || refuse('unknownFormat', String(style), {
+    explanation: isDevelopment
+      ? `expected a style in [${
+        Object.keys(widths).join(', ')
+      }] as the first argument. A locale is the last argument, as in \`monthNames('long', 'de')\` or \`weekdayNames('short', undefined, 'de')\``
+      : 0,
+  });
 
 export const weekdayNames = (style = 'short', firstDay, locale) => {
-  const table = names(pickLocale(locale))[weekdayWidths[style] ?? 'ddd'];
+  const table = names(pickLocale(locale))[tokenOf(weekdayWidths, style)];
   const first = weekStart(firstDay, locale) - 1;
   return [...table.slice(first), ...table.slice(0, first)];
 };
@@ -173,21 +180,21 @@ export const weekdayNames = (style = 'short', firstDay, locale) => {
 export const monthNames = (
   style = 'long',
   locale,
-) => [...names(pickLocale(locale))[style === 'short' ? 'MMM' : 'MMMM']];
+) => [...names(pickLocale(locale))[tokenOf({ short: 'MMM', long: 'MMMM' }, style)]];
 
 export const formatTokens = (subject, kind, named, locale) => {
   const pattern = namedFormat(named);
   const resolved = pickLocale(locale);
   // use genitive month only right after a day token, skipping MMMM[ta] where suffixes are bracketed by hand (e.g. Finnish)
   const besideDay = /D[oD]?\.?(\[[^\]]*\]|\s)+MMMM?(?![M[])/.test(pattern);
-  return pattern.replace(tokenPattern, (token, literal, stray) => {
+  return pattern.replace(tokenPattern, (token, literal) => {
     if (literal !== undefined) {
       return literal;
     }
-    if (stray) {
+    if (!tokenReaders[token]) {
       refuse('unknownFormat', pattern, {
         explanation: isDevelopment
-          ? `'${stray}' is not a format token. Wrap literal text in brackets like '[at]', or pass a preset like 'medium' or an \`Intl.DateTimeFormat\` options object`
+          ? `'${token}' is not a format token. Wrap literal text in brackets like '[at]', or pass a preset like 'medium' or an \`Intl.DateTimeFormat\` options object`
           : 0,
       });
     }

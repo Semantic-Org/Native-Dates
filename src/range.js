@@ -54,7 +54,7 @@ class Range {
       return start;
     }
     if (isString(start) && end === undefined) {
-      [start, end] = Range.#splitInterval(start);
+      [start, end] = Range.#splitInterval(start, kind);
     }
     this.start = Range.#read(kind, start, undefined, settings);
     this.end = Range.#readEnd(kind, end, this.start, settings);
@@ -75,16 +75,15 @@ class Range {
       && Object.keys(value).every((key) => ['loose', 'zone', 'dayFirst', 'locale'].includes(key));
   }
 
-  // mask bracketed '[America/New_York]' zones before splitting on '/', and check spaced ' - ' / ' to '
-  // first so slash-delimited dates like '2026/11/06 - 2026/11/10' stay intact
-  static #splitInterval(text) {
+  // mask bracketed '[America/New_York]' zones before splitting on '/', checking spaced ' - ' / ' to ' first
+  // so '2026/11/06 - 2026/11/10' stays intact and falling back to '-' / '–' only for plain time ranges
+  static #splitInterval(text, kind) {
     const blanked = text.replace(/\[[^\]]*\]/g, (zone) => ' '.repeat(zone.length));
-    const dash = blanked.match(/\s(?:-|–|to)\s/);
-    if (dash) {
-      return [text.slice(0, dash.index), text.slice(dash.index + dash[0].length)];
-    }
-    const at = blanked.indexOf('/');
-    return at === -1 ? [text] : [text.slice(0, at), text.slice(at + 1)];
+    const separator = blanked.match(/\s(?:-|–|to)\s/) ?? blanked.match('/')
+      ?? (kind === 'time' ? blanked.match(/[-–]/) : null);
+    return separator
+      ? [text.slice(0, separator.index), text.slice(separator.index + separator[0].length)]
+      : [text];
   }
 
   // coerce endpoints in start's zone and locale so both ends share one frame of reference

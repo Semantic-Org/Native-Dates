@@ -1,6 +1,6 @@
 import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 
-import { DateTime } from './date-time.js';
+import { DateTime, now } from './date-time.js';
 import { anchored, duration } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
@@ -19,6 +19,7 @@ import {
   isInstant,
   isPlainDate,
   isPlainDateTime,
+  isUnzoned,
   isZonedDateTime,
   localeOf,
   namesInstant,
@@ -374,7 +375,7 @@ export class CalendarDate {
 
   until(other, name) {
     const end = new CalendarDate(other);
-    const span = anchored(this.#plain.until(end.toTemporal(), { largestUnit: 'year' }), this.#plain, this.#locale);
+    const span = anchored(this.#plain.until(end.toTemporal(), { largestUnit: 'day' }), this.#plain, this.#locale);
     return name === undefined ? span : span.total(name);
   }
 
@@ -383,7 +384,8 @@ export class CalendarDate {
   }
 
   at(when, zone) {
-    const plainTime = new Time(when ?? '00:00').toTemporal();
+    // Date, Temporal.Instant, and instant strings carry no zone of their own, while DateTime and ZonedDateTime keep their wall-clock time
+    const plainTime = new Time(when ?? '00:00', isUnzoned(when) ? { zone } : undefined).toTemporal();
     return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }), { locale: this.#locale });
   }
 
@@ -473,7 +475,8 @@ export const date = (input, monthOrOptions, day) => {
   return isPlainObject(monthOrOptions) && monthOrOptions.loose ? loosely(build) : build();
 };
 
-export const today = (zone) => new CalendarDate(Temporal.Now.plainDateISO(zoneId(zone)));
+// derive from now() so mocking Date alone in tests also moves today()
+export const today = (zone) => now(zone).date;
 export const tomorrow = (zone) => today(zone).plus({ days: 1 });
 export const yesterday = (zone) => today(zone).minus({ days: 1 });
 
