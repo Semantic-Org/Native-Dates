@@ -383,7 +383,10 @@ export class CalendarDate {
   }
 
   at(when, zone) {
-    const plainTime = new Time(when ?? '00:00').toTemporal();
+    // a Date, a Temporal.Instant or an instant string has no zone of its own, so it is read in this one.
+    // anything else, a DateTime from another zone included, keeps the clock time it carries
+    const inZone = isDate(when) || isInstant(when) || isString(when) ? { zone } : undefined;
+    const plainTime = new Time(when ?? '00:00', inZone).toTemporal();
     return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }), { locale: this.#locale });
   }
 

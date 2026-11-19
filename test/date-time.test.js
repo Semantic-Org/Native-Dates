@@ -510,6 +510,23 @@ describe('DateTime.at()', () => {
     expect(morning.at({ hour: 17, minute: 45 }).toString()).toBe('2026-11-17T01:45:00.000Z');
   });
 
+  // 20:15 UTC is 12:15 in Los Angeles and 05:15 the next day in Tokyo, so one of the two differs from any host timezone
+  it('reads the time of day of a Date, ISO instant string, or Temporal.Instant in the instance timezone', () => {
+    const lunch = new Date('2026-11-16T20:15:00Z');
+    const earlyTokyo = datetime('2026-11-17T02:30', 'Asia/Tokyo');
+    expect(morning.at(lunch).toString()).toBe('2026-11-16T20:15:00.000Z');
+    expect(earlyTokyo.at(lunch).toString()).toBe('2026-11-16T20:15:00.000Z');
+    expect(morning.at('2026-11-16T20:15:00Z').toString()).toBe('2026-11-16T20:15:00.000Z');
+    expect(earlyTokyo.at(Temporal.Instant.from('2026-11-16T20:15:00Z')).toString()).toBe('2026-11-16T20:15:00.000Z');
+  });
+
+  it('keeps the clock time of a DateTime from another timezone and of a Temporal.PlainTime', () => {
+    const tokyoDawn = datetime('2026-11-17T05:15', 'Asia/Tokyo');
+    expect(morning.at(tokyoDawn)).toMatchObject({ zone: 'America/Los_Angeles', day: 16, hour: 5, minute: 15 });
+    expect(morning.at(tokyoDawn.toTemporal())).toMatchObject({ day: 16, hour: 5, minute: 15 });
+    expect(morning.at(Temporal.PlainTime.from('08:00')).toString()).toBe('2026-11-16T16:00:00.000Z');
+  });
+
   // at 02:30 on Nov 17 in Asia/Tokyo it is still Nov 16 in UTC
   it('preserves the calendar day in the instance timezone rather than UTC', () => {
     const earlyTokyo = datetime('2026-11-17T02:30', 'Asia/Tokyo');
