@@ -195,7 +195,7 @@ describe('default zone, locale, and weekStart from process environment', () => {
       console.log(JSON.stringify({ zone: now().zone, month, weekStart: date('2026-11-18').weekStart }));
     `;
     const printed = execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
-      cwd: fileURLToPath(new URL('..', import.meta.url)),
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
       env: { ...process.env, TZ: 'Asia/Tokyo', LC_ALL: 'de_DE.UTF-8' },
       encoding: 'utf8',
     });
@@ -210,7 +210,7 @@ describe('default zone, locale, and weekStart from process environment', () => {
       console.log(JSON.stringify({ weekStart: wednesday.weekStart, start, first: weekdayNames()[0] }));
     `;
     const printed = execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
-      cwd: fileURLToPath(new URL('..', import.meta.url)),
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
       env: { ...process.env, LC_ALL: 'en_US.UTF-8' },
       encoding: 'utf8',
     });

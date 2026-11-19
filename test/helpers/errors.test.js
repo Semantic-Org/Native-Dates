@@ -349,7 +349,7 @@ describe('error explanation stripping under NODE_ENV', () => {
   const errorsUnder = (nodeEnv) => {
     const { NODE_ENV: inherited, ...env } = process.env;
     const output = execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
-      cwd: fileURLToPath(new URL('..', import.meta.url)),
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
       env: nodeEnv === undefined ? env : { ...env, NODE_ENV: nodeEnv },
       encoding: 'utf8',
     });
@@ -392,7 +392,10 @@ describe('errors in browser bundles without a process global', () => {
       globalName: 'nativeDates',
       write: false,
       logLevel: 'silent',
-      stdin: { contents: "export * from 'native-dates';", resolveDir: fileURLToPath(new URL('..', import.meta.url)) },
+      stdin: {
+        contents: "export * from 'native-dates';",
+        resolveDir: fileURLToPath(new URL('../..', import.meta.url)),
+      },
       ...options,
     });
     return vm.runInContext(`(() => { ${bundle.outputFiles[0].text}\nreturn nativeDates; })()`, vm.createContext({}));

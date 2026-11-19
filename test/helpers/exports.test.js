@@ -88,7 +88,7 @@ describe('native-dates exports', () => {
   });
 
   it('matches every value export declared in types/index.d.ts', () => {
-    const declarations = readFileSync(new URL('../types/index.d.ts', import.meta.url), 'utf8');
+    const declarations = readFileSync(new URL('../../types/index.d.ts', import.meta.url), 'utf8');
     const declared = [...declarations.matchAll(/^export \{([^}]+)\} from/gm)]
       .flatMap(([, names]) => names.split(','))
       .map((name) => name.trim())
