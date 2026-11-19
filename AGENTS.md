@@ -50,6 +50,8 @@ Ask the maintainer rather than inventing conventions for:
 
 - **Changelog format:** No `CHANGELOG.md` convention is settled. The docs version menu links directly to GitHub Releases.
 - **Post-launch MCP and CDN (`tools/mcp`, `tools/cdn`):** Standalone MCP server (`tools/mcp`) and CDN worker/bundle infrastructure (`tools/cdn`) from `next` are optional post-launch additions.
+- **Behavioral tests and environments:** Assert `error.code` and `error.at` rather than matching prose sentences. Each package's tests live with it, `test/` for `native-dates` and `packages/<name>/test/` for the others, and import packages by their public names. Repo and CI tooling tests live with their scripts under `tools/`. Place pure Node tests in `test/` (the core nouns at the top, cross-cutting suites in subfolders like `test/format/` and `test/helpers/`), DOM tests in `test/dom/`, and real Chromium Playwright tests in `test/browser/` (`vitest.config.js`).
+- **Commit format:** `Category: Description` (both capitalized, no trailing period, no `Co-Authored-By`). Categories: `Feat`, `Bug`, `Docs`, `Chore`, `Harness`, `Test`, `Perf`, `Refactor`, `Build`, `Bench`, `BREAKING`.
 
 ## Commands
 
