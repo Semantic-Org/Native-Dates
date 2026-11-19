@@ -63,6 +63,20 @@ describe('weekdayNames()', () => {
     expect(weekdayNames('narrow', 'sunday', 'ja')).toEqual(['日', '月', '火', '水', '木', '金', '土']);
   });
 
+  // Turkish beside the languages of the docs examples: its two-letter cuts all differ and still are not its full names
+  it.each([
+    ['fr', ['lu', 'ma', 'me', 'je', 've', 'sa', 'di']],
+    ['es', ['lu', 'ma', 'mi', 'ju', 'vi', 'sá', 'do']],
+    ['de', ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']],
+    ['ru', ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']],
+    ['zh-CN', ['一', '二', '三', '四', '五', '六', '日']],
+    ['ko', ['월', '화', '수', '목', '금', '토', '일']],
+    ['ar-EG', ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح']],
+    ['tr', ['P', 'S', 'Ç', 'P', 'C', 'C', 'P']],
+  ])('returns for narrow what a calendar in %s heads its columns with', (locale, headers) => {
+    expect(weekdayNames('narrow', 'monday', locale)).toEqual(headers);
+  });
+
   it('starts on the first day of the week of the locale when given no first day', () => {
     expect(weekdayNames('short', undefined, 'en-US')[0]).toBe('Sun');
     expect(weekdayNames('short', undefined, 'de-DE')[0]).toBe('Mo');

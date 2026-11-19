@@ -61,6 +61,46 @@ describe('format() with an Intl options bag', () => {
 
   it.todo('keeps the default date and clock of a datetime when the bag names no field, such as { hour12: false }');
 
+  it('prints a datetime in the zone a bag names in timeZone, for that call only', () => {
+    const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
+    const clock = { hour: 'numeric', minute: '2-digit' };
+    expect(standup.format({ ...clock, timeZone: 'Asia/Tokyo' }, 'en-US')).toBe('2:30 AM');
+    expect(standup.format({ dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Tokyo' }, 'en-US')).toBe(
+      'Nov 17, 2026, 2:30 AM',
+    );
+    expect(standup.format(clock, 'en-US')).toBe('9:30 AM');
+  });
+
+  // a bag kept from toLocaleDateString(), where a zone west of Greenwich turns a date into the day before
+  it('keeps a date on its own day and a time on its own clock when a bag names a timeZone', () => {
+    const inHonolulu = { timeZone: 'Pacific/Honolulu' };
+    expect(monday.format({ dateStyle: 'long', ...inHonolulu }, 'en-US')).toBe('November 16, 2026');
+    expect(afternoon.format({ timeStyle: 'short', ...inHonolulu }, 'en-US')).toBe('5:30 PM');
+    expect(birthday.format({ month: 'long', day: 'numeric', ...inHonolulu }, 'en-US')).toBe('October 17');
+    expect(november.format({ year: 'numeric', month: 'long', ...inHonolulu }, 'en-US')).toBe('November 2026');
+  });
+
+  // a datetime prints the clock of the runtime's zone, and a time prints 1/1/1970
+  it.todo('keeps the zone of a datetime when the bag carries timeZone: undefined');
+  it.todo('keeps the default clock of a time when the bag carries timeStyle: undefined');
+
+  it('prints the clock of a time with no zone name when a bag asks for timeStyle long or full', () => {
+    expect(afternoon.format({ timeStyle: 'long' }, 'en-US')).toBe('5:30:15 PM');
+    expect(afternoon.format({ timeStyle: 'full' }, 'en-US')).toBe('5:30:15 PM');
+  });
+
+  // the year alone, since Intl given a Temporal date prints the Julian day for a date before 1582
+  it('prints a year before 100 as written instead of reading it as 19xx', () => {
+    expect(date('0099-06-15').format({ year: 'numeric' }, 'en-US')).toBe('99');
+    expect(date('0005-06-15').format({ year: 'numeric' }, 'en-US')).toBe('5');
+  });
+
+  it('prints the milliseconds of a time when a bag asks for fractional seconds', () => {
+    const lap = time('17:30:15.123');
+    const bag = { hour: 'numeric', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 };
+    expect(lap.format(bag, 'en-US')).toBe('5:30:15.123 PM');
+  });
+
   it('throws unknownFormat when Intl refuses the bag', () => {
     expect(() => monday.format({ month: 'bogus' }, 'en-US')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: '{"month":"bogus"}' }),
