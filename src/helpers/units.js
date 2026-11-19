@@ -114,9 +114,15 @@ export const dayOfWeek = (input) => {
   }
   return weekdayNamed(input) || refuse('unknownDayOfWeek', String(input), {
     explanation: isDevelopment
-      ? `expected a weekday in [${
-        weekdays.join(', ')
-      }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday)`
+      ? (() => {
+        const key = input === 'M' ? 'month' : isString(input) ? input.trim().toLowerCase() : '';
+        const namedUnit = Object.hasOwn(spellings, key) && spellings[key];
+        return namedUnit
+          ? `'${input}' is a unit, not a weekday. Use \`.plus(1, '${namedUnit}')\` or \`.minus(1, '${namedUnit}')\` to shift by 1 ${namedUnit}, or \`.startOfNext('${namedUnit}')\` or \`.startOfPrevious('${namedUnit}')\` for the start of the next or previous ${namedUnit}`
+          : `expected a weekday in [${
+            weekdays.join(', ')
+          }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday)`;
+      })()
       : 0,
   });
 };
