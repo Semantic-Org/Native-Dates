@@ -768,7 +768,26 @@ describe('DateTime.startOf() and endOf()', () => {
     expect(friday.startOf('day').toString()).toBe('2026-04-23T22:00:00.000Z');
   });
 
-  it.todo('returns the final millisecond of the same calendar day in endOf("day") when midnight is skipped by DST');
+  it('returns the final millisecond of the same calendar day in endOf("day") when midnight is skipped by DST', () => {
+    const friday = datetime('2026-04-24T12:00', 'Africa/Cairo');
+    expect(friday.endOf('day').toString()).toBe('2026-04-24T20:59:59.999Z');
+    expect(friday.endOf('day')).toMatchObject({ day: 24, hour: 23, minute: 59 });
+    expect(friday.endOf('week', 'friday').toString()).toBe('2026-04-30T20:59:59.999Z');
+  });
+
+  // on the day before, the skipped midnight is the day's end, which lands on 01:00
+  it('ends the day before a skipped midnight at the instant the next day starts', () => {
+    const thursday = datetime('2026-04-23T12:00', 'Africa/Cairo');
+    expect(thursday.endOf('day').toString()).toBe('2026-04-23T21:59:59.999Z');
+    expect(thursday.endOf('day')).toMatchObject({ day: 23, hour: 23, minute: 59 });
+  });
+
+  // Lord Howe turns its clocks back 30 minutes at 02:00 on 2026-04-05, so 01:30 to 02:00 comes round twice
+  it('keeps an hour one elapsed hour long across a 30-minute DST transition', () => {
+    const early = datetime('2026-04-05T01:15+11:00', 'Australia/Lord_Howe');
+    expect(early.endOf('hour').toString()).toBe('2026-04-04T14:59:59.999Z');
+    expect(early.range('hour').toString()).toBe('2026-04-04T14:00:00.000Z/2026-04-04T15:00:00.000Z');
+  });
 
   it('computes microsecond boundaries to nanosecond precision', () => {
     const precise = datetime('2026-11-18T14:45:12.345678912Z', 'UTC');

@@ -433,7 +433,14 @@ describe('CalendarDate.prototype.range() and DateTime.prototype.range()', () => 
     );
   });
 
-  it.todo('computes datetime.range("day") end on the same calendar day when midnight is skipped by DST');
+  // Havana springs forward from 00:00 to 01:00 on 2026-03-08, so the day starts at 01:00 and is 23 hours long
+  it('computes datetime.range("day") end on the same calendar day when midnight is skipped by DST', () => {
+    const day = datetime('2026-03-08T12:00', 'America/Havana').range('day');
+    expect(day.start.format('YYYY-MM-DD HH:mm')).toBe('2026-03-08 01:00');
+    expect(day.end.format('YYYY-MM-DD HH:mm')).toBe('2026-03-09 00:00');
+    expect(day.duration.total('hours')).toBe(23);
+    expect(day.overlaps(datetime('2026-03-09T12:00', 'America/Havana').range('day'))).toBe(false);
+  });
 });
 
 describe('Range duration and as("duration")', () => {
@@ -1057,7 +1064,11 @@ describe('CalendarDate split(), splitBy(), and points()', () => {
     );
   });
 
-  it.todo('keeps all split() slices and points() within the calendar day when midnight is skipped by DST');
+  it('keeps all split() slices and points() within the calendar day when midnight is skipped by DST', () => {
+    const day = date('2026-03-08');
+    expect(day.split('hour', 'America/Havana')).toHaveLength(23);
+    expect(day.points('hour', 'America/Havana').at(-1).format('YYYY-MM-DD HH:mm')).toBe('2026-03-08 23:00');
+  });
 });
 
 describe('Range in()', () => {

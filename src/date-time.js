@@ -27,6 +27,7 @@ import {
   quarterStart,
   singularKeys,
   stepOf,
+  timeUnits,
   unit,
   withParts,
   zoneOptions,
@@ -312,8 +313,14 @@ export class DateTime {
 
   // inclusive last ms (or ns for sub-ms units). Prefer range(unit) for half-open query bounds
   endOf(name, firstDay) {
-    const target = unit(name);
-    return this.startOf(target, firstDay).plus(stepOf(target)).minus(endPrecision(target));
+    return this.#nextStart(name, firstDay).minus(endPrecision(unit(name)));
+  }
+
+  // adding a step to a start keeps its clock time, which a skipped midnight has moved to 01:00, so the start
+  // after a day or a longer unit is read by startOf() as well. a clock unit ends one step after it starts
+  #nextStart(name, firstDay) {
+    const next = this.startOf(name, firstDay).plus(stepOf(unit(name)));
+    return timeUnits.includes(unit(name)) ? next : next.startOf(name, firstDay);
   }
 
   round(increment, name) {
@@ -360,8 +367,7 @@ export class DateTime {
   }
 
   range(name, firstDay) {
-    const start = this.startOf(name, firstDay);
-    return new DateTimeRange(start, start.plus(stepOf(unit(name))));
+    return new DateTimeRange(this.startOf(name, firstDay), this.#nextStart(name, firstDay));
   }
 
   /*******************************
