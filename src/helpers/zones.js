@@ -64,7 +64,18 @@ export const zoneId = (id) => {
   return found;
 };
 
-export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats } = {}) => {
+export const configure = (options = {}) => {
+  const { zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats } = options;
+  // a key that is not a setting is the author's mistake, so it is refused in development and ignored in production
+  if (isDevelopment) {
+    each(options, (value, name) => {
+      if (!Object.hasOwn(settings, name)) {
+        refuse('unknownSetting', name, {
+          explanation: `expected a setting in [${Object.keys(settings).join(', ')}]`,
+        });
+      }
+    });
+  }
   if (zoneAliases !== undefined) {
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
