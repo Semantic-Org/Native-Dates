@@ -36,6 +36,24 @@ describe('duration()', () => {
     expect(duration(phrase).toString()).toBe(iso);
   });
 
+  // a time tracker writes '1w 2d 3h 4m', and the short style prints '1 wk' and '1 yr'
+  it.each([
+    ['1w 2d 3h 4m', 'P1W2DT3H4M'],
+    ['1y 6mo', 'P1Y6M'],
+    ['30 secs', 'PT30S'],
+    ['1 wk', 'P1W'],
+    ['1 yr', 'P1Y'],
+    ['6 mos', 'P6M'],
+  ])('reads the shorthand %j as %s', (phrase, iso) => {
+    expect(duration(phrase).toString()).toBe(iso);
+  });
+
+  // a length kept in an env file or typed into a form field
+  it('reads a phrase or an ISO string with space or a line break around it', () => {
+    expect(duration(' 1h 30m ').toString()).toBe('PT1H30M');
+    expect(duration('PT1H30M\n').toString()).toBe('PT1H30M');
+  });
+
   it('spills a fractional amount in a phrase into the next smaller unit', () => {
     expect(duration('1.5h').toFields()).toEqual({ hours: 1, minutes: 30 });
   });
@@ -68,6 +86,20 @@ describe('duration()', () => {
 
   it.each(['hour', 'hours', 'h', 'hr', 'Hours'])('reads %j as the unit beside a count', (unit) => {
     expect(duration(2, unit).toString()).toBe('PT2H');
+  });
+
+  // moment.duration(2, 'M') is two months and moment.duration(2, 'm') two minutes
+  it.each([
+    ['y', 'P2Y'],
+    ['M', 'P2M'],
+    ['w', 'P2W'],
+    ['d', 'P2D'],
+    ['h', 'PT2H'],
+    ['m', 'PT2M'],
+    ['s', 'PT2S'],
+    ['ms', 'PT0.002S'],
+  ])('reads the letter %j beside a count as Moment and Day.js read it', (unit, iso) => {
+    expect(duration(2, unit).toString()).toBe(iso);
   });
 
   it('reads a numeric string as the count when a unit is given', () => {
@@ -238,6 +270,11 @@ describe('unit helpers, years() through milliseconds()', () => {
     expect(days('1.5').toString()).toBe('P1DT12H');
   });
 
+  it('reads a numeric string with a minus sign, or with space around it', () => {
+    expect(hours('-2').toString()).toBe('-PT2H');
+    expect(hours(' 2 ').toString()).toBe('PT2H');
+  });
+
   it('throws invalidFraction for part of a month, written in months or in years', () => {
     expect(() => months(1.5)).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'invalidFraction', at: '1.5 month' }),
@@ -248,6 +285,11 @@ describe('unit helpers, years() through milliseconds()', () => {
   // hours(row.estimate) with the column empty must not quietly become a zero length
   it.each([[null], [undefined]])('throws invalidDuration for a count of %j', (count) => {
     expect(() => hours(count)).toThrowError(expect.objectContaining({ name: 'TypeError', code: 'invalidDuration' }));
+  });
+
+  // hours(input.value) with the field left empty, or 1,5 typed with a decimal comma, where Number('') is 0
+  it.each(['', ' ', 'abc', '1,5'])('throws invalidDuration for the text %j given as a count', (text) => {
+    expect(() => hours(text)).toThrowError(expect.objectContaining({ code: 'invalidDuration' }));
   });
 
   it.each([[NaN], [Infinity]])('throws invalidNumber for a count of %s', (count) => {
@@ -450,6 +492,10 @@ describe('Duration balance()', () => {
     expect(months(18).balance().toFields()).toEqual({ years: 1, months: 6 });
   });
 
+  it("carries months into years when asked for 'year'", () => {
+    expect(months(30).balance('year').toString()).toBe('P2Y6M');
+  });
+
   // a calendar day can be 23 or 25 hours long, so hours only become days when asked
   it('leaves hours as hours and days as days when no unit is named', () => {
     expect(hours(36).balance().toString()).toBe('PT36H');
@@ -619,6 +665,11 @@ describe('Duration equals() and compare()', () => {
     expect(days(2).locale('de').equals(days(2).locale('fr'))).toBe(true);
   });
 
+  it('equals a length written the same way when it mixes months and days, with no date to count from', () => {
+    expect(duration('1 month 15 days').equals('P1M15D')).toBe(true);
+    expect(duration({ months: 1, days: 15 }).compare(duration('1mo 15d'))).toBe(0);
+  });
+
   it('throws missingAnchor when months are compared with days and neither was measured from a date', () => {
     expect(() => months(1).equals(days(30))).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'missingAnchor', at: expect.stringContaining('P1M') }),
@@ -731,6 +782,12 @@ describe('Duration measured by until() or since()', () => {
     expect(span.total('days')).toBe(90.5);
   });
 
+  it('keeps its anchor when it is given a locale or rounded', () => {
+    const span = date('2026-01-01').until('2026-04-10');
+    expect(span.locale('fr').total('days')).toBe(99);
+    expect(span.round('month').total('days')).toBe(90);
+  });
+
   // String.prototype.anchor exists, so a phrase must not be mistaken for a measured length
   it('leaves a bare length without an anchor when a phrase is added to it', () => {
     expect(hours(1).plus('2h').anchor).toBeUndefined();
@@ -749,6 +806,8 @@ describe('Duration measured by until() or since()', () => {
   it.todo(
     'abs() and negated() cover the days the length itself did: April 1 back to January 1, then abs(), is 90 days',
   );
+  // throws conflictingSigns, and so does a measured year minus a month, which years(1).minus(months(1)) answers
+  it.todo('takes hours away from a measured day by the date it was measured from: 1 day 2 hours minus 3 hours is 23');
 });
 
 describe('Duration format() and text', () => {
@@ -759,6 +818,11 @@ describe('Duration format() and text', () => {
     ['digital', '2:30:00'],
   ])('prints the %s style in en-US', (style, printed) => {
     expect(duration({ hours: 2, minutes: 30 }).format(style, 'en-US')).toBe(printed);
+  });
+
+  it('prints the digital style under an hour as minutes and seconds', () => {
+    expect(seconds(90).format('digital', 'en-US')).toBe('01:30');
+    expect(seconds(45).format('digital', 'en-US')).toBe('00:45');
   });
 
   it('prints the long style when no style is named', () => {
@@ -890,6 +954,10 @@ describe('Duration toString(), toJSON(), valueOf() and toTemporal()', () => {
 
   it('is its ISO string in a template literal', () => {
     expect(`${hours(2)}`).toBe('PT2H');
+  });
+
+  it('is its ISO string when joined to a string with +, as every other kind of value is', () => {
+    expect('Took ' + hours(2)).toBe('Took PT2H');
   });
 
   it('toMilliseconds(), valueOf() and a unary + give the length in milliseconds', () => {
