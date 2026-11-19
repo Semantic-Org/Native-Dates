@@ -62,6 +62,13 @@ describe('date() from a calendar day', () => {
 
   it.todo('reads a year number beside month and day given as digit strings');
 
+  // a form or a query string hands over every field as text
+  it('reads digit strings in a fields object', () => {
+    expect(date({ year: '2026', month: '11', day: '16' }).toString()).toBe('2026-11-16');
+    const query = new URLSearchParams('year=2026&month=02&day=09');
+    expect(date(Object.fromEntries(query)).toString()).toBe('2026-02-09');
+  });
+
   it('reads a Temporal.PlainDate and a Temporal.PlainDateTime as their own day', () => {
     expect(date(Temporal.PlainDate.from('2026-11-16')).toString()).toBe('2026-11-16');
     expect(date(Temporal.PlainDateTime.from('2026-11-16T23:30')).toString()).toBe('2026-11-16');
@@ -91,11 +98,20 @@ describe('date() from a moment in a zone', () => {
     expect(date(instant, { zone: 'America/Los_Angeles' }).toString()).toBe('2026-11-16');
   });
 
+  // date(instant, { timeZone: 'Asia/Tokyo' }) gives the day in the zone of the machine and says nothing
+  it.todo('never ignores a zone passed as { timeZone }, the name Intl and Temporal give it');
+
   it('fixes the instant by a numeric offset in the string, then reads its day in the zone asked for', () => {
     expect(date('2026-11-16T23:30:00-05:00', 'Asia/Tokyo').toString()).toBe('2026-11-17');
     expect(date('2026-11-16T23:30:00-05:00', 'America/Los_Angeles').toString()).toBe('2026-11-16');
     // the text Postgres prints for a timestamptz column
     expect(date('2026-11-16 18:00:00+00', 'Asia/Tokyo').toString()).toBe('2026-11-17');
+  });
+
+  // the offset as strftime('%z') writes it
+  it('fixes the instant by an offset written without its colon', () => {
+    expect(date('2026-11-16T23:30:00-0500', 'Asia/Tokyo').toString()).toBe('2026-11-17');
+    expect(date('2026-11-16T23:30:00-0500', 'America/Los_Angeles').toString()).toBe('2026-11-16');
   });
 
   it('reads the day in a zone on the half hour and in a fixed offset', () => {
@@ -127,6 +143,15 @@ describe('date() from a moment in a zone', () => {
     const zoned = Temporal.ZonedDateTime.from('2026-11-16T18:00[America/Los_Angeles]');
     expect(date(zoned).toString()).toBe('2026-11-16');
     expect(date(zoned, 'Asia/Tokyo').toString()).toBe('2026-11-17');
+  });
+
+  // the text Java prints for a ZonedDateTime, and Temporal for its own
+  it('reads a string that names its zone in brackets in that zone, or in another zone when one is asked for', () => {
+    const morningInTokyo = '2026-11-17T08:00+09:00[Asia/Tokyo]';
+    expect(date(morningInTokyo, 'America/Los_Angeles').toString()).toBe('2026-11-16');
+    expect(date('2026-11-17T08:00[Asia/Tokyo]', 'America/Los_Angeles').toString()).toBe('2026-11-16');
+    configure({ zone: 'America/Los_Angeles' });
+    expect(date(morningInTokyo).toString()).toBe('2026-11-17');
   });
 
   it('reads an instant in the configured zone when no zone is passed', () => {
@@ -204,6 +229,15 @@ describe('date() refusals', () => {
     expect(() => date('')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '' }));
     expect(() => date('   ')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '   ' }));
   });
+
+  it('refuses a fields object whose month was left blank in a form', () => {
+    expect(() => date({ year: '2026', month: '', day: '16' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidDate' }),
+    );
+  });
+
+  // date('2026', '', '16') is refused as unknownZone at '', the blank month read as a zone
+  it.todo('refuses a year or month left blank beside the other two as a date, not as a zone');
 
   it('refuses a single number, which could be a year or an epoch timestamp', () => {
     expect(() => date(1794850200000)).toThrowError(
@@ -458,6 +492,12 @@ describe('CalendarDate at()', () => {
       expect.objectContaining({ code: 'unknownZone', at: 'Mars/Phobos' }),
     );
   });
+
+  it('refuses an empty time, as a blank form field gives, instead of reading it as the start of the day', () => {
+    expect(() => day.at('', 'UTC')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidTime', at: '' }),
+    );
+  });
 });
 
 describe('CalendarDate set()', () => {
@@ -596,6 +636,25 @@ describe('CalendarDate plus() and minus()', () => {
     expect(() => day.minus(1_000_000, 'years')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'cannotSubtract' }),
     );
+  });
+});
+
+describe('CalendarDate unit names', () => {
+  const day = date('2026-11-16');
+
+  it('reads the short names Moment and Day.js give the calendar units', () => {
+    expect(day.plus(1, 'y').toString()).toBe('2027-11-16');
+    expect(day.plus(1, 'Q').toString()).toBe('2027-02-16');
+    expect(day.plus(1, 'w').toString()).toBe('2026-11-23');
+    expect(day.plus(1, 'd').toString()).toBe('2026-11-17');
+  });
+
+  // Moment and Day.js write a month as M and a minute as m, and a date has no minutes
+  it("reads a capital 'M' as months in plus(), startOf() and until(), and refuses 'm' as minutes", () => {
+    expect(day.plus(1, 'M').toString()).toBe('2026-12-16');
+    expect(day.startOf('M').toString()).toBe('2026-11-01');
+    expect(date('2026-01-01').until('2026-07-01', 'M')).toBe(6);
+    expect(() => day.plus(1, 'm')).toThrowError(expect.objectContaining({ code: 'unsupportedUnit', at: 'minutes' }));
   });
 });
 
