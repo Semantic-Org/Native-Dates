@@ -80,6 +80,23 @@ describe('configure({ formats })', () => {
     );
   });
 
+  it('replaces the whole set when formats is given again', () => {
+    configure({ formats: { invoice: 'YYYY-MM-DD' } });
+    configure({ formats: { stamp: 'HH:mm' } });
+    expect(time('17:30').format('stamp')).toBe('17:30');
+    expect(() => friday.format('invoice')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'invoice' }),
+    );
+  });
+
+  // HH:mm on a date would throw unsupportedToken if text or a bare format() read the name
+  it('keeps text and a bare format() built in, so a format named medium or text cannot stop a value being made', () => {
+    configure({ formats: { medium: 'HH:mm', text: 'HH:mm' } });
+    const day = date('2026-11-06', { locale: 'en-US' });
+    expect(day.text).toBe('Nov 6, 2026');
+    expect(day.format()).toBe('Nov 6, 2026');
+  });
+
   it('is not changed by the app editing its own object afterwards', () => {
     const formats = { invoice: 'YYYY-MM-DD' };
     configure({ formats });

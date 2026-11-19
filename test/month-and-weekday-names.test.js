@@ -147,6 +147,12 @@ describe('configure({ weekdayNames })', () => {
     expect(date('2026-11-03').format('ddd', 'en-US')).toBe('Tues');
   });
 
+  it('replaces the whole table when weekdayNames is given again', () => {
+    configure({ weekdayNames: { en: { short: { tue: 'Tues' } } } });
+    configure({ weekdayNames: { en: { short: { thu: 'Thurs' } } } });
+    expect(weekdayNames('short', 'monday', 'en-US')).toEqual(['Mon', 'Tue', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun']);
+  });
+
   it('goes back to the runtime names when set to null', () => {
     configure({ weekdayNames: { en: { short: { tue: 'Tues' } } } });
     configure({ weekdayNames: null });
@@ -206,6 +212,13 @@ describe('configure({ ordinals })', () => {
 
   it('replaces the English suffixes when given a function for English', () => {
     configure({ ordinals: { en: (day) => `${day}.` } });
+    expect(date('2026-11-01').format('Do', 'en-US')).toBe('1.');
+  });
+
+  it('replaces the whole table when ordinals is given again', () => {
+    configure({ ordinals: firstAsPremier });
+    configure({ ordinals: { en: (day) => `${day}.` } });
+    expect(date('2026-11-01').format('Do MMMM', 'fr')).toBe('1 novembre');
     expect(date('2026-11-01').format('Do', 'en-US')).toBe('1.');
   });
 
