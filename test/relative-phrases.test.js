@@ -34,6 +34,15 @@ describe('DateTime from()', () => {
     expect(noon.minus(23, 'hours').from(noon, 'en-US')).toBe('1 day ago');
   });
 
+  it('moves up to minutes at 45 seconds, to months at 26 days and to years at 320 days', () => {
+    expect(noon.plus(44, 'seconds').from(noon, 'en-US')).toBe('in 44 seconds');
+    expect(noon.plus(45, 'seconds').from(noon, 'en-US')).toBe('in 1 minute');
+    expect(noon.minus(25, 'days').from(noon, 'en-US')).toBe('25 days ago');
+    expect(noon.minus(26, 'days').from(noon, 'en-US')).toBe('1 month ago');
+    expect(noon.minus(319, 'days').from(noon, 'en-US')).toBe('10 months ago');
+    expect(noon.minus(320, 'days').from(noon, 'en-US')).toBe('1 year ago');
+  });
+
   it('rounds the past and the future alike', () => {
     expect(noon.minus(90, 'seconds').from(noon, 'en-US')).toBe('2 minutes ago');
     expect(noon.plus(90, 'seconds').from(noon, 'en-US')).toBe('in 2 minutes');
@@ -131,6 +140,18 @@ describe('CalendarDate from()', () => {
     expect(monday.minus(60, 'days').from(monday, 'en-US')).toBe('2 months ago');
     expect(monday.minus(365, 'days').from(monday, 'en-US')).toBe('1 year ago');
     expect(monday.plus(730, 'days').from(monday, 'en-US')).toBe('in 2 years');
+  });
+
+  it('counts weeks up to 25 days away, months up to 319 days and years from 320', () => {
+    expect(monday.plus(25, 'days').from(monday, 'en-US')).toBe('in 4 weeks');
+    expect(monday.plus(26, 'days').from(monday, 'en-US')).toBe('in 1 month');
+    expect(monday.minus(319, 'days').from(monday, 'en-US')).toBe('10 months ago');
+    expect(monday.minus(320, 'days').from(monday, 'en-US')).toBe('1 year ago');
+  });
+
+  it('counts to the nearest week, so 13 days is 2 weeks', () => {
+    expect(monday.plus(13, 'days').from(monday, 'en-US')).toBe('in 2 weeks');
+    expect(monday.minus(13, 'days').from(monday, 'en-US')).toBe('2 weeks ago');
   });
 
   it('reads the other date from a string', () => {

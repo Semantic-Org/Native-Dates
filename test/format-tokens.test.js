@@ -188,6 +188,17 @@ describe('token patterns in other locales', () => {
     expect(friday.format('D. MMMM[ta] YYYY', 'fi')).toBe('6. marraskuuta 2026');
   });
 
+  it('gives the month the form it takes beside a day after a day written with a period', () => {
+    expect(friday.format('D. MMMM YYYY', 'cs')).toBe('6. listopadu 2026');
+    expect(friday.format('D. MMMM YYYY', 'fi')).toBe('6. marraskuuta 2026');
+  });
+
+  // Intl writes a day and a month in these languages as numbers, 11月6日, so the month alone is what has a name
+  it('keeps the counter on a month that follows a day in Japanese and Korean', () => {
+    expect(friday.format('D MMMM YYYY', 'ja')).toBe('6 11月 2026');
+    expect(friday.format('D MMMM YYYY', 'ko')).toBe('6 11월 2026');
+  });
+
   it('prints Do with the mark the locale puts after a day number instead of an English suffix', () => {
     expect(friday.format('Do MMMM', 'de')).toBe('6. November');
     expect(friday.format('M月Do', 'ja')).toBe('11月6日');
@@ -199,6 +210,12 @@ describe('token patterns in other locales', () => {
     expect(time('15:00').format('a h:mm', 'ja')).toBe('午後 3:00');
     expect(time('15:00').format('A h:mm', 'ko')).toBe('오후 3:00');
     expect(time('15:00').format('h:mm A', 'ar')).toBe('3:00 م');
+  });
+
+  // \s inside the period, where ICU versions differ on the kind of space
+  it('prints A and a in the case the locale writes its day period in outside English', () => {
+    expect(time('15:00').format('h:mm A', 'es')).toMatch(/^3:00 p\.\sm\.$/);
+    expect(time('09:00').format('h:mm a', 'es')).toMatch(/^9:00 a\.\sm\.$/);
   });
 
   it('prints dd as two letters where the language abbreviates that way and as its calendar letter elsewhere', () => {

@@ -110,6 +110,12 @@ describe('DateTime format() presets', () => {
     const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
     expect(standup.in('Asia/Tokyo').format('LLLL', 'en-US')).toBe('Tuesday, November 17, 2026 at 2:30 AM');
   });
+
+  // a month longer than May, which is spelled the same abbreviated and in full
+  it('abbreviates the month for date, as medium does', () => {
+    const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
+    expect(standup.format('date', 'en-US')).toBe('Nov 16, 2026');
+  });
 });
 
 describe('CalendarDate format() presets', () => {
@@ -126,6 +132,10 @@ describe('CalendarDate format() presets', () => {
 
   it('prints the month and year for month', () => {
     expect(monday.format('month', 'en-US')).toBe('November 2026');
+  });
+
+  it('prints the medium date for date', () => {
+    expect(monday.format('date', 'en-US')).toBe('Nov 16, 2026');
   });
 
   it('keeps the date part of the Moment and Day.js names', () => {
@@ -171,6 +181,20 @@ describe('YearMonth format() presets', () => {
     expect(november.format('L', 'en-US')).toBe('11/2026');
     expect(november.format('LL', 'en-US')).toBe('November 2026');
   });
+
+  it('prints a month below ten without a leading zero for short', () => {
+    expect(yearMonth('2026-05').format('short', 'en-US')).toBe('5/2026');
+  });
+
+  it('counts the year as the locale does, in the Buddhist era in Thai and by imperial era when the tag asks', () => {
+    expect(november.format('long', 'th')).toBe('พฤศจิกายน 2569');
+    expect(november.format('short', 'th')).toBe('11/2569');
+    expect(november.format('long', 'ja-u-ca-japanese')).toBe('令和8年11月');
+  });
+
+  it('names the Gregorian month where the locale counts months on its own calendar', () => {
+    expect(november.format('long', 'fa')).toBe('نوامبر ۲۰۲۶');
+  });
 });
 
 describe('MonthDay format() presets', () => {
@@ -187,6 +211,15 @@ describe('MonthDay format() presets', () => {
 
   it('orders the month and the day the way the locale does', () => {
     expect(birthday.format('short', 'en-GB')).toBe('17/10');
+  });
+
+  it('prints a month and a day below ten without leading zeros for short', () => {
+    expect(monthDay(5, 6).format('short', 'en-US')).toBe('5/6');
+  });
+
+  // a Gregorian birthday falls on a different Persian date each year, so it is not converted
+  it('prints the Gregorian month and day where the locale counts on its own calendar', () => {
+    expect(monthDay(11, 6).format('long', 'fa')).toBe('۶ نوامبر');
   });
 });
 
@@ -219,6 +252,15 @@ describe('format() locale', () => {
     expect(day.format('long')).toBe('15 de mayo de 2026');
     expect(day.locale('de').format('long')).toBe('15. Mai 2026');
     expect(day.locale('de').format('long', 'fr')).toBe('15 mai 2026');
+  });
+
+  it('writes a time, a year-month and a month-day in the locale each one carries, unless one is passed', () => {
+    expect(afternoon.locale('ko').format('short')).toBe('오후 5:30');
+    expect(afternoon.locale('ko').format('short', 'de')).toBe('17:30');
+    expect(yearMonth('2026-05').locale('ru').format('long')).toBe('май 2026 г.');
+    expect(yearMonth('2026-05').locale('ru').format('long', 'fr')).toBe('mai 2026');
+    expect(monthDay(5, 1).locale('ru').format('long')).toBe('1 мая');
+    expect(monthDay(5, 1).locale('ru').format('long', 'de')).toBe('1. Mai');
   });
 
   it('writes a duration by the same order of locales', () => {
@@ -306,6 +348,10 @@ describe('range format()', () => {
   it('formats both ends with a token pattern and joins them with a spaced en dash', () => {
     expect(week.format('YYYY-MM-DD')).toBe('2026-09-01 – 2026-09-07');
     expect(timeRange('22:00', '06:00').format('HH:mm')).toBe('22:00 – 06:00');
+  });
+
+  it('names the month at both ends of a token pattern in the locale passed to the call', () => {
+    expect(week.format('D MMMM', 'fr')).toBe('1 septembre – 7 septembre');
   });
 
   it('reads as its medium form in text, with the zone name on a datetime range', () => {

@@ -97,6 +97,28 @@ describe('configure({ formats })', () => {
     expect(day.format()).toBe('Nov 6, 2026');
   });
 
+  // YYYY on a time or a month-day would throw unsupportedToken if its text read the name
+  it('keeps the text of a datetime, a time, a year-month, a month-day and a range built in as well', () => {
+    configure({ formats: { text: 'YYYY', medium: 'YYYY', short: 'YYYY' } });
+    const inLosAngeles = { zone: 'America/Los_Angeles', locale: 'en-US' };
+    expect(datetime('2026-11-16T09:30', inLosAngeles).text).toBe('Nov 16, 2026, 9:30 AM PST');
+    expect(time('9:30am', { locale: 'en-US' }).text).toBe('9:30 AM');
+    expect(yearMonth('2026-11', { locale: 'en-US' }).text).toBe('Nov 2026');
+    expect(monthDay('10-17', { locale: 'en-US' }).text).toBe('Oct 17');
+    expect(datetimeRange('2026-09-01T09:00', '2026-09-01T17:00', inLosAngeles).text).toMatch(
+      /^Sep 1, 2026, 9:00 AM\s*–\s*5:00 PM PDT$/,
+    );
+  });
+
+  it('prints a built-in preset under a name the app gave it', () => {
+    configure({ formats: { table: 'medium', card: 'full' } });
+    expect(friday.format('table', 'en-US')).toBe('Nov 6, 2026');
+    expect(friday.format('card', 'en-US')).toBe('Friday, November 6, 2026');
+    expect(time('17:30:15').format('table', 'en-US')).toBe('5:30:15 PM');
+    expect(yearMonth('2026-11').format('table', 'en-US')).toBe('Nov 2026');
+    expect(monthDay('11-06').format('card', 'en-US')).toBe('November 6');
+  });
+
   it('is not changed by the app editing its own object afterwards', () => {
     const formats = { invoice: 'YYYY-MM-DD' };
     configure({ formats });
