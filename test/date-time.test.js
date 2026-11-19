@@ -961,6 +961,15 @@ describe('DateTime.startOfNext() and startOfPrevious()', () => {
     expect(saturday.startOfPrevious('day').toString()).toBe('2011-12-29T10:00:00.000Z');
     expect(thursday.startOfNext('day')).toMatchObject({ day: 31, hour: 0 });
     expect(thursday.startOfNext('day').toString()).toBe('2011-12-30T10:00:00.000Z');
+    expect(thursday.startOfNext('saturday')).toMatchObject({ day: 31, dayOfWeek: 6, hour: 0 });
+  });
+
+  // Nuuk springs forward from 23:00 on Saturday 2026-03-28 to 00:00 on Sunday 2026-03-29
+  it('resolves weekday boundaries on the calendar date when the current evening hour is skipped into midnight', () => {
+    const fridayLate = datetime('2026-03-27T23:30', 'America/Nuuk');
+    const sundayLate = datetime('2026-03-29T23:30', 'America/Nuuk');
+    expect(fridayLate.startOfNext('saturday')).toMatchObject({ day: 28, dayOfWeek: 6, hour: 0, minute: 0 });
+    expect(sundayLate.startOfPrevious('saturday')).toMatchObject({ day: 28, dayOfWeek: 6, hour: 0, minute: 0 });
   });
 
   it('computes microsecond boundaries to nanosecond precision', () => {
