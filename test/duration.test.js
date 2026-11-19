@@ -118,6 +118,14 @@ describe('duration()', () => {
     expect(duration('1500').toFields()).toEqual({ milliseconds: 1500 });
   });
 
+  // two performance.now() readings three hours into a session differ by 113.46000000089407
+  it('rounds a millisecond count with sub-nanosecond precision to the nearest nanosecond', () => {
+    expect(duration(1000 / 3).toFields()).toEqual({ milliseconds: 333, microseconds: 333, nanoseconds: 333 });
+    expect(duration(1000 / 60).toFields()).toEqual({ milliseconds: 16, microseconds: 666, nanoseconds: 667 });
+    expect(duration(10800113.46 - 10800000).toFields()).toEqual({ milliseconds: 113, microseconds: 460 });
+    expect(milliseconds(100).times(1 / 3).toString()).toBe('PT0.033333333S');
+  });
+
   it('returns an existing Duration instance unchanged when no options are passed', () => {
     const shift = hours(8);
     expect(duration(shift)).toBe(shift);

@@ -52,7 +52,8 @@ export const spill = (fields, name, value) => {
           : 0,
       });
     }
-    spill(fields, next[0], Number((fraction * next[1]).toFixed(9)));
+    // nanoseconds are the smallest unit, so what is finer rounds to the nearest one
+    spill(fields, next[0], Number((fraction * next[1]).toFixed(next[0] === 'nanosecond' ? 0 : 9)));
   }
   return fields;
 };
