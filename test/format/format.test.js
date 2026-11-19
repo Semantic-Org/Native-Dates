@@ -428,6 +428,16 @@ describe('format() with an Intl options object', () => {
     expect(ascii(standup.format(clock, 'en-US'))).toBe('9:30 AM');
   });
 
+  // two zones so one always differs from the host, and the formatter cache keys both option objects alike
+  it('keeps the DateTime timezone when options.timeZone is undefined, in that call and in later calls', () => {
+    const clock = { hour: 'numeric', minute: '2-digit', second: '2-digit' };
+    for (const zone of ['Asia/Tokyo', 'America/Los_Angeles']) {
+      const standup = datetime('2026-11-16T09:30', zone);
+      expect(ascii(standup.format({ ...clock, timeZone: undefined }, 'en-US'))).toBe('9:30:00 AM');
+      expect(ascii(standup.format(clock, 'en-US'))).toBe('9:30:00 AM');
+    }
+  });
+
   // options reused from toLocaleDateString() can include a western timeZone that would shift UTC midnight back a day
   it('ignores options.timeZone on CalendarDate, Time, MonthDay, and YearMonth', () => {
     const inHonolulu = { timeZone: 'Pacific/Honolulu' };
