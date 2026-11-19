@@ -231,8 +231,6 @@ describe('token patterns that cannot be printed', () => {
     );
   });
 
-  it.todo('throws unknownFormat for a run of one letter longer than any token, such as SSSSSS or YYYYYY');
-
   it('throws unsupportedToken naming the token when a date is asked for the clock', () => {
     expect(() => friday.format('HH:mm')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unsupportedToken', at: "HH in 'HH:mm'" }),
