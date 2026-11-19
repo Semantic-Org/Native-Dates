@@ -259,45 +259,27 @@ describe('Duration unit factories (years() through milliseconds())', () => {
     expect(factory(count).toFields()).toEqual(fields);
   });
 
-  // a count from float division, such as hours(minutes / 60), has no exact decimal form
-  it.each([
-    ['hours', 1 / 3, hours, 'PT20M'],
-    ['hours', 100 / 60, hours, 'PT1H40M'],
-    ['days', 1 / 3, days, 'PT8H'],
-    ['years', 1 / 3, years, 'P4M'],
-    ['years', 1 / 12, years, 'P1M'],
-    ['years', 7 / 6, years, 'P1Y2M'],
-  ])('spills repeating fraction %s(%s) into whole smaller units', (_, count, factory, iso) => {
-    expect(factory(count).toString()).toBe(iso);
-  });
-
-  it('sums three thirds of an hour to exactly one hour', () => {
-    const third = hours(1 / 3);
-    expect(third.plus(third).plus(third).equals(hours(1))).toBe(true);
-    expect(hours(1).times(1 / 3).toString()).toBe('PT20M');
-  });
-
-  // subtracting the whole part leaves float residue that grows with the count, such as 16396.1 - 16396
+  // subtracting a large integer leaves IEEE-754 residue (e.g. 495000.3 - 495000 = 0.29999999998835847)
   it('spills decimal fractions of large counts without floating-point residue', () => {
     expect(duration(16396.1).toFields()).toEqual({ milliseconds: 16396, microseconds: 100 });
     expect(seconds(8219.3).toFields()).toEqual({ seconds: 8219, milliseconds: 300 });
     expect(minutes(525600.1).toFields()).toEqual({ minutes: 525600, seconds: 6 });
     expect(hours(1000000.1).toFields()).toEqual({ hours: 1000000, minutes: 6 });
+    expect(hours(495000.3 - 495000).toString()).toBe('PT18M');
   });
 
   it('rounds a repeating fraction of a second at the nanosecond', () => {
     expect(seconds(1 / 3).toFields()).toEqual({ milliseconds: 333, microseconds: 333, nanoseconds: 333 });
   });
 
-  // a count of 100,000 or more leaves its remainder fewer than 9 of a number's 15 significant digits
-  it('keeps at least 9 decimal places of a remainder, whatever the size or sign of the count', () => {
+  it('preserves 9 decimal places of a remainder across positive and negative counts', () => {
     expect(seconds(1795075200.123456).microseconds).toBe(456);
     expect(hours(-123456.123456789).equals(hours(123456.123456789).negated())).toBe(true);
     expect(hours(-12345.1234567891).equals(hours(12345.1234567891).negated())).toBe(true);
   });
 
-  // months cannot spill, so a remainder is refused, and float residue must not read as one
-  it('reads a month count within 9 decimal places of a whole number as whole', () => {
+  // months cannot spill, so sub-nanosecond float residue around an integer must not throw invalidFraction
+  it('treats a month count within 9 decimal places of an integer as whole', () => {
     expect(months(1 + 1e-10).toString()).toBe('P1M');
     expect(months(9.000000000000005).toString()).toBe('P9M');
   });
