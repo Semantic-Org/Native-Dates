@@ -344,7 +344,10 @@ describe('util.inspect() formatting', () => {
       globalName: 'nativeDates',
       write: false,
       logLevel: 'silent',
-      stdin: { contents: "export * from 'native-dates';", resolveDir: fileURLToPath(new URL('..', import.meta.url)) },
+      stdin: {
+        contents: "export * from 'native-dates';",
+        resolveDir: fileURLToPath(new URL('../..', import.meta.url)),
+      },
     });
     const minified = vm.runInThisContext(`(() => { ${bundle.outputFiles[0].text}\nreturn nativeDates; })()`);
     expect(minified.DateRange.name).not.toBe('DateRange');
