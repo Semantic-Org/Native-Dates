@@ -234,6 +234,48 @@ export class CalendarDate {
   endOf(unit: DateUnit, firstDay?: DayOfWeek): CalendarDate;
 
   /**
+   * Returns the first day of the calendar unit after the one containing this date.
+   * The result is always later than this date, so from December 1 the next month starts on January 1.
+   * A weekday name in place of a unit returns the next day with that name, as `next()` does.
+   *
+   * @param unit - Calendar unit from `'year'` down to `'day'`, or a weekday name such as `'wednesday'`
+   * @param firstDay - First day of the week when `unit` is `'week'`, such as `'sunday'` or 7
+   * @returns The first `CalendarDate` of the next `unit`, or the next given weekday
+   *
+   * @example
+   * ```ts
+   * const mon = date('2026-11-16', { locale: 'en-US' });
+   * mon.startOfNext('month').toString(); // '2026-12-01'
+   * mon.startOfNext('quarter').toString(); // '2027-01-01'
+   * mon.startOfNext('week').toString(); // '2026-11-22'
+   * mon.startOfNext('wednesday').toString(); // '2026-11-18'
+   * ```
+   *
+   * @see {@link https://nativedates.dev/api/calendar-date/#startofnext startOfNext}
+   */
+  startOfNext(unit: DateUnit | Exclude<DayOfWeek, number>, firstDay?: DayOfWeek): CalendarDate;
+
+  /**
+   * Returns the first day of the calendar unit before the one containing this date.
+   * A weekday name in place of a unit returns the most recent day with that name, as `previous()` does.
+   *
+   * @param unit - Calendar unit from `'year'` down to `'day'`, or a weekday name such as `'wednesday'`
+   * @param firstDay - First day of the week when `unit` is `'week'`
+   * @returns The first `CalendarDate` of the previous `unit`, or the previous given weekday
+   *
+   * @example
+   * ```ts
+   * const mon = date('2026-11-16');
+   * mon.startOfPrevious('month').toString(); // '2026-10-01'
+   * mon.startOfPrevious('year').toString(); // '2025-01-01'
+   * mon.startOfPrevious('wednesday').toString(); // '2026-11-11'
+   * ```
+   *
+   * @see {@link https://nativedates.dev/api/calendar-date/#startofprevious startOfPrevious}
+   */
+  startOfPrevious(unit: DateUnit | Exclude<DayOfWeek, number>, firstDay?: DayOfWeek): CalendarDate;
+
+  /**
    * Moves forward to the next given weekday after this date.
    * When already on that weekday, advances seven days to the following occurrence.
    *

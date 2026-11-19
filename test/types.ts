@@ -55,6 +55,10 @@ const spec: FormatSpec = { dateStyle: 'long' };
 export const chained: DateTime = today().plus(2, 'days').at('9am').in('Europe/Berlin');
 export const constructed: CalendarDate = new CalendarDate('2026-09-06', options).endOf('month');
 export const shifted: DateTime = new DateTime(Date.now(), zone).minus(hours(3)).startOf('week', 'sunday');
+export const nextQuarter: CalendarDate = due.startOfNext('quarter');
+export const lastSunday: CalendarDate = due.startOfPrevious('sunday');
+export const nextWednesday: DateTime = meeting.startOfNext('wednesday');
+export const lastWeek: DateTime = meeting.startOfPrevious('week', 'monday');
 export const elapsed: Duration = meeting.until(viaCore);
 export const elapsedHours: number = meeting.until(viaCore, unit);
 export const stay: DateRange = due.for(3, 'days');
@@ -147,5 +151,9 @@ meeting.remove(1, 'day');
 due.hour;
 // @ts-expect-error MonthDay is unordered
 birthday.isBefore(due);
+// @ts-expect-error startOfNext() takes a weekday by name, so a count before a unit is not next Tuesday
+due.startOfNext(2, 'months');
+// @ts-expect-error startOfPrevious() takes a weekday by name
+meeting.startOfPrevious(7);
 // @ts-expect-error loose: true returns DateTime | null
 export const unchecked: DateTime = datetime('TBD', { loose: true });

@@ -154,6 +154,14 @@ describe('weekStart resolution', () => {
     expect(wednesday.locale('en-US').startOf('week', undefined).toString()).toBe('2026-11-15');
   });
 
+  it('starts startOfNext("week") and startOfPrevious("week") on configure({ weekStart }) over the instance locale', () => {
+    configure({ weekStart: 'saturday' });
+    expect(wednesday.locale('en-US').startOfNext('week').toString()).toBe('2026-11-21');
+    expect(wednesday.locale('en-US').startOfPrevious('week').toString()).toBe('2026-11-07');
+    expect(datetime('2026-11-18T14:45', 'UTC').startOfNext('week').toString()).toBe('2026-11-21T00:00:00.000Z');
+    expect(wednesday.startOfNext('week', 'monday').toString()).toBe('2026-11-23');
+  });
+
   it('keeps ISO weekOfYear and format("W") anchored to Monday regardless of configured weekStart', () => {
     configure({ weekStart: 'sunday' });
     expect(date('2026-11-15').weekOfYear).toBe(46);

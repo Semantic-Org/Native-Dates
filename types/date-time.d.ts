@@ -393,6 +393,46 @@ export class DateTime {
   endOf(unit: Unit, firstDay?: DayOfWeek): DateTime;
 
   /**
+   * Moves forward to the start of the calendar or clock unit after the one containing this moment, in this time zone.
+   * The result is always later than this moment, so from midnight the next day starts at the following midnight.
+   * A weekday name in place of a unit returns the start of the next day with that name, where `next()` keeps the time of day.
+   *
+   * @param unit - Calendar or clock unit from `'year'` down to `'nanosecond'`, or a weekday name such as `'wednesday'`
+   * @param firstDay - First day of the week when `unit` is `'week'`, such as `'sunday'` or 7
+   * @returns A new `DateTime` at the start of the next `unit`, or of the next given weekday
+   *
+   * @example
+   * ```ts
+   * const standup = datetime('2026-11-16T09:30', 'America/New_York');
+   * standup.startOfNext('month').toString(); // '2026-12-01T05:00:00.000Z'
+   * standup.startOfNext('hour').hour; // 10
+   * standup.startOfNext('wednesday').toString(); // '2026-11-18T05:00:00.000Z'
+   * ```
+   *
+   * @see {@link https://nativedates.dev/api/date-time/#startofnext startOfNext}
+   */
+  startOfNext(unit: Unit | Exclude<DayOfWeek, number>, firstDay?: DayOfWeek): DateTime;
+
+  /**
+   * Moves back to the start of the calendar or clock unit before the one containing this moment, in this time zone.
+   * A weekday name in place of a unit returns the start of the previous day with that name, where `previous()` keeps the time of day.
+   *
+   * @param unit - Calendar or clock unit from `'year'` down to `'nanosecond'`, or a weekday name such as `'wednesday'`
+   * @param firstDay - First day of the week when `unit` is `'week'`
+   * @returns A new `DateTime` at the start of the previous `unit`, or of the previous given weekday
+   *
+   * @example
+   * ```ts
+   * const standup = datetime('2026-11-16T09:30', 'America/New_York');
+   * standup.startOfPrevious('day').toString(); // '2026-11-15T05:00:00.000Z'
+   * standup.startOfPrevious('hour').hour; // 8
+   * ```
+   *
+   * @see {@link https://nativedates.dev/api/date-time/#startofprevious startOfPrevious}
+   */
+  startOfPrevious(unit: Unit | Exclude<DayOfWeek, number>, firstDay?: DayOfWeek): DateTime;
+
+  /**
    * Rounds to the nearest calendar day or clock unit, with half-way ties rounding up.
    *
    * @param unit - Unit to round to, from `'day'` down to `'nanosecond'`
