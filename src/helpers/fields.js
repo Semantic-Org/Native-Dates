@@ -41,12 +41,10 @@ export const spill = (fields, name, value) => {
     });
   }
   const whole = Math.trunc(value);
-  const next = spillsInto[name];
-  // preserve up to 15 IEEE-754 significant digits across the integer and fraction parts (at least 9 decimal places)
-  // so repeating fractions like hours(1 / 3) spill to 20 minutes instead of 19m 59.9999988s
-  const fraction = Number((value - whole).toFixed(next ? Math.max(9, 15 - String(Math.abs(whole)).length) : 9));
+  const fraction = Number((value - whole).toFixed(9));
   fields[plural(name)] = (fields[plural(name)] ?? 0) + whole;
   if (fraction) {
+    const next = spillsInto[name];
     if (!next) {
       refuse('invalidFraction', `${value} ${name}`, {
         explanation: isDevelopment
