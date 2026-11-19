@@ -22,4 +22,7 @@ describe('@native-dates/core exports', () => {
       core.configure({ zone: null });
     }
   });
+
+  // its exports map names only the import condition, as the one in native-dates does
+  it.todo('load with require() from a CommonJS file, as Node 26 loads any ES module');
 });
