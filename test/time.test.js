@@ -423,6 +423,53 @@ describe('Time.startOf() and Time.endOf()', () => {
   });
 });
 
+describe('Time.startOfNext() and Time.startOfPrevious()', () => {
+  const afternoon = time('14:37:22.123456789');
+
+  it.each([
+    ['hour', '15:00:00', '13:00:00'],
+    ['minute', '14:38:00', '14:36:00'],
+    ['second', '14:37:23', '14:37:21'],
+    ['millisecond', '14:37:22.124', '14:37:22.122'],
+    ['microsecond', '14:37:22.123457', '14:37:22.123455'],
+    ['nanosecond', '14:37:22.123456790', '14:37:22.123456788'],
+  ])('returns the start of the next and previous %s', (unit, next, previous) => {
+    expect(afternoon.startOfNext(unit).toString()).toBe(next);
+    expect(afternoon.startOfPrevious(unit).toString()).toBe(previous);
+  });
+
+  it('advances or rewinds a full unit when already aligned on the boundary', () => {
+    const topOfHour = time('14:00:00');
+    expect(topOfHour.startOfNext('hour').toString()).toBe('15:00:00');
+    expect(topOfHour.startOfPrevious('hour').toString()).toBe('13:00:00');
+  });
+
+  it('wraps around midnight in both directions', () => {
+    expect(time('23:37:22').startOfNext('hour').toString()).toBe('00:00:00');
+    expect(time('00:15:00').startOfPrevious('hour').toString()).toBe('23:00:00');
+  });
+
+  it('returns a new Time without mutating the original', () => {
+    expect(afternoon.startOfNext('hour')).not.toBe(afternoon);
+    expect(afternoon.toString()).toBe('14:37:22.123456789');
+  });
+
+  it.each(['day', 'week', 'month', 'quarter', 'year'])('throws cannotRound for calendar unit %s', (unit) => {
+    const errorMatch = expect.objectContaining({ name: 'RangeError', code: 'cannotRound', at: unit });
+    expect(() => time('14:37').startOfNext(unit)).toThrow(errorMatch);
+    expect(() => time('14:37').startOfPrevious(unit)).toThrow(errorMatch);
+  });
+
+  it.each([['fortnight', 'fortnight'], ['wednesday', 'wednesday'], [3, '3'], [undefined, 'undefined']])(
+    'throws unknownUnit for %s',
+    (target, at) => {
+      const errorMatch = expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at });
+      expect(() => time('14:37').startOfNext(target)).toThrow(errorMatch);
+      expect(() => time('14:37').startOfPrevious(target)).toThrow(errorMatch);
+    },
+  );
+});
+
 describe('Time.round(), Time.floor(), and Time.ceil()', () => {
   it('rounds to the nearest whole unit', () => {
     expect(time('14:36').round('hour').toString()).toBe('15:00:00');

@@ -253,6 +253,68 @@ time('14:37:22').endOf('hour').toString(); // '14:59:59.999'
 :::
 
 :::entry
+### `startOfNext()` :kind[method]
+
+```js signature
+t.startOfNext(unit): Time
+```
+
+Moves forward to the start of the clock unit after the one containing this time, wrapping around midnight. Always advances into the next unit, so calling `startOfNext('hour')` on `14:00:00` returns `15:00:00`.
+
+**Parameters**
+
+```params
+- name: unit
+  type: Unit
+  required: true
+  description: Clock unit from `'hour'` down to `'nanosecond'`.
+```
+
+**Returns**
+
+```returns
+type: Time
+description: A new `Time` at the start of the next `unit`.
+```
+
+```js
+time('14:37:22').startOfNext('hour').toString(); // '15:00:00'
+time('23:37:22').startOfNext('hour').toString(); // '00:00:00'
+```
+:::
+
+:::entry
+### `startOfPrevious()` :kind[method]
+
+```js signature
+t.startOfPrevious(unit): Time
+```
+
+Moves back to the start of the clock unit before the one containing this time, wrapping around midnight.
+
+**Parameters**
+
+```params
+- name: unit
+  type: Unit
+  required: true
+  description: Clock unit from `'hour'` down to `'nanosecond'`.
+```
+
+**Returns**
+
+```returns
+type: Time
+description: A new `Time` at the start of the previous `unit`.
+```
+
+```js
+time('14:37:22').startOfPrevious('hour').toString(); // '13:00:00'
+time('00:15:00').startOfPrevious('hour').toString(); // '23:00:00'
+```
+:::
+
+:::entry
 ### `round()` :kind[method]
 
 ```js signature
