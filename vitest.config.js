@@ -18,6 +18,7 @@ export default defineConfig({
           include: [
             '**/test/unit/**/*.test.{ts,js}',
             '**/test/*.test.{ts,js}',
+            'tools/**/*.test.{ts,js}',
           ],
           exclude,
           name: 'node',
