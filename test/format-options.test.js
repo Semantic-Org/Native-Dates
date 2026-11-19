@@ -59,8 +59,6 @@ describe('format() with an Intl options bag', () => {
     expect(afternoon.format({ hour12: false }, 'en-US')).toBe('17:30');
   });
 
-  it.todo('keeps the default date and clock of a datetime when the bag names no field, such as { hour12: false }');
-
   it('prints a datetime in the zone a bag names in timeZone, for that call only', () => {
     const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
     const clock = { hour: 'numeric', minute: '2-digit' };

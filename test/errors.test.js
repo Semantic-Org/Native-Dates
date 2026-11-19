@@ -466,8 +466,6 @@ describe('junk passed where a value was expected', () => {
     expect(leaks).toEqual([]);
   });
 
-  it.todo('refuses an epoch number beyond the supported range, such as nanoseconds since 1970, with a code');
-
   it.todo('reads a units object that has no prototype in plus() and minus(), as duration() reads it');
 });
 

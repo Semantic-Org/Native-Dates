@@ -172,8 +172,6 @@ describe('datetime() reading a DateTime or a Temporal value', () => {
     const day = datetime(Temporal.PlainDate.from('2026-11-16'), 'America/Los_Angeles');
     expect(day.toString()).toBe('2026-11-16T08:00:00.000Z');
   });
-
-  it.todo('reads a Temporal value kept in another calendar by the ISO calendar, or refuses it with a code');
 });
 
 describe('datetime() choosing the zone', () => {
@@ -305,8 +303,6 @@ describe('datetime() refusing input', () => {
     );
   });
 
-  it.todo('refuses a number beyond the last moment Temporal can hold with a coded error');
-  it.todo('refuses a fraction in a fields object instead of dropping it');
   it.todo('reads the time after a lowercase t instead of dropping it');
   // datetime(text, { timeZone: 'Asia/Tokyo' }) reads in the default zone and says nothing
   it.todo('refuses an option it does not know, such as timeZone, the key Intl uses for the zone');
@@ -606,7 +602,6 @@ describe('DateTime.set()', () => {
     expect(secondHalfPastOne.set('minute', 45).toString()).toBe('2026-11-01T06:45:00.000Z');
   });
 
-  it.todo('refuses null or true as a field value instead of reading them as 0 and 1');
   // set('month', 2) on January 31 throws cannotSet, where plus(1, 'month') gives February 28
   it.todo('stops at the last day of a shorter month when only the month or the year is set');
 });
@@ -870,8 +865,6 @@ describe('DateTime.round(), floor() and ceil()', () => {
       expect.objectContaining({ name: 'RangeError', code: 'cannotRound', at: '7 minutes' }),
     );
   });
-
-  it.todo('refuses a step with a fraction instead of rounding to the whole step below it');
 
   it('refuses a unit it does not know with unknownUnit', () => {
     expect(() => stamp.round('fortnight')).toThrowError(
