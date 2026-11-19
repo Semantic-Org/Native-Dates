@@ -86,7 +86,24 @@ describe('dayFirst with { loose: true }', () => {
     expect(datetime('30/02/2026 10:00', { loose: true, dayFirst: true, zone: 'UTC' })).toBeNull();
   });
 
+  it('returns null for 31 February when read day first', () => {
+    expect(date('31/02/2026', { loose: true, dayFirst: true })).toBeNull();
+    expect(date('31/2/24', { loose: true, dayFirst: true })).toBeNull();
+  });
+
+  // a cell cut from a CSV line keeps the space after its comma
+  it('reads the day first in text with spaces around it', () => {
+    expect(date('  7/9/2026  ', { loose: true, dayFirst: true })?.toString()).toBe('2026-09-07');
+    expect(datetime(' 7/9/2026 14:30', { loose: true, dayFirst: true, zone: 'UTC' })?.toString()).toBe(
+      '2026-09-07T14:30:00.000Z',
+    );
+  });
+
   it.todo('reads "7 / 9 / 2026" and "7 9 2026" as 7 September when dayFirst is set, as it does "7/9/2026"');
+  // only a date that opens the text is reordered, so these come back as 9 July
+  it.todo(
+    'reads the day first when a weekday or a clock comes before the date, like "Mon, 07/09/2026" or "14:30 7/9/2026"',
+  );
 });
 
 describe('configure({ dayFirst }) with the loose plugin', () => {

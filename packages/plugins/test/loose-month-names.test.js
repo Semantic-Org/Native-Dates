@@ -17,6 +17,16 @@ describe('monthDay() with { loose: true }', () => {
     expect(monthDay(text, { loose: true })?.toString()).toBe('10-17');
   });
 
+  it('reads a month cut short of its full name, like "Sept"', () => {
+    expect(monthDay('Sept 17', { loose: true })?.toString()).toBe('09-17');
+    expect(monthDay('17 Sept.', { loose: true })?.toString()).toBe('09-17');
+  });
+
+  // Dutch shortens maart to mrt, which is not how maart begins
+  it('reads a short month name that is not the start of the long one', () => {
+    expect(monthDay('5 mrt', { loose: true, locale: 'nl' })?.toString()).toBe('03-05');
+  });
+
   it('reads every English ordinal ending', () => {
     expect(monthDay('Jan 1st', { loose: true })?.toString()).toBe('01-01');
     expect(monthDay('2nd Feb', { loose: true })?.toString()).toBe('02-02');
@@ -127,6 +137,11 @@ describe('yearMonth() with { loose: true }', () => {
     expect(yearMonth('Mar 2026', { loose: true, locale: 'fi' })?.toString()).toBe('2026-03');
   });
 
+  it('reads a month cut short of its full name, or shortened another way', () => {
+    expect(yearMonth('Sept 2026', { loose: true })?.toString()).toBe('2026-09');
+    expect(yearMonth('mrt 2026', { loose: true, locale: 'nl' })?.toString()).toBe('2026-03');
+  });
+
   it('returns null for a month name the locale does not have', () => {
     expect(yearMonth('novembre 2026', { loose: true, locale: 'en' })).toBeNull();
     expect(yearMonth('Foo 2026', { loose: true })).toBeNull();
@@ -149,6 +164,9 @@ describe('yearMonth() with { loose: true }', () => {
     expect(yearMonth('2026/11', { loose: true })?.toString()).toBe('2026-11');
     expect(yearMonth('2026-11-16', { loose: true })?.toString()).toBe('2026-11');
   });
+
+  // format() prints a Thai year counted from the Buddhist era, and it is read back as written
+  it.todo('reads back the year-month format() prints in Thai, "มกราคม 2569", as January 2026 and not the year 2569');
 });
 
 describe('monthYear() with { loose: true }', () => {
