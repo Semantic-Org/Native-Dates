@@ -411,7 +411,4 @@ describe('errors in browser bundles without a process global', () => {
     },
     30_000,
   );
-
-  // typeof process !== 'undefined' evaluates to false in browsers even when a bundler replaces process.env.NODE_ENV
-  it.todo('preserves line-two error explanations when bundled with NODE_ENV="development" and no process global');
 });
