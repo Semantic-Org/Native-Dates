@@ -7,6 +7,11 @@ const exclude = [
   'docs/**',
 ];
 
+const nodeTests = [
+  '**/test/unit/**/*.test.{ts,js}',
+  '**/test/*.test.{ts,js}',
+];
+
 export default defineConfig({
   test: {
     watch: false,
@@ -15,13 +20,20 @@ export default defineConfig({
     projects: [
       {
         test: {
-          include: [
-            '**/test/unit/**/*.test.{ts,js}',
-            '**/test/*.test.{ts,js}',
-          ],
+          include: nodeTests,
           exclude,
           name: 'node',
           environment: 'node',
+        },
+      },
+      {
+        // the node tests again on a runtime with no Temporal of its own, where the polyfill stands in
+        test: {
+          include: nodeTests,
+          exclude: [...exclude, 'packages/polyfill/**'],
+          name: 'polyfill',
+          environment: 'node',
+          setupFiles: ['packages/polyfill/test/polyfilled-runtime.js'],
         },
       },
       {
