@@ -29,6 +29,17 @@ describe('yearMonth()', () => {
     expect(yearMonth(2026, 5).toString()).toBe('2026-05');
   });
 
+  it('reads year then month from two strings of digits, as two form fields hand them over', () => {
+    expect(yearMonth('2026', '11').toString()).toBe('2026-11');
+    expect(yearMonth('2026', '05').toString()).toBe('2026-05');
+    expect(yearMonth('2026', 11).toString()).toBe('2026-11');
+  });
+
+  it('reads a string with spaces around it', () => {
+    expect(yearMonth(' 2026-11 ').toString()).toBe('2026-11');
+    expect(yearMonth('2026-11\n').toString()).toBe('2026-11');
+  });
+
   it('drops the day from a date string, a CalendarDate, date fields and a Temporal.PlainDate', () => {
     expect(yearMonth('2026-11-16').toString()).toBe('2026-11');
     expect(yearMonth(date('2026-11-16')).toString()).toBe('2026-11');
@@ -137,6 +148,9 @@ describe('yearMonth()', () => {
       expect.objectContaining({ name: 'RangeError', code: 'missingPlugin', at: 'loose' }),
     );
   });
+
+  // refused today with unknownUnit at 'text', the property every value carries
+  it.todo('reads the fields a YearMonth spreads into, as one comes back from structuredClone() or a spread');
 });
 
 describe('monthYear()', () => {
@@ -160,6 +174,29 @@ describe('monthYear()', () => {
   it('reads month then year from two numbers', () => {
     expect(monthYear(11, 26).toString()).toBe('2026-11');
     expect(monthYear(5, 2028).toString()).toBe('2028-05');
+  });
+
+  it('reads month then year from two strings of digits, as two form fields hand them over', () => {
+    expect(monthYear('11', '26').toString()).toBe('2026-11');
+    expect(monthYear('05', '2028').toString()).toBe('2028-05');
+  });
+
+  it('reads a card expiry with spaces around it', () => {
+    expect(monthYear(' 11/26 ').toString()).toBe('2026-11');
+  });
+
+  // refused today with invalidYearMonth, though card fields that format as you type write it this way
+  it.todo("reads a card expiry with spaces around the slash: monthYear('11 / 26')");
+
+  it('carries the locale passed in options beside a card expiry', () => {
+    expect(monthYear('11/26', { locale: 'fr' }).locale()).toBe('fr');
+  });
+
+  // two zones a month apart at this moment, so no machine zone gives both answers if the zone asked for is dropped
+  it('reads a moment as the month it falls in, in the zone asked for', () => {
+    const moment = new Date('2026-11-01T02:00:00Z');
+    expect(monthYear(moment, 'America/Los_Angeles').toString()).toBe('2026-10');
+    expect(monthYear(moment, 'Asia/Tokyo').toString()).toBe('2026-11');
   });
 
   it('places a two-digit year from 00 to 99 in the 2000s', () => {

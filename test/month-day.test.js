@@ -15,6 +15,17 @@ describe('monthDay()', () => {
     expect(monthDay('1/2').toString()).toBe('01-02');
   });
 
+  it('reads month then day from two strings of digits, as two form fields hand them over', () => {
+    expect(monthDay('10', '17').toString()).toBe('10-17');
+    expect(monthDay('02', '29').toString()).toBe('02-29');
+    expect(monthDay('10', 17).toString()).toBe('10-17');
+  });
+
+  it('reads a string with spaces around it', () => {
+    expect(monthDay(' 10/17 ').toString()).toBe('10-17');
+    expect(monthDay('10-17\n').toString()).toBe('10-17');
+  });
+
   it("reads the ISO 8601 form with two leading dashes, '--10-17'", () => {
     expect(monthDay('--10-17').toString()).toBe('10-17');
   });
@@ -132,6 +143,9 @@ describe('monthDay()', () => {
       expect.objectContaining({ name: 'RangeError', code: 'missingPlugin', at: 'loose' }),
     );
   });
+
+  // refused today with unknownUnit at 'text', the property every value carries
+  it.todo('reads the fields a MonthDay spreads into, as one comes back from structuredClone() or a spread');
 });
 
 describe('dayMonth()', () => {
@@ -144,6 +158,30 @@ describe('dayMonth()', () => {
 
   it('reads a single-digit day and month across a dash day-first', () => {
     expect(dayMonth('5-6').toString()).toBe('06-05');
+  });
+
+  it('reads two digits, a dash and two digits month-first, the form toString() and toJSON() write', () => {
+    expect(dayMonth('10-17').toString()).toBe('10-17');
+    expect(dayMonth('05-06').toString()).toBe('05-06');
+    expect(monthDay('05-06', { dayFirst: true }).toString()).toBe('05-06');
+  });
+
+  it('reads day then month from two strings of digits, as two form fields hand them over', () => {
+    expect(dayMonth('17', '10').toString()).toBe('10-17');
+    expect(dayMonth('29', '02').toString()).toBe('02-29');
+  });
+
+  it('reads a string day-first and carries the locale when given options', () => {
+    const birthday = dayMonth('17/10', { locale: 'fr' });
+    expect(birthday.toString()).toBe('10-17');
+    expect(birthday.locale()).toBe('fr');
+  });
+
+  // two zones a day apart, so no machine zone gives both answers if the zone asked for is dropped
+  it('reads a moment as the month and day it falls on in the zone asked for', () => {
+    const moment = new Date('2026-10-18T02:00:00Z');
+    expect(dayMonth(moment, 'America/Los_Angeles').toString()).toBe('10-17');
+    expect(dayMonth(moment, 'Asia/Tokyo').toString()).toBe('10-18');
   });
 
   it('accepts February 29 written day-first', () => {
@@ -200,6 +238,11 @@ describe('MonthDay', () => {
   it('prints its month and day in text, in the locale it carries', () => {
     expect(monthDay('10-17', { locale: 'en-US' }).text).toBe('Oct 17');
     expect(monthDay('02-29', { locale: 'en-US' }).text).toBe('Feb 29');
+  });
+
+  it('writes text in the language of the locale it carries', () => {
+    expect(monthDay(10, 17).locale('ja').text).toBe('10月17日');
+    expect(monthDay('10-17', { locale: 'fr' }).text).toBe('17 oct.');
   });
 
   it('cannot be changed after it is made', () => {
@@ -524,6 +567,17 @@ describe('MonthDay.isToday(), isTomorrow() and isYesterday()', () => {
     expect(monthDay(10, 17).isYesterday('Asia/Tokyo')).toBe(true);
   });
 
+  // two zones a day apart, so no machine zone gives both answers if the zone asked for is dropped
+  it('reads tomorrow and yesterday in the zone asked for', () => {
+    vi.setSystemTime(new Date('2026-10-18T02:00:00Z'));
+    expect(monthDay(10, 18).isTomorrow('America/Los_Angeles')).toBe(true);
+    expect(monthDay(10, 19).isTomorrow('Asia/Tokyo')).toBe(true);
+    expect(monthDay(10, 18).isTomorrow('Asia/Tokyo')).toBe(false);
+    expect(monthDay(10, 16).isYesterday('America/Los_Angeles')).toBe(true);
+    expect(monthDay(10, 17).isYesterday('Asia/Tokyo')).toBe(true);
+    expect(monthDay(10, 17).isYesterday('America/Los_Angeles')).toBe(false);
+  });
+
   it('counts February 29 as today on February 28 of a year with no leap day', () => {
     vi.setSystemTime(new Date('2027-02-28T12:00:00Z'));
     expect(monthDay(2, 29).isToday('UTC')).toBe(true);
@@ -682,6 +736,17 @@ describe('MonthDay.toString(), toJSON() and toTemporal()', () => {
         const written = monthDay(index + 1, day);
         expect(monthDay(written.toString())).toMatchObject({ month: index + 1, day });
         expect(monthDay(JSON.parse(JSON.stringify(written)))).toMatchObject({ month: index + 1, day });
+      }
+    });
+  });
+
+  it('reads every day of the year back from its own string under dayMonth() too', () => {
+    const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    daysInMonth.forEach((days, index) => {
+      for (let day = 1; day <= days; day++) {
+        const written = monthDay(index + 1, day);
+        expect(dayMonth(written.toString())).toMatchObject({ month: index + 1, day });
+        expect(dayMonth(JSON.parse(JSON.stringify(written)))).toMatchObject({ month: index + 1, day });
       }
     });
   });
