@@ -65,6 +65,15 @@ describe('date() with { loose: true }', () => {
     expect(date('Sep 6, 2026', { loose: true, locale: 'fr' })?.locale()).toBe('fr');
   });
 
+  // a date picker hands over a Date where a text field hands over what was typed
+  it('reads a Date, a DateTime, fields and a CalendarDate as it does without loose', () => {
+    const lateEvening = new Date('2026-09-06T20:30:00Z');
+    expect(date(lateEvening, { loose: true, zone: 'Asia/Tokyo' })?.toString()).toBe('2026-09-07');
+    expect(date(datetime(lateEvening, 'UTC'), { loose: true, zone: 'Asia/Tokyo' })?.toString()).toBe('2026-09-07');
+    expect(date({ year: 2026, month: 9, day: 6 }, { loose: true })?.toString()).toBe('2026-09-06');
+    expect(date(date('2026-09-06'), { loose: true })?.toString()).toBe('2026-09-06');
+  });
+
   it.todo('returns null for a date with no year, like "Sep 6" or "9/6", instead of filling in 2001');
   it.todo('returns null for a run of digits that is no date, like "46271", instead of reading it as a year');
   it.todo('reads a day, month name and year joined by hyphens, like "6-Sep-26", as that day on any machine');
@@ -130,6 +139,10 @@ describe('datetime() with { loose: true }', () => {
     expect(datetime(new Date(epoch), { loose: true, zone: 'UTC' })?.toString()).toBe('2026-09-06T14:30:00.000Z');
   });
 
+  it('carries the locale passed beside loose', () => {
+    expect(datetime('Sep 6, 2026 5:30 PM', { loose: true, zone: 'UTC', locale: 'fr' })?.locale()).toBe('fr');
+  });
+
   describe('with configure({ zone })', () => {
     afterEach(() => {
       configure({ zone: null });
@@ -150,6 +163,10 @@ describe('datetime() with { loose: true }', () => {
     'keeps a written clock time that this machine skips for daylight saving, like 2:30 AM on 8 March in New York',
   );
   it.todo('returns null for text ending in an impossible offset, like "14:30 +2500", instead of an error with no code');
+  // the engine reads "GMT+2" as an offset and the plugin does not, so the clock comes back in the zone of the machine
+  it.todo(
+    'reads back the text of a datetime, like "Sep 6, 2026, 4:30 PM GMT+2", as the moment it names on any machine',
+  );
 });
 
 describe('time() with { loose: true }', () => {
@@ -170,6 +187,17 @@ describe('time() with { loose: true }', () => {
     expect(time('9am', { loose: true })?.toString()).toBe('09:00:00');
     expect(time('17:30:15', { loose: true })?.toString()).toBe('17:30:15');
   });
+
+  it('reads a Date, a DateTime and fields as it does without loose', () => {
+    const afternoon = new Date('2026-09-06T14:30:00Z');
+    expect(time(afternoon, { loose: true, zone: 'Asia/Tokyo' })?.toString()).toBe('23:30:00');
+    expect(time(datetime(afternoon, 'UTC'), { loose: true, zone: 'Asia/Tokyo' })?.toString()).toBe('23:30:00');
+    expect(time({ hour: 14, minute: 30 }, { loose: true })?.toString()).toBe('14:30:00');
+  });
+
+  it('carries the locale passed beside loose', () => {
+    expect(time('Sep 6, 2026 5:30 PM', { loose: true, locale: 'fr' })?.locale()).toBe('fr');
+  });
 });
 
 describe('duration() with { loose: true }', () => {
@@ -177,6 +205,10 @@ describe('duration() with { loose: true }', () => {
     expect(duration('2h', { loose: true })?.toString()).toBe('PT2H');
     expect(duration('45 mins', { loose: true })?.toString()).toBe('PT45M');
     expect(duration('2 weeks and 3 days', { loose: true })?.toString()).toBe('P2W3D');
+  });
+
+  it('carries the locale passed beside loose', () => {
+    expect(duration('2h', { loose: true, locale: 'fr' })?.locale()).toBe('fr');
   });
 
   it.each([
@@ -230,6 +262,22 @@ describe('dateRange(), datetimeRange() and timeRange() with { loose: true }', ()
     expect(dateRange('2026-09-01/2026-09-07', { loose: true })?.toString()).toBe('2026-09-01/2026-09-07');
     expect(timeRange('9am - 5pm', { loose: true })?.toString()).toBe('09:00:00/17:00:00');
   });
+
+  it('takes a zone and a locale beside one string that holds both ends', () => {
+    const shift = datetimeRange('Sep 1 2026 9:00 AM - Sep 1 2026 5:00 PM', {
+      loose: true,
+      zone: 'Asia/Tokyo',
+      locale: 'fr',
+    });
+    expect(shift?.start).toMatchObject({ zone: 'Asia/Tokyo', day: 1, hour: 9 });
+    expect(shift?.end).toMatchObject({ zone: 'Asia/Tokyo', day: 1, hour: 17 });
+    expect(shift?.locale()).toBe('fr');
+  });
+
+  it('carries the locale passed beside loose to the range and both its ends', () => {
+    const stay = dateRange('Sep 1 2026', 'Sep 7 2026', { loose: true, locale: 'fr' });
+    expect([stay?.locale(), stay?.start.locale(), stay?.end.locale()]).toEqual(['fr', 'fr', 'fr']);
+  });
 });
 
 describe('{ loose: true } returns null for input that cannot be read', () => {
@@ -264,6 +312,12 @@ describe('{ loose: true } returns null for input that cannot be read', () => {
     'Feb 30, 2026 10:00:00 GMT',
     'Jun 31, 2026 5:00 PM',
   ])('returns null for %j, a day that does not exist', (text) => {
+    expect(date(text, { loose: true })).toBeNull();
+    expect(datetime(text, { loose: true, zone: 'UTC' })).toBeNull();
+  });
+
+  // three selects for day, month and year can post 31 February, which the engine rolls to 3 March
+  it.each(['2/31/2026', 'Feb 31 2026', '31 Feb 2026'])('returns null for %j, a day February never has', (text) => {
     expect(date(text, { loose: true })).toBeNull();
     expect(datetime(text, { loose: true, zone: 'UTC' })).toBeNull();
   });
@@ -342,6 +396,9 @@ describe('{ loose: true } still throws for a mistake in the options', () => {
     expect(() => date('TBD', { loose: true, locale: 'not a locale' })).toThrowError(unknownLocale);
     expect(() => dateRange('TBD', 'TBD', { loose: true, locale: 'not a locale' })).toThrowError(unknownLocale);
   });
+
+  // these three read the input before the locale, so a bad locale beside bad input comes back as null
+  it.todo('throws unknownLocale from yearMonth(), monthDay() and duration() even when the input cannot be read');
 });
 
 describe('new CalendarDate() and the other classes with { loose: true }', () => {
@@ -396,4 +453,7 @@ describe('importing @native-dates/plugins/loose', () => {
     expect(date(text, { loose: true, zone })?.toString()).toBe(date(text, zone).toString());
     expect(datetime(text, { loose: true, zone })?.toString()).toBe(datetime(text, zone).toString());
   });
+
+  // with an option beside it, date() and time() have no way in for the Temporal type they wrap
+  it.todo('reads a Temporal.PlainDate and a Temporal.PlainTime with loose as without it, instead of returning null');
 });
