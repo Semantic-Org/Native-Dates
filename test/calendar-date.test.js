@@ -782,7 +782,14 @@ describe('CalendarDate.next() and previous()', () => {
     expect(() => monday.next()).toThrowError(expect.objectContaining({ code: 'unknownDayOfWeek' }));
   });
 
-  it.todo("throws unknownDayOfWeek for next('month') and previous('month')");
+  it("throws unknownDayOfWeek for next('month') and previous('month')", () => {
+    expect(() => monday.next('month')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: 'month' }),
+    );
+    expect(() => monday.previous('month')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: 'month' }),
+    );
+  });
 });
 
 describe('CalendarDate.equals(), isBefore(), isAfter(), and isSame()', () => {

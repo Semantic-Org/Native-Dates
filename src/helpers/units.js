@@ -105,8 +105,8 @@ export const dayOfWeek = (input) => {
   if (isNumber(input) && Number.isInteger(input) && input >= 1 && input <= 7) {
     return input;
   }
-  const key = isString(input) ? input.trim().toLowerCase().slice(0, 3) : '';
-  const index = key.length === 3 ? weekdays.findIndex((name) => name.startsWith(key)) : -1;
+  const key = isString(input) ? input.trim().toLowerCase() : '';
+  const index = key.length > 2 ? weekdays.findIndex((name) => name.startsWith(key)) : -1;
   return index === -1
     ? refuse('unknownDayOfWeek', String(input), {
       explanation: isDevelopment

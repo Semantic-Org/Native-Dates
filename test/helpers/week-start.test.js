@@ -69,7 +69,20 @@ describe('dayOfWeek()', () => {
     );
   });
 
-  it.todo("rejects non-weekday words sharing a three-letter prefix such as 'month', 'monkey', or 'sunshine'");
+  it.each(['month', 'months', 'monkey', 'sunshine', 'fritter'])(
+    'rejects %s, a non-weekday word sharing a three-letter prefix with a weekday',
+    (word) => {
+      expect(() => dayOfWeek(word)).toThrowError(
+        expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: word }),
+      );
+    },
+  );
+
+  it('parses longer prefixes of a weekday name such as tues and thurs', () => {
+    expect(dayOfWeek('tues')).toBe(2);
+    expect(dayOfWeek('Thurs')).toBe(4);
+    expect(dayOfWeek('wednes')).toBe(3);
+  });
 });
 
 describe('weekStart resolution', () => {
