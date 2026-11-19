@@ -59,6 +59,8 @@ export const nextQuarter: CalendarDate = due.startOfNext('quarter');
 export const lastSunday: CalendarDate = due.startOfPrevious('sunday');
 export const nextWednesday: DateTime = meeting.startOfNext('wednesday');
 export const lastWeek: DateTime = meeting.startOfPrevious('week', 'monday');
+export const nextHour: Time = opening.startOfNext('hour');
+export const previousMinute: Time = opening.startOfPrevious('minute');
 export const elapsed: Duration = meeting.until(viaCore);
 export const elapsedHours: number = meeting.until(viaCore, unit);
 export const stay: DateRange = due.for(3, 'days');
@@ -155,5 +157,7 @@ birthday.isBefore(due);
 due.startOfNext(2, 'months');
 // @ts-expect-error startOfPrevious() takes a weekday by name
 meeting.startOfPrevious(7);
+// @ts-expect-error Time.startOfNext() takes a single clock unit argument
+opening.startOfNext(2, 'hours');
 // @ts-expect-error loose: true returns DateTime | null
 export const unchecked: DateTime = datetime('TBD', { loose: true });
