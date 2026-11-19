@@ -52,7 +52,8 @@ export const spill = (fields, name, value) => {
           : 0,
       });
     }
-    spill(fields, next[0], Number((fraction * next[1]).toFixed(9)));
+    // round sub-nanosecond remainders to the nearest nanosecond
+    spill(fields, next[0], Number((fraction * next[1]).toFixed(next[0] === 'nanosecond' ? 0 : 9)));
   }
   return fields;
 };

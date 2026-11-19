@@ -29,7 +29,7 @@ import { zoneId } from './helpers/zones.js';
 */
 
 const noDay = /^([+-]\d{6}|\d{4})[-/.](\d{1,2})$/;
-const monthFirst = /^(\d{1,2})[-/.](\d{2}|\d{4})$/;
+const monthFirst = /^(\d{1,2})\s*[-/.]\s*(\d{2}|\d{4})$/;
 const nameAndYear = /^(?:([\p{L}\p{M}]{3,})\.?,?\s+(?:de\s+)?(\d{4})|(\d{4})\s+([\p{L}\p{M}]{3,})\.?)$/iu;
 
 const presets = {
@@ -271,9 +271,11 @@ export class YearMonth {
              Measure
   *******************************/
 
+  // CalendarDate.until() counts in days, so rebalance the span between month starts up to years
   until(other, name) {
     const rival = other instanceof YearMonth ? other : new YearMonth(other);
-    return this.start.until(rival.start, name);
+    const span = this.start.until(rival.start).balance('year');
+    return name === undefined ? span : span.total(name);
   }
 
   since(other, name) {

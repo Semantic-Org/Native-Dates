@@ -170,6 +170,7 @@ export class CalendarDate {
   /**
    * Returns a new `CalendarDate` with one or more calendar fields replaced.
    * Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into March.
+   * Updating `month` or `year` without `day` clamps an overflowing day to the end of the target month.
    *
    * @param fields - Object with `year`, `month`, or `day` values to replace
    * @returns A new `CalendarDate` with updated calendar fields
@@ -575,9 +576,9 @@ export class CalendarDate {
   isYesterday(zone?: Zone): boolean;
 
   /**
-   * Measures the calendar span from this date to `other` as a `Duration` balanced up to years,
+   * Measures the calendar span from this date to `other` as a `Duration` counted in days,
    * returning a negative duration when `other` is earlier. Remembers this starting date so
-   * months and years can be totaled accurately in days.
+   * `balance('year')` and `total('months')` can compute calendar months and years.
    *
    * @param other - Target date to measure toward
    * @returns A signed `Duration` from this date to `other`
@@ -585,7 +586,8 @@ export class CalendarDate {
    * @example
    * ```ts
    * const start = date('2026-01-01');
-   * start.until('2027-04-05').toString(); // 'P1Y3M4D'
+   * start.until('2027-04-05').toString(); // 'P459D'
+   * start.until('2027-04-05').balance('year').toString(); // 'P1Y3M4D'
    * start.until('2027-04-05', 'days'); // 459
    * ```
    *
@@ -609,7 +611,7 @@ export class CalendarDate {
   until(other: CalendarDateInput, unit: Unit): number;
 
   /**
-   * Measures the calendar span elapsed since an earlier date as a `Duration` balanced up to years.
+   * Measures the calendar span elapsed since an earlier date as a `Duration` counted in days.
    *
    * @param other - Earlier date to measure from
    * @returns A signed `Duration` from `other` to this date

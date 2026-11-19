@@ -18,6 +18,7 @@ import {
   isInstant,
   isPlainDateTime,
   isPlainTime,
+  isUnzoned,
   isZonedDateTime,
   localeOf,
   namesInstant,
@@ -334,7 +335,8 @@ export class Time {
   }
 
   on(day, zone) {
-    return new CalendarDate(day, { locale: this.#locale }).at(this, zone);
+    // Date, Temporal.Instant, and instant strings carry no zone of their own, so resolve their date in `zone`
+    return new CalendarDate(day, { zone: isUnzoned(day) ? zone : undefined, locale: this.#locale }).at(this, zone);
   }
 
   as(kind) {
