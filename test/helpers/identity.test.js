@@ -109,7 +109,7 @@ beforeAll(async () => {
     globalName: 'nativeDates',
     write: false,
     logLevel: 'silent',
-    stdin: { contents: "export * from 'native-dates';", resolveDir: fileURLToPath(new URL('..', import.meta.url)) },
+    stdin: { contents: "export * from 'native-dates';", resolveDir: fileURLToPath(new URL('../..', import.meta.url)) },
   });
   const code = `(() => { ${bundle.outputFiles[0].text}\nreturn nativeDates; })()`;
   secondCopy = vm.runInThisContext(code);
