@@ -90,6 +90,29 @@ describe('dayOfWeek()', () => {
     expect(dayOfWeek('Thurs')).toBe(4);
     expect(dayOfWeek('wednes')).toBe(3);
   });
+
+  // distinguishes the two branches sharing unknownDayOfWeek when a caller passes a unit to next() or previous()
+  it('points to plus() and startOfNext() in development when given a unit name instead of a weekday', () => {
+    let unitError;
+    let typoError;
+    try {
+      date('2026-06-14').next('months');
+    }
+    catch (error) {
+      unitError = error;
+    }
+    try {
+      date('2026-06-14').next('funday');
+    }
+    catch (error) {
+      typoError = error;
+    }
+    expect(unitError).toMatchObject({ code: 'unknownDayOfWeek', at: 'months' });
+    expect(unitError.message).toContain(".plus(1, 'month')");
+    expect(unitError.message).toContain(".startOfNext('month')");
+    expect(typoError).toMatchObject({ code: 'unknownDayOfWeek', at: 'funday' });
+    expect(typoError.message).not.toContain('startOfNext');
+  });
 });
 
 describe('weekStart resolution', () => {
