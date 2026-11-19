@@ -110,6 +110,17 @@ const settings: Settings = { zoneAliases: { hq: 'Europe/Berlin' }, dayFirst: tru
 const active: ActiveSettings = configure(settings);
 export const configured: Record<string, string> = active.zoneAliases;
 
+// a locale is a tag, a header or a list of tags such as navigator.languages, and reads back as a tag or a list
+declare const languages: readonly string[];
+export const fromBrowser: CalendarDate = due.locale(languages);
+export const appWide: ActiveSettings = configure({ locale: languages });
+export const inFrench: string = due.format('long', ['fr-CH', 'fr']);
+export const fromHeader: string | readonly string[] | undefined = due.locale('fr-CH;q=0.8, de;q=0.9').locale();
+
+// @ts-expect-error a carried locale may be a list, which has no toUpperCase()
+due.locale()?.toUpperCase();
+// @ts-expect-error so may the configured one
+active.locale?.toUpperCase();
 // @ts-expect-error epoch became epochMilliseconds
 meeting.epoch;
 // @ts-expect-error weekday became dayOfWeek
