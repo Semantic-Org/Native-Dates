@@ -25,6 +25,14 @@ describe('time() reading clock strings', () => {
     },
   );
 
+  // CLDR writes a narrow no-break space before AM and PM, and a time pasted from a page keeps it
+  it.each([
+    ['a narrow no-break space', '5:15 PM'],
+    ['a no-break space', '5:15 PM'],
+  ])('reads a 12-hour time written with %s before PM', (_, text) => {
+    expect(time(text).toString()).toBe('17:15:00');
+  });
+
   it.each([
     ['09:00', '09:00:00'],
     ['17:30', '17:30:00'],
@@ -64,6 +72,9 @@ describe('time() reading clock strings', () => {
   it.each(['whenever', '', '2026-11-16'])('throws invalidTime at %j, which names no clock time', (text) => {
     expect(() => time(text)).toThrow(expect.objectContaining({ code: 'invalidTime', at: text }));
   });
+
+  // '1730' reads as 17:30 and '0930' throws, while '0900' throws on Node and Chromium and reads on temporal-polyfill
+  it.todo("reads every time written as four digits alike, '0930' as it does '1730'");
 });
 
 describe('time() reading numbers and fields', () => {
@@ -75,6 +86,11 @@ describe('time() reading numbers and fields', () => {
 
   it('reads digit strings, such as the values of a form, as numbers', () => {
     expect(time('9', '30').toString()).toBe('09:30:00');
+  });
+
+  it('reads one digit string as the hour, and three as the hour, minute and second', () => {
+    expect(time('9').toString()).toBe('09:00:00');
+    expect(time('17', '30', '15').toString()).toBe('17:30:15');
   });
 
   it.each([
@@ -126,6 +142,9 @@ describe('time() reading numbers and fields', () => {
 
   it.todo('throws invalidTime for a fractional field such as { hour: 9.5 }, as time(9.5) does');
 
+  // an empty form field or a null column reads as 0 today, so { hour: '' } and { hour: null } are midnight
+  it.todo('throws invalidTime for a field that is null, true or an empty string, instead of reading it as 0 or 1');
+
   it('reads the same inputs through new Time() as through time()', () => {
     expect(new Time('5:30pm').toString()).toBe('17:30:00');
     expect(new Time(9, 30).toString()).toBe('09:30:00');
@@ -144,6 +163,13 @@ describe('time() reading the clock of a moment', () => {
 
   it('honours both the offset written in the string and the zone asked for', () => {
     expect(time('2026-11-16T17:30:00+02:00', 'Asia/Tokyo').toString()).toBe('00:30:00');
+  });
+
+  // i.e. what toString() on a Temporal.ZonedDateTime writes
+  it('reads a string that names its zone in brackets in the zone asked for, or in its own when none is', () => {
+    const fromTokyo = '2026-11-16T17:30:00+09:00[Asia/Tokyo]';
+    expect(time(fromTokyo, 'UTC').toString()).toBe('08:30:00');
+    expect(time(fromTokyo).toString()).toBe('17:30:00');
   });
 
   it('reads an instant in the configured zone when no zone is passed', () => {
@@ -359,6 +385,8 @@ describe('Time.set()', () => {
       expect.objectContaining({ code: 'unknownUnit', at: 'fortnight' }),
     );
   });
+
+  it.todo('throws cannotSet for a value that is null or true, instead of setting 0 or 1');
 });
 
 describe('Time.startOf() and Time.endOf()', () => {
@@ -427,6 +455,12 @@ describe('Time.round(), Time.floor() and Time.ceil()', () => {
     expect(time('14:01').ceil(15, 'minutes').toString()).toBe('14:15:00');
   });
 
+  it('reads a step given as a digit string, such as the value of a select', () => {
+    expect(time('14:36').round('15', 'minutes').toString()).toBe('14:30:00');
+    expect(time('14:36').floor('30', 'minutes').toString()).toBe('14:30:00');
+    expect(time('14:36').ceil('30', 'minutes').toString()).toBe('15:00:00');
+  });
+
   it('leaves a time that already sits on a step where it is', () => {
     expect(time('14:15').round(15, 'minutes').toString()).toBe('14:15:00');
     expect(time('14:15').floor(15, 'minutes').toString()).toBe('14:15:00');
@@ -451,6 +485,9 @@ describe('Time.round(), Time.floor() and Time.ceil()', () => {
   it('throws cannotRound for a step of zero', () => {
     expect(() => time('14:36').round(0, 'minutes')).toThrow(expect.objectContaining({ code: 'cannotRound' }));
   });
+
+  // round(2.5, 'minutes') rounds to steps of 2 minutes today
+  it.todo('throws cannotRound for a step with a fraction, instead of rounding to the whole step below it');
 
   it('throws cannotRound when asked to round to a calendar unit', () => {
     expect(() => time('14:36').round('week')).toThrow(expect.objectContaining({ code: 'cannotRound' }));
@@ -502,6 +539,12 @@ describe('Time.equals(), Time.isBefore(), Time.isAfter() and Time.isSame()', () 
     expect(time('9:05am').isSame('10:05am', 'hour')).toBe(false);
     expect(time('9:05am').isSame('9:05:30am', 'minute')).toBe(true);
     expect(time('9:05am').isSame('9:05:30am', 'second')).toBe(false);
+  });
+
+  // an alarm set for 9:05 that asks this every minute must not ring at 10:05
+  it('does not count the same minute of another hour, or the same second of another minute, as the same', () => {
+    expect(time('9:05am').isSame('10:05am', 'minute')).toBe(false);
+    expect(time('9:05:30am').isSame('9:06:30am', 'second')).toBe(false);
   });
 
   it('checks for the exact same time with isSame(other) and no unit', () => {
@@ -604,6 +647,14 @@ describe('Time.on()', () => {
     expect(opens.on('2026-11-16', 'UTC').toString()).toBe('2026-11-16T09:30:00.000Z');
     expect(opens.on(date('2026-11-16'), 'UTC').toString()).toBe('2026-11-16T09:30:00.000Z');
     expect(opens.on({ year: 2026, month: 11, day: 16 }, 'UTC').toString()).toBe('2026-11-16T09:30:00.000Z');
+  });
+
+  // wherever the tests run, one of these two moments falls on another day there than in its own zone
+  it('takes the day a DateTime shows in its own zone', () => {
+    const tokyoMorning = datetime('2026-11-17T07:00', 'Asia/Tokyo');
+    const losAngelesEvening = datetime('2026-11-15T19:00', 'America/Los_Angeles');
+    expect(time('9:30am').on(tokyoMorning, 'Asia/Tokyo').toString()).toBe('2026-11-17T00:30:00.000Z');
+    expect(time('9:30am').on(losAngelesEvening, 'America/Los_Angeles').toString()).toBe('2026-11-15T17:30:00.000Z');
   });
 
   it('gives the same moment as date.at(time, zone)', () => {
