@@ -724,8 +724,8 @@ describe('CalendarDate.startOf() and endOf()', () => {
     expect(() => wednesday.startOf('week', 'funday')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: 'funday' }),
     );
-    expect(() => wednesday.endOf('week', 0)).toThrowError(
-      expect.objectContaining({ code: 'unknownDayOfWeek', at: '0' }),
+    expect(() => wednesday.endOf('week', 8)).toThrowError(
+      expect.objectContaining({ code: 'unknownDayOfWeek', at: '8' }),
     );
   });
 });
@@ -750,6 +750,12 @@ describe('CalendarDate.next() and previous()', () => {
     expect(monday.next('fri').toString()).toBe('2026-11-20');
     expect(monday.next(5).toString()).toBe('2026-11-20');
     expect(monday.previous(7).toString()).toBe('2026-11-15');
+  });
+
+  it('accepts 0 for Sunday, matching Date.prototype.getDay()', () => {
+    expect(monday.next(0).toString()).toBe('2026-11-22');
+    expect(monday.previous(0).toString()).toBe('2026-11-15');
+    expect(monday.startOf('week', 0).toString()).toBe('2026-11-15');
   });
 
   it('advances or rewinds to the next or previous occurrence of a MonthDay', () => {
@@ -777,7 +783,7 @@ describe('CalendarDate.next() and previous()', () => {
     expect(() => monday.next('funday')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: 'funday' }),
     );
-    expect(() => monday.next(0)).toThrowError(expect.objectContaining({ code: 'unknownDayOfWeek', at: '0' }));
+    expect(() => monday.next(-1)).toThrowError(expect.objectContaining({ code: 'unknownDayOfWeek', at: '-1' }));
     expect(() => monday.previous(8)).toThrowError(expect.objectContaining({ code: 'unknownDayOfWeek', at: '8' }));
     expect(() => monday.next()).toThrowError(expect.objectContaining({ code: 'unknownDayOfWeek' }));
   });

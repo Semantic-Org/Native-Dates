@@ -47,6 +47,13 @@ describe('dayOfWeek()', () => {
     expect([1, 2, 3, 4, 5, 6, 7].map(dayOfWeek)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
+  // Date.prototype.getDay(), Moment, and date-fns use 0 for Sunday
+  it('parses 0 as 7 (Sunday), matching Date.prototype.getDay()', () => {
+    const sunday = new Date(2026, 10, 22);
+    expect(dayOfWeek(0)).toBe(7);
+    expect(dayOfWeek(sunday.getDay())).toBe(date(sunday).dayOfWeek);
+  });
+
   it('matches the .dayOfWeek numbering on CalendarDate instances', () => {
     const monday = date('2026-11-16');
     expect(monday.dayOfWeek).toBe(dayOfWeek('monday'));
@@ -57,7 +64,7 @@ describe('dayOfWeek()', () => {
     ['an unrecognized weekday string', 'funday', 'funday'],
     ['an empty string', '', ''],
     ['an ambiguous single-letter prefix', 't', 't'],
-    ['0 (Date.prototype.getDay() Sunday)', 0, '0'],
+    ['-1', -1, '-1'],
     ['8', 8, '8'],
     ['a fractional number', 1.5, '1.5'],
     ['NaN', NaN, 'NaN'],

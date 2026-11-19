@@ -866,6 +866,11 @@ describe('DateTime.next() and previous()', () => {
     expect(monday.next(7).day).toBe(22);
   });
 
+  it('accepts 0 for Sunday, matching Date.prototype.getDay()', () => {
+    expect(monday.next(0).day).toBe(22);
+    expect(monday.previous(0).day).toBe(15);
+  });
+
   it('preserves wall-clock time when advancing across a DST transition', () => {
     const saturday = datetime('2026-03-07T09:00', 'America/New_York');
     expect(saturday.next('sunday').toString()).toBe('2026-03-08T13:00:00.000Z');
@@ -887,7 +892,7 @@ describe('DateTime.next() and previous()', () => {
     expect(monday.previous(monthDay('11-16'))).toMatchObject({ year: 2025, month: 11, day: 16 });
   });
 
-  it.each([['funday', 'funday'], [0, '0'], [8, '8']])(
+  it.each([['funday', 'funday'], [-1, '-1'], [8, '8']])(
     'throws unknownDayOfWeek for %s',
     (day, at) => {
       expect(() => monday.next(day)).toThrowError(
