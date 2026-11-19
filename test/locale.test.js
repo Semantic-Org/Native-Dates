@@ -25,12 +25,10 @@ import {
 } from 'native-dates';
 import { afterEach, describe, expect, it } from 'vitest';
 
-// the configured locale belongs to the whole process, so each test hands the default back
 afterEach(() => {
   configure({ locale: null });
 });
 
-// points() and split() return lists, so every value in one is read
 const localesOf = (made) => new Set([made].flat().map((value) => value.locale()));
 
 const kinds = [
@@ -45,8 +43,8 @@ const kinds = [
   ['TimeRange', TimeRange, () => timeRange('09:00', '17:00')],
 ];
 
-describe.each(kinds)('locale() and lang() on a %s', (name, Kind, make) => {
-  it('return a copy carrying the tag and leave the original without one', () => {
+describe.each(kinds)('%s locale() and lang()', (name, Kind, make) => {
+  it('returns a new instance with the locale tag without mutating the receiver', () => {
     const plain = make();
     const french = plain.locale('fr');
     expect(french).toBeInstanceOf(Kind);
@@ -54,14 +52,14 @@ describe.each(kinds)('locale() and lang() on a %s', (name, Kind, make) => {
     expect(plain.locale()).toBeUndefined();
   });
 
-  it('read and write the same tag under either name', () => {
+  it('treats lang() as an alias for locale() when reading and setting tags', () => {
     expect(make().lang('fr').locale()).toBe('fr');
     expect(make().locale('fr').lang()).toBe('fr');
   });
 
-  // an empty column in a database must not break a chain like value.locale(user.locale).format()
+  // an empty database column must not break chains like value.locale(user.locale).format()
   it.each([['null', null], ['undefined', undefined], ['an empty string', '']])(
-    'clear the tag and still return a value of the same kind when passed %s',
+    'clears the locale tag and preserves instance type when passed %s',
     (label, empty) => {
       const cleared = make().locale('fr').locale(empty);
       expect(cleared).toBeInstanceOf(Kind);
@@ -70,13 +68,13 @@ describe.each(kinds)('locale() and lang() on a %s', (name, Kind, make) => {
   );
 });
 
-describe('a locale carried on a value', () => {
-  it('prints the value in that language', () => {
+describe('instance locale in formatting, equality, and serialization', () => {
+  it('formats the instance in its attached locale', () => {
     expect(date('2026-05-15').locale('fr-FR').format('long')).toContain('mai');
     expect(date('2026-05-15').locale('de-DE').format('long')).toContain('Mai');
   });
 
-  it('is left out of equals(), compare(), toString() and JSON', () => {
+  it('excludes locale metadata from equals(), compare(), toString(), and toJSON()', () => {
     const french = date('2026-05-15').locale('fr');
     const japanese = date('2026-05-15').locale('ja');
     expect(french.equals(japanese)).toBe(true);
@@ -86,7 +84,7 @@ describe('a locale carried on a value', () => {
   });
 });
 
-// each kind is written in two languages, so one of them is never the language of the machine running the test
+// test two locales per type so at least one differs from the host runtime default locale
 const written = [
   ['DateTime', () => datetime('2026-05-15T14:30:00Z', 'UTC'), ['fr', 'mai'], ['it', 'mag']],
   ['CalendarDate', () => date('2026-05-15'), ['fr', 'mai'], ['it', 'mag']],
@@ -99,70 +97,70 @@ const written = [
   ['TimeRange', () => timeRange('09:00', '17:00'), ['en-US', 'PM'], ['ko', '오후']],
 ];
 
-describe.each(written)('format() and text on a %s carrying a locale', (name, make, ...languages) => {
-  it.each(languages)('are written in %s', (tag, word) => {
+describe.each(written)('%s format() and .text with an instance locale', (name, make, ...languages) => {
+  it.each(languages)('formats in %s', (tag, word) => {
     const value = make().locale(tag);
     expect(value.format('long')).toContain(word);
     expect(value.text).toContain(word);
   });
 });
 
-describe('locale() given a locale as a server or a browser hands it over', () => {
+describe('locale() tag and Accept-Language normalization', () => {
   const day = date('2026-05-15');
 
   it.each([
     ['en_US', 'en-US'],
     ['pt_BR', 'pt-BR'],
     ['zh_Hans_CN', 'zh-Hans-CN'],
-  ])('reads the underscore tag %s as %s', (given, read) => {
-    expect(day.locale(given).locale()).toBe(read);
+  ])('normalizes POSIX underscore tag %s to BCP 47 %s', (given, normalized) => {
+    expect(day.locale(given).locale()).toBe(normalized);
   });
 
-  it('reads an Accept-Language header as its languages from the heaviest weight down, without those at q=0', () => {
+  it('parses Accept-Language headers sorted by descending q-weight and drops q=0 entries', () => {
     expect(day.locale('fr-CH;q=0.8, de;q=0.9, es;q=0').locale()).toEqual(['de', 'fr-CH']);
   });
 
-  it('prints in the first language of the header a browser sends', () => {
-    const reader = day.locale('de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7');
-    expect(reader.locale()).toEqual(['de-DE', 'de', 'en-US', 'en']);
-    expect(reader.format('MMMM')).toBe('Mai');
+  it('formats in the highest-priority language from an Accept-Language header', () => {
+    const localized = day.locale('de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7');
+    expect(localized.locale()).toEqual(['de-DE', 'de', 'en-US', 'en']);
+    expect(localized.format('MMMM')).toBe('Mai');
   });
 
-  it('keeps the order written for languages of equal weight', () => {
+  it('preserves header order among languages with equal q-weights', () => {
     expect(day.locale('en;q=0.5, fr;q=0.5').locale()).toEqual(['en', 'fr']);
   });
 
-  it('leaves the * wildcard out of a header that also names languages', () => {
+  it('strips the * wildcard from Accept-Language headers that also list specific tags', () => {
     expect(day.locale('fr-CH, fr;q=0.9, *;q=0.5').locale()).toEqual(['fr-CH', 'fr']);
   });
 
-  it('takes a list of tags such as navigator.languages', () => {
-    const reader = day.locale(Object.freeze(['de-AT', 'de', 'en']));
-    expect(reader.locale()).toEqual(['de-AT', 'de', 'en']);
-    expect(reader.format('MMMM')).toBe('Mai');
+  it('accepts a frozen array of locale tags such as navigator.languages', () => {
+    const localized = day.locale(Object.freeze(['de-AT', 'de', 'en']));
+    expect(localized.locale()).toEqual(['de-AT', 'de', 'en']);
+    expect(localized.format('MMMM')).toBe('Mai');
   });
 
-  it('prints in the next language listed when the runtime has no data for the first', () => {
+  it('falls back to the next supported tag when the runtime lacks data for the first tag', () => {
     expect(day.locale(['xx', 'fr']).format('MMMM')).toBe('mai');
     expect(day.locale('xx, fr;q=0.9').format('MMMM')).toBe('mai');
   });
 
-  it('reads back a form Intl takes as it is', () => {
+  it('returns a normalized value accepted directly by Intl constructors', () => {
     const grouped = (given) => new Intl.NumberFormat(day.locale(given).locale()).format(1234.5);
     expect(grouped('de_DE')).toBe('1.234,5');
     expect(grouped('de-DE,de;q=0.9,en;q=0.8')).toBe('1.234,5');
   });
 
-  it('throws unknownLocale at the text when it is neither a tag nor a header', () => {
+  it('throws unknownLocale for an invalid locale string', () => {
     expect(() => day.locale('not a locale')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownLocale', at: 'not a locale' }),
     );
   });
 
-  it.todo('falls back to the configured locale when a header names no language, such as *');
+  it.todo('falls back to configure().locale when an Accept-Language header contains only wildcard *');
 });
 
-describe('{ locale } passed to a factory', () => {
+describe('factory { locale } option', () => {
   it.each([
     ['date()', () => date('2026-05-15', { locale: 'fr' })],
     ['datetime()', () => datetime('2026-05-15T14:30:00Z', { zone: 'UTC', locale: 'fr' })],
@@ -173,33 +171,33 @@ describe('{ locale } passed to a factory', () => {
     ['dateRange()', () => dateRange('2026-05-15', '2026-05-19', { locale: 'fr' })],
     ['datetimeRange()', () => datetimeRange('2026-05-15T09:00', '2026-05-15T10:00', { zone: 'UTC', locale: 'fr' })],
     ['timeRange()', () => timeRange('09:00', '17:00', { locale: 'fr' })],
-  ])('is carried by the value %s returns', (name, make) => {
+  ])('attaches { locale } on instances created via %s', (name, make) => {
     expect(make().locale()).toBe('fr');
   });
 
-  it('is read in the forms locale() reads', () => {
+  it('normalizes underscore tags and Accept-Language headers in { locale }', () => {
     expect(date('2026-05-15', { locale: 'en_US' }).locale()).toBe('en-US');
     expect(date('2026-05-15', { locale: 'fr-CH;q=0.8, de;q=0.9' }).locale()).toEqual(['de', 'fr-CH']);
   });
 
-  it('replaces the locale of a value the factory is given', () => {
+  it('overrides the existing locale when wrapping an instance with { locale }', () => {
     const french = datetime('2026-05-15T14:30:00Z', { zone: 'UTC', locale: 'fr' });
     expect(datetime(french, { locale: 'de' }).locale()).toBe('de');
     expect(date(french, { locale: 'de' }).locale()).toBe('de');
   });
 
-  it('throws unknownLocale at the text when it is not a locale', () => {
+  it('throws unknownLocale when { locale } is invalid', () => {
     expect(() => date('2026-05-15', { locale: 'not a locale' })).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownLocale', at: 'not a locale' }),
     );
   });
 });
 
-describe('a locale carried on a DateTime', () => {
+describe('DateTime locale propagation', () => {
   const arrival = datetime('2026-05-15T14:30:00Z', 'Europe/Paris').locale('fr');
   const christmas = monthDay(12, 25);
 
-  it('prints values made from it in that locale', () => {
+  it('propagates locale through chained conversions into formatting', () => {
     expect(arrival.plus(3, 'days').date.format('long')).toContain('mai');
   });
 
@@ -217,14 +215,14 @@ describe('a locale carried on a DateTime', () => {
     ['round()', () => arrival.round('hour')],
     ['floor()', () => arrival.floor(15, 'minutes')],
     ['ceil()', () => arrival.ceil('hour')],
-    ['next() to a weekday', () => arrival.next('friday')],
-    ['previous() to a weekday', () => arrival.previous('friday')],
-    ['next() to a MonthDay', () => arrival.next(christmas)],
-    ['previous() to a MonthDay', () => arrival.previous(christmas)],
-    ['the date property', () => arrival.date],
-    ['the time property', () => arrival.time],
-    ['the yearMonth property', () => arrival.yearMonth],
-    ['the monthDay property', () => arrival.monthDay],
+    ['next(weekday)', () => arrival.next('friday')],
+    ['previous(weekday)', () => arrival.previous('friday')],
+    ['next(MonthDay)', () => arrival.next(christmas)],
+    ['previous(MonthDay)', () => arrival.previous(christmas)],
+    ['.date', () => arrival.date],
+    ['.time', () => arrival.time],
+    ['.yearMonth', () => arrival.yearMonth],
+    ['.monthDay', () => arrival.monthDay],
     ["as('date')", () => arrival.as('date')],
     ["as('time')", () => arrival.as('time')],
     ["as('yearMonth')", () => arrival.as('yearMonth')],
@@ -234,17 +232,17 @@ describe('a locale carried on a DateTime', () => {
     ['range()', () => arrival.range('day')],
     ['until()', () => arrival.until('2026-05-16T14:30:00Z')],
     ['since()', () => arrival.since('2026-05-14T14:30:00Z')],
-    ['datetime() given it and a zone', () => datetime(arrival, 'UTC')],
-    ['date() given it', () => date(arrival)],
-    ['time() given it', () => time(arrival)],
-    ['yearMonth() given it', () => yearMonth(arrival)],
-    ['monthDay() given it', () => monthDay(arrival)],
-  ])('is kept by %s', (name, derive) => {
+    ['datetime(value, zone)', () => datetime(arrival, 'UTC')],
+    ['date(value)', () => date(arrival)],
+    ['time(value)', () => time(arrival)],
+    ['yearMonth(value)', () => yearMonth(arrival)],
+    ['monthDay(value)', () => monthDay(arrival)],
+  ])('preserves locale across %s', (name, derive) => {
     expect(localesOf(derive())).toEqual(new Set(['fr']));
   });
 });
 
-describe('a locale carried on a CalendarDate', () => {
+describe('CalendarDate locale propagation', () => {
   const trip = date('2026-05-15').locale('fr');
   const christmas = monthDay(12, 25);
 
@@ -258,14 +256,14 @@ describe('a locale carried on a CalendarDate', () => {
     ["startOf('week')", () => trip.startOf('week')],
     ["startOf('day')", () => trip.startOf('day')],
     ['endOf()', () => trip.endOf('month')],
-    ['next() to a weekday', () => trip.next('friday')],
-    ['previous() to a weekday', () => trip.previous('friday')],
-    ['next() to a MonthDay', () => trip.next(christmas)],
-    ['previous() to a MonthDay', () => trip.previous(christmas)],
+    ['next(weekday)', () => trip.next('friday')],
+    ['previous(weekday)', () => trip.previous('friday')],
+    ['next(MonthDay)', () => trip.next(christmas)],
+    ['previous(MonthDay)', () => trip.previous(christmas)],
     ['at()', () => trip.at('9am', 'Europe/Paris')],
     ["as('datetime')", () => trip.as('datetime', 'UTC')],
-    ['the yearMonth property', () => trip.yearMonth],
-    ['the monthDay property', () => trip.monthDay],
+    ['.yearMonth', () => trip.yearMonth],
+    ['.monthDay', () => trip.monthDay],
     ["as('yearMonth')", () => trip.as('yearMonth')],
     ["as('monthDay')", () => trip.as('monthDay')],
     ['to()', () => trip.to('2026-05-19')],
@@ -276,16 +274,16 @@ describe('a locale carried on a CalendarDate', () => {
     ['split()', () => trip.split(6, 'hours', 'UTC')],
     ['until()', () => trip.until('2026-06-15')],
     ['since()', () => trip.since('2026-04-15')],
-    ['date() given it and a zone', () => date(trip, 'UTC')],
-    ['datetime() given it', () => datetime(trip, 'UTC')],
-    ['yearMonth() given it', () => yearMonth(trip)],
-    ['monthDay() given it', () => monthDay(trip)],
-  ])('is kept by %s', (name, derive) => {
+    ['date(value, zone)', () => date(trip, 'UTC')],
+    ['datetime(value, zone)', () => datetime(trip, 'UTC')],
+    ['yearMonth(value)', () => yearMonth(trip)],
+    ['monthDay(value)', () => monthDay(trip)],
+  ])('preserves locale across %s', (name, derive) => {
     expect(localesOf(derive())).toEqual(new Set(['fr']));
   });
 });
 
-describe('a locale carried on a Time', () => {
+describe('Time locale propagation', () => {
   const closing = time('17:30').locale('fr');
 
   it.each([
@@ -304,13 +302,13 @@ describe('a locale carried on a Time', () => {
     ['until()', () => closing.until('18:00')],
     ['since()', () => closing.since('09:00')],
     ['on()', () => closing.on('2026-05-01', 'Asia/Seoul')],
-    ['time() given it', () => time(closing)],
-  ])('is kept by %s', (name, derive) => {
+    ['time(value)', () => time(closing)],
+  ])('preserves locale across %s', (name, derive) => {
     expect(localesOf(derive())).toEqual(new Set(['fr']));
   });
 });
 
-describe('a locale carried on a Duration', () => {
+describe('Duration locale propagation', () => {
   const wait = duration('1h 30m').locale('fr');
   const measured = date('2026-01-31').locale('fr').until('2026-03-15');
 
@@ -326,15 +324,15 @@ describe('a locale carried on a Duration', () => {
     ['balance()', () => wait.balance()],
     ["balance('week')", () => days(10).locale('fr').balance('week')],
     ["balance('year')", () => months(18).locale('fr').balance('year')],
-    ['balance() of a measured length', () => measured.balance('day')],
-    ['round() of a measured length', () => measured.round('month')],
-    ['duration() given it', () => duration(wait)],
-  ])('is kept by %s', (name, derive) => {
+    ['balance() on an anchored Duration', () => measured.balance('day')],
+    ['round() on an anchored Duration', () => measured.round('month')],
+    ['duration(value)', () => duration(wait)],
+  ])('preserves locale across %s', (name, derive) => {
     expect(localesOf(derive())).toEqual(new Set(['fr']));
   });
 });
 
-describe('a locale carried on a YearMonth', () => {
+describe('YearMonth locale propagation', () => {
   const billing = yearMonth('2026-05').locale('fr');
 
   it.each([
@@ -344,38 +342,38 @@ describe('a locale carried on a YearMonth', () => {
     ['subtract()', () => billing.subtract(2, 'months')],
     ['set()', () => billing.set('month', 1)],
     ['on()', () => billing.on(15)],
-    ['the start property', () => billing.start],
-    ['the end property', () => billing.end],
+    ['.start', () => billing.start],
+    ['.end', () => billing.end],
     ['until()', () => billing.until('2027-01')],
     ['since()', () => billing.since('2025-01')],
-    ['yearMonth() given it', () => yearMonth(billing)],
-  ])('is kept by %s', (name, derive) => {
+    ['yearMonth(value)', () => yearMonth(billing)],
+  ])('preserves locale across %s', (name, derive) => {
     expect(localesOf(derive())).toEqual(new Set(['fr']));
   });
 });
 
-describe('a locale carried on a MonthDay', () => {
+describe('MonthDay locale propagation', () => {
   const birthday = monthDay(10, 17).locale('fr');
 
   it.each([
     ['in()', () => birthday.in(2027)],
-    ['next()', () => birthday.next('2026-05-15')],
-    ['next() counted from today', () => birthday.next()],
+    ['next(anchor)', () => birthday.next('2026-05-15')],
+    ['next() from today', () => birthday.next()],
     ['previous()', () => birthday.previous('2026-05-15')],
     ['last()', () => birthday.last('2026-12-01')],
-    ['monthDay() given it', () => monthDay(birthday)],
-  ])('is kept by %s', (name, derive) => {
+    ['monthDay(value)', () => monthDay(birthday)],
+  ])('preserves locale across %s', (name, derive) => {
     expect(localesOf(derive())).toEqual(new Set(['fr']));
   });
 });
 
-describe('a locale carried on a range', () => {
+describe('range locale propagation', () => {
   const stay = dateRange('2026-09-01', '2026-09-07').locale('fr');
   const meeting = datetimeRange('2026-09-01T09:00', '2026-09-01T11:00', 'Europe/Paris').locale('fr');
   const lunch = datetimeRange('2026-09-01T10:00', '2026-09-01T12:00', 'Europe/Paris');
   const shift = timeRange('22:00', '06:00').locale('fr');
 
-  it('is given to both ends by locale() and taken from both by locale(null)', () => {
+  it('propagates locale(tag) and locale(null) to both range endpoints', () => {
     expect(localesOf([stay.start, stay.end])).toEqual(new Set(['fr']));
     expect(localesOf([stay.locale(null), stay.locale(null).start, stay.locale(null).end])).toEqual(
       new Set([undefined]),
@@ -383,77 +381,77 @@ describe('a locale carried on a range', () => {
   });
 
   it.each([
-    ['the duration of a DateRange', () => stay.duration],
-    ['points() of a DateRange', () => stay.points('day')],
-    ['split() of a DateRange', () => stay.split(2, 'days')],
-    ['intersection() of a DateRange', () => stay.intersection('2026-09-05/2026-09-10')],
-    ['in() of a DateRange', () => stay.in('Europe/Paris')],
-    ['the ends of a DateTimeRange', () => [meeting.start, meeting.end]],
-    ['the duration of a DateTimeRange', () => meeting.duration],
-    ['points() of a DateTimeRange', () => meeting.points('30m')],
-    ['split() of a DateTimeRange', () => meeting.split('hour')],
-    ['intersection() of a DateTimeRange', () => meeting.intersection(lunch)],
-    ['in() of a DateTimeRange', () => meeting.in('Asia/Tokyo')],
-    ['the ends of a TimeRange', () => [shift.start, shift.end]],
-    ['the duration of a TimeRange', () => shift.duration],
-    ['points() of a TimeRange', () => shift.points(2, 'hours')],
-    ['split() of a TimeRange', () => shift.split(4, 'hours')],
-    ['intersection() of a TimeRange', () => shift.intersection(timeRange('04:00', '08:00'))],
-  ])('is kept by %s', (name, derive) => {
+    ['DateRange.duration', () => stay.duration],
+    ['DateRange.points()', () => stay.points('day')],
+    ['DateRange.split()', () => stay.split(2, 'days')],
+    ['DateRange.intersection()', () => stay.intersection('2026-09-05/2026-09-10')],
+    ['DateRange.in()', () => stay.in('Europe/Paris')],
+    ['DateTimeRange endpoints', () => [meeting.start, meeting.end]],
+    ['DateTimeRange.duration', () => meeting.duration],
+    ['DateTimeRange.points()', () => meeting.points('30m')],
+    ['DateTimeRange.split()', () => meeting.split('hour')],
+    ['DateTimeRange.intersection()', () => meeting.intersection(lunch)],
+    ['DateTimeRange.in()', () => meeting.in('Asia/Tokyo')],
+    ['TimeRange endpoints', () => [shift.start, shift.end]],
+    ['TimeRange.duration', () => shift.duration],
+    ['TimeRange.points()', () => shift.points(2, 'hours')],
+    ['TimeRange.split()', () => shift.split(4, 'hours')],
+    ['TimeRange.intersection()', () => shift.intersection(timeRange('04:00', '08:00'))],
+  ])('preserves locale across %s', (name, derive) => {
     expect(localesOf(derive())).toEqual(new Set(['fr']));
   });
 });
 
-describe('two values carrying different locales', () => {
+describe('receiver locale precedence in binary methods', () => {
   const french = date('2026-05-15').locale('fr');
   const japanese = date('2026-05-19').locale('ja');
 
   it.each([
     ['to()', () => french.to(japanese)],
-    ['the end of the range to() returns', () => french.to(japanese).end],
+    ['to().end', () => french.to(japanese).end],
     ['until()', () => french.until(japanese)],
     ['since()', () => french.since(japanese)],
-    ['next() given a MonthDay', () => french.next(monthDay(12, 25).locale('ja'))],
-    ['at() given a Time', () => french.at(time('09:00').locale('ja'), 'UTC')],
-    ['on() given a date', () => time('09:00').locale('fr').on(japanese, 'UTC')],
-    ['plus() given a Duration', () => hours(1).locale('fr').plus(hours(2).locale('ja'))],
-    ['intersection() given a range', () => french.to('2026-05-25').intersection(japanese.to('2026-05-30'))],
-  ])('keep the locale of the value the method was called on in %s', (name, derive) => {
+    ['next(MonthDay)', () => french.next(monthDay(12, 25).locale('ja'))],
+    ['at(Time)', () => french.at(time('09:00').locale('ja'), 'UTC')],
+    ['on(CalendarDate)', () => time('09:00').locale('fr').on(japanese, 'UTC')],
+    ['plus(Duration)', () => hours(1).locale('fr').plus(hours(2).locale('ja'))],
+    ['intersection(DateRange)', () => french.to('2026-05-25').intersection(japanese.to('2026-05-30'))],
+  ])('preserves the receiver locale over the argument locale in %s', (name, derive) => {
     expect(localesOf(derive())).toEqual(new Set(['fr']));
   });
 });
 
-describe('locale precedence when printing', () => {
-  it('prints in the locale of the runtime when nothing is set', () => {
+describe('locale precedence in formatting', () => {
+  it('uses the runtime default locale when no locale is configured or attached', () => {
     const inRuntimeLocale = new Intl.DateTimeFormat(undefined, { month: 'long', timeZone: 'UTC' });
     expect(date('2026-05-15').format('MMMM')).toBe(inRuntimeLocale.format(Date.UTC(2026, 4, 15)));
   });
 
-  it('prints in the configured locale when the value carries none', () => {
+  it('uses configure().locale when the instance has no locale', () => {
     configure({ locale: 'es' });
     expect(date('2026-05-15').format('MMMM')).toBe('mayo');
   });
 
-  it('prints in the locale a value carries over the configured locale', () => {
+  it('prefers the instance locale over configure().locale', () => {
     configure({ locale: 'es' });
     expect(date('2026-05-15').locale('fr').format('MMMM')).toBe('mai');
   });
 
-  it('prints in the locale passed to format() over the one the value carries, for that call only', () => {
+  it('prefers the call-site format() locale over the instance locale for that call only', () => {
     configure({ locale: 'es' });
     const french = date('2026-05-15').locale('fr');
     expect(french.format('MMMM', 'de')).toBe('Mai');
     expect(french.format('MMMM')).toBe('mai');
   });
 
-  it('applies the same order to the text of a duration', () => {
+  it('applies the same locale precedence to Duration format()', () => {
     configure({ locale: 'es' });
     expect(days(2).format()).toContain('días');
     expect(days(2).locale('fr').format()).toContain('jours');
     expect(days(2).locale('fr').format('long', 'de')).toContain('Tage');
   });
 
-  it('applies the same order to a relative phrase', () => {
+  it('applies the same locale precedence to from()', () => {
     configure({ locale: 'es' });
     const noon = datetime('2026-05-15T12:00:00Z', 'UTC');
     expect(noon.minus(3, 'hours').from(noon)).toContain('horas');
@@ -461,14 +459,14 @@ describe('locale precedence when printing', () => {
     expect(noon.locale('fr').minus(3, 'hours').from(noon, 'de')).toContain('Stunden');
   });
 
-  it('applies the same order to a range', () => {
+  it('applies the same locale precedence to range format()', () => {
     configure({ locale: 'es' });
     expect(dateRange('2026-05-15', '2026-05-19').format('long')).toContain('mayo');
     expect(dateRange('2026-05-15', '2026-05-19').locale('fr').format('long')).toContain('mai');
     expect(dateRange('2026-05-15', '2026-05-19').locale('fr').format('long', 'de')).toContain('Mai');
   });
 
-  it('reads an underscore tag or a header passed to format()', () => {
+  it('normalizes underscore tags and Accept-Language headers passed directly to format()', () => {
     expect(date('2026-05-15').format('MMMM', 'fr_FR')).toBe('mai');
     expect(date('2026-05-15').format('MMMM', 'ja,en;q=0.5')).toBe('5月');
   });
