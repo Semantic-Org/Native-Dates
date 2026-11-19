@@ -954,9 +954,16 @@ describe('CalendarDate.isToday(), isTomorrow(), isYesterday(), isPast(), and isF
 });
 
 describe('CalendarDate.until() and since()', () => {
-  it('measures the calendar Duration to a target date in years, months, and days', () => {
-    expect(date('2026-01-01').until('2027-04-05').toString()).toBe('P1Y3M4D');
-    expect(date('2026-01-01').until('2027-04-05')).toMatchObject({ years: 1, months: 3, days: 4 });
+  it('measures the Duration to a target date as a count of days', () => {
+    expect(date('2026-01-01').until('2027-04-05').toString()).toBe('P459D');
+    expect(date('2026-01-01').until('2026-02-15').days).toBe(45);
+    expect(date('2026-01-01').until('2027-04-05')).toMatchObject({ years: 0, months: 0, days: 459 });
+  });
+
+  it("spells the measured Duration out in years, months, and days through balance('year')", () => {
+    const span = date('2026-01-01').until('2027-04-05').balance('year');
+    expect(span.toString()).toBe('P1Y3M4D');
+    expect(span).toMatchObject({ years: 1, months: 3, days: 4 });
   });
 
   it('returns a numeric total when a target unit is passed', () => {
@@ -980,15 +987,15 @@ describe('CalendarDate.until() and since()', () => {
   it('computes since() as the inverse calendar span from an earlier date', () => {
     expect(date('2026-11-16').since('2026-11-02').days).toBe(14);
     expect(date('2026-11-16').since('2026-11-02', 'weeks')).toBe(2);
-    expect(date('2027-04-05').since('2026-01-01').toString()).toBe('P1Y3M4D');
+    expect(date('2027-04-05').since('2026-01-01').toString()).toBe('P459D');
     expect(date('2026-11-16').since('2026-11-20', 'days')).toBe(-4);
   });
 
-  it('counts full elapsed years only once the anniversary month and day are reached', () => {
+  it("counts full elapsed years in balance('year') only once the anniversary month and day are reached", () => {
     const born = date('1990-05-10');
-    expect(born.until('2026-05-09').years).toBe(35);
-    expect(born.until('2026-05-10').years).toBe(36);
-    expect(date('2026-05-10').since(born).years).toBe(36);
+    expect(born.until('2026-05-09').balance('year').years).toBe(35);
+    expect(born.until('2026-05-10').balance('year').years).toBe(36);
+    expect(date('2026-05-10').since(born).balance('year').years).toBe(36);
   });
 
   it('round-trips start.plus(start.until(end)) back to end across month-end boundaries', () => {

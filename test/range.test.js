@@ -454,6 +454,13 @@ describe('Range duration and as("duration")', () => {
     expect(dateRange('2026-01-01', '2026-12-31').duration.total('days')).toBe(365);
   });
 
+  it('counts every day of a multi-month DateRange in duration.days', () => {
+    const stay = dateRange('2026-01-01', '2026-02-14');
+    expect(stay.duration.days).toBe(45);
+    expect(stay.duration.toString()).toBe('P45D');
+    expect(stay.duration.balance('month').toString()).toBe('P1M14D');
+  });
+
   it('measures elapsed duration between start and end on DateTimeRange', () => {
     const meeting = datetimeRange('2026-09-01T09:00', '2026-09-01T10:30', 'America/New_York');
     expect(meeting.duration.total('minutes')).toBe(90);
