@@ -46,6 +46,30 @@ describe('configure()', () => {
     expect(now().zone).toBe('Europe/Berlin');
   });
 
+  it('throws unknownSetting RangeError for a key that is not a setting, such as timeZone, before applying any', () => {
+    expect(() => configure({ timeZone: 'Europe/Berlin' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownSetting', at: 'timeZone' }),
+    );
+    expect(() => configure({ locale: 'de-DE', lang: 'de' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownSetting', at: 'lang' }),
+    );
+    expect(configure().locale).toBeUndefined();
+  });
+
+  // the check is a development aid that production builds fold out along with the error explanations
+  it('ignores a key that is not a setting when NODE_ENV=production', () => {
+    const script = `
+      import { configure } from 'native-dates';
+      console.log(JSON.stringify(configure({ timeZone: 'Europe/Berlin', locale: 'de-DE' })));
+    `;
+    const printed = execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
+      env: { ...process.env, NODE_ENV: 'production' },
+      encoding: 'utf8',
+    });
+    expect(JSON.parse(printed)).toEqual({ locale: 'de-DE', dayFirst: false, zoneAliases: {} });
+  });
+
   // vitest isolates modules per test file and this file imports no plugins
   it('throws missingPlugin RangeError when configuring an option from an unimported plugin', () => {
     expect(() => configure({ dayFirst: true })).toThrowError(
