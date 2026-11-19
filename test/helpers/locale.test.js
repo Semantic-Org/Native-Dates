@@ -157,7 +157,20 @@ describe('locale() tag and Accept-Language normalization', () => {
     );
   });
 
-  it.todo('falls back to configure().locale when an Accept-Language header contains only wildcard *');
+  it('falls back to configure().locale when an Accept-Language header contains only wildcard *', () => {
+    configure({ locale: 'ja' });
+    const localized = day.locale('*');
+    expect(localized.locale()).toBeUndefined();
+    expect(localized.format('MMMM')).toBe('5月');
+    expect(day.format('MMMM', '*')).toBe('5月');
+  });
+
+  it.each(['es;q=0', ',', '*;q=0.5'])('reads header %j, which names no language, as no locale', (header) => {
+    configure({ locale: 'ja' });
+    expect(day.locale(header).locale()).toBeUndefined();
+    expect(date('2026-05-15', { locale: header }).format('MMMM')).toBe('5月');
+    expect(configure({ locale: header }).locale).toBeUndefined();
+  });
 });
 
 describe('factory { locale } option', () => {

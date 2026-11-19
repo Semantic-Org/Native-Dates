@@ -413,6 +413,14 @@ describe('weekdayNames()', () => {
     expect(weekdayNames('long', 'monday', 'de')[0]).toBe('Montag');
   });
 
+  // weeks start on Monday in German and on Saturday in Egypt, so one of the two differs from any runtime locale
+  it('uses the configured locale and its week start when the locale argument is a header naming no language', () => {
+    for (const configured of ['de', 'ar-EG']) {
+      configure({ locale: configured });
+      expect(weekdayNames('short', undefined, '*')).toEqual(weekdayNames('short'));
+    }
+  });
+
   it('returns a new array on each call so mutating the result does not affect later calls', () => {
     weekdayNames('long', 'monday', 'en-US').reverse();
     expect(weekdayNames('long', 'monday', 'en-US')[0]).toBe('Monday');
