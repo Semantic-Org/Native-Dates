@@ -324,13 +324,15 @@ export class DateTime {
   }
 
   startOfNext(target, firstDay) {
-    return weekdayNamed(target) ? this.next(target).startOf('day') : this.#nextStart(target, firstDay);
+    return weekdayNamed(target)
+      ? this.date.next(target).at(undefined, this.zone)
+      : this.#nextStart(target, firstDay);
   }
 
-  // 1ns before this unit starts is always inside the unit before it, where a whole unit back can land on a skipped time
+  // step 1ns before startOf() rather than subtracting 1 unit, which can land inside a skipped DST day or hour
   startOfPrevious(target, firstDay) {
     return weekdayNamed(target)
-      ? this.previous(target).startOf('day')
+      ? this.date.previous(target).at(undefined, this.zone)
       : this.startOf(target, firstDay).minus({ nanoseconds: 1 }).startOf(target, firstDay);
   }
 
