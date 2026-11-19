@@ -5,8 +5,8 @@ name: Bundle Size
 
 on:
   # a PR starts a run only when it touches a path below, what the measurement reads or is built
-  # with, so a change to the docs or a test costs no minutes. test/budget.test.js holds every file
-  # in a bundle to this list
+  # with, so a change to the docs or a test costs no minutes. tools/ci/bundle/budget.test.js holds
+  # every file in a bundle to this list
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
