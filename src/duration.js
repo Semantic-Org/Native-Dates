@@ -308,18 +308,17 @@ export class Duration {
     const clock = fieldsOf(temporalDurationOf(clockFields(written)).round({ largestUnit: 'hour' }));
     const fields = { ...written, ...Object.fromEntries(fieldNames.slice(4).map((field) => [field, clock[field]])) };
     const large = fieldNames.slice(0, subsecond).some((field) => fields[field]);
-    const shown = {};
+    // hoursDisplay 'auto' prints nothing for the zero hours, which leaves a zero length in the digital style as '00:00'
+    const shown = { hours: 0 };
     each(fieldNames, (field, index) => {
       if (fields[field] && (!large || index < subsecond)) {
         shown[field] = fields[field];
       }
     });
     // Intl.DurationFormat omits zero fields by default (returning '' for { seconds: 0 } and throwing on {})
-    if (this.isZero()) {
+    if (this.isZero() && style !== 'digital') {
       const unitDisplay = style === 'long' ? 'long' : style === 'narrow' ? 'narrow' : 'short';
-      return style === 'digital'
-        ? durationFormat(pickLocale(locale), style, 'always').format({ hours: 0 })
-        : unitFormat(pickLocale(locale), 'second', unitDisplay).format(0);
+      return unitFormat(pickLocale(locale), 'second', unitDisplay).format(0);
     }
     return durationFormat(pickLocale(locale), style, 'auto').format(shown);
   }

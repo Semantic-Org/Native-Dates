@@ -856,6 +856,11 @@ describe('Duration format() and text', () => {
     expect(duration(0, { locale: 'en-US' }).text).toBe('0 seconds');
   });
 
+  it('formats a zero duration in digital style as MM:SS like every other sub-hour duration', () => {
+    expect(seconds(1).format('digital', 'en-US')).toBe('00:01');
+    expect(duration(0).format('digital', 'en-US')).toBe('00:00');
+  });
+
   it('prefixes negative durations with a minus sign', () => {
     expect(hours(-2).format('long', 'en-US')).toBe('-2 hours');
     expect(duration('-1h 30m').format('digital', 'en-US')).toBe('-1:30:00');

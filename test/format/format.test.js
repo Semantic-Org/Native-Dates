@@ -309,7 +309,7 @@ describe('Duration format()', () => {
 
   it('formats a zero duration as zero seconds rather than an empty string', () => {
     expect(duration('0s').format('long', 'en-US')).toBe('0 seconds');
-    expect(duration('0s').format('digital', 'en-US')).toBe('0:00:00');
+    expect(duration('0s').format('digital', 'en-US')).toBe('00:00');
   });
 
   it('throws unknownFormat for unsupported presets or token patterns', () => {
