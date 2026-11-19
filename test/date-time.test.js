@@ -598,8 +598,13 @@ describe('DateTime.set()', () => {
     expect(secondHalfPastOne.set('minute', 45).toString()).toBe('2026-11-01T06:45:00.000Z');
   });
 
-  // set('month', 2) on Jan 31 throws cannotSet whereas plus(1, 'month') constrains to Feb 28
-  it.todo('constrains the day to month-end when set() updates month or year on day 31');
+  // plus(1, 'month') from Jan 31 gives Feb 28, and so does Temporal's own with({ month: 2 })
+  it('constrains the day to month-end when set() updates month or year on day 31', () => {
+    const lastOfJanuary = datetime('2026-01-31T09:00', 'UTC');
+    expect(lastOfJanuary.set('month', 2).toString()).toBe('2026-02-28T09:00:00.000Z');
+    expect(lastOfJanuary.set('month', 4).toString()).toBe('2026-04-30T09:00:00.000Z');
+    expect(lastOfJanuary.set({ year: 2028, month: 2 }).toString()).toBe('2028-02-29T09:00:00.000Z');
+  });
 });
 
 describe('DateTime.plus() and minus()', () => {
