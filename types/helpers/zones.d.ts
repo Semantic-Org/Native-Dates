@@ -139,6 +139,7 @@ export interface ActiveSettings {
  *
  * @param settings - Process-wide defaults to update, leaving omitted keys unchanged
  * @returns A shallow copy of the active settings after applying any updates
+ * @throws {RangeError} When an unrecognized setting key (`unknownSetting`), time zone (`unknownZone`), locale (`unknownLocale`), weekday (`unknownDayOfWeek`), width (`unknownWidth`), or unimported plugin option (`missingPlugin`) is passed
  *
  * @example
  * ```ts

@@ -46,7 +46,7 @@ describe('configure()', () => {
     expect(now().zone).toBe('Europe/Berlin');
   });
 
-  it('throws unknownSetting RangeError for a key that is not a setting, such as timeZone, before applying any', () => {
+  it('throws unknownSetting RangeError for an unrecognized setting key before applying any updates', () => {
     expect(() => configure({ timeZone: 'Europe/Berlin' })).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownSetting', at: 'timeZone' }),
     );
@@ -56,18 +56,32 @@ describe('configure()', () => {
     expect(configure().locale).toBeUndefined();
   });
 
-  // the check is a development aid that production builds fold out along with the error explanations
-  it('ignores a key that is not a setting when NODE_ENV=production', () => {
+  it('returns active settings without throwing when passed null', () => {
+    configure({ zone: 'Europe/Berlin' });
+    expect(configure(null).zone).toBe('Europe/Berlin');
+  });
+
+  it('throws unknownSetting in NODE_ENV=production with line-two explanation stripped', () => {
     const script = `
       import { configure } from 'native-dates';
-      console.log(JSON.stringify(configure({ timeZone: 'Europe/Berlin', locale: 'de-DE' })));
+      try {
+        configure({ timeZone: 'Europe/Berlin' });
+      }
+      catch (error) {
+        console.log(JSON.stringify({ name: error.name, code: error.code, at: error.at, message: error.message }));
+      }
     `;
     const printed = execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
       cwd: fileURLToPath(new URL('../..', import.meta.url)),
       env: { ...process.env, NODE_ENV: 'production' },
       encoding: 'utf8',
     });
-    expect(JSON.parse(printed)).toEqual({ locale: 'de-DE', dayFirst: false, zoneAliases: {} });
+    expect(JSON.parse(printed)).toEqual({
+      name: 'RangeError',
+      code: 'unknownSetting',
+      at: 'timeZone',
+      message: 'dates refused [unknownSetting] timeZone',
+    });
   });
 
   // vitest isolates modules per test file and this file imports no plugins

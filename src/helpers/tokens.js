@@ -157,13 +157,13 @@ const tokenReaders = {
   WW: ['weekOfYear', (subject) => pad(subject.weekOfYear)],
 };
 
-// match a whole run of one letter, so a run no token spells is refused: 'SSSSSS' rather than SSS printed twice,
-// and each letter of a typo like 'meduim'. 'T' is left out so it passes as the literal in 'YYYY-MM-DDTHH:mm'
+// match full single-letter runs so overlong tokens like 'SSSSSS' and typos like 'meduim' throw unknownFormat,
+// leaving 'T' unescaped for 'YYYY-MM-DDTHH:mm'
 const tokenPattern = /\[([^\]]*)\]|Do|([A-SU-Za-z])\2*/g;
 
-// refuse a style the table lacks, such as the locale in monthNames('de'), rather than answering with the default
+// reject unrecognized style arguments such as a locale tag passed first in monthNames('de')
 const tokenOf = (widths, style) =>
-  widths[style] ?? refuse('unknownFormat', String(style), {
+  (Object.hasOwn(widths, style) && widths[style]) || refuse('unknownFormat', String(style), {
     explanation: isDevelopment
       ? `expected a style in [${
         Object.keys(widths).join(', ')

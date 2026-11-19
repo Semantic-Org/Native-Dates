@@ -782,7 +782,7 @@ describe('DateTime.startOf() and endOf()', () => {
     expect(thursday.endOf('day')).toMatchObject({ day: 23, hour: 23, minute: 59 });
   });
 
-  // Lord Howe turns its clocks back 30 minutes at 02:00 on 2026-04-05, so 01:30 to 02:00 comes round twice
+  // Lord Howe shifts clocks back 30 minutes at 02:00 on 2026-04-05, repeating 01:30 to 02:00
   it('keeps an hour one elapsed hour long across a 30-minute DST transition', () => {
     const early = datetime('2026-04-05T01:15+11:00', 'Australia/Lord_Howe');
     expect(early.endOf('hour').toString()).toBe('2026-04-04T14:59:59.999Z');
