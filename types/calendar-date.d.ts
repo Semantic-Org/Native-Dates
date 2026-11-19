@@ -170,6 +170,7 @@ export class CalendarDate {
   /**
    * Returns a new `CalendarDate` with one or more calendar fields replaced.
    * Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into March.
+   * A day left unchanged lands on the last day of its new month or year, so January 31 set to February is February 28.
    *
    * @param fields - Object with `year`, `month`, or `day` values to replace
    * @returns A new `CalendarDate` with updated calendar fields

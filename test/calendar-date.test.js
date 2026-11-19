@@ -539,6 +539,14 @@ describe('CalendarDate.set()', () => {
     expect(() => day.set('month', 13)).toThrowError(expect.objectContaining({ code: 'cannotSet' }));
   });
 
+  // a birthday on Feb 29 moved to this year, or a month picker used on the 31st
+  it('constrains the day to month-end when set() updates month or year', () => {
+    expect(date('2024-02-29').set('year', 2025).toString()).toBe('2025-02-28');
+    expect(date('2024-02-29').set('year', 2028).toString()).toBe('2028-02-29');
+    expect(date('2026-01-31').set('month', 2).toString()).toBe('2026-02-28');
+    expect(date('2026-03-31').set({ month: 4 }).toString()).toBe('2026-04-30');
+  });
+
   it('throws cannotSet for fractional field values', () => {
     expect(() => day.set('day', 1.5)).toThrowError(expect.objectContaining({ name: 'RangeError', code: 'cannotSet' }));
   });

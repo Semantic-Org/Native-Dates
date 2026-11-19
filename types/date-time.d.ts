@@ -289,6 +289,7 @@ export class DateTime {
   /**
    * Returns a new `DateTime` with one or more local calendar or clock fields replaced.
    * Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into the next month.
+   * A day left unchanged lands on the last day of its new month or year, so January 31 set to February is February 28.
    *
    * @param fields - Calendar or clock fields to replace in the current time zone
    * @returns A new `DateTime` in the same time zone with updated fields

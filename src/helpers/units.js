@@ -145,7 +145,10 @@ export const withParts = (temporal, changes) => {
   if (!wholeNumbers(Object.values(changes))) {
     fail(isDevelopment ? 'each value passed to `set()` must be a whole number' : '');
   }
-  return temporal.with(changes, { overflow: 'reject' });
+  // every value passed is held to its range, checked on a day each month has. a day left as it was
+  // then lands on the last one its new month or year has, as plus() does
+  temporal.with({ day: 1, ...changes }, { overflow: 'reject' });
+  return temporal.with(changes);
 };
 
 export const singularKeys = (fields) => {
