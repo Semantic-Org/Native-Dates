@@ -41,10 +41,13 @@ export const spill = (fields, name, value) => {
     });
   }
   const whole = Math.trunc(value);
-  const fraction = Number((value - whole).toFixed(9));
+  const next = spillsInto[name];
+  // a number holds 15 significant digits, so a remainder that spills on keeps as many as the whole part leaves it,
+  // and never fewer than the 9 a month or a nanosecond is held to. a fixed 9 read a third of an hour as
+  // 19 minutes 59.9999988 seconds
+  const fraction = Number((value - whole).toFixed(next ? Math.max(9, 15 - String(Math.abs(whole)).length) : 9));
   fields[plural(name)] = (fields[plural(name)] ?? 0) + whole;
   if (fraction) {
-    const next = spillsInto[name];
     if (!next) {
       refuse('invalidFraction', `${value} ${name}`, {
         explanation: isDevelopment
