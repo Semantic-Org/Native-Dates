@@ -1,3 +1,4 @@
+import { build } from 'esbuild';
 import {
   compare,
   configure,
@@ -25,6 +26,7 @@ import {
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
+import vm from 'node:vm';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 const refusal = (call) => {
@@ -520,4 +522,33 @@ describe('a refusal in a Node process started with NODE_ENV', () => {
     expect(impossible.message.split('\n')).toHaveLength(2);
     expect(production[1].message).not.toContain(impossible.message.split('\n')[1]);
   });
+});
+
+// a browser has no process global, which a test run in Node never notices
+describe('a refusal in a page, where there is no process global', () => {
+  const pageFrom = async (options) => {
+    const bundle = await build({
+      bundle: true,
+      format: 'iife',
+      globalName: 'nativeDates',
+      write: false,
+      logLevel: 'silent',
+      stdin: { contents: "export * from 'native-dates';", resolveDir: fileURLToPath(new URL('..', import.meta.url)) },
+      ...options,
+    });
+    return vm.runInContext(`(() => { ${bundle.outputFiles[0].text}\nreturn nativeDates; })()`, vm.createContext({}));
+  };
+
+  // the published files as an import map or a CDN serves them, with no bundler to define NODE_ENV
+  it('is thrown with its class, code, at and first line when nothing has defined NODE_ENV', async () => {
+    const page = await pageFrom({ platform: 'neutral' });
+    expect(page.date('2026-11-16').plus(1, 'day').toString()).toBe('2026-11-17');
+    const [missing, impossible] = [refusal(() => page.date(null)), refusal(() => page.date('2026-02-30'))];
+    expect([missing.name, missing.code, missing.at]).toEqual(['TypeError', 'missingDate', 'null']);
+    expect([impossible.name, impossible.code, impossible.at]).toEqual(['RangeError', 'invalidDate', '2026-02-30']);
+    expect(impossible.message.split('\n')[0]).toBe('dates refused [invalidDate] 2026-02-30');
+  }, 30_000);
+
+  // the explanation waits on a process global, so a page Vite or esbuild builds for development never has one
+  it.todo('explains when a bundler has set NODE_ENV to development');
 });
