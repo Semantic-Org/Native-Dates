@@ -28,6 +28,13 @@ describe('datetime() reading text', () => {
     expect(datetime('2026-11-16 12:30-05:00', 'Asia/Tokyo').toString()).toBe('2026-11-16T17:30:00.000Z');
   });
 
+  // Postgres prints a timestamptz as '2026-11-16 17:30:00+00', and strftime('%z') writes -0500
+  it('fixes the moment from an offset of hours alone, or of hours and minutes with no colon', () => {
+    expect(datetime('2026-11-16 17:30:00+00', 'Asia/Tokyo').toString()).toBe('2026-11-16T17:30:00.000Z');
+    expect(datetime('2026-11-16 12:30:00-05', 'Asia/Tokyo').toString()).toBe('2026-11-16T17:30:00.000Z');
+    expect(datetime('2026-11-16T12:30:00-0500', 'Asia/Tokyo').toString()).toBe('2026-11-16T17:30:00.000Z');
+  });
+
   // +02:00 is not Berlin's offset in March, so a value that kept it would read 16:00
   it('takes the zone from the argument, never from the offset the text was written with', () => {
     const berlin = datetime('2026-03-07T16:00:00+02:00', 'Europe/Berlin');
@@ -61,6 +68,19 @@ describe('datetime() reading text', () => {
     expect(meeting).toMatchObject({ zone: 'Europe/Berlin', hour: 15, minute: 30 });
   });
 
+  // 1:30 comes twice in New York on 2026-11-01, and only the offset says which of the two was written
+  it('reads the string a Temporal.ZonedDateTime writes, with its offset beside the bracketed zone', () => {
+    const meeting = datetime('2026-11-16T09:30:00-05:00[America/New_York]');
+    expect(meeting.zone).toBe('America/New_York');
+    expect(meeting.toString()).toBe('2026-11-16T14:30:00.000Z');
+    expect(datetime('2026-11-01T01:30:00-04:00[America/New_York]').toString()).toBe('2026-11-01T05:30:00.000Z');
+    expect(datetime('2026-11-01T01:30:00-05:00[America/New_York]').toString()).toBe('2026-11-01T06:30:00.000Z');
+  });
+
+  it('reads text with spaces or a line break around it', () => {
+    expect(datetime(' 2026-11-16T17:30:00Z\n', 'UTC').toString()).toBe('2026-11-16T17:30:00.000Z');
+  });
+
   it('keeps microseconds and nanoseconds written in the text', () => {
     const precise = datetime('2026-11-16T17:30:00.123456789Z', 'UTC');
     expect(precise).toMatchObject({ millisecond: 123, microsecond: 456, nanosecond: 789 });
@@ -82,6 +102,11 @@ describe('datetime() reading text', () => {
 describe('datetime() reading numbers, Dates and fields', () => {
   it('reads a number as milliseconds since 1970', () => {
     expect(datetime(1794850200000, 'Asia/Tokyo').toString()).toBe('2026-11-16T17:30:00.000Z');
+  });
+
+  it('reads 0 as the first moment of 1970 and a negative number as a moment before it', () => {
+    expect(datetime(0, 'UTC').toString()).toBe('1970-01-01T00:00:00.000Z');
+    expect(datetime(-86400000, 'UTC').toString()).toBe('1969-12-31T00:00:00.000Z');
   });
 
   it('drops a fraction of a millisecond the way Date does', () => {
@@ -283,6 +308,8 @@ describe('datetime() refusing input', () => {
   it.todo('refuses a number beyond the last moment Temporal can hold with a coded error');
   it.todo('refuses a fraction in a fields object instead of dropping it');
   it.todo('reads the time after a lowercase t instead of dropping it');
+  // datetime(text, { timeZone: 'Asia/Tokyo' }) reads in the default zone and says nothing
+  it.todo('refuses an option it does not know, such as timeZone, the key Intl uses for the zone');
 });
 
 /*******************************
@@ -417,6 +444,15 @@ describe('DateTime parts', () => {
     expect(moment.isWeekday()).toBe(false);
     expect(moment.in('America/Los_Angeles').isWeekend()).toBe(false);
     expect(moment.in('America/Los_Angeles').isWeekday()).toBe(true);
+  });
+
+  it('calls Sunday the weekend and the Monday after it a weekday', () => {
+    const sunday = datetime('2026-11-15T12:00', 'UTC');
+    const monday = sunday.plus(1, 'day');
+    expect(sunday.isWeekend()).toBe(true);
+    expect(sunday.isWeekday()).toBe(false);
+    expect(monday.isWeekend()).toBe(false);
+    expect(monday.isWeekday()).toBe(true);
   });
 
   // 20:00 UTC on New Year's Eve is 5:00 on New Year's Day in Tokyo
@@ -571,6 +607,8 @@ describe('DateTime.set()', () => {
   });
 
   it.todo('refuses null or true as a field value instead of reading them as 0 and 1');
+  // set('month', 2) on January 31 throws cannotSet, where plus(1, 'month') gives February 28
+  it.todo('stops at the last day of a shorter month when only the month or the year is set');
 });
 
 /*******************************
@@ -611,6 +649,16 @@ describe('DateTime.plus() and minus()', () => {
 
   it('adds the days of a mixed amount by the calendar and its hours by the clock', () => {
     expect(saturday.plus({ days: 1, hours: 4 })).toMatchObject({ day: 8, hour: 13 });
+  });
+
+  it("reads a capital 'M' as months and a small 'm' as minutes, as Moment and Day.js do", () => {
+    expect(saturday.plus(1, 'M').toString()).toBe('2026-04-07T13:00:00.000Z');
+    expect(saturday.plus(1, 'm').toString()).toBe('2026-03-07T14:01:00.000Z');
+  });
+
+  it('moves the other way when the amount is negative', () => {
+    expect(saturday.plus(-1, 'day').toString()).toBe('2026-03-06T14:00:00.000Z');
+    expect(saturday.minus(-1, 'day').toString()).toBe('2026-03-08T13:00:00.000Z');
   });
 
   it('stops at the last day of a shorter month', () => {
@@ -864,6 +912,11 @@ describe('DateTime.next() and previous()', () => {
     expect(saturday.next('sunday').toString()).toBe('2026-03-08T13:00:00.000Z');
   });
 
+  it('keeps the time of day across a clock change when it steps back', () => {
+    const mondayAfter = datetime('2026-03-09T09:00', 'America/New_York');
+    expect(mondayAfter.previous('saturday').toString()).toBe('2026-03-07T14:00:00.000Z');
+  });
+
   // Los Angeles is still on daylight time on October 31, an hour of UTC earlier than in mid November
   it('steps to the next and the previous occurrence of a MonthDay at the same time of day', () => {
     expect(monday.next(monthDay('12-25')).toString()).toBe('2026-12-25T17:30:15.250Z');
@@ -934,6 +987,15 @@ describe('DateTime.equals(), isBefore() and isAfter()', () => {
     const next = noon.plus(1, 'millisecond');
     expect(noon.equals(next)).toBe(false);
     expect(noon.isBefore(next)).toBe(true);
+  });
+
+  // a Postgres timestamp counts microseconds, so two rows can share a millisecond
+  it('tells apart moments a microsecond from each other', () => {
+    const first = datetime('2026-11-16T17:00:00.123456Z');
+    const second = datetime('2026-11-16T17:00:00.123457Z');
+    expect(first.equals(second)).toBe(false);
+    expect(first.isBefore(second)).toBe(true);
+    expect(second.isAfter(first)).toBe(true);
   });
 
   it('refuses to compare with a missing value', () => {
@@ -1022,6 +1084,13 @@ describe('DateTime.isPast(), isFuture(), isToday(), isTomorrow() and isYesterday
     expect(datetime('2026-11-15T23:59', 'UTC').isYesterday()).toBe(true);
     expect(datetime('2026-11-14T23:59', 'UTC').isYesterday()).toBe(false);
     expect(datetime('2026-11-16T00:00', 'UTC').isYesterday()).toBe(false);
+  });
+
+  // 03:00 UTC on the 16th is noon that day in Tokyo, where the current moment is already on the 17th
+  it('judges yesterday by the calendar of its own zone', () => {
+    const moment = datetime('2026-11-16T03:00:00Z', 'UTC');
+    expect(moment.isYesterday()).toBe(false);
+    expect(moment.in('Asia/Tokyo').isYesterday()).toBe(true);
   });
 });
 
