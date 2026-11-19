@@ -1,10 +1,9 @@
 import { setLooseExtension } from 'native-dates/helpers/errors';
 import { dayFirst as readsDayFirst, zoneId } from 'native-dates/helpers/zones';
 
-// a zone the engine reads: a name ('EDT', 'UTC', 'GMT+2'), a Z, or an offset that follows a space or a clock time,
-// so the year in '6-Sep-26' is never taken for an offset. an engine reads none before the first number or
-// inside parentheses, which it skips as a comment. those two and the text an offset follows are matched whole
-// and kept, since a lookaround that searched for them would read a long text once for every zone in it
+// match zone abbreviations ('EDT', 'UTC', 'GMT+2'), trailing Z, or offsets after spaces or clock times
+// without matching two-digit years like '6-Sep-26'. Leading non-digits and parenthesized comments are
+// captured and restored in one linear pass to avoid catastrophic backtracking on untrusted inputs
 const zoneMarker =
   /(^\D+|\([^)]*\)?)|\b(?:GMT|UTC?|[ECMP][SD]T)\b(?:[+-]\d\d?(?::?\d\d)?)?|(?<![a-z])Z\b|(\s|:[\d.]+)[+-]\d\d?(?::?\d\d)?(?!\d)/gi;
 
@@ -33,9 +32,8 @@ const rolledForward = (text, read, wallClock) => {
   return !Number.isNaN(epoch) && wallClock(epoch).month !== read.month;
 };
 
-// Date.parse reads text in the zone it names, and in the host's zone when it names none (UTC for date-only ISO).
-// With the named zone taken out it reads the wall clock as written, so that is read back in the host's zone
-// and local inputs don't shift when placed into `zone`
+// Date.parse interprets zoned strings as instants and unzoned strings in the host timezone (UTC for date-only ISO).
+// stripping zoneMarker parses the written wall clock in the host timezone so local inputs don't shift when placed into `zone`
 export const looseZoned = (text, zone, dayFirst) => {
   const trimmed = engineOrder(text.trim(), readsDayFirst(dayFirst));
   const unzoned = trimmed.replace(zoneMarker, '$1$2');

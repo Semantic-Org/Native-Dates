@@ -960,7 +960,7 @@ describe('CalendarDate.until() and since()', () => {
     expect(date('2026-01-01').until('2027-04-05')).toMatchObject({ years: 0, months: 0, days: 459 });
   });
 
-  it("spells the measured Duration out in years, months, and days through balance('year')", () => {
+  it("balances the measured Duration into years, months, and days with balance('year')", () => {
     const span = date('2026-01-01').until('2027-04-05').balance('year');
     expect(span.toString()).toBe('P1Y3M4D');
     expect(span).toMatchObject({ years: 1, months: 3, days: 4 });

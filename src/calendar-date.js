@@ -19,6 +19,7 @@ import {
   isInstant,
   isPlainDate,
   isPlainDateTime,
+  isUnzoned,
   isZonedDateTime,
   localeOf,
   namesInstant,
@@ -383,10 +384,8 @@ export class CalendarDate {
   }
 
   at(when, zone) {
-    // a Date, a Temporal.Instant or an instant string has no zone of its own, so it is read in this one.
-    // anything else, a DateTime from another zone included, keeps the clock time it carries
-    const inZone = isDate(when) || isInstant(when) || isString(when) ? { zone } : undefined;
-    const plainTime = new Time(when ?? '00:00', inZone).toTemporal();
+    // Date, Temporal.Instant, and instant strings carry no zone of their own, while DateTime and ZonedDateTime keep their wall-clock time
+    const plainTime = new Time(when ?? '00:00', isUnzoned(when) ? { zone } : undefined).toTemporal();
     return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }), { locale: this.#locale });
   }
 
@@ -476,7 +475,7 @@ export const date = (input, monthOrOptions, day) => {
   return isPlainObject(monthOrOptions) && monthOrOptions.loose ? loosely(build) : build();
 };
 
-// read the clock through now() so a test clock that mocks Date alone moves today() with it
+// derive from now() so mocking Date alone in tests also moves today()
 export const today = (zone) => now(zone).date;
 export const tomorrow = (zone) => today(zone).plus({ days: 1 });
 export const yesterday = (zone) => today(zone).minus({ days: 1 });

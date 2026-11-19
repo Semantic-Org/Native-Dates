@@ -42,9 +42,8 @@ export const spill = (fields, name, value) => {
   }
   const whole = Math.trunc(value);
   const next = spillsInto[name];
-  // a number holds 15 significant digits, so a remainder that spills on keeps as many as the whole part leaves it,
-  // and never fewer than the 9 a month or a nanosecond is held to. a fixed 9 read a third of an hour as
-  // 19 minutes 59.9999988 seconds
+  // preserve up to 15 IEEE-754 significant digits across the integer and fraction parts (at least 9 decimal places)
+  // so repeating fractions like hours(1 / 3) spill to 20 minutes instead of 19m 59.9999988s
   const fraction = Number((value - whole).toFixed(next ? Math.max(9, 15 - String(Math.abs(whole)).length) : 9));
   fields[plural(name)] = (fields[plural(name)] ?? 0) + whole;
   if (fraction) {
@@ -55,7 +54,7 @@ export const spill = (fields, name, value) => {
           : 0,
       });
     }
-    // nanoseconds are the smallest unit, so what is finer rounds to the nearest one
+    // round sub-nanosecond remainders to the nearest nanosecond
     spill(fields, next[0], Number((fraction * next[1]).toFixed(next[0] === 'nanosecond' ? 0 : 9)));
   }
   return fields;
