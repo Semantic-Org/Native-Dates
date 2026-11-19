@@ -277,6 +277,83 @@ date('2028-02-10').endOf('month').toString(); // '2028-02-29'
 :::
 
 :::entry
+### `startOfNext()` :kind[method]
+
+```js signature
+d.startOfNext(unit, firstDay?): CalendarDate
+```
+
+Returns the first day of the calendar unit after the one containing this date. The result is always a later date, so from December 1 the next month starts on January 1.
+
+Pass a weekday name in place of a unit to get the next day with that name, the same date [`next()`](#next) returns.
+
+**Parameters**
+
+```params
+- name: unit
+  type: DateUnit | string
+  required: true
+  description: Calendar unit from `'year'` down to `'day'`, or a weekday name such as `'wednesday'`.
+- name: firstDay
+  type: DayOfWeek
+  description: First day of the week when `unit` is `'week'`.
+```
+
+**Returns**
+
+```returns
+type: CalendarDate
+description: The first calendar day of the next `unit`, or the next given weekday.
+```
+
+```js
+const mon = date('2026-11-16', { locale: 'en-US' });
+
+mon.startOfNext('month').toString(); // '2026-12-01'
+mon.startOfNext('quarter').toString(); // '2027-01-01'
+mon.startOfNext('week').toString(); // '2026-11-22'
+mon.startOfNext('wednesday').toString(); // '2026-11-18'
+```
+:::
+
+:::entry
+### `startOfPrevious()` :kind[method]
+
+```js signature
+d.startOfPrevious(unit, firstDay?): CalendarDate
+```
+
+Returns the first day of the calendar unit before the one containing this date. A weekday name in place of a unit gives the most recent day with that name, as [`previous()`](#previous) does.
+
+**Parameters**
+
+```params
+- name: unit
+  type: DateUnit | string
+  required: true
+  description: Calendar unit from `'year'` down to `'day'`, or a weekday name such as `'wednesday'`.
+- name: firstDay
+  type: DayOfWeek
+  description: First day of the week when `unit` is `'week'`.
+```
+
+**Returns**
+
+```returns
+type: CalendarDate
+description: The first calendar day of the previous `unit`, or the previous given weekday.
+```
+
+```js
+const mon = date('2026-11-16');
+
+mon.startOfPrevious('month').toString(); // '2026-10-01'
+mon.startOfPrevious('year').toString(); // '2025-01-01'
+mon.startOfPrevious('wednesday').toString(); // '2026-11-11'
+```
+:::
+
+:::entry
 ### `next()` :kind[method]
 
 ```js signature
