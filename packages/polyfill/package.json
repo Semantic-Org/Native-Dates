@@ -15,11 +15,11 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./index.js"
+      "default": "./index.js"
     },
     "./sync": {
       "types": "./index.d.ts",
-      "import": "./sync.js"
+      "default": "./sync.js"
     }
   },
   "peerDependencies": {

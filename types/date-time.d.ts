@@ -289,6 +289,7 @@ export class DateTime {
   /**
    * Returns a new `DateTime` with one or more local calendar or clock fields replaced.
    * Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into the next month.
+   * Updating `month` or `year` without `day` clamps an overflowing day to the end of the target month.
    *
    * @param fields - Calendar or clock fields to replace in the current time zone
    * @returns A new `DateTime` in the same time zone with updated fields
@@ -713,9 +714,9 @@ export class DateTime {
   isYesterday(): boolean;
 
   /**
-   * Measures the span from this moment to `other` as a `Duration` balanced up to years,
+   * Measures the span from this moment to `other` as a `Duration` counted in days and clock units,
    * returning a negative duration when `other` is earlier. Remembers this starting moment
-   * so calendar months and years can be totaled in smaller units.
+   * so `balance('year')` and `total('months')` can compute calendar months and years.
    *
    * @param other - Target moment to measure toward
    * @returns A signed `Duration` from this moment to `other`
@@ -748,7 +749,7 @@ export class DateTime {
   until(other: DateTimeInput, unit: Unit): number;
 
   /**
-   * Measures the span elapsed since an earlier moment as a `Duration` balanced up to years.
+   * Measures the span elapsed since an earlier moment as a `Duration` counted in days and clock units.
    *
    * @param other - Earlier moment to measure from
    * @returns A signed `Duration` from `other` to this moment

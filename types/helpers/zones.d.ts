@@ -12,11 +12,12 @@ import type { DayOfWeek } from './units.js';
 export type Zone = string;
 
 /**
- * BCP 47 locale tag such as `'en-US'` or `'de-DE'`, underscore tag, or `Accept-Language` header.
+ * BCP 47 locale tag such as `'en-US'` or `'de-DE'`, underscore tag, `Accept-Language` header,
+ * or list of tags in order of preference such as `navigator.languages`.
  *
  * @see {@link https://nativedates.dev/guides/internationalization/ Internationalization}
  */
-export type Locale = string;
+export type Locale = string | readonly string[];
 
 /**
  * Options accepted as the second argument when reading values in factory functions.
@@ -73,7 +74,7 @@ export interface Settings {
    * });
    * ```
    */
-  weekdayNames?: Record<Locale, Partial<Record<'narrow' | 'short' | 'long', Record<string, string>>>> | null;
+  weekdayNames?: Record<string, Partial<Record<'narrow' | 'short' | 'long', Record<string, string>>>> | null;
 
   /**
    * Custom formatter for the `Do` day-of-month token, keyed by language tag.
@@ -86,7 +87,7 @@ export interface Settings {
    * });
    * ```
    */
-  ordinals?: Record<Locale, (day: number) => string | number> | null;
+  ordinals?: Record<string, (day: number) => string | number> | null;
 
   /**
    * Named formats reusable across `format(name)` calls on dates, moments, times, partial dates, and ranges.
@@ -113,8 +114,8 @@ export interface Settings {
 export interface ActiveSettings {
   /** Active default IANA time zone or offset, or `undefined` when using the runtime's local zone. */
   zone: string | undefined;
-  /** Active default BCP 47 locale tag, or `undefined` when using the runtime's default locale. */
-  locale: string | undefined;
+  /** Active default locale, a tag or a list of tags, or `undefined` when using the runtime's default locale. */
+  locale: Locale | undefined;
   /** Active ISO week-start number (1–7), or `undefined` when following the locale. */
   weekStart: number | undefined;
   /** Whether loose numeric dates default to day-first order (`false` unless set with `@native-dates/plugins/loose`). */
@@ -138,6 +139,7 @@ export interface ActiveSettings {
  *
  * @param settings - Process-wide defaults to update, leaving omitted keys unchanged
  * @returns A shallow copy of the active settings after applying any updates
+ * @throws {RangeError} When an unrecognized setting key (`unknownSetting`), time zone (`unknownZone`), locale (`unknownLocale`), weekday (`unknownDayOfWeek`), width (`unknownWidth`), or unimported plugin option (`missingPlugin`) is passed
  *
  * @example
  * ```ts
