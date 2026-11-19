@@ -31,6 +31,11 @@ describe('dayOfWeek()', () => {
     expect(dayOfWeek('SUNDAY')).toBe(7);
   });
 
+  it('ignores spaces and a line break around a name, as a setting read from a file carries them', () => {
+    expect(dayOfWeek(' monday ')).toBe(1);
+    expect(dayOfWeek('Fri\n')).toBe(5);
+  });
+
   it('returns a whole number from 1 to 7 as it is', () => {
     expect([1, 2, 3, 4, 5, 6, 7].map(dayOfWeek)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
