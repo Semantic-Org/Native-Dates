@@ -395,7 +395,7 @@ export class DateTime {
   /**
    * Moves forward to the start of the calendar or clock unit after the one containing this moment, in this time zone.
    * The result is always later than this moment, so from midnight the next day starts at the following midnight.
-   * A weekday name in place of a unit returns the start of the next day with that name, where `next()` keeps the time of day.
+   * A weekday name in place of a unit returns the start of the next day with that name, whereas `next()` keeps the time of day.
    *
    * @param unit - Calendar or clock unit from `'year'` down to `'nanosecond'`, or a weekday name such as `'wednesday'`
    * @param firstDay - First day of the week when `unit` is `'week'`, such as `'sunday'` or 7
@@ -415,7 +415,7 @@ export class DateTime {
 
   /**
    * Moves back to the start of the calendar or clock unit before the one containing this moment, in this time zone.
-   * A weekday name in place of a unit returns the start of the previous day with that name, where `previous()` keeps the time of day.
+   * A weekday name in place of a unit returns the start of the previous day with that name, whereas `previous()` keeps the time of day.
    *
    * @param unit - Calendar or clock unit from `'year'` down to `'nanosecond'`, or a weekday name such as `'wednesday'`
    * @param firstDay - First day of the week when `unit` is `'week'`

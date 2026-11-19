@@ -101,8 +101,7 @@ export const plural = (name) => `${name}s`;
 
 const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-// 1-7 for a weekday name or its first three letters or more, and 0 for anything else, a number included.
-// startOfNext() reads a weekday by name only because a number beside a unit reads as a count
+// returns ISO 1-7 for weekday names/prefixes only (never numbers, so startOfNext(2, 'months') rejects 2 as unknownUnit)
 export const weekdayNamed = (input) => {
   const key = isString(input) ? input.trim().toLowerCase() : '';
   return key.length > 2 ? weekdays.findIndex((name) => name.startsWith(key)) + 1 : 0;
