@@ -109,8 +109,8 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 
 | Code | Thrown by | Cause |
 |---|---|---|
-| `unknownUnit` | Arithmetic, rounding, `set()`, `duration()` | Unrecognized unit name or abbreviation. |
-| `unknownDayOfWeek` | `dayOfWeek()`, `next()`, `previous()`, `configure()` | Day name is not recognized, or the day of the week as a number is outside 1 to 7. |
+| `unknownUnit` | Arithmetic, boundaries, rounding, `set()`, `duration()` | Unrecognized unit name or abbreviation. |
+| `unknownDayOfWeek` | `dayOfWeek()`, `next()`, `previous()`, `startOf()`, `startOfNext()`, `startOfPrevious()`, `configure()` | Day name is not recognized, or the day of the week as a number is outside 1 to 7. |
 | `unknownSetting` | `configure()` | Setting key passed to `configure()` is not recognized. |
 | `unknownWidth` | `configure()` | A `weekdayNames` entry names a width other than `narrow`, `short`, or `long`, or leaves the width out. |
 | `unknownZone` | Factories, `in()`, `configure()` | Unknown IANA time zone ID, non-string zone, or malformed UTC offset. |
@@ -128,7 +128,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `cannotAdd` | `plus()`, `add()` | Addition overflows Temporal's representable date range. |
 | `cannotSubtract` | `minus()`, `subtract()` | Subtraction overflows Temporal's representable date range. |
 | `cannotSet` | `set()` | Field value is fractional or out of range for that calendar month or clock unit. |
-| `cannotRound` | `round()`, `floor()`, `ceil()`, `Time.startOf()` | Unsupported rounding unit, or step increment does not divide evenly into the next unit. |
+| `cannotRound` | `round()`, `floor()`, `ceil()`, `Time.startOf()`, `Time.startOfNext()`, `Time.startOfPrevious()` | Unsupported rounding unit, or step increment does not divide evenly into the next unit. |
 | `missingAnchor` | `Duration.balance()`, `total()`, `compare()` | Unanchored duration requires a calendar start date to convert months or years into weeks, days, or clock units. |
 | `cannotBalance` | `Duration.balance()` | Balancing a duration overflows or fails Temporal rounding. |
 | `cannotTotal` | `Duration.total()`, `until()`, `since()` | Computing a total length overflows or uses an unsupported unit. |

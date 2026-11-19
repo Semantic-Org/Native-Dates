@@ -363,7 +363,7 @@ standup.next('wednesday').text; // 'Nov 18, 2026, 9:30 AM EST'
 dt.startOfPrevious(unit, firstDay?): DateTime
 ```
 
-Moves back to the start of the calendar or clock unit before the one containing this moment, in this time zone. A weekday name in place of a unit gives the start of the previous day with that name, where [`previous()`](#previous) keeps the time of day.
+Moves back to the start of the calendar or clock unit before the one containing this moment, in this time zone. A weekday name in place of a unit gives the start of the previous day with that name, whereas [`previous()`](#previous) keeps the time of day.
 
 **Parameters**
 

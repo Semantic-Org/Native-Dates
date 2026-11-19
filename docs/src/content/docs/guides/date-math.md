@@ -88,7 +88,7 @@ wednesday.locale('de-DE').startOf('week').toString(); // '2026-11-16'
 wednesday.startOf('week', 'monday').toString(); // '2026-11-16'
 ```
 
-Call `startOfNext()` or `startOfPrevious()` to reach the start of the unit after or before the current one. The result always moves, so the next month from December 1 starts on January 1:
+Call `startOfNext()` or `startOfPrevious()` to reach the start of the unit after or before the current one. Always steps into the adjacent unit, so calling `startOfNext('month')` on December 1 returns January 1:
 
 ```js
 const invoiced = date('2026-11-16');
