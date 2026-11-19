@@ -317,6 +317,83 @@ nov.endOf('month').toString(); // '2026-11-30T23:59:59.999Z'
 :::
 
 :::entry
+### `startOfNext()` :kind[method]
+
+```js signature
+dt.startOfNext(unit, firstDay?): DateTime
+```
+
+Moves forward to the start of the calendar or clock unit after the one containing this moment, in this time zone. The result is always a later moment, so from midnight the next day starts at the following midnight.
+
+Pass a weekday name in place of a unit to get the start of the next day with that name. Calling [`next()`](#next) finds the same day and keeps the time of day.
+
+**Parameters**
+
+```params
+- name: unit
+  type: Unit | string
+  required: true
+  description: Calendar or clock unit from `'year'` down to `'nanosecond'`, or a weekday name such as `'wednesday'`.
+- name: firstDay
+  type: DayOfWeek
+  description: First day of the week when `unit` is `'week'`.
+```
+
+**Returns**
+
+```returns
+type: DateTime
+description: A new `DateTime` at the start of the next `unit`, or of the next given weekday.
+```
+
+```js
+const standup = datetime('2026-11-16T09:30', 'America/New_York');
+
+standup.startOfNext('month').text; // 'Dec 1, 2026, 12:00 AM EST'
+standup.startOfNext('hour').text; // 'Nov 16, 2026, 10:00 AM EST'
+standup.startOfNext('wednesday').text; // 'Nov 18, 2026, 12:00 AM EST'
+standup.next('wednesday').text; // 'Nov 18, 2026, 9:30 AM EST'
+```
+:::
+
+:::entry
+### `startOfPrevious()` :kind[method]
+
+```js signature
+dt.startOfPrevious(unit, firstDay?): DateTime
+```
+
+Moves back to the start of the calendar or clock unit before the one containing this moment, in this time zone. A weekday name in place of a unit gives the start of the previous day with that name, where [`previous()`](#previous) keeps the time of day.
+
+**Parameters**
+
+```params
+- name: unit
+  type: Unit | string
+  required: true
+  description: Calendar or clock unit from `'year'` down to `'nanosecond'`, or a weekday name such as `'wednesday'`.
+- name: firstDay
+  type: DayOfWeek
+  description: First day of the week when `unit` is `'week'`.
+```
+
+**Returns**
+
+```returns
+type: DateTime
+description: A new `DateTime` at the start of the previous `unit`, or of the previous given weekday.
+```
+
+```js
+const standup = datetime('2026-11-16T09:30', 'America/New_York');
+
+standup.startOfPrevious('day').text; // 'Nov 15, 2026, 12:00 AM EST'
+standup.startOfPrevious('month').text; // 'Oct 1, 2026, 12:00 AM EDT'
+standup.startOfPrevious('wednesday').text; // 'Nov 11, 2026, 12:00 AM EST'
+```
+:::
+
+:::entry
 ### `next()` :kind[method]
 
 ```js signature

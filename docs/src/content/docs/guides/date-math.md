@@ -88,6 +88,16 @@ wednesday.locale('de-DE').startOf('week').toString(); // '2026-11-16'
 wednesday.startOf('week', 'monday').toString(); // '2026-11-16'
 ```
 
+Call `startOfNext()` or `startOfPrevious()` to reach the start of the unit after or before the current one. The result always moves, so the next month from December 1 starts on January 1:
+
+```js
+const invoiced = date('2026-11-16');
+
+invoiced.startOfNext('month').toString(); // '2026-12-01'
+invoiced.startOfNext('quarter').toString(); // '2027-01-01'
+invoiced.startOfPrevious('month').toString(); // '2026-10-01'
+```
+
 ## Rounding clock times
 
 Call `round()` on a moment or time to snap to the nearest unit or a step increment, or round in one direction:
@@ -126,6 +136,17 @@ import { monthDay } from 'native-dates';
 
 const birthday = monthDay('10/17');
 monday.next(birthday).toString(); // '2027-10-17'
+```
+
+On a moment, `next()` keeps the time of day. Pass a weekday name to `startOfNext()` when you want the start of that day instead:
+
+```js
+import { datetime } from 'native-dates';
+
+const standup = datetime('2026-11-16T09:30', 'America/New_York');
+
+standup.next('wednesday').text; // 'Nov 18, 2026, 9:30 AM EST'
+standup.startOfNext('wednesday').text; // 'Nov 18, 2026, 12:00 AM EST'
 ```
 
 ## Building and stepping ranges
