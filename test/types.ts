@@ -72,6 +72,7 @@ export const brand: symbol = IS_DATE_TIME;
 export const brandedInstance: true = meeting[IS_DATE_TIME];
 export const brandedRange: true = stay[IS_RANGE];
 export const sunday: number = dayOfWeek('sunday');
+export const sundayOfGetDay: number = dayOfWeek(0);
 export const names: string[] = [...monthNames('long', 'fr'), ...weekdayNames('narrow', 'monday')];
 export const text: string = `${meeting.format(spec)} ${due.text} ${length.format('narrow')} ${meeting.fromNow()}`;
 export const epochs: [number, number, bigint] = [

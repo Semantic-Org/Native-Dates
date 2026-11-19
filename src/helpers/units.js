@@ -101,9 +101,10 @@ export const plural = (name) => `${name}s`;
 
 const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
+// 0 is the Sunday of Date.prototype.getDay(), Moment and date-fns
 export const dayOfWeek = (input) => {
-  if (isNumber(input) && Number.isInteger(input) && input >= 1 && input <= 7) {
-    return input;
+  if (isNumber(input) && Number.isInteger(input) && input >= 0 && input <= 7) {
+    return input || 7;
   }
   const key = isString(input) ? input.trim().toLowerCase() : '';
   const index = key.length > 2 ? weekdays.findIndex((name) => name.startsWith(key)) : -1;
@@ -112,7 +113,7 @@ export const dayOfWeek = (input) => {
       explanation: isDevelopment
         ? `expected a weekday in [${
           weekdays.join(', ')
-        }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday)`
+        }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday), or 0 for Sunday as \`getDay()\` counts it`
         : 0,
     })
     : index + 1;

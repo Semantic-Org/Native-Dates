@@ -46,7 +46,7 @@ export type DateUnit = 'year' | 'quarter' | 'month' | 'week' | 'day' | (string &
 
 /**
  * Day of the week as a case-insensitive name or prefix such as `'monday'` or `'Fri'`,
- * or an ISO number from 1 for Monday through 7 for Sunday.
+ * an ISO number from 1 for Monday through 7 for Sunday, or 0 for Sunday as `Date.prototype.getDay()` counts it.
  *
  * @see {@link https://nativedates.dev/api/configure/#dayofweek dayOfWeek}
  */
@@ -58,6 +58,7 @@ export type DayOfWeek =
   | 'friday'
   | 'saturday'
   | 'sunday'
+  | 0
   | 1
   | 2
   | 3

@@ -186,6 +186,7 @@ describe('configure({ weekStart })', () => {
     ['sunday', 7],
     ['Mon', 1],
     [6, 6],
+    [0, 7],
   ])('normalizes %j to ISO weekday number %i (Monday = 1, Sunday = 7)', (day, number) => {
     expect(configure({ weekStart: day }).weekStart).toBe(number);
   });
@@ -197,8 +198,7 @@ describe('configure({ weekStart })', () => {
     expect(date('2026-11-18').startOf('week').toString()).toBe('2026-11-16');
   });
 
-  // Date.prototype.getDay(), Moment, and date-fns use 0 for Sunday
-  it.each([[0], ['funday']])(
+  it.each([[8], ['funday']])(
     'throws unknownDayOfWeek RangeError for %j and preserves the previous weekStart',
     (day) => {
       configure({ weekStart: 'saturday' });
