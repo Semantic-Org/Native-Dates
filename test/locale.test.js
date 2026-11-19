@@ -86,6 +86,27 @@ describe('a locale carried on a value', () => {
   });
 });
 
+// each kind is written in two languages, so one of them is never the language of the machine running the test
+const written = [
+  ['DateTime', () => datetime('2026-05-15T14:30:00Z', 'UTC'), ['fr', 'mai'], ['it', 'mag']],
+  ['CalendarDate', () => date('2026-05-15'), ['fr', 'mai'], ['it', 'mag']],
+  ['Time', () => time('17:30'), ['en-US', 'PM'], ['ko', '오후']],
+  ['Duration', () => hours(2), ['fr', 'heures'], ['de', 'Stunden']],
+  ['YearMonth', () => yearMonth('2026-05'), ['fr', 'mai'], ['it', 'mag']],
+  ['MonthDay', () => monthDay(5, 15), ['fr', 'mai'], ['it', 'mag']],
+  ['DateRange', () => dateRange('2026-05-15', '2026-05-19'), ['fr', 'mai'], ['it', 'mag']],
+  ['DateTimeRange', () => datetimeRange('2026-05-15T09:00', '2026-05-15T10:00', 'UTC'), ['fr', 'mai'], ['it', 'mag']],
+  ['TimeRange', () => timeRange('09:00', '17:00'), ['en-US', 'PM'], ['ko', '오후']],
+];
+
+describe.each(written)('format() and text on a %s carrying a locale', (name, make, ...languages) => {
+  it.each(languages)('are written in %s', (tag, word) => {
+    const value = make().locale(tag);
+    expect(value.format('long')).toContain(word);
+    expect(value.text).toContain(word);
+  });
+});
+
 describe('locale() given a locale as a server or a browser hands it over', () => {
   const day = date('2026-05-15');
 
@@ -453,4 +474,7 @@ describe('locale precedence when printing', () => {
   });
 
   it.todo('treats null or an empty string passed to format() as no locale for that call');
+
+  // jp for Japanese is the usual slip, and today it prints in the language of the machine and not the configured one
+  it.todo('prints in the configured locale when the runtime has data for no language the value carries');
 });

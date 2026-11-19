@@ -86,6 +86,15 @@ describe('configure({ zone })', () => {
     expect(datetime('2026-11-16T09:30[America/New_York]').zone).toBe('America/New_York');
   });
 
+  // the zone is taken when a moment is made, where the locale is read each time a value prints
+  it('leaves a moment made before the call, and what is made from it, in the zone it had', () => {
+    configure({ zone: 'Europe/Berlin' });
+    const made = datetime('2026-11-16T17:30:00Z');
+    configure({ zone: 'Asia/Tokyo' });
+    expect(made).toMatchObject({ zone: 'Europe/Berlin', hour: 18 });
+    expect(made.plus(1, 'day').at('9am')).toMatchObject({ zone: 'Europe/Berlin', day: 17, hour: 9 });
+  });
+
   it('returns to the zone of the runtime when set to null', () => {
     const runtimeZone = now().zone;
     configure({ zone: 'Asia/Tokyo' });
@@ -192,5 +201,21 @@ describe('zone, locale and week start with nothing configured', () => {
       encoding: 'utf8',
     });
     expect(JSON.parse(printed)).toEqual({ zone: 'Asia/Tokyo', month: 'Mai', weekStart: 1 });
+  });
+
+  // weeks that always started on Monday would pass in de_DE, so this starts a process where they start on Sunday
+  it.skipIf(process.platform === 'win32')('start weeks on Sunday in a process started in en_US', () => {
+    const script = `
+      import { date, weekdayNames } from 'native-dates';
+      const wednesday = date('2026-11-18');
+      const start = wednesday.startOf('week').toString();
+      console.log(JSON.stringify({ weekStart: wednesday.weekStart, start, first: weekdayNames()[0] }));
+    `;
+    const printed = execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
+      cwd: fileURLToPath(new URL('..', import.meta.url)),
+      env: { ...process.env, LC_ALL: 'en_US.UTF-8' },
+      encoding: 'utf8',
+    });
+    expect(JSON.parse(printed)).toEqual({ weekStart: 7, start: '2026-11-15', first: 'Sun' });
   });
 });
