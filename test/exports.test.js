@@ -96,4 +96,7 @@ describe('native-dates exports', () => {
       .filter(Boolean);
     expect(declared.sort()).toEqual(Object.keys(nativeDates).sort());
   });
+
+  // the exports map names only the import condition, so require('native-dates') finds no entry
+  it.todo('load with require() from a CommonJS file, as Node 26 loads any ES module');
 });
