@@ -1,5 +1,7 @@
 import * as nativeDates from 'native-dates';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const classes = [
@@ -94,5 +96,15 @@ describe('native-dates exports', () => {
       .map((name) => name.trim())
       .filter(Boolean);
     expect(declared.sort()).toEqual(Object.keys(nativeDates).sort());
+  });
+
+  // test files are ES modules, so require() runs in a second Node process started as CommonJS
+  it('resolves require() from a CommonJS module to the same named exports as import', () => {
+    const script = `console.log(JSON.stringify(Object.keys(require('native-dates'))));`;
+    const printed = execFileSync(process.execPath, ['--input-type=commonjs', '--eval', script], {
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
+      encoding: 'utf8',
+    });
+    expect(JSON.parse(printed).sort()).toEqual(Object.keys(nativeDates).sort());
   });
 });
