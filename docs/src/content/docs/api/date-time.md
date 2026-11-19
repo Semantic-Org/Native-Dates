@@ -135,7 +135,7 @@ dt.set(fields): DateTime
 dt.set(unit, value): DateTime
 ```
 
-Returns a new `DateTime` with one or more calendar or clock fields replaced in the current time zone. Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into the next month.
+Returns a new `DateTime` with one or more calendar or clock fields replaced in the current time zone. Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into the next month. Updating `month` or `year` without `day` clamps an overflowing day to the end of the target month.
 
 **Parameters**
 
@@ -600,7 +600,7 @@ Measures the time from this moment to another, returning a negative span when th
 
 ```returns
 type: Duration | number
-description: A `Duration` balanced up to years, or a number when `unit` is given.
+description: A `Duration` counted in days and clock units, or a number when `unit` is given.
 ```
 
 ```js

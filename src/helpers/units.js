@@ -1,4 +1,4 @@
-import { each, isNumber, isPlainObject, isString } from './utils.js';
+import { each, isDate, isNumber, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { fail, refuse } from './errors.js';
@@ -101,12 +101,13 @@ export const plural = (name) => `${name}s`;
 
 const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
+// canonical range is ISO 1-7 (7 = Sunday), accepting 0 only as grace for Date.prototype.getDay()
 export const dayOfWeek = (input) => {
-  if (isNumber(input) && Number.isInteger(input) && input >= 1 && input <= 7) {
-    return input;
+  if (isNumber(input) && Number.isInteger(input) && input >= 0 && input <= 7) {
+    return input || 7;
   }
-  const key = isString(input) ? input.trim().toLowerCase().slice(0, 3) : '';
-  const index = key.length === 3 ? weekdays.findIndex((name) => name.startsWith(key)) : -1;
+  const key = isString(input) ? input.trim().toLowerCase() : '';
+  const index = key.length > 2 ? weekdays.findIndex((name) => name.startsWith(key)) : -1;
   return index === -1
     ? refuse('unknownDayOfWeek', String(input), {
       explanation: isDevelopment
@@ -120,6 +121,7 @@ export const dayOfWeek = (input) => {
 
 export const isZonedDateTime = (value) => value instanceof Temporal.ZonedDateTime;
 export const isInstant = (value) => value instanceof Temporal.Instant;
+export const isUnzoned = (value) => isDate(value) || isInstant(value) || isString(value);
 
 // true only when text includes both a clock time and an offset or bracketed zone, pinning an exact instant
 export const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;
@@ -143,7 +145,9 @@ export const withParts = (temporal, changes) => {
   if (!wholeNumbers(Object.values(changes))) {
     fail(isDevelopment ? 'each value passed to `set()` must be a whole number' : '');
   }
-  return temporal.with(changes, { overflow: 'reject' });
+  // validate passed fields against day 1 so explicit out-of-range values reject while an unchanged day clamps to month-end
+  temporal.with({ day: 1, ...changes }, { overflow: 'reject' });
+  return temporal.with(changes);
 };
 
 export const singularKeys = (fields) => {

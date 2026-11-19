@@ -265,8 +265,18 @@ describe('timeRange()', () => {
     );
   });
 
-  // '9am-5pm' throws invalidTime and '09:00-17:00' parses '-17:00' as a UTC offset
-  it.todo("parses unspaced hyphenated time intervals such as '09:00-17:00' and '9am-5pm' in timeRange()");
+  it("parses unspaced hyphenated time intervals such as '09:00-17:00' and '9am-5pm' in timeRange()", () => {
+    expect(timeRange('09:00-17:00').toString()).toBe('09:00:00/17:00:00');
+    expect(timeRange('9am-5pm').toString()).toBe('09:00:00/17:00:00');
+    expect(timeRange('9am–5pm').toString()).toBe('09:00:00/17:00:00');
+    expect(timeRange('22:00-02:00').toString()).toBe('22:00:00/02:00:00');
+    expect(timeRange('09:00', '17:00').overlaps('16:30-18:00')).toBe(true);
+  });
+
+  it("splits on '/' before an unspaced hyphen so instants keep their dates and negative offsets", () => {
+    const shift = timeRange('2026-09-01T09:00-05:00/2026-09-01T17:00-05:00', { zone: 'UTC' });
+    expect(shift.toString()).toBe('14:00:00/22:00:00');
+  });
 });
 
 describe('new DateRange(), new DateTimeRange(), and new TimeRange()', () => {
@@ -433,7 +443,14 @@ describe('CalendarDate.prototype.range() and DateTime.prototype.range()', () => 
     );
   });
 
-  it.todo('computes datetime.range("day") end on the same calendar day when midnight is skipped by DST');
+  // Havana springs forward from 00:00 to 01:00 on 2026-03-08, so the day starts at 01:00 and is 23 hours long
+  it('computes datetime.range("day") end on the same calendar day when midnight is skipped by DST', () => {
+    const day = datetime('2026-03-08T12:00', 'America/Havana').range('day');
+    expect(day.start.format('YYYY-MM-DD HH:mm')).toBe('2026-03-08 01:00');
+    expect(day.end.format('YYYY-MM-DD HH:mm')).toBe('2026-03-09 00:00');
+    expect(day.duration.total('hours')).toBe(23);
+    expect(day.overlaps(datetime('2026-03-09T12:00', 'America/Havana').range('day'))).toBe(false);
+  });
 });
 
 describe('Range duration and as("duration")', () => {
@@ -445,6 +462,13 @@ describe('Range duration and as("duration")', () => {
   it('totals days accurately across multi-month DateRanges', () => {
     expect(dateRange('2026-09-01', '2026-10-15').duration.total('days')).toBe(45);
     expect(dateRange('2026-01-01', '2026-12-31').duration.total('days')).toBe(365);
+  });
+
+  it('counts every day of a multi-month DateRange in duration.days', () => {
+    const stay = dateRange('2026-01-01', '2026-02-14');
+    expect(stay.duration.days).toBe(45);
+    expect(stay.duration.toString()).toBe('P45D');
+    expect(stay.duration.balance('month').toString()).toBe('P1M14D');
   });
 
   it('measures elapsed duration between start and end on DateTimeRange', () => {
@@ -1057,7 +1081,11 @@ describe('CalendarDate split(), splitBy(), and points()', () => {
     );
   });
 
-  it.todo('keeps all split() slices and points() within the calendar day when midnight is skipped by DST');
+  it('keeps all split() slices and points() within the calendar day when midnight is skipped by DST', () => {
+    const day = date('2026-03-08');
+    expect(day.split('hour', 'America/Havana')).toHaveLength(23);
+    expect(day.points('hour', 'America/Havana').at(-1).format('YYYY-MM-DD HH:mm')).toBe('2026-03-08 23:00');
+  });
 });
 
 describe('Range in()', () => {

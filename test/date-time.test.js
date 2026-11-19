@@ -510,6 +510,23 @@ describe('DateTime.at()', () => {
     expect(morning.at({ hour: 17, minute: 45 }).toString()).toBe('2026-11-17T01:45:00.000Z');
   });
 
+  // 20:15 UTC is 12:15 in Los Angeles and 05:15 the next day in Tokyo, so one of the two differs from any host timezone
+  it('reads the time of day of a Date, ISO instant string, or Temporal.Instant in the instance timezone', () => {
+    const lunch = new Date('2026-11-16T20:15:00Z');
+    const earlyTokyo = datetime('2026-11-17T02:30', 'Asia/Tokyo');
+    expect(morning.at(lunch).toString()).toBe('2026-11-16T20:15:00.000Z');
+    expect(earlyTokyo.at(lunch).toString()).toBe('2026-11-16T20:15:00.000Z');
+    expect(morning.at('2026-11-16T20:15:00Z').toString()).toBe('2026-11-16T20:15:00.000Z');
+    expect(earlyTokyo.at(Temporal.Instant.from('2026-11-16T20:15:00Z')).toString()).toBe('2026-11-16T20:15:00.000Z');
+  });
+
+  it('keeps the clock time of a DateTime from another timezone and of a Temporal.PlainTime', () => {
+    const tokyoDawn = datetime('2026-11-17T05:15', 'Asia/Tokyo');
+    expect(morning.at(tokyoDawn)).toMatchObject({ zone: 'America/Los_Angeles', day: 16, hour: 5, minute: 15 });
+    expect(morning.at(tokyoDawn.toTemporal())).toMatchObject({ day: 16, hour: 5, minute: 15 });
+    expect(morning.at(Temporal.PlainTime.from('08:00')).toString()).toBe('2026-11-16T16:00:00.000Z');
+  });
+
   // at 02:30 on Nov 17 in Asia/Tokyo it is still Nov 16 in UTC
   it('preserves the calendar day in the instance timezone rather than UTC', () => {
     const earlyTokyo = datetime('2026-11-17T02:30', 'Asia/Tokyo');
@@ -581,8 +598,12 @@ describe('DateTime.set()', () => {
     expect(secondHalfPastOne.set('minute', 45).toString()).toBe('2026-11-01T06:45:00.000Z');
   });
 
-  // set('month', 2) on Jan 31 throws cannotSet whereas plus(1, 'month') constrains to Feb 28
-  it.todo('constrains the day to month-end when set() updates month or year on day 31');
+  it('constrains the day to month-end when set() updates month or year on day 31', () => {
+    const lastOfJanuary = datetime('2026-01-31T09:00', 'UTC');
+    expect(lastOfJanuary.set('month', 2).toString()).toBe('2026-02-28T09:00:00.000Z');
+    expect(lastOfJanuary.set('month', 4).toString()).toBe('2026-04-30T09:00:00.000Z');
+    expect(lastOfJanuary.set({ year: 2028, month: 2 }).toString()).toBe('2028-02-29T09:00:00.000Z');
+  });
 });
 
 describe('DateTime.plus() and minus()', () => {
@@ -751,7 +772,26 @@ describe('DateTime.startOf() and endOf()', () => {
     expect(friday.startOf('day').toString()).toBe('2026-04-23T22:00:00.000Z');
   });
 
-  it.todo('returns the final millisecond of the same calendar day in endOf("day") when midnight is skipped by DST');
+  it('returns the final millisecond of the same calendar day in endOf("day") when midnight is skipped by DST', () => {
+    const friday = datetime('2026-04-24T12:00', 'Africa/Cairo');
+    expect(friday.endOf('day').toString()).toBe('2026-04-24T20:59:59.999Z');
+    expect(friday.endOf('day')).toMatchObject({ day: 24, hour: 23, minute: 59 });
+    expect(friday.endOf('week', 'friday').toString()).toBe('2026-04-30T20:59:59.999Z');
+  });
+
+  // Africa/Cairo skips 00:00 to 01:00 on 2026-04-24, so Apr 23 ends one millisecond before 01:00
+  it('ends the day before a skipped midnight one millisecond before the next day starts', () => {
+    const thursday = datetime('2026-04-23T12:00', 'Africa/Cairo');
+    expect(thursday.endOf('day').toString()).toBe('2026-04-23T21:59:59.999Z');
+    expect(thursday.endOf('day')).toMatchObject({ day: 23, hour: 23, minute: 59 });
+  });
+
+  // Lord Howe shifts clocks back 30 minutes at 02:00 on 2026-04-05, repeating 01:30 to 02:00
+  it('keeps an hour one elapsed hour long across a 30-minute DST transition', () => {
+    const early = datetime('2026-04-05T01:15+11:00', 'Australia/Lord_Howe');
+    expect(early.endOf('hour').toString()).toBe('2026-04-04T14:59:59.999Z');
+    expect(early.range('hour').toString()).toBe('2026-04-04T14:00:00.000Z/2026-04-04T15:00:00.000Z');
+  });
 
   it('computes microsecond boundaries to nanosecond precision', () => {
     const precise = datetime('2026-11-18T14:45:12.345678912Z', 'UTC');
@@ -866,6 +906,11 @@ describe('DateTime.next() and previous()', () => {
     expect(monday.next(7).day).toBe(22);
   });
 
+  it('accepts 0 for Sunday, matching Date.prototype.getDay()', () => {
+    expect(monday.next(0).day).toBe(22);
+    expect(monday.previous(0).day).toBe(15);
+  });
+
   it('preserves wall-clock time when advancing across a DST transition', () => {
     const saturday = datetime('2026-03-07T09:00', 'America/New_York');
     expect(saturday.next('sunday').toString()).toBe('2026-03-08T13:00:00.000Z');
@@ -887,7 +932,7 @@ describe('DateTime.next() and previous()', () => {
     expect(monday.previous(monthDay('11-16'))).toMatchObject({ year: 2025, month: 11, day: 16 });
   });
 
-  it.each([['funday', 'funday'], [0, '0'], [8, '8']])(
+  it.each([['funday', 'funday'], [-1, '-1'], [8, '8']])(
     'throws unknownDayOfWeek for %s',
     (day, at) => {
       expect(() => monday.next(day)).toThrowError(
@@ -1082,9 +1127,10 @@ describe('DateTime.until() and since()', () => {
     expect(doors.until(datetime('2026-11-17T02:00', 'Asia/Tokyo'), 'hours')).toBe(1);
   });
 
-  it('balances multi-year spans across years, months, days, and clock units', () => {
+  it("measures multi-year spans in days and clock units, and in years and months through balance('year')", () => {
     const start = datetime('2026-01-15T09:00', 'America/New_York');
-    expect(start.until('2027-03-18T10:30').toString()).toBe('P1Y2M3DT1H30M');
+    expect(start.until('2027-03-18T10:30').toString()).toBe('P427DT1H30M');
+    expect(start.until('2027-03-18T10:30').balance('year').toString()).toBe('P1Y2M3DT1H30M');
   });
 
   it('counts 1 calendar day across 23-hour and 25-hour DST transitions while counting exact hours', () => {
@@ -1104,11 +1150,12 @@ describe('DateTime.until() and since()', () => {
     expect(start.until('2026-03-15T09:00', 'hours')).toBe(1415);
   });
 
-  it("anchors the returned Duration so total('days') resolves calendar months", () => {
+  it("anchors the returned Duration so total('months') and balance('month') resolve calendar months", () => {
     const start = datetime('2026-01-15T09:00', 'America/New_York');
     const span = start.until('2026-03-15T09:00');
-    expect(span.toString()).toBe('P2M');
-    expect(span.total('days')).toBe(59);
+    expect(span.toString()).toBe('P59D');
+    expect(span.total('months')).toBe(2);
+    expect(span.balance('month').toString()).toBe('P2M');
   });
 
   // from Saturday 09:00 to Sunday 09:00 in New York across spring-forward is P1D locally and PT23H in UTC

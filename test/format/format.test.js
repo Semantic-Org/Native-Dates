@@ -309,7 +309,7 @@ describe('Duration format()', () => {
 
   it('formats a zero duration as zero seconds rather than an empty string', () => {
     expect(duration('0s').format('long', 'en-US')).toBe('0 seconds');
-    expect(duration('0s').format('digital', 'en-US')).toBe('0:00:00');
+    expect(duration('0s').format('digital', 'en-US')).toBe('00:00');
   });
 
   it('throws unknownFormat for unsupported presets or token patterns', () => {
@@ -418,6 +418,13 @@ describe('format() with an Intl options object', () => {
     expect(afternoon.format({ hour12: false }, 'en-US')).toBe('17:30');
   });
 
+  it('keeps the default fields on Time, CalendarDate, MonthDay, and YearMonth when an option is undefined', () => {
+    expect(afternoon.format({ hour12: false, timeStyle: undefined }, 'en-US')).toBe('17:30');
+    expect(monday.format({ dateStyle: undefined }, 'en-US')).toBe('Nov 16, 2026');
+    expect(birthday.format({ month: undefined }, 'en-US')).toBe('Oct 17');
+    expect(november.format({ year: undefined, era: 'short' }, 'en-US')).toBe('Nov 2026 AD');
+  });
+
   it('overrides the DateTime timezone for a single call when options include timeZone', () => {
     const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
     const clock = { hour: 'numeric', minute: '2-digit' };
@@ -426,6 +433,16 @@ describe('format() with an Intl options object', () => {
       ascii(standup.format({ dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Tokyo' }, 'en-US')),
     ).toBe('Nov 17, 2026, 2:30 AM');
     expect(ascii(standup.format(clock, 'en-US'))).toBe('9:30 AM');
+  });
+
+  // test two timezones so at least one differs from the host, and check that the formatter cache does not conflate them
+  it('preserves the DateTime timezone when options.timeZone is undefined across cached calls', () => {
+    const clock = { hour: 'numeric', minute: '2-digit', second: '2-digit' };
+    for (const zone of ['Asia/Tokyo', 'America/Los_Angeles']) {
+      const standup = datetime('2026-11-16T09:30', zone);
+      expect(ascii(standup.format({ ...clock, timeZone: undefined }, 'en-US'))).toBe('9:30:00 AM');
+      expect(ascii(standup.format(clock, 'en-US'))).toBe('9:30:00 AM');
+    }
   });
 
   // options reused from toLocaleDateString() can include a western timeZone that would shift UTC midnight back a day

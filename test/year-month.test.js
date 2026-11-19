@@ -181,6 +181,12 @@ describe('monthYear()', () => {
     expect(monthYear('05', '2028').toString()).toBe('2028-05');
   });
 
+  it("parses card expiry strings with spaces around the separator such as '11 / 26'", () => {
+    expect(monthYear('11 / 26').toString()).toBe('2026-11');
+    expect(monthYear('11 /26').toString()).toBe('2026-11');
+    expect(monthYear('1 - 2026').toString()).toBe('2026-01');
+  });
+
   it('trims surrounding whitespace on card expiry strings', () => {
     expect(monthYear(' 11/26 ').toString()).toBe('2026-11');
   });

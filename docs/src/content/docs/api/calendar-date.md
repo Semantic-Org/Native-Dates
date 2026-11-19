@@ -93,7 +93,7 @@ d.set(fields): CalendarDate
 d.set(unit, value): CalendarDate
 ```
 
-Returns a new `CalendarDate` with one or more calendar fields replaced. Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into the next month.
+Returns a new `CalendarDate` with one or more calendar fields replaced. Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into the next month. Updating `month` or `year` without `day` clamps an overflowing day to the end of the target month.
 
 **Parameters**
 
@@ -491,13 +491,14 @@ Measures the calendar span from this date to another, returning a negative durat
 
 ```returns
 type: Duration | number
-description: A `Duration` balanced up to years, or a number when `unit` is given.
+description: A `Duration` counted in days, or a number when `unit` is given.
 ```
 
 ```js
 const start = date('2026-01-01');
 
-start.until('2027-04-05').toString(); // 'P1Y3M4D'
+start.until('2027-04-05').toString(); // 'P459D'
+start.until('2027-04-05').balance('year').toString(); // 'P1Y3M4D'
 start.until('2027-04-05', 'days'); // 459
 start.until('2026-07-01').total('months'); // 6
 ```

@@ -46,6 +46,44 @@ describe('configure()', () => {
     expect(now().zone).toBe('Europe/Berlin');
   });
 
+  it('throws unknownSetting RangeError for an unrecognized setting key before applying any updates', () => {
+    expect(() => configure({ timeZone: 'Europe/Berlin' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownSetting', at: 'timeZone' }),
+    );
+    expect(() => configure({ locale: 'de-DE', lang: 'de' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownSetting', at: 'lang' }),
+    );
+    expect(configure().locale).toBeUndefined();
+  });
+
+  it('returns active settings without throwing when passed null', () => {
+    configure({ zone: 'Europe/Berlin' });
+    expect(configure(null).zone).toBe('Europe/Berlin');
+  });
+
+  it('throws unknownSetting in NODE_ENV=production with line-two explanation stripped', () => {
+    const script = `
+      import { configure } from 'native-dates';
+      try {
+        configure({ timeZone: 'Europe/Berlin' });
+      }
+      catch (error) {
+        console.log(JSON.stringify({ name: error.name, code: error.code, at: error.at, message: error.message }));
+      }
+    `;
+    const printed = execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
+      env: { ...process.env, NODE_ENV: 'production' },
+      encoding: 'utf8',
+    });
+    expect(JSON.parse(printed)).toEqual({
+      name: 'RangeError',
+      code: 'unknownSetting',
+      at: 'timeZone',
+      message: 'dates refused [unknownSetting] timeZone',
+    });
+  });
+
   // vitest isolates modules per test file and this file imports no plugins
   it('throws missingPlugin RangeError when configuring an option from an unimported plugin', () => {
     expect(() => configure({ dayFirst: true })).toThrowError(
@@ -162,6 +200,7 @@ describe('configure({ weekStart })', () => {
     ['sunday', 7],
     ['Mon', 1],
     [6, 6],
+    [0, 7],
   ])('normalizes %j to ISO weekday number %i (Monday = 1, Sunday = 7)', (day, number) => {
     expect(configure({ weekStart: day }).weekStart).toBe(number);
   });
@@ -173,8 +212,7 @@ describe('configure({ weekStart })', () => {
     expect(date('2026-11-18').startOf('week').toString()).toBe('2026-11-16');
   });
 
-  // Date.prototype.getDay(), Moment, and date-fns use 0 for Sunday
-  it.each([[0], ['funday']])(
+  it.each([[8], ['funday']])(
     'throws unknownDayOfWeek RangeError for %j and preserves the previous weekStart',
     (day) => {
       configure({ weekStart: 'saturday' });

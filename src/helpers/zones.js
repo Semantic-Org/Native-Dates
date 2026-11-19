@@ -64,7 +64,15 @@ export const zoneId = (id) => {
   return found;
 };
 
-export const configure = ({ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats } = {}) => {
+export const configure = (options) => {
+  const { zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats } = options ??= {};
+  each(options, (value, name) => {
+    if (!Object.hasOwn(settings, name)) {
+      refuse('unknownSetting', name, {
+        explanation: isDevelopment ? `expected a setting in [${Object.keys(settings).join(', ')}]` : 0,
+      });
+    }
+  });
   if (zoneAliases !== undefined) {
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
@@ -158,30 +166,33 @@ export const checkedLocale = (tag) => {
         ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
         : 0,
     );
-    knownLocales.set(key, tags && (tags.length === 1 ? tags[0] : Object.freeze(tags)));
+    // headers with no accepted language (like '*' or `es;q=0`) resolve to undefined
+    knownLocales.set(key, tags ? (tags.length > 1 ? Object.freeze(tags) : tags[0]) : tag);
   }
-  return (isString(tag) && knownLocales.get(key)) || tag;
+  return isString(tag) ? knownLocales.get(key) : tag;
 };
 
 // checked before built-in presets so apps can redefine names like 'short'
 export const namedFormat = (spec) => (isString(spec) && settings.formats?.[spec]) || spec;
 
-export const locale = (override) => (override === undefined ? settings.locale : checkedLocale(override));
+// fall back to configured locale when an override header like '*' resolves to undefined
+export const locale = (override) =>
+  override === undefined ? settings.locale : checkedLocale(override) ?? settings.locale;
 export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);
 
 const firstDays = new Map();
-export const weekStart = (override, tag = settings.locale) => {
+export const weekStart = (override, tag) => {
   if (override !== undefined) {
     return dayOfWeek(override);
   }
   if (settings.weekStart !== undefined) {
     return settings.weekStart;
   }
-  const key = String(tag);
+  const read = locale(tag);
+  const key = String(read);
   if (!firstDays.has(key)) {
     // pass single tag strings straight to Intl.Locale so region and -u-fw- extensions survive,
     // resolving through DateTimeFormat only for undefined (system locale) or tag arrays
-    const read = tag === undefined ? tag : checkedLocale(tag);
     const asked = isString(read) ? read : new Intl.DateTimeFormat(read).resolvedOptions().locale;
     firstDays.set(key, new Intl.Locale(asked).getWeekInfo?.().firstDay ?? 1);
   }

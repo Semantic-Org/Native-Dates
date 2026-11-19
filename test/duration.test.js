@@ -118,6 +118,14 @@ describe('duration()', () => {
     expect(duration('1500').toFields()).toEqual({ milliseconds: 1500 });
   });
 
+  // e.g. performance.now() delta 10800113.46 - 10800000 = 113.46000000089407
+  it('rounds a millisecond count with sub-nanosecond precision to the nearest nanosecond', () => {
+    expect(duration(1000 / 3).toFields()).toEqual({ milliseconds: 333, microseconds: 333, nanoseconds: 333 });
+    expect(duration(1000 / 60).toFields()).toEqual({ milliseconds: 16, microseconds: 666, nanoseconds: 667 });
+    expect(duration(10800113.46 - 10800000).toFields()).toEqual({ milliseconds: 113, microseconds: 460 });
+    expect(milliseconds(100).times(1 / 3).toString()).toBe('PT0.033333333S');
+  });
+
   it('returns an existing Duration instance unchanged when no options are passed', () => {
     const shift = hours(8);
     expect(duration(shift)).toBe(shift);
@@ -249,6 +257,31 @@ describe('Duration unit factories (years() through milliseconds())', () => {
     ['seconds', 0.1, seconds, { milliseconds: 100 }],
   ])('spills decimal fraction %s(%s) without floating-point residue', (_, count, factory, fields) => {
     expect(factory(count).toFields()).toEqual(fields);
+  });
+
+  // subtracting a large integer leaves IEEE-754 residue (e.g. 495000.3 - 495000 = 0.29999999998835847)
+  it('spills decimal fractions of large counts without floating-point residue', () => {
+    expect(duration(16396.1).toFields()).toEqual({ milliseconds: 16396, microseconds: 100 });
+    expect(seconds(8219.3).toFields()).toEqual({ seconds: 8219, milliseconds: 300 });
+    expect(minutes(525600.1).toFields()).toEqual({ minutes: 525600, seconds: 6 });
+    expect(hours(1000000.1).toFields()).toEqual({ hours: 1000000, minutes: 6 });
+    expect(hours(495000.3 - 495000).toString()).toBe('PT18M');
+  });
+
+  it('rounds a repeating fraction of a second at the nanosecond', () => {
+    expect(seconds(1 / 3).toFields()).toEqual({ milliseconds: 333, microseconds: 333, nanoseconds: 333 });
+  });
+
+  it('preserves 9 decimal places of a remainder across positive and negative counts', () => {
+    expect(seconds(1795075200.123456).microseconds).toBe(456);
+    expect(hours(-123456.123456789).equals(hours(123456.123456789).negated())).toBe(true);
+    expect(hours(-12345.1234567891).equals(hours(12345.1234567891).negated())).toBe(true);
+  });
+
+  // months cannot spill, so sub-nanosecond float residue around an integer must not throw invalidFraction
+  it('treats a month count within 9 decimal places of an integer as whole', () => {
+    expect(months(1 + 1e-10).toString()).toBe('P1M');
+    expect(months(9.000000000000005).toString()).toBe('P9M');
   });
 
   it('creates a negative duration from a negative count', () => {
@@ -684,7 +717,7 @@ describe('Duration anchored arithmetic and totals', () => {
   });
 
   it('totals calendar months in days using the spanned calendar months', () => {
-    const span = date('2026-01-15').until('2026-04-15');
+    const span = date('2026-01-15').until('2026-04-15').balance('month');
     expect(span.toString()).toBe('P3M');
     expect(span.total('months')).toBe(3);
     expect(span.total('days')).toBe(90);
@@ -698,8 +731,9 @@ describe('Duration anchored arithmetic and totals', () => {
 
   it('computes a negative duration and negative day total when until() targets an earlier date', () => {
     const back = date('2026-04-01').until('2026-01-01');
-    expect(back.toString()).toBe('-P3M');
+    expect(back.toString()).toBe('-P90D');
     expect(back.total('days')).toBe(-90);
+    expect(back.balance('month').toString()).toBe('-P3M');
   });
 
   it('totals a Duration measured between two YearMonth instances in days', () => {
@@ -709,19 +743,20 @@ describe('Duration anchored arithmetic and totals', () => {
   });
 
   it('compares an anchored month duration symmetrically against an unanchored day duration', () => {
-    const january = date('2026-01-01').until('2026-02-01');
+    const january = date('2026-01-01').until('2026-02-01').balance('month');
     expect(january.compare(days(31))).toBe(0);
     expect(january.equals(days(30))).toBe(false);
     expect(days(31).equals(january)).toBe(true);
   });
 
   it('balances an anchored month duration into days when no largest unit is specified', () => {
-    expect(date('2026-01-01').until('2026-04-01').balance().toString()).toBe('P90D');
+    expect(date('2026-01-01').until('2026-04-01').balance('month').balance().toString()).toBe('P90D');
   });
 
   it('balances across days, weeks, months, and years using the anchor calendar', () => {
     const span = date('2026-01-01').until('2027-04-05');
-    expect(span.toString()).toBe('P1Y3M4D');
+    expect(span.toString()).toBe('P459D');
+    expect(span.balance('year').toString()).toBe('P1Y3M4D');
     expect(span.balance('month').toString()).toBe('P15M4D');
     expect(span.balance('week').toString()).toBe('P65W4D');
     expect(span.balance('day').toString()).toBe('P459D');
@@ -734,7 +769,7 @@ describe('Duration anchored arithmetic and totals', () => {
   });
 
   it('converts anchored months to milliseconds for toMilliseconds() and relational operators', () => {
-    const quarter = date('2026-01-01').until('2026-04-01');
+    const quarter = date('2026-01-01').until('2026-04-01').balance('month');
     expect(quarter.toMilliseconds()).toBe(90 * 24 * 60 * 60 * 1000);
     expect(quarter > days(89)).toBe(true);
     expect(quarter < days(91)).toBe(true);
@@ -777,7 +812,7 @@ describe('Duration anchored arithmetic and totals', () => {
   });
 
   it('omits the anchor from JSON serialization so a parsed ISO 8601 duration is unanchored', () => {
-    const wire = JSON.stringify(date('2026-01-15').until('2026-04-15'));
+    const wire = JSON.stringify(date('2026-01-15').until('2026-04-15').balance('month'));
     const restored = duration(JSON.parse(wire));
     expect(restored.toString()).toBe('P3M');
     expect(restored.anchor).toBeUndefined();
@@ -854,6 +889,11 @@ describe('Duration format() and text', () => {
     expect(duration(0).format('short', 'en-US')).toBe('0 sec');
     expect(duration(0).format('narrow', 'en-US')).toBe('0s');
     expect(duration(0, { locale: 'en-US' }).text).toBe('0 seconds');
+  });
+
+  it('formats a zero duration in digital style as MM:SS like every other sub-hour duration', () => {
+    expect(seconds(1).format('digital', 'en-US')).toBe('00:01');
+    expect(duration(0).format('digital', 'en-US')).toBe('00:00');
   });
 
   it('prefixes negative durations with a minus sign', () => {

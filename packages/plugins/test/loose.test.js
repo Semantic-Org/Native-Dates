@@ -48,6 +48,16 @@ describe('date() with { loose: true }', () => {
     expect(date(text, { loose: true })?.toString()).toBe('2026-09-06');
   });
 
+  // trailing -26 or -2026 is the year rather than a UTC offset
+  it.each(['6-Sep-26', '06-SEP-26', '06-Sep-2026', 'Sep-6-26'])(
+    'parses hyphenated day, month name, and year %j as 2026-09-06 in any target zone',
+    (text) => {
+      expect(date(text, { loose: true })?.toString()).toBe('2026-09-06');
+      expect(date(text, { loose: true, zone: 'America/Los_Angeles' })?.toString()).toBe('2026-09-06');
+      expect(date(text, { loose: true, zone: 'Asia/Tokyo' })?.toString()).toBe('2026-09-06');
+    },
+  );
+
   it('round-trips en-US format() output across all presets', () => {
     const day = date('2026-09-06');
     for (const preset of ['short', 'medium', 'long', 'full']) {
@@ -90,6 +100,12 @@ describe('datetime() with { loose: true }', () => {
     ['PostgreSQL timestamptz', '2026-09-06 16:30:00+02'],
     ['ISO 8601 UTC string', '2026-09-06T14:30:00.000Z'],
     ['en-US formatted datetime with UTC suffix', 'Sep 6, 2026, 2:30\u202fPM UTC'],
+    ['RFC 2822 zone abbreviation', 'Sun, 06 Sep 2026 10:30:00 EDT'],
+    ['lowercase zone abbreviation', 'Sun, 06 Sep 2026 07:30:00 pdt'],
+    ['date(1) output with the zone before the year', 'Sun Sep  6 14:30:00 UTC 2026'],
+    ['GMT with a single-digit offset', 'Sep 6 2026 16:30 GMT+2'],
+    ['a bare single-digit offset', 'Sep 6 2026 19:30 +5'],
+    ['RFC 2822 offset followed by a zone comment', 'Sun, 06 Sep 2026 07:30:00 -0700 (PDT)'],
   ])('parses exact instant from %s into target zone', (_format, text) => {
     const parsed = datetime(text, { loose: true, zone: 'Asia/Tokyo' });
     expect(parsed?.toString()).toBe('2026-09-06T14:30:00.000Z');
@@ -105,6 +121,9 @@ describe('datetime() with { loose: true }', () => {
     ['month-first prose datetime', 'September 6, 2026 14:30'],
     ['day-first prose datetime', '6 Sep 2026 14:30'],
     ['slash-delimited numeric datetime', '9/6/2026 2:30 PM'],
+    ['zone name inside a parenthesized comment', 'Sep 6 2026 14:30 (EDT)'],
+    ['offset inside a parenthesized comment', 'Sep 6 2026 14:30 (GMT+2)'],
+    ['zone name before the first number', 'PST Sep 6 2026 14:30'],
   ])('keeps wall-clock time in target zone for unzoned %s', (_format, text) => {
     const parsed = datetime(text, { loose: true, zone: 'Asia/Tokyo' });
     expect(parsed).toMatchObject({ zone: 'Asia/Tokyo', year: 2026, month: 9, day: 6, hour: 14, minute: 30 });
@@ -126,6 +145,14 @@ describe('datetime() with { loose: true }', () => {
     expect(parsed?.toString()).toBe('2026-09-06T14:30:15.250Z');
   });
 
+  // guard against superlinear backtracking on untrusted inputs
+  it('parses 200 KB of repeated zone abbreviations in under 500 ms', () => {
+    const stuffed = `Sep 6 2026 14:30${' EST'.repeat(50_000)}`;
+    const started = performance.now();
+    datetime(stuffed, { loose: true, zone: 'UTC' });
+    expect(performance.now() - started).toBeLessThan(500);
+  });
+
   it('accepts Date instances and epoch milliseconds', () => {
     const epoch = Date.UTC(2026, 8, 6, 14, 30);
     expect(datetime(epoch, { loose: true, zone: 'UTC' })?.toString()).toBe('2026-09-06T14:30:00.000Z');
@@ -145,7 +172,10 @@ describe('datetime() with { loose: true }', () => {
     });
   });
 
-  it.todo('returns null instead of throwing an uncoded error for out-of-range offsets like "14:30 +2500"');
+  it('returns null without throwing uncoded errors for out-of-range offsets', () => {
+    expect(datetime('14:30 +2500', { loose: true })).toBeNull();
+    expect(datetime('2026-09-06T14:30:00+25:00', { loose: true, zone: 'UTC' })).toBeNull();
+  });
 });
 
 describe('time() with { loose: true }', () => {
@@ -802,6 +832,9 @@ const parseInHostZone = (hostZone) => {
       afterMidnight: formatClock(datetime('9/6/2026, 12:15:00 AM', loose)),
       clockAlone: time('Sep 6, 2026 11:30 PM', loose)?.toString(),
       header: datetime('Sun, 06 Sep 2026 14:30:00 GMT', loose)?.toString(),
+      zoneName: datetime('Sun, 06 Sep 2026 10:30:00 EDT', loose)?.toString(),
+      zoneComment: formatClock(datetime('Sep 6, 2026 2:30 PM (PST)', loose)),
+      hyphenated: date('06-Sep-2026', loose)?.toString(),
       headerDay: date('Sun, 06 Sep 2026 20:30:00 GMT', loose)?.toString(),
       range: dateRange('Sep 1, 2026 - Sep 7, 2026', loose)?.toString(),
       noSuchDay: date('Feb 30 2026', loose),
@@ -829,6 +862,9 @@ describe('{ loose: true } across host TZ offsets', () => {
         afterMidnight: '2026-09-06 00:15',
         clockAlone: '23:30:00',
         header: '2026-09-06T14:30:00.000Z',
+        zoneName: '2026-09-06T14:30:00.000Z',
+        zoneComment: '2026-09-06 14:30',
+        hyphenated: '2026-09-06',
         headerDay: '2026-09-07',
         range: '2026-09-01/2026-09-07',
         noSuchDay: null,
