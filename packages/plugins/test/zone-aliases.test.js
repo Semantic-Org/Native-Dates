@@ -42,6 +42,13 @@ describe('configure({ zoneAliases }) with the zones plugin', () => {
     expect(configure().zoneAliases).toEqual(aliases);
   });
 
+  it('returns a copy of the aliases, so writing to it adds no alias', () => {
+    configure({ zoneAliases: { hq: 'Europe/Berlin' } });
+    configure().zoneAliases.lab = 'Asia/Tokyo';
+    expect(configure().zoneAliases).toEqual({ hq: 'Europe/Berlin' });
+    expect(() => datetime(noonInJuly, 'lab')).toThrowError(expect.objectContaining({ code: 'unknownZone', at: 'lab' }));
+  });
+
   it('adds to the aliases already configured', () => {
     configure({ zoneAliases: { hq: 'Europe/Berlin' } });
     configure({ zoneAliases: { lab: 'Asia/Tokyo' } });
