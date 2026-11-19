@@ -451,6 +451,27 @@ describe('CalendarDate.at()', () => {
     expect(day.at({ hour: 17, minute: 30 }, 'UTC').toString()).toBe('2026-11-16T17:30:00.000Z');
   });
 
+  // 20:15 UTC is 12:15 in Los Angeles and 05:15 in Tokyo, so one of the two differs from any host timezone
+  it('reads the time of day of a Date or ISO instant string in the target timezone', () => {
+    const lunch = new Date('2026-11-16T20:15:00Z');
+    expect(day.at(lunch, 'America/Los_Angeles').toString()).toBe('2026-11-16T20:15:00.000Z');
+    expect(day.at(lunch, 'Asia/Tokyo')).toMatchObject({ zone: 'Asia/Tokyo', day: 16, hour: 5, minute: 15 });
+    expect(day.at('2026-11-16T20:15:00Z', 'America/Los_Angeles').toString()).toBe('2026-11-16T20:15:00.000Z');
+  });
+
+  it('keeps the clock time of a DateTime from another timezone, with or without a timezone argument', () => {
+    configure({ zone: 'America/New_York' });
+    const berlin = datetime('2026-11-16T09:00', 'Europe/Berlin');
+    expect(day.at(berlin)).toMatchObject({ zone: 'America/New_York', day: 16, hour: 9, minute: 0 });
+    expect(day.at(berlin, 'America/New_York').toString()).toBe(day.at(berlin).toString());
+  });
+
+  it('accepts a Temporal.PlainTime, and a fixed-offset timezone written in digits beside a digit-only time', () => {
+    expect(day.at(Temporal.PlainTime.from('08:00'), 'UTC').toString()).toBe('2026-11-16T08:00:00.000Z');
+    expect(day.at('9', '+05').toString()).toBe('2026-11-16T04:00:00.000Z');
+    expect(day.at('17', '+0530').toString()).toBe('2026-11-16T11:30:00.000Z');
+  });
+
   it('defaults to the start of the day in the target timezone when time is omitted', () => {
     expect(day.at(undefined, 'UTC').toString()).toBe('2026-11-16T00:00:00.000Z');
     expect(day.at(undefined, 'Asia/Tokyo').toString()).toBe('2026-11-15T15:00:00.000Z');
