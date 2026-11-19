@@ -104,6 +104,14 @@ export const submitted: CalendarDate | null = date('07.09.2026', { loose: true, 
 export const span: DateRange | null = dateRange('Sep 1 2026', 'Sep 7 2026', { loose: true });
 export const zoned: unknown = looseZoned('Sep 7 2026', zone);
 
+// options held in a variable widen loose to a boolean, and the answer may still be null
+const held = { loose: true, zone };
+export const heldTyped: DateTime | null = datetime('TBD', held);
+// @ts-expect-error a loose read from held options answers null for what it cannot read
+export const heldDay: CalendarDate = date('TBD', held);
+// @ts-expect-error so does a loose range
+export const heldSpan: DateRange = dateRange('TBD', 'TBD', held);
+
 // zones adds zoneAliases to the settings and exports its abbreviation table
 timezones.IST = 'Asia/Jerusalem';
 const settings: Settings = { zoneAliases: { hq: 'Europe/Berlin' }, dayFirst: true, weekStart: 'monday' };
