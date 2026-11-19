@@ -26,6 +26,29 @@ describe('zone names read with no plugin imported', () => {
     expect(datetime(july, offset)).toMatchObject({ zone: offset, offset });
   });
 
+  // the ZZ token writes an offset this way, so a zone printed with it has to read back
+  it.each([['-0800', '-08:00'], ['+0530', '+05:30']])(
+    'reads the offset %s, written with no colon, and reports it as %s',
+    (written, offset) => {
+      expect(datetime(july, written)).toMatchObject({ zone: offset, offset });
+    },
+  );
+
+  // V8 still reports the zone of a reader in India as Asia/Calcutta, so that is the name a stored profile holds
+  it.each([
+    ['Asia/Calcutta', '+05:30', '+05:30'],
+    ['US/Pacific', '-08:00', '-07:00'],
+  ])('reads the older name %s with the clock of the zone it names', (name, winter, summer) => {
+    expect(datetime(january, name).offset).toBe(winter);
+    expect(datetime(july, name).offset).toBe(summer);
+  });
+
+  // a CHAR column pads its value with spaces, and a line read from a file keeps its newline
+  it('reads a name with spaces or a newline around it', () => {
+    expect(datetime(july, ' Europe/Berlin ').zone).toBe('Europe/Berlin');
+    expect(datetime(july, 'UTC\n').zone).toBe('UTC');
+  });
+
   it('keeps a fixed offset all year where an IANA zone moves with daylight saving time', () => {
     expect(datetime(january, '-08:00').offset).toBe('-08:00');
     expect(datetime(july, '-08:00').offset).toBe('-08:00');
