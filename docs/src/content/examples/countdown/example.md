@@ -14,6 +14,6 @@ related:
 
 The target moment comes from `today().next('friday').at('5pm')`. That steps forward to the upcoming Friday and sets the local clock to five in the afternoon.
 
-Every second, `now().until(launch)` measures the remaining span as a balanced duration. Calling `round('second')` trims milliseconds so the live readout steps cleanly.
+Every second, `now().until(launch)` measures the remaining span in days, hours, minutes, and seconds. Calling `round('second')` trims milliseconds so the live readout steps cleanly.
 
 Finally, `format()` renders that same duration in full words alongside its narrow and digital timer styles, without dividing by milliseconds.

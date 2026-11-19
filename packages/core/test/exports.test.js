@@ -1,5 +1,7 @@
 import * as core from '@native-dates/core';
 import * as nativeDates from 'native-dates';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 describe('@native-dates/core', () => {
@@ -21,5 +23,15 @@ describe('@native-dates/core', () => {
     finally {
       core.configure({ zone: null });
     }
+  });
+
+  // test files are ES modules, so require() runs in a second Node process started as CommonJS
+  it('resolves require() from a CommonJS module to the same named exports as import', () => {
+    const script = `console.log(JSON.stringify(Object.keys(require('@native-dates/core'))));`;
+    const printed = execFileSync(process.execPath, ['--input-type=commonjs', '--eval', script], {
+      cwd: fileURLToPath(new URL('../../..', import.meta.url)),
+      encoding: 'utf8',
+    });
+    expect(JSON.parse(printed).sort()).toEqual(Object.keys(core).sort());
   });
 });

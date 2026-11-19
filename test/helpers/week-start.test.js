@@ -47,6 +47,13 @@ describe('dayOfWeek()', () => {
     expect([1, 2, 3, 4, 5, 6, 7].map(dayOfWeek)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
+  // ISO 1-7 is canonical, with 0 accepted only as grace for Date.prototype.getDay() callers
+  it('accepts 0 for Sunday as a Date.prototype.getDay() fallback', () => {
+    const sunday = new Date(2026, 10, 22);
+    expect(dayOfWeek(0)).toBe(7);
+    expect(dayOfWeek(sunday.getDay())).toBe(date(sunday).dayOfWeek);
+  });
+
   it('matches the .dayOfWeek numbering on CalendarDate instances', () => {
     const monday = date('2026-11-16');
     expect(monday.dayOfWeek).toBe(dayOfWeek('monday'));
@@ -57,7 +64,7 @@ describe('dayOfWeek()', () => {
     ['an unrecognized weekday string', 'funday', 'funday'],
     ['an empty string', '', ''],
     ['an ambiguous single-letter prefix', 't', 't'],
-    ['0 (Date.prototype.getDay() Sunday)', 0, '0'],
+    ['-1', -1, '-1'],
     ['8', 8, '8'],
     ['a fractional number', 1.5, '1.5'],
     ['NaN', NaN, 'NaN'],
@@ -69,7 +76,20 @@ describe('dayOfWeek()', () => {
     );
   });
 
-  it.todo("rejects non-weekday words sharing a three-letter prefix such as 'month', 'monkey', or 'sunshine'");
+  it.each(['month', 'months', 'monkey', 'sunshine', 'fritter'])(
+    'rejects %s, a non-weekday word sharing a three-letter prefix with a weekday',
+    (word) => {
+      expect(() => dayOfWeek(word)).toThrowError(
+        expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: word }),
+      );
+    },
+  );
+
+  it('parses longer prefixes of a weekday name such as tues and thurs', () => {
+    expect(dayOfWeek('tues')).toBe(2);
+    expect(dayOfWeek('Thurs')).toBe(4);
+    expect(dayOfWeek('wednes')).toBe(3);
+  });
 });
 
 describe('weekStart resolution', () => {

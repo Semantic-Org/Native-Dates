@@ -61,7 +61,8 @@ const ownOptions = (kind, bag) => {
     options.timeStyle = 'medium';
   }
   const namesOwnPart = ownParts[kind].some((part) => options[part] !== undefined);
-  return namesOwnPart ? options : { ...intlOptions(kind), ...options };
+  // spread defaults last so undefined option keys like { timeStyle: undefined } do not blank them out
+  return namesOwnPart ? options : { ...options, ...intlOptions(kind) };
 };
 
 // passed as an object rather than 'text' so configure({ formats: { text } }) cannot alter value.text
@@ -170,5 +171,5 @@ export const partOptions = (named, names, styles) => {
     }
   });
   // require at least one primary field (not just 'era') before skipping the medium fallback
-  return names.slice(0, 2).some((name) => options[name] !== undefined) ? options : { ...styles.medium, ...options };
+  return names.slice(0, 2).some((name) => options[name] !== undefined) ? options : { ...options, ...styles.medium };
 };

@@ -111,11 +111,12 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 |---|---|---|
 | `unknownUnit` | Arithmetic, rounding, `set()`, `duration()` | Unrecognized unit name or abbreviation. |
 | `unknownDayOfWeek` | `dayOfWeek()`, `next()`, `previous()`, `configure()` | Day name is not recognized, or the day of the week as a number is outside 1 to 7. |
+| `unknownSetting` | `configure()` | Setting key passed to `configure()` is not recognized. |
 | `unknownWidth` | `configure()` | A `weekdayNames` entry names a width other than `narrow`, `short`, or `long`, or leaves the width out. |
 | `unknownZone` | Factories, `in()`, `configure()` | Unknown IANA time zone ID, non-string zone, or malformed UTC offset. |
 | `invalidZoneAliases` | `configure()` | `zoneAliases` is neither a plain object nor `null`. |
 | `unknownLocale` | `locale()`, factories, `format()`, `monthNames()`, `weekdayNames()`, `configure()` | Locale tag, tag list, or `Accept-Language` header contains an invalid language tag. |
-| `unknownFormat` | `format()` | Non-string format spec, unsupported duration style, or unrecognized letters in a token pattern outside `[brackets]`. |
+| `unknownFormat` | `format()`, `monthNames()`, `weekdayNames()` | Invalid format spec or `Intl` options, unsupported duration or label style, or unrecognized tokens outside `[brackets]`. |
 | `unsupportedToken` | `format()` | Token pattern asks for a field the value lacks, such as `HH` on a `CalendarDate` or `YYYY` on a `Time`. |
 | `unknownKind` | `as()` | Target kind is not supported by the receiver. |
 

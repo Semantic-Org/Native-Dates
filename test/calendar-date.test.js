@@ -6,6 +6,7 @@ import {
   days,
   duration,
   monthDay,
+  now,
   time,
   today,
   tomorrow,
@@ -345,6 +346,14 @@ describe('today(), tomorrow(), and yesterday()', () => {
     });
   });
 
+  it('reads the same clock as now() when fake timers mock Date without Temporal.Now', () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2031-03-04T12:00:00Z') });
+    expect(now('UTC').date.toString()).toBe('2031-03-04');
+    expect(today('UTC').toString()).toBe('2031-03-04');
+    expect(tomorrow('UTC').toString()).toBe('2031-03-05');
+    expect(yesterday('UTC').toString()).toBe('2031-03-03');
+  });
+
   it("chains today().plus(2, 'days').at('9am') into a DateTime", () => {
     vi.setSystemTime(new Date('2026-11-17T02:00:00Z'));
     configure({ zone: 'America/Los_Angeles' });
@@ -441,6 +450,27 @@ describe('CalendarDate.at()', () => {
     expect(day.at({ hour: 17, minute: 30 }, 'UTC').toString()).toBe('2026-11-16T17:30:00.000Z');
   });
 
+  // 20:15 UTC is 12:15 in Los Angeles and 05:15 in Tokyo, so one of the two differs from any host timezone
+  it('reads the time of day of a Date or ISO instant string in the target timezone', () => {
+    const lunch = new Date('2026-11-16T20:15:00Z');
+    expect(day.at(lunch, 'America/Los_Angeles').toString()).toBe('2026-11-16T20:15:00.000Z');
+    expect(day.at(lunch, 'Asia/Tokyo')).toMatchObject({ zone: 'Asia/Tokyo', day: 16, hour: 5, minute: 15 });
+    expect(day.at('2026-11-16T20:15:00Z', 'America/Los_Angeles').toString()).toBe('2026-11-16T20:15:00.000Z');
+  });
+
+  it('keeps the clock time of a DateTime from another timezone, with or without a timezone argument', () => {
+    configure({ zone: 'America/New_York' });
+    const berlin = datetime('2026-11-16T09:00', 'Europe/Berlin');
+    expect(day.at(berlin)).toMatchObject({ zone: 'America/New_York', day: 16, hour: 9, minute: 0 });
+    expect(day.at(berlin, 'America/New_York').toString()).toBe(day.at(berlin).toString());
+  });
+
+  it('accepts a Temporal.PlainTime, and a fixed-offset timezone written in digits beside a digit-only time', () => {
+    expect(day.at(Temporal.PlainTime.from('08:00'), 'UTC').toString()).toBe('2026-11-16T08:00:00.000Z');
+    expect(day.at('9', '+05').toString()).toBe('2026-11-16T04:00:00.000Z');
+    expect(day.at('17', '+0530').toString()).toBe('2026-11-16T11:30:00.000Z');
+  });
+
   it('defaults to the start of the day in the target timezone when time is omitted', () => {
     expect(day.at(undefined, 'UTC').toString()).toBe('2026-11-16T00:00:00.000Z');
     expect(day.at(undefined, 'Asia/Tokyo').toString()).toBe('2026-11-15T15:00:00.000Z');
@@ -506,6 +536,13 @@ describe('CalendarDate.set()', () => {
     expect(() => day.set({ month: 2, day: 30 })).toThrowError(expect.objectContaining({ code: 'cannotSet' }));
     expect(() => day.set('day', 0)).toThrowError(expect.objectContaining({ code: 'cannotSet' }));
     expect(() => day.set('month', 13)).toThrowError(expect.objectContaining({ code: 'cannotSet' }));
+  });
+
+  it('constrains the day to month-end when set() updates month or year', () => {
+    expect(date('2024-02-29').set('year', 2025).toString()).toBe('2025-02-28');
+    expect(date('2024-02-29').set('year', 2028).toString()).toBe('2028-02-29');
+    expect(date('2026-01-31').set('month', 2).toString()).toBe('2026-02-28');
+    expect(date('2026-03-31').set({ month: 4 }).toString()).toBe('2026-04-30');
   });
 
   it('throws cannotSet for fractional field values', () => {
@@ -714,8 +751,8 @@ describe('CalendarDate.startOf() and endOf()', () => {
     expect(() => wednesday.startOf('week', 'funday')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: 'funday' }),
     );
-    expect(() => wednesday.endOf('week', 0)).toThrowError(
-      expect.objectContaining({ code: 'unknownDayOfWeek', at: '0' }),
+    expect(() => wednesday.endOf('week', 8)).toThrowError(
+      expect.objectContaining({ code: 'unknownDayOfWeek', at: '8' }),
     );
   });
 });
@@ -740,6 +777,12 @@ describe('CalendarDate.next() and previous()', () => {
     expect(monday.next('fri').toString()).toBe('2026-11-20');
     expect(monday.next(5).toString()).toBe('2026-11-20');
     expect(monday.previous(7).toString()).toBe('2026-11-15');
+  });
+
+  it('accepts 0 for Sunday, matching Date.prototype.getDay()', () => {
+    expect(monday.next(0).toString()).toBe('2026-11-22');
+    expect(monday.previous(0).toString()).toBe('2026-11-15');
+    expect(monday.startOf('week', 0).toString()).toBe('2026-11-15');
   });
 
   it('advances or rewinds to the next or previous occurrence of a MonthDay', () => {
@@ -767,12 +810,19 @@ describe('CalendarDate.next() and previous()', () => {
     expect(() => monday.next('funday')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: 'funday' }),
     );
-    expect(() => monday.next(0)).toThrowError(expect.objectContaining({ code: 'unknownDayOfWeek', at: '0' }));
+    expect(() => monday.next(-1)).toThrowError(expect.objectContaining({ code: 'unknownDayOfWeek', at: '-1' }));
     expect(() => monday.previous(8)).toThrowError(expect.objectContaining({ code: 'unknownDayOfWeek', at: '8' }));
     expect(() => monday.next()).toThrowError(expect.objectContaining({ code: 'unknownDayOfWeek' }));
   });
 
-  it.todo("throws unknownDayOfWeek for next('month') and previous('month')");
+  it("throws unknownDayOfWeek for next('month') and previous('month')", () => {
+    expect(() => monday.next('month')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: 'month' }),
+    );
+    expect(() => monday.previous('month')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: 'month' }),
+    );
+  });
 });
 
 describe('CalendarDate.equals(), isBefore(), isAfter(), and isSame()', () => {
@@ -910,9 +960,16 @@ describe('CalendarDate.isToday(), isTomorrow(), isYesterday(), isPast(), and isF
 });
 
 describe('CalendarDate.until() and since()', () => {
-  it('measures the calendar Duration to a target date in years, months, and days', () => {
-    expect(date('2026-01-01').until('2027-04-05').toString()).toBe('P1Y3M4D');
-    expect(date('2026-01-01').until('2027-04-05')).toMatchObject({ years: 1, months: 3, days: 4 });
+  it('measures the Duration to a target date as a count of days', () => {
+    expect(date('2026-01-01').until('2027-04-05').toString()).toBe('P459D');
+    expect(date('2026-01-01').until('2026-02-15').days).toBe(45);
+    expect(date('2026-01-01').until('2027-04-05')).toMatchObject({ years: 0, months: 0, days: 459 });
+  });
+
+  it("balances the measured Duration into years, months, and days with balance('year')", () => {
+    const span = date('2026-01-01').until('2027-04-05').balance('year');
+    expect(span.toString()).toBe('P1Y3M4D');
+    expect(span).toMatchObject({ years: 1, months: 3, days: 4 });
   });
 
   it('returns a numeric total when a target unit is passed', () => {
@@ -936,15 +993,15 @@ describe('CalendarDate.until() and since()', () => {
   it('computes since() as the inverse calendar span from an earlier date', () => {
     expect(date('2026-11-16').since('2026-11-02').days).toBe(14);
     expect(date('2026-11-16').since('2026-11-02', 'weeks')).toBe(2);
-    expect(date('2027-04-05').since('2026-01-01').toString()).toBe('P1Y3M4D');
+    expect(date('2027-04-05').since('2026-01-01').toString()).toBe('P459D');
     expect(date('2026-11-16').since('2026-11-20', 'days')).toBe(-4);
   });
 
-  it('counts full elapsed years only once the anniversary month and day are reached', () => {
+  it("counts full elapsed years in balance('year') only once the anniversary month and day are reached", () => {
     const born = date('1990-05-10');
-    expect(born.until('2026-05-09').years).toBe(35);
-    expect(born.until('2026-05-10').years).toBe(36);
-    expect(date('2026-05-10').since(born).years).toBe(36);
+    expect(born.until('2026-05-09').balance('year').years).toBe(35);
+    expect(born.until('2026-05-10').balance('year').years).toBe(36);
+    expect(date('2026-05-10').since(born).balance('year').years).toBe(36);
   });
 
   it('round-trips start.plus(start.until(end)) back to end across month-end boundaries', () => {

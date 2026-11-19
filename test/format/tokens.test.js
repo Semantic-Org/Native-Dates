@@ -258,6 +258,15 @@ describe('invalid patterns and unsupported tokens', () => {
     );
   });
 
+  it.each(['HH:mm:ss.SSSSSS', 'YYYYYY', 'MMMMM', 'SSSS', 'hhh', 'ZZZ', 'DDDo'])(
+    'throws unknownFormat for overlong repeated token pattern %j',
+    (pattern) => {
+      expect(() => standup.format(pattern)).toThrowError(
+        expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: pattern }),
+      );
+    },
+  );
+
   it('throws unsupportedToken when formatting CalendarDate with time tokens', () => {
     expect(() => friday.format('HH:mm')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unsupportedToken', at: "HH in 'HH:mm'" }),
@@ -332,9 +341,17 @@ describe('monthNames()', () => {
     expect(monthNames('long', 'en-US')[0]).toBe('January');
   });
 
-  it.todo(
-    'throws unknownFormat when monthNames() receives an unrecognized style such as a locale tag in the first argument',
-  );
+  it('throws unknownFormat when monthNames() receives an unrecognized style or Object.prototype key', () => {
+    expect(() => monthNames('de')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'de' }),
+    );
+    expect(() => monthNames('narrow', 'en-US')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'narrow' }),
+    );
+    expect(() => monthNames('toString')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'toString' }),
+    );
+  });
 
   it('throws unknownLocale when given an invalid locale tag', () => {
     expect(() => monthNames('long', 'not a locale')).toThrowError(
@@ -398,9 +415,29 @@ describe('weekdayNames()', () => {
     expect(weekdayNames('long', 'monday', 'de')[0]).toBe('Montag');
   });
 
+  // weeks start on Monday in German and on Saturday in Egypt, so one of the two differs from any runtime locale
+  it('uses the configured locale and its week start when the locale argument is a header naming no language', () => {
+    for (const configured of ['de', 'ar-EG']) {
+      configure({ locale: configured });
+      expect(weekdayNames('short', undefined, '*')).toEqual(weekdayNames('short'));
+    }
+  });
+
   it('returns a new array on each call so mutating the result does not affect later calls', () => {
     weekdayNames('long', 'monday', 'en-US').reverse();
     expect(weekdayNames('long', 'monday', 'en-US')[0]).toBe('Monday');
+  });
+
+  it('throws unknownFormat when weekdayNames() receives an unrecognized style or Object.prototype key', () => {
+    expect(() => weekdayNames('de')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'de' }),
+    );
+    expect(() => weekdayNames('medium', 'monday', 'en-US')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'medium' }),
+    );
+    expect(() => weekdayNames('toString')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: 'toString' }),
+    );
   });
 
   it('throws unknownDayOfWeek for an unrecognized weekStart value', () => {
