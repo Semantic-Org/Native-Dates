@@ -1,19 +1,15 @@
 ---
-// a live example: editor tabs beside a preview, built and served in the browser by the playground
-// engine. the preview's bar picks the zone the example runs in. pass the example's files
-// ({ name: content }) and the tabs to show
 import '../styles/playground.css';
 import { t } from '../lib/i18n.js';
 import { IMPORT_MAP } from '../lib/import-map.js';
 
 const locale = Astro.currentLocale;
 const { files, tabs, label = t(locale, 'playground.label'), lineNumbers = true, zones } = Astro.props;
-// until the editor loads, its pane shows the first file as text, so nothing moves when it arrives
+// render the first tab statically before CodeMirror mounts to prevent layout shift
 const preview = (files[tabs[0]] ?? '').replace(/\/\* playground-hide \*\/[\s\S]*?\/\* playground-hide-end \*\/\n?/g, '');
-// the files ride a json script, so their braces and tags never meet astro's template
+// serialize files in a JSON script tag with '<' escaped so HTML tags never close the script element
 const data = JSON.stringify({ files, tabs, importMap: IMPORT_MAP }).replace(/</g, '\\u003c');
 const editorId = `pg-editor-${Math.random().toString(36).slice(2, 8)}`;
-// zones an example can run in besides the reader's own: one per stretch of the map, by IANA name
 const DEFAULT_ZONES = ['America/Los_Angeles', 'America/New_York', 'America/Sao_Paulo', 'Europe/London', 'Europe/Berlin', 'Asia/Kolkata', 'Asia/Tokyo', 'Australia/Sydney'];
 const ZONES = zones ? [...new Set([...zones, 'Europe/London', 'Asia/Tokyo', 'Australia/Sydney', 'America/Sao_Paulo'])] : DEFAULT_ZONES;
 ---
@@ -45,8 +41,7 @@ const ZONES = zones ? [...new Set([...zones, 'Europe/London', 'Asia/Tokyo', 'Aus
 <script>
   import { ui } from '../scripts/strings.js';
 
-  // the editor, its workers and the preview are the heaviest thing on any page, so they load only as
-  // the playground comes near the screen (or is reached for). with data saver on, they wait to be asked
+  // defer loading CodeMirror and sandbox workers until near the viewport or interacted with (or clicked under Save-Data)
   const start = async (root) => {
     if (root.dataset.started !== undefined) { return; }
     root.dataset.started = '';

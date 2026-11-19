@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# a local-dev cert for https://local.nativedates.dev, signed by the dev CA this machine already trusts
-# (next/docs/cert), so there is nothing new to trust. run from docs/ via `npm run cert`.
-# the CA's key is read where it lives and never copied here.
+# generates a local HTTPS cert for https://local.nativedates.dev signed by DEV_CA_DIR
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -10,7 +8,7 @@ CA_DIR="${DEV_CA_DIR:-../../next/docs/cert}"
 mkdir -p cert
 
 if [[ ! -f "$CA_DIR/ca.pem" || ! -f "$CA_DIR/ca-key.pem" ]]; then
-  echo "No dev CA in $CA_DIR. Set DEV_CA_DIR, or run 'npm run cert' in next/docs first." >&2
+  echo "No dev CA in $CA_DIR. Set DEV_CA_DIR to a directory containing ca.pem and ca-key.pem." >&2
   exit 1
 fi
 if [[ -f "cert/$HOST-key.pem" ]]; then
@@ -27,5 +25,4 @@ rm cert/temp.csr cert/san.ext cert/ca.srl
 
 echo
 echo "cert/$HOST.pem signed by $CA_DIR/ca.pem."
-echo "Point $HOST at this machine: '<vm ip> $HOST' in the hosts file of the machine you browse from"
-echo "(and '127.0.0.1 $HOST' here)."
+echo "Add '127.0.0.1 $HOST' (or your dev host IP) to /etc/hosts."

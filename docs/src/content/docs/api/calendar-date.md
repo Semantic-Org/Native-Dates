@@ -530,7 +530,7 @@ d.for(length): DateRange
 d.for(count, unit): DateRange
 ```
 
-Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included. It is also aliased as `through()`. Given a length, it is also spelled `for()`.
+Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included. Also aliased as `through()`, or as `for()` when given a length.
 
 **Parameters**
 
@@ -798,7 +798,7 @@ today().plus(3, 'days').fromNow('en-US'); // 'in 3 days'
 d.formatRelative(other?, locale?): string
 ```
 
-Alias for [`from()`](#from) that formats the calendar distance from `other` (or today when omitted) as a localized phrase.
+Alias for [`from()`](#from) that formats the calendar distance from `other`, or from today when omitted, as a localized phrase.
 :::
 
 :::entry

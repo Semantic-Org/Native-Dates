@@ -46,7 +46,7 @@ dateRange('TBD', '2026-09-07', { loose: true }); // null
 ```
 
 :::note[Bad data returns null, bad options still throw]
-Loose mode only forgives unreadable input data. Passing an unknown time zone like `'Mars/Olympus'` is a mistake in application code rather than user input, so it still throws immediately.
+Loose mode only handles unreadable input data. Passing an unknown time zone like `'Mars/Olympus'` is a mistake in application code rather than user input, so it still throws immediately.
 :::
 
 ## Time zones on loose strings

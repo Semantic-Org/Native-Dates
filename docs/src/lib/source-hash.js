@@ -1,10 +1,7 @@
-// a translation records the hash of the english it was made from (source: in its frontmatter); when
-// the english moves on, the hashes differ and the translation says it may be behind. the hash covers
-// what a translator translates: the body and the words in the frontmatter, not its dates or sizes.
-//
-// to print a page's hash for its translation:  node src/lib/source-hash.js src/content/docs/<page>.md
 import { createHash } from 'node:crypto';
 
+// hashes only prose frontmatter fields and markdown body so non-prose edits do not mark translations stale.
+// CLI usage: node src/lib/source-hash.js src/content/docs/<page>.md
 const WORDS = ['title', 'lede', 'description', 'try'];
 
 export const sourceHash = ({ data, body }) =>

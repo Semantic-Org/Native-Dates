@@ -96,7 +96,7 @@ describe('renderComment() and renderSummary()', () => {
   });
 
   it('treats a plugin with a brotli delta on unchanged minified bytes as unchanged', () => {
-    // plugin brotli is a difference of two compressions, so it shifts when core changes beside it
+    // marginal plugin brotli is a difference of two compressed streams and can shift when core changes
     const report = build(loadFixture());
     const zones = report.rows.find((row) => row.label === ZONES);
     expect(zones.delta).toEqual({ min: 0, gz: -3, br: 36 });
@@ -336,7 +336,7 @@ describe('buildReport() failing checks', () => {
       '⛔ import { now } Did Not Build',
     );
 
-    // rows weighed beside core fail whenever core fails, so report Core alone
+    // dependent rows fail whenever core fails to build, so report Core alone
     const dependents = loadFixture().head.rows
       .filter((row) => row.beside || row.part === 'overhead')
       .map((row) => row.label);

@@ -1,13 +1,8 @@
-// the divider between a playground's editor and its preview. side by side it sets the editor's
-// share of the width; stacked (narrow windows) it sets the editor's height. drag it, or focus it
-// and use the arrow keys; double-click or Enter puts it back. the reader's split is remembered for
-// every example, as a share of the width (side by side) or a height in px (stacked).
-
 import { ui } from './strings.js';
 
 const KEY = 'nd:pg-split';
 const STACKED = matchMedia('(max-width: 900px)');
-const SIDE = { min: 280, fallback: 7 / 12 }; // each side keeps at least this many px
+const SIDE = { min: 280, fallback: 7 / 12 };
 const STACK = { min: 160, max: 800, fallback: 340 };
 const STEP = 16;
 
@@ -32,10 +27,9 @@ export function mountSplit(root) {
   const editor = root.querySelector('.pg-editor-pane');
   if (!handle || !editor) { return; }
   const saved = load();
-  let share = saved.share ?? SIDE.fallback; // side by side: editor's share of the width
-  let height = saved.height ?? STACK.fallback; // stacked: editor's height
+  let share = saved.share ?? SIDE.fallback;
+  let height = saved.height ?? STACK.fallback;
 
-  // side by side, the split is applied in whole px from the share, so it follows the window
   function apply() {
     if (STACKED.matches) {
       root.style.gridTemplateColumns = '';
@@ -81,7 +75,7 @@ export function mountSplit(root) {
     if (e.button !== 0) { return; }
     e.preventDefault();
     handle.setPointerCapture(e.pointerId);
-    // the preview is a document of its own: without this it swallows the drag as it passes over
+    // disable iframe pointer-events during drag so the preview iframe does not swallow pointermove
     root.classList.add('is-resizing');
     const box = root.getBoundingClientRect();
     const move = (ev) => setFrom(STACKED.matches ? ev.clientY - box.top : ev.clientX - box.left);

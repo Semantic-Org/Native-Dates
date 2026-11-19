@@ -6,7 +6,7 @@ updated: 2026-11-12
 
 Native Dates is a thin, ergonomic layer over JavaScript's built-in `Temporal` and Intl APIs.
 
-Temporal provides exact calendar and time-zone primitives with explicit option bags. Native Dates wraps everyday callsites in concise methods while interoperating freely with raw Temporal instances.
+Temporal provides exact calendar and time-zone primitives with explicit options objects. Native Dates wraps everyday callsites in concise methods while interoperating freely with raw Temporal instances.
 
 ## How types map to Temporal
 
@@ -92,4 +92,4 @@ import { today } from 'native-dates';
 today().plus(1, 'week');
 ```
 
-The default entry checks `globalThis.Temporal` first and dynamically imports the polyfill only when needed, so modern browsers skip downloading it. If another module computes a date at load time (such as `export const start = today()`), or your environment lacks top-level await, import `'@native-dates/polyfill/sync'` instead.
+The default entry checks `globalThis.Temporal` first and dynamically imports the polyfill only when needed, so modern browsers skip downloading it. Import `'@native-dates/polyfill/sync'` instead if another module evaluates dates at load time, such as `export const start = today()`, or if your environment lacks top-level await.

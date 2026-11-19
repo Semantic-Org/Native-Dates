@@ -1,7 +1,3 @@
-// ⌘K search. the built site queries pagefind; `astro dev` has no pagefind index, so it falls back to
-// /search-index.json, generated from the same pages. both are normalized to one result shape:
-//   { section, title, url, crumb, symbol, subs: [{ heading, url, excerpt (html), symbol }] }
-
 import { ui } from './strings.js';
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const terms = (q) => q.toLowerCase().split(/\s+/).filter(Boolean);
@@ -9,14 +5,14 @@ const looksLikeSymbol = (t) => /^[\w.-]+\(\)$|^[A-Z][a-z]+[A-Z]\w*$|^[a-z]+(-[a-
 
 /* ---------- engines ---------- */
 
-// pagefind ships with the built site; the import is hidden from the bundler, which must not resolve it
+// hide dynamic import from Vite since /pagefind/pagefind.js is generated after the bundle builds
 const importAtRuntime = new Function('path', 'return import(path)');
 
 function pagefindEngine(pf) {
   return async (q) => {
     const search = await pf.debouncedSearch?.(q, {}, 120) ?? await pf.search(q);
-    if (!search) { return undefined; // superseded by a newer query
-     }
+    // debouncedSearch resolves to null when superseded by a newer query
+    if (!search) { return undefined; }
     const pages = await Promise.all(search.results.slice(0, 8).map((r) => r.data()));
     return pages.map((p) => ({
       section: p.meta.section ?? 'Docs',
@@ -67,6 +63,7 @@ function jsonEngine(index) {
   };
 }
 
+// fall back to /search-index.json during astro dev since Pagefind only indexes built output
 let enginePromise = null;
 function engine() {
   enginePromise ??= importAtRuntime('/pagefind/pagefind.js')
@@ -201,7 +198,7 @@ export function mountSearch() {
     input.value = '';
     run();
     input.focus();
-    engine(); // warm the index while the reader types
+    engine(); // warm the index before the first query
   };
 
   input.addEventListener('input', run);

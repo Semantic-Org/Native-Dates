@@ -1,5 +1,4 @@
 ---
-// the examples landing: every example as a card, grouped as the sidebar groups them
 import { getCollection } from 'astro:content';
 
 import LocaleNotice from '../components/LocaleNotice.astro';
@@ -12,8 +11,6 @@ const entries = new Map((await getCollection('examples')).map((e) => [`examples/
 const groups = SECTIONS.find((s) => s.key === 'examples').groups
   .map((g) => ({ name: g.name, items: g.items.filter((it) => entries.has(it.slug)).map((it) => ({ ...it, entry: entries.get(it.slug) })) }))
   .filter((g) => g.items.length);
-// the page is its words (examples.… in content/strings.json): a language that has them has the
-// page. each card is its example in the language, where the example has been translated
 const locale = Astro.currentLocale;
 const writtenIn = languagesWith('examples.');
 const translated = writtenIn.includes(locale);

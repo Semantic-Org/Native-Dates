@@ -160,7 +160,7 @@ weekdayNames('narrow', 'monday', 'en-US'); // ['Mo', 'Tu', 'We', ...]
 
 ## Naming your own formats
 
-An app that prints the same shape in many places can name it once in [`configure()`](/api/configure/) and ask for it by name. A named format is a token pattern or an options bag:
+Register reusable format names in [`configure()`](/api/configure/) when your app uses the same date or time layout in multiple places. Each named format can be a token pattern or an `Intl` options object:
 
 ```js
 import { configure, date } from 'native-dates';
@@ -179,11 +179,11 @@ date('2026-11-06').to('2026-11-20').format('invoice'); // '2026-11-06 – 2026-1
 configure({ formats: null });
 ```
 
-A name is read before the built-in presets, so naming a format `'short'` changes what that preset prints across the app. Durations keep their own four styles and do not read named formats.
+Named formats take precedence over built-in presets, so registering `'short'` overrides that preset across the app. Custom named formats apply to dates, times, partial dates, and ranges, while durations use only their built-in styles.
 
 ## Formatting ranges
 
-Every [range](/api/ranges/) formats presets and options through `Intl`, collapsing shared month or year parts automatically. Passing a token pattern formats both endpoints across `' – '`:
+Every [range](/api/ranges/) formats presets and options through `Intl`, collapsing shared month or year parts automatically. Passing a token pattern formats both endpoints separated by `' – '`:
 
 ```js
 import { date } from 'native-dates';

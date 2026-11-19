@@ -409,7 +409,7 @@ ym.format(spec?, locale?): string
 
 Formats the year and month using named presets, `Intl` options objects, or built-in token patterns such as `'MM/YY'`. Shared options objects drop day, clock, and zone keys automatically.
 
-Standard and localized presets print only the year and month, and formats an app names in [`configure()`](/api/configure/) print here too. See [Formatting](/guides/formatting/) for the full preset and token tables.
+Standard and localized presets print only the year and month, and custom formats registered in [`configure()`](/api/configure/) work here too. See [Formatting](/guides/formatting/) for the full preset and token tables.
 
 **Parameters**
 

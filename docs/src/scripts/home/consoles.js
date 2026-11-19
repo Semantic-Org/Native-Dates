@@ -1,8 +1,4 @@
-// the two consoles: four questions, each asked of Date and of native-dates. `lines` is what is
-// typed, and `run` is those same lines as code, so what a console prints is what the reader's own
-// browser answers (the build prints its own answers first, for the page as shipped).
-// each locale asks with a city and offset where that bug hits locally, so the answer is deterministic anywhere
-
+// pin each locale to an explicit offset or IANA zone so the Date bug reproduces in any system timezone
 const ZONES = {
   ja: { eastOffset: '+09:00', dstStamp: '2026-03-28T09:00+00:00', dstPlain: '2026-03-28T09:00', dstZone: 'Europe/London' },
   'zh-CN': { eastOffset: '+08:00', dstStamp: '2026-03-28T09:00+00:00', dstPlain: '2026-03-28T09:00', dstZone: 'Europe/London' },
@@ -102,8 +98,7 @@ export const CASES = consolesFor('en');
 const NOUN = { datetime: 'DateTime', date: 'CalendarDate', time: 'Time', duration: 'Duration' };
 const literal = (value) => (typeof value === 'string' ? `'${value}'` : String(value));
 
-// a value as a browser's console previews it: a string in quotes, an object as its class and its
-// first five own properties, in the order it holds them
+// mimic DevTools object preview so own-property order leads with text
 export function preview(value, { kindOf }) {
   if (typeof value === 'string') { return literal(value); }
   const keys = Object.keys(value);

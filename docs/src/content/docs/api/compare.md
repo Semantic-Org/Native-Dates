@@ -18,7 +18,7 @@ compare(a, b): -1 | 0 | 1
 
 Orders two values of the same kind for `Array.prototype.sort()`, returning negative, zero, or positive numbers. Works across moments, epoch timestamps, calendar dates, clock times, durations, [year-month values](/api/year-month/), and [ranges](/api/ranges/).
 
-Raw ISO strings, native JavaScript dates, and epoch millisecond numbers can stand first too. Beside a clock time, a number reads as an hour, while comparing two different kinds throws a `TypeError`.
+Either argument can also be a raw ISO string, native JavaScript `Date`, or epoch millisecond timestamp. When compared with a clock time, a number is read as an hour, while comparing different kinds throws a `TypeError`.
 
 ```js title="sort.js"
 import { compare, date, datetime, hours, minutes } from 'native-dates';

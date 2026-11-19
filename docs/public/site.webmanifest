@@ -1,7 +1,7 @@
 {
   "name": "native-dates",
   "short_name": "native-dates",
-  "description": "Temporal, spoken plainly.",
+  "description": "Natural-language dates built on the browser's Temporal and Intl APIs.",
   "start_url": "/",
   "display": "browser",
   "background_color": "#000000",

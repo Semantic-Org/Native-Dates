@@ -1,6 +1,4 @@
-// the year strip's playhead. as its section comes into view it crosses the year once, and the Berlin
-// clock follows it through each change; after that it goes where the reader points, drags or arrows.
-// with reduced motion it stays where the reader puts it and never moves by itself
+// scrub the year strip playhead on pointer or keyboard input, with a single initial sweep on scroll into view
 
 import { ui } from '../strings.js';
 
@@ -58,7 +56,6 @@ export function mountYear(root) {
   });
 
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
-  // one crossing, eased at both ends, the first time the strip is well inside the screen
   const io = new IntersectionObserver(([entry]) => {
     if (!entry.isIntersecting) { return; }
     io.disconnect();
