@@ -172,7 +172,10 @@ describe('datetime() with { loose: true }', () => {
     });
   });
 
-  it.todo('returns null instead of throwing an uncoded error for out-of-range offsets like "14:30 +2500"');
+  it('returns null without throwing uncoded errors for out-of-range offsets', () => {
+    expect(datetime('14:30 +2500', { loose: true })).toBeNull();
+    expect(datetime('2026-09-06T14:30:00+25:00', { loose: true, zone: 'UTC' })).toBeNull();
+  });
 });
 
 describe('time() with { loose: true }', () => {

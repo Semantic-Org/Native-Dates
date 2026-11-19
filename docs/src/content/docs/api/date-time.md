@@ -600,7 +600,7 @@ Measures the time from this moment to another, returning a negative span when th
 
 ```returns
 type: Duration | number
-description: A `Duration` balanced up to years, or a number when `unit` is given.
+description: A `Duration` counted in days and clock units, or a number when `unit` is given.
 ```
 
 ```js

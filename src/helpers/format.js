@@ -61,7 +61,7 @@ const ownOptions = (kind, bag) => {
     options.timeStyle = 'medium';
   }
   const namesOwnPart = ownParts[kind].some((part) => options[part] !== undefined);
-  // defaults spread last so a key left undefined, like timeStyle: undefined, cannot blank one out
+  // spread defaults last so undefined option keys like { timeStyle: undefined } do not blank them out
   return namesOwnPart ? options : { ...options, ...intlOptions(kind) };
 };
 

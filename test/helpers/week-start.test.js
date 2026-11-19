@@ -47,8 +47,8 @@ describe('dayOfWeek()', () => {
     expect([1, 2, 3, 4, 5, 6, 7].map(dayOfWeek)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
-  // Date.prototype.getDay(), Moment, and date-fns use 0 for Sunday
-  it('parses 0 as 7 (Sunday), matching Date.prototype.getDay()', () => {
+  // ISO 1-7 is canonical, with 0 accepted only as grace for Date.prototype.getDay() callers
+  it('accepts 0 for Sunday as a Date.prototype.getDay() fallback', () => {
     const sunday = new Date(2026, 10, 22);
     expect(dayOfWeek(0)).toBe(7);
     expect(dayOfWeek(sunday.getDay())).toBe(date(sunday).dayOfWeek);

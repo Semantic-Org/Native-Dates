@@ -1,4 +1,4 @@
-import { each, isNumber, isPlainObject, isString } from './utils.js';
+import { each, isDate, isNumber, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { fail, refuse } from './errors.js';
@@ -101,7 +101,7 @@ export const plural = (name) => `${name}s`;
 
 const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-// 0 is the Sunday of Date.prototype.getDay(), Moment and date-fns
+// canonical range is ISO 1-7 (7 = Sunday), accepting 0 only as grace for Date.prototype.getDay()
 export const dayOfWeek = (input) => {
   if (isNumber(input) && Number.isInteger(input) && input >= 0 && input <= 7) {
     return input || 7;
@@ -113,7 +113,7 @@ export const dayOfWeek = (input) => {
       explanation: isDevelopment
         ? `expected a weekday in [${
           weekdays.join(', ')
-        }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday), or 0 for Sunday as \`getDay()\` counts it`
+        }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday)`
         : 0,
     })
     : index + 1;
@@ -121,6 +121,7 @@ export const dayOfWeek = (input) => {
 
 export const isZonedDateTime = (value) => value instanceof Temporal.ZonedDateTime;
 export const isInstant = (value) => value instanceof Temporal.Instant;
+export const isUnzoned = (value) => isDate(value) || isInstant(value) || isString(value);
 
 // true only when text includes both a clock time and an offset or bracketed zone, pinning an exact instant
 export const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;

@@ -27,8 +27,7 @@ export const cached = (make) => {
   };
 };
 
-// DateTime lets a timeZone set in the options override its zone, and a key left undefined is no override.
-// plain dates and times pin timeZone: 'UTC' to match epochOf()'s UTC timestamps
+// DateTime lets a defined options.timeZone override its zone, while plain dates and times pin 'UTC' to match epochOf()
 export const zonedDateTimeFormat = cached((locale, options, zone) =>
   guard(
     () => new Intl.DateTimeFormat(locale, { ...options, timeZone: options.timeZone ?? zone }),

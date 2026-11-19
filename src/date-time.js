@@ -316,8 +316,7 @@ export class DateTime {
     return this.#nextStart(name, firstDay).minus(endPrecision(unit(name)));
   }
 
-  // adding a step to a start keeps its clock time, which a skipped midnight has moved to 01:00, so the start
-  // after a day or a longer unit is read by startOf() as well. a clock unit ends one step after it starts
+  // re-anchor day and larger boundaries with startOf() in case a skipped midnight shifted the start to 01:00
   #nextStart(name, firstDay) {
     const next = this.startOf(name, firstDay).plus(stepOf(unit(name)));
     return timeUnits.includes(unit(name)) ? next : next.startOf(name, firstDay);
