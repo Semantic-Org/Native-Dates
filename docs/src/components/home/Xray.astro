@@ -1,8 +1,5 @@
 ---
-// four common operations, each under what its writer wants as an x-ray: the code in native-dates,
-// and switched over, the same value made on Temporal alone, or on Date. the samples are text
-// (scripts/home/samples.js); this runs them every way and stops the build if a sample's values
-// differ, so the page can't show code that isn't equivalent
+// execute every sample in scripts/home/samples.js across native-dates, Temporal, and Date at build time so equivalent panes cannot drift
 import * as library from 'native-dates';
 
 import { HOME_LOCALES } from '../../data/home-locales.js';
@@ -16,18 +13,14 @@ const inviteCity = (hasStrings(locale, 'home.') ? xray?.inviteCity : xray?.invit
 const { kindOf, now, today } = library;
 const WAYS = [['ours', 'native-dates'], ['temporal', 'Temporal'], ['legacy', 'Date']];
 
-// every sample's value by its name, from the samples written one way. each runs alone, in a block
-// of its own so it can declare any name, with the values the earlier ones made in scope, and the
-// library's calls where the code is ours
+// isolate each sample in its own block while passing bindings produced by earlier samples in scope
 const SCOPE = { ours: { now, today }, temporal: {}, legacy: {} };
 const made = (way) => samples.reduce((values, sample) => {
   const scope = { ...SCOPE[way], ...values };
   const value = new Function(...Object.keys(scope), `{ ${sample[way]}\nreturn ${sample.id}; }`)(...Object.values(scope));
   return { ...values, [sample.id]: value };
 }, {});
-// a value as Temporal prints it, so ours reads the same as the Temporal value under it
 const printed = (value) => String(value.toTemporal ? value.toTemporal() : value);
-// whether a Date holds what ours does: a moment by its epoch, a calendar day by its own date
 const day = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 const holds = (date, ours) => (kindOf(ours) === 'datetime' ? date.getTime() === ours.epochMilliseconds : day(date) === String(ours));
 const SAME = {
@@ -39,10 +32,10 @@ const difference = () => {
   for (const way of ['temporal', 'legacy']) {
     const theirs = made(way);
     const sample = samples.find(({ id }) => !SAME[way](theirs[id], ours[id]));
-    if (sample) { return `the x-ray's \`${sample.id}\` differs: ${printed(ours[sample.id])} in native-dates, ${String(theirs[sample.id])} in its ${way} code`; }
+    if (sample) { return `Xray sample "${sample.id}" mismatch (${way}): expected ${printed(ours[sample.id])}, got ${String(theirs[sample.id])}`; }
   }
 };
-// every way reads the clock, so a minute can turn between runs: a second try settles that
+// retry once in case the system clock crosses a minute boundary mid-comparison
 const differs = difference() && difference();
 if (differs) { throw new Error(differs); }
 ---

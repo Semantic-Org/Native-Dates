@@ -84,7 +84,7 @@ leapDay.in(2028).toString(); // '2028-02-29'
 md.next(day?): CalendarDate
 ```
 
-Returns the next occurrence strictly after a reference date, defaulting to `today()`. When the reference date already falls on this month and day, the method advances to the following year.
+Returns the next occurrence after a reference date, defaulting to `today()`. When the reference date already falls on this month and day, the method advances to the following year.
 
 Calendar dates and moments also accept a month-day directly in `d.next(md)` and `dt.next(md)`.
 
@@ -101,7 +101,7 @@ Calendar dates and moments also accept a month-day directly in `d.next(md)` and 
 
 ```returns
 type: CalendarDate
-description: Upcoming `CalendarDate` strictly after `day`.
+description: Upcoming `CalendarDate` after `day`.
 ```
 
 ```js
@@ -123,7 +123,7 @@ md.previous(day?): CalendarDate
 md.last(day?): CalendarDate
 ```
 
-Returns the most recent occurrence strictly before a reference date, defaulting to `today()`. Calendar dates and moments also accept a month-day directly in `previous()`. It is also aliased as `last()`.
+Returns the most recent occurrence before a reference date, defaulting to `today()`. Calendar dates and moments also accept a month-day directly in `previous()`. It is also aliased as `last()`.
 
 **Parameters**
 
@@ -138,7 +138,7 @@ Returns the most recent occurrence strictly before a reference date, defaulting 
 
 ```returns
 type: CalendarDate
-description: Most recent `CalendarDate` strictly before `day`.
+description: Most recent `CalendarDate` before `day`.
 ```
 
 ```js
@@ -158,7 +158,7 @@ date('2026-11-16').previous(birthday).toString(); // '2026-10-17'
 md.after(day): CalendarDate
 ```
 
-Returns the next occurrence strictly after a required reference date. Behaves like [`next()`](#next) without defaulting to today.
+Returns the next occurrence after a required reference date. Behaves like [`next()`](#next) without defaulting to today.
 
 **Parameters**
 
@@ -188,7 +188,7 @@ monthDay(2, 29).after('2026-03-01').toString(); // '2027-02-28'
 md.before(day): CalendarDate
 ```
 
-Returns the most recent occurrence strictly before a required reference date. Behaves like [`previous()`](#previous) without defaulting to today.
+Returns the most recent occurrence before a required reference date. Behaves like [`previous()`](#previous) without defaulting to today.
 
 ```js
 monthDay(10, 17).before('2026-10-01').toString(); // '2025-10-17'
@@ -197,10 +197,10 @@ monthDay(10, 17).before('2026-10-01').toString(); // '2025-10-17'
 
 ## Matching and equality
 
-Because a month-day repeats every year rather than sitting at one point on a timeline, ordering methods like `isBefore()` do not apply.
+Because a month-day repeats every year rather than representing a single date, ordering methods like `isBefore()` do not apply.
 
 :::tip[Choosing equals or fallsOn]
-Use `fallsOn()` to check whether a calendar date is that year's observance, since February 29 lands on February 28 in common years. Reserve `equals()` for checking whether two values write the exact same month and day numbers.
+Use `fallsOn()` to check whether a calendar date is that year's observance, since February 29 resolves to February 28 in common years. Reserve `equals()` for checking whether two values have the exact same month and day numbers.
 :::
 
 :::entry
@@ -333,7 +333,7 @@ md.format(spec?, locale?): string
 
 Formats the month and day in the locale's own order, or with a built-in token pattern such as `'MMM Do'`. Shared options objects ignore year, clock, and zone keys automatically.
 
-Formats an app names in [`configure()`](/api/configure/) print here too, and non-Gregorian locales format Gregorian month names so annual dates stay stable. See [Formatting](/guides/formatting/) for all preset and token options.
+Custom formats registered in [`configure()`](/api/configure/) work here too, and non-Gregorian locales format Gregorian month names so annual dates stay stable. See [Formatting](/guides/formatting/) for all preset and token options.
 
 **Parameters**
 

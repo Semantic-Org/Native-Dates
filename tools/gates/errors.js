@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// checks developer-facing error, warning, and log prose across src/, packages/*/src/, and integrations/
+// checks developer-facing error, warning, and log prose across src/ and packages/*/src/
 //   npm run errors                        # new or changed literals against base branch
 //   npm run errors -- --all               # every prose literal across package source
 //   npm run errors -- src/example.js      # specific files or directories
@@ -247,7 +247,7 @@ export function checkErrorRow(row) {
       rule: 'sentence-boundary',
       reason: `lowercase after period (". ${
         boundary[1]
-      }"). Use "explanation. Capital instruction" so fadeSecondary splits cleanly`,
+      }"). Capitalize the next sentence ("explanation. Capital instruction")`,
     });
   }
 
@@ -303,7 +303,7 @@ export function checkErrorRow(row) {
   if (row.kind === 'thrown' && !row.file?.endsWith('/errors.js')) {
     findings.push({
       rule: 'structured-errors',
-      reason: 'raw "throw new Error(...)". Route through createErrors from @semantic-ui/utils',
+      reason: 'raw "throw new Error(...)". Route through refuse() or refuseType() in src/helpers/errors.js',
     });
   }
 

@@ -1,11 +1,9 @@
-// share cards, 1200×630 png per page: the mark, the section, the title (in mono for a symbol) and the
-// lede. satori turns the text to paths from the font files themselves, so the build machine's fonts
-// don't matter; sharp rasterizes. colors are the dark theme's, as literals since there is no css here
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import satori from 'satori';
 import sharp from 'sharp';
 
+// generates 1200x630 Open Graph PNGs via Satori and Sharp with bundled font files so host fonts are not required
 const require = createRequire(import.meta.url);
 const font = (pkg, file) => readFileSync(require.resolve(`${pkg}/files/${file}`));
 const FONTS = [
@@ -37,14 +35,11 @@ const MARK = `data:image/svg+xml;utf8,${
 }`;
 
 const h = (type, style, children = []) => ({ type, props: { style, children } });
-// backticks in a lede are code in the page; on a card they're plain text
 const plainText = (s = '') => s.replace(/`/g, '');
 
-// a lede cut at a word, so it fits two lines of the card
 const fit = (s, max = 104) => (s.length <= max ? s : `${s.slice(0, s.lastIndexOf(' ', max)).replace(/[,;:]$/, '')}…`);
 
 export async function renderCard({ title, lede, section, symbol = false }) {
-  // the ruler lines behind the page, as the homepage hero draws them, fading out before the text
   const rules = h('div', { position: 'absolute', top: 0, left: 0, width: 1200, height: 630, display: 'flex' }, [
     ...Array.from(
       { length: 12 },
@@ -69,8 +64,7 @@ export async function renderCard({ title, lede, section, symbol = false }) {
     color: C.text,
   }, [
     rules,
-    // positioned, so it paints above the positioned rules and fade; inset rather than padded, since
-    // satori sizes a box without its padding
+    // use absolute insets instead of padding so content paints above the rules and avoids Satori's padding sizing quirk
     h('div', {
       position: 'absolute',
       top: 72,

@@ -1,13 +1,13 @@
-# Local-dev SSL certs
+# Local HTTPS Certificates
 
-`npm run dev` serves `https://local.nativedates.dev` on :443 when the cert is here: one dev site up at
-a time, always at the same origin. HTTPS is needed off localhost, and by the playground's service
-worker.
+When `local.nativedates.dev.pem` and its private key exist in this folder, the dev server listens on port 443 at `https://local.nativedates.dev`. HTTPS is required off `localhost` so the interactive playground service worker can register.
 
-`npm run cert` signs one with the dev CA this machine already trusts (`next/docs/cert`, or set
-`DEV_CA_DIR`), so there is nothing new to trust. The CA's key is read in place, never copied here.
+Generate a certificate signed by your local development CA via `DEV_CA_DIR`:
 
-Then point the name at the machine: `<vm ip> local.nativedates.dev` in the hosts file of the machine
-you browse from, and `127.0.0.1 local.nativedates.dev` here.
+```sh
+npm run cert
+```
 
-Without a cert, dev falls back to plain http on :4321. Certs are git-ignored; only this README is kept.
+Point `local.nativedates.dev` at `127.0.0.1` in `/etc/hosts`, or at your dev machine's IP when testing from another device.
+
+Without a certificate, `npm run dev` serves HTTP on port 4321. Generated `.pem` files are ignored by Git.

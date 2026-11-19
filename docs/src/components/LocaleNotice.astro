@@ -1,7 +1,5 @@
 ---
-// on a page shown in english for want of a translation, one that is a machine translation nobody has
-// reviewed, or one whose english has moved on: says so in the reader's language, with the way to the
-// english page
+// banner shown on untranslated, machine-translated, or outdated localized pages with a link to English
 import { DEFAULT_LOCALE, localeOf, t, unlocalized } from '../lib/i18n.js';
 
 const { translated = false, stale = false, draft = false } = Astro.props;

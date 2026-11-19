@@ -1,8 +1,7 @@
-// bespoke homepage sections and city choices for each non-English locale in lib/locales.js.
-// evaluated at build time only so localized copy never enters the client script bundle.
-// all localized prose here is agent-authored draft copy pending native speaker review. sample dates
-// stay on 2026-05-01 where single-digit month/day unpadding or genitive day 1 is the point, and move
-// to 2026-05-15 in French and Brazilian Portuguese where the 1st of a month takes 1er / 1º
+// localized homepage sections and city choices for each non-English locale in lib/locales.js,
+// evaluated at build time so localized copy never enters the client script bundle. Sample dates
+// use 2026-05-01 where single-digit month/day unpadding or genitive day 1 is shown, and 2026-05-15
+// in French and Brazilian Portuguese where the 1st of a month uses 1er / 1º
 
 export const HOME_LOCALES = {
   ja: {

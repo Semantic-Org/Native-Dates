@@ -1,9 +1,8 @@
-// /llms.txt: the docs for an assistant, in the sidebar's order. each written page links to its
-// markdown (/<page>.md) with its lede; examples link to their pages, which run live
 import { getCollection } from 'astro:content';
 
 import { SECTIONS } from '../lib/nav.js';
 
+// links docs pages to /<slug>.md and examples to /<slug>/ because examples have no raw markdown route
 export async function GET({ site }) {
   const docs = new Map((await getCollection('docs')).map((e) => [e.id, e]));
   const examples = new Map((await getCollection('examples')).map((e) => [`examples/${e.id}`, e]));

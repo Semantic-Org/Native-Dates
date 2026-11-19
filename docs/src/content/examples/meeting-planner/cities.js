@@ -1,4 +1,4 @@
-// IANA zone names. the platform knows each one's offset on any date
+// IANA time zones resolved by Intl and Temporal
 export const CITIES = [
   'America/Los_Angeles',
   'America/New_York',

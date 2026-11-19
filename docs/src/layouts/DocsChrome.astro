@@ -1,6 +1,4 @@
 ---
-// the docs frame every docs page shares: topbar, sidebar, the main column and on-this-page.
-// a page passes what goes in main; `wide` drops on-this-page for index pages like /plugins/
 import { getCollection } from 'astro:content';
 
 import '../styles/docs.css';
@@ -49,8 +47,6 @@ const section = nav.find((s) => s.key === sectionKey);
     <div class="drawer-scrim"></div>
 
     <div class="docs-main">
-      {/* on screens too narrow for the on-this-page column: the same list behind a bar that keeps
-          the reader's section in view */}
       {!wide && toc.length > 0 && (
         <nav class="toc-bar" aria-label={t(locale, 'toc.label')} data-toc-bar>
           <button class="toc-bar-button" type="button" aria-expanded="false" aria-controls="toc-sheet">
@@ -66,7 +62,6 @@ const section = nav.find((s) => s.key === sectionKey);
         </nav>
       )}
       <slot />
-      {/* the on-this-page rail rides beside the doc, not at the window's edge */}
       {!wide && toc.length > 0 && (
         <aside class="docs-toc" aria-label={t(locale, 'toc.label')}>
           <p class="toc-label">{t(locale, 'toc.label')}</p>

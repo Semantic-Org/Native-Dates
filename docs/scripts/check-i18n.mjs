@@ -1,11 +1,5 @@
-// checks content/strings.json and content/translations/* against the site's code and content:
-//   - unused keys in content/strings.json that nothing in src/ asks for
-//   - keys referenced in src/ or data modules that content/strings.json lacks
-//   - orphaned keys in translations/*/strings.json whose english key was removed or renamed
-//   - placeholder ({name}) mismatches between a translation and its english string
-//   - orphaned markdown translations whose english twin is gone
-//
-//   node scripts/check-i18n.mjs
+// verify content/strings.json and content/translations/* have no unused, missing, or orphaned keys,
+// mismatched {name} placeholders, or orphaned translated markdown files
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -45,7 +39,7 @@ const englishKeys = new Set(Object.keys(english));
 const literalKeys = new Set();
 const pluralFamilies = new Set();
 
-// every source file outside src/content/ that asks for interface words
+// scan source files outside src/content/ that reference UI string keys
 const codeFiles = walk(srcDir).filter((file) => !file.startsWith(`${contentDir}/`) && /\.(js|astro|html)$/.test(file));
 for (const file of codeFiles) {
   const code = stripComments(readFileSync(file, 'utf8'));
@@ -105,7 +99,7 @@ const pluralBaseOf = (key) => {
   return form ? key.slice(0, -(form.length + 1)) : null;
 };
 
-// 1. english keys nothing asks for
+// 1. unused English keys
 for (const key of englishKeys) {
   const base = pluralBaseOf(key);
   if (!literalKeys.has(key) && !(base && pluralFamilies.has(base))) {
@@ -113,7 +107,7 @@ for (const key of englishKeys) {
   }
 }
 
-// 2. keys code asks for that english lacks
+// 2. referenced keys missing from English strings.json
 for (const key of literalKeys) {
   if (!englishKeys.has(key)) {
     errors.push(`src/content/strings.json: missing key "${key}" referenced in src/`);

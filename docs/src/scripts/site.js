@@ -4,9 +4,6 @@ import { clockFavicon } from './favicon.js';
 import { wireMarkClock } from './mark-clock.js';
 import { wireVersionMenus } from './version-menu.js';
 
-// what every page does in the browser: a tiny js highlighter for code written in the page's own
-// markup (markdown goes through shiki at build), copy buttons and the theme.
-
 const KEYWORDS = new Set([
   'import',
   'from',
@@ -31,8 +28,9 @@ const KEYWORDS = new Set([
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+// lightweight browser highlighter for UI snippets outside build-time Shiki markdown
 export function highlight(src) {
-  // order matters: comments, strings, arrows, then jsx tags (a `>` only closes a tag it follows), numbers, calls, keys, words
+  // alternation order matters so comments, strings, and => match before JSX tags, numbers, calls, and keywords
   const re =
     /(\/\/[^\n]*)|('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)|(=>)|(<\/?[A-Z][\w.]*\s*\/?>?|\/>)|\b(\d+(?:\.\d+)?)\b|([A-Za-z_$][\w$]*)(?=\s*\()|([A-Za-z_$][\w$]*)(?=\s*:)|([A-Za-z_$][\w$]*)|(\n)/g;
   let out = '';
@@ -47,7 +45,7 @@ export function highlight(src) {
     else if (arrow) { out += `<span class="tk-k">=&gt;</span>`; }
     else if (tag) { out += `<span class="tk-t">${esc(tag)}</span>`; }
     else if (n) { out += `<span class="tk-n">${n}</span>`; }
-    // a keyword's name after a dot is a method: Temporal.PlainDate.from(…)
+    // treat keyword names after a dot as method calls, e.g. Temporal.PlainDate.from(...)
     else if (f) { out += KEYWORDS.has(f) && src[m.index - 1] !== '.' ? `<span class="tk-k">${f}</span>` : `<span class="tk-f">${f}</span>`; }
     else if (p) { out += KEYWORDS.has(p) ? `<span class="tk-k">${p}</span>` : `<span class="tk-p">${p}</span>`; }
     else if (w) { out += KEYWORDS.has(w) ? `<span class="tk-k">${w}</span>` : w; }
@@ -56,7 +54,6 @@ export function highlight(src) {
   return out + esc(src.slice(last));
 }
 
-// <pre data-hl> blocks; lines starting with "!!" are highlighted
 export function highlightAll(root = document) {
   root.querySelectorAll('pre[data-hl]').forEach((pre) => {
     const raw = pre.textContent.replace(/^\n/, '').replace(/\s+$/, '');
@@ -74,8 +71,7 @@ export function highlightAll(root = document) {
   });
 }
 
-// inline code in prose gets the same tokens. bare identifiers pass through untouched, so `navigate`
-// stays plain while href('team', { org }) is colored. opt out with data-no-hl; settings keep their tint
+// highlight inline code so calls (`date('2026-05-10')`) get token colors while bare identifiers (`today`) stay plain
 const PUNCT_AFTER = /^[,.;:!?)\]}'"’”]+/;
 const PUNCT_BEFORE = /[(\[{'"‘“]+$/;
 
@@ -85,7 +81,7 @@ export function highlightInline(root = document) {
       if (!code.matches('.setting, .t, [data-no-hl]')) { code.innerHTML = highlight(code.textContent); }
       code.dataset.hlDone = '';
       joinPunctuation(code);
-      // a chip that opens its block has nothing to keep apart from on the left
+      // drop left margin when inline code starts its block
       const prev = code.parentElement.closest('.code-join') ? null : code.previousSibling;
       if (!prev || (prev.nodeType === 3 && !prev.data.trim() && !prev.previousSibling)) {
         code.classList.add('joined-start');
@@ -93,8 +89,7 @@ export function highlightInline(root = document) {
     });
 }
 
-// a chip's side margin would push touching punctuation away, and a line could break between them.
-// whatever punctuation touches the chip moves into a no-wrap join with it, and that side drops its margin
+// wrap adjacent punctuation with inline code in .code-join so margin and line breaks do not split them
 function joinPunctuation(code) {
   const take = (node, re, fromEnd) => {
     if (node?.nodeType !== 3) { return null; }
@@ -121,7 +116,6 @@ function joinPunctuation(code) {
   }
 }
 
-// shell commands: the command, its flags and its package arguments
 export function highlightShell(root = document) {
   root.querySelectorAll('code[data-shell]:not([data-hl-done])').forEach((code) => {
     const words = code.textContent.split(/(\s+)/);
@@ -173,8 +167,7 @@ export function wireCopy(root = document) {
   });
 }
 
-// the theme follows the system until the reader picks one; a pick is remembered. the base layout
-// sets it before first paint, so here it only answers the toggle and later system changes
+// initial data-theme is set before first paint in the layout, so only handle toggles and later OS changes here
 export function wireTheme() {
   const root = document.documentElement;
   const saved = () => {
@@ -213,7 +206,6 @@ export function init() {
   wireMarkClock();
   mountSearch();
   wireVersionMenus();
-  // the language select in the menu drawer goes to the page in the language picked
   document.querySelectorAll('[data-language-select]').forEach((select) =>
     select.addEventListener('change', () => {
       try { sessionStorage.setItem('nd:language-picked', select.selectedOptions[0].dataset.code); } catch {}

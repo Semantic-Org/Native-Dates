@@ -1,31 +1,24 @@
 name: Bundle Size
 
-# builds PR code, so its token cannot post: bundle-size-report.yml posts the comment.
-# tools/ci/bundle/README.md is the page
+# bundles PR code with read-only permissions, while bundle-size-report.yml posts the PR comment.
+# See tools/ci/bundle/README.md for details
 
 on:
-  # a PR starts a run only when it touches a path below, what the measurement reads or is built
-  # with, so a change to the docs or a test costs no minutes. tools/ci/bundle/budget.test.js holds
-  # every file in a bundle to this list
+  # runs only when a PR touches bundled sources, package manifests, or measurement config.
+  # tools/ci/bundle/budget.test.js verifies every bundled source file matches this list
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      # the sources the bundles are built from, and the exports and sideEffects that decide what a
-      # bundle holds
       - 'src/**'
       - 'packages/plugins/src/**'
       - 'packages/plugins/package.json'
       - 'package.json'
-      # the rows, the check, the prose reader and the budget they are held to
       - 'tools/size.js'
       - 'tools/gates/budget.js'
       - 'tools/gates/prose.js'
       - 'ai/contributing/budget.md'
-      # the reporter and its page
       - 'tools/ci/bundle/**'
-      # this workflow, which a PR runs from its own copy
       - '.github/workflows/bundle-size.yml'
-      # the bundler's version, and the node whose zlib compresses
       - 'package-lock.json'
       - '.node-version'
 
@@ -44,8 +37,7 @@ jobs:
     env:
       TITLE: ${{ github.event.pull_request.title }}
     steps:
-      # the checkout is the PR merged onto its base branch's tip, and that tip is the merge's first
-      # parent, so a PR behind main reads its own bytes and never main's other merges
+      # compare the PR merge commit against its first parent on the base branch to isolate PR changes
       - name: Checkout Head
         uses: actions/checkout@v7
         with:
@@ -63,21 +55,21 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version-file: head/.node-version
-      # no install script runs, and the PR's code is bundled by esbuild and never executed
+      # skip lifecycle scripts and bundle PR code with esbuild without executing it
       - name: Install Dependencies
         run: |
           (cd base && npm ci --ignore-scripts --no-audit --no-fund)
           (cd head && npm ci --ignore-scripts --no-audit --no-fund)
-      # the base's copy weighs the PR, so a PR cannot move the ceiling or the rows for its own run
+      # run measurement scripts from the base branch so a PR cannot raise its own budget
       - name: Use Main's Tools
         id: tools
         run: |
           if [ -f base/tools/ci/bundle/reporter.js ]; then
             echo "dir=base" >> "$GITHUB_OUTPUT"
-            echo "measuring with the base's tools"
+            echo "measuring with base branch tools"
           else
             echo "dir=head" >> "$GITHUB_OUTPUT"
-            echo "the base has no tools/ci/bundle yet, so this PR's copy measures itself"
+            echo "base branch predates tools/ci/bundle, falling back to head tools"
           fi
       - name: List Changed Files
         env:
@@ -88,7 +80,7 @@ jobs:
           jq -n --arg head "$(git -C head rev-parse HEAD)" --arg base "$BASE_SHA" --arg ref "$BASE_REF" \
             --arg files "$(git -C head -c core.quotepath=false diff --name-only HEAD^1 HEAD)" \
             '{ head: { sha: $head }, base: { sha: $base, ref: $ref }, files: ($files | split("\n") | map(select(. != ""))) }' > "$RUNNER_TEMP/size/changed.json"
-      # the one step that fails a pull request. the steps after it still run, so a red check has its report
+      # report and artifact upload steps use !cancelled() so failing checks still publish their report
       - name: Check the Budget
         env:
           TOOLS: ${{ steps.tools.outputs.dir }}
@@ -114,7 +106,6 @@ jobs:
           name: size-results
           path: ${{ runner.temp }}/size
           if-no-files-found: error
-      # the summary's size-report.json link opens this run's page, so the file is uploaded here
       - name: Save Bundle Size Report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7

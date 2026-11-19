@@ -1,15 +1,12 @@
 ---
-// every docs page, in every language: english at the root and each other language under its path,
-// where a page it hasn't translated shows the english. the homepage, the examples and the plugins
-// landing have routes of their own beside this one (pages/[...locale]/), so each kind of page ships
-// its own styles and no other's
 import { getCollection } from 'astro:content';
 
 import { behind, ENABLED, localePath } from '../lib/i18n.js';
 import Doc from '../views/Doc.astro';
 
+// routes docs entries across all enabled locales. Landing pages and examples use separate routes
+// under pages/[...locale]/ so Astro scopes CSS bundles per page type
 export async function getStaticPaths() {
-  // say which translations the english has moved past, where whoever changed the english will see it
   for (const { file, english, source, orphan } of await behind()) {
     console.warn(orphan
       ? `[i18n] ${file} translates a page that is gone`

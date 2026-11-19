@@ -18,7 +18,7 @@ inputs:
     description: Path to the rendered comment body.
     required: true
   marker:
-    description: A hidden HTML comment that opens the body and finds this comment among the login's others, when two workflows post under one login. Empty finds by login alone.
+    description: Hidden HTML comment prepended to the body to distinguish multiple comments from the same bot login. When empty, matches by login alone.
     required: false
     default: ''
 

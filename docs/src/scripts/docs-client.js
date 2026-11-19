@@ -1,12 +1,7 @@
-// what the docs do in the browser once the page is built: the toc follows the reader, the drawer
-// opens on small screens, copy page hands over the markdown source, the import line is highlighted.
-
 import { ui } from './strings.js';
 import { highlight } from './site.js';
 
-// the section the reader is in: the last heading scrolled past the top third, so a long section stays
-// lit while read. at the very end of the page a heading can't reach that line, so one the reader
-// linked to and can see wins
+// at the bottom of the page a linked heading cannot reach the 30% line, so let a visible hash target win
 function currentHeading(heads) {
   const line = innerHeight * 0.3;
   let i = -1;
@@ -22,18 +17,15 @@ function currentHeading(heads) {
 
 const idOf = (a) => decodeURIComponent(a.hash.slice(1));
 
-// the toc follows the reader as they scroll
 function scrollspy() {
   const heads = [...document.querySelectorAll('main h2[id], main h3[id]')];
   if (!heads.length) { return; }
-  // the on-this-page list, once in its column and once behind the bar on narrow screens
   const tocs = [...document.querySelectorAll('.toc-list')].map((ul) => [...ul.querySelectorAll('a')]);
   const rail = document.querySelector('.docs-toc');
   const barCurrent = document.querySelector('[data-toc-current]');
   let lastLit = null;
   const update = () => {
     const i = currentHeading(heads);
-    // the last of its headings at or before the reader's, else its first
     const passed = new Set(heads.slice(0, i + 1).map((h) => h.id));
     let active = null;
     tocs.forEach((toc) => {
@@ -50,7 +42,6 @@ function scrollspy() {
         else if (item.bottom > box.bottom - 32) { rail.scrollTop += item.bottom - (box.bottom - 32); }
       }
     }
-    // the bar names the section only once the reader is in one
     if (barCurrent) { barCurrent.textContent = i >= 0 ? heads[i].textContent.trim() : ''; }
   };
   addEventListener('scroll', update, { passive: true });
@@ -58,9 +49,8 @@ function scrollspy() {
   update();
 }
 
-// the sidebar marks what the url points at, not where the reader has scrolled: its items for a
-// page's sections (Router's navigate(), href(), settings) aren't in the page's order, so following
-// the scroll would jump around. a section's item while the url names it, else the page's
+// track the URL rather than scroll position because sidebar section links (date(), today(), DateTime)
+// are grouped by role rather than document order, so scroll-following would jump around
 function sidebarCurrent() {
   const here = [...document.querySelectorAll('.docs-sidebar a.nav-link')].filter((a) => a.pathname === location.pathname);
   if (!here.length) { return; }
@@ -87,8 +77,7 @@ function drawer() {
   };
   btn.addEventListener('click', () => set(btn.getAttribute('aria-expanded') !== 'true'));
   scrim?.addEventListener('click', () => set(false));
-  // a link to a section of this same page only scrolls, so the drawer would stay over it: any link
-  // tapped in the drawer closes it
+  // close on any link click since same-page hash links only scroll and would leave the drawer open
   side.addEventListener('click', (e) => {
     if (e.target.closest('a') && side.classList.contains('is-open')) { set(false); }
   });
@@ -97,7 +86,6 @@ function drawer() {
   });
 }
 
-// the on-this-page bar on narrow screens: opens its list, closes on a pick, a tap outside or Escape
 function tocBar() {
   const bar = document.querySelector('[data-toc-bar]');
   if (!bar) { return; }
@@ -122,14 +110,12 @@ function tocBar() {
   });
 }
 
-// the page's own markdown, for an issue, a pull request or an assistant
 function copyPage() {
   const source = document.getElementById('page-source');
   const actions = document.querySelector('[data-page-actions]');
   const main = actions?.querySelector('.page-copy') ?? document.querySelector('[data-copy-page]');
   if (!main) { return; }
-  // the main button says what happened, whichever item did it. both labels stack in one cell, so
-  // the button keeps the wider one's width as they swap
+  // toggle stacked labels instead of replacing textContent so the button width stays fixed
   const idle = main.querySelector('[data-copy-label]');
   const done = main.querySelector('[data-copy-done]');
   let timer;
@@ -151,8 +137,6 @@ function copyPage() {
   document.querySelectorAll('[data-copy-page]').forEach((btn) => btn.addEventListener('click', () => copy(pageText())));
   if (!actions) { return; }
 
-  // the menu: opens below the chevron, arrows move between items, a pick, Escape or a click outside
-  // closes it
   const more = actions.querySelector('.page-more');
   const menu = actions.querySelector('.page-menu');
   const items = [...menu.querySelectorAll('[role=menuitem]')];
@@ -181,7 +165,7 @@ function copyPage() {
   menu.addEventListener('click', (e) => {
     const item = e.target.closest('[role=menuitem]');
     if (!item) { return; }
-    // an assistant that can't take a prompt in its url: the prompt goes on the clipboard as it opens
+    // copy the prompt when opening assistants that cannot take a prompt via URL
     if (item.dataset.copyPrompt) { copy(item.dataset.copyPrompt); }
     set(false);
   });

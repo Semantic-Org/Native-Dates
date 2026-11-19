@@ -18,7 +18,7 @@ export const isProse = (text) => {
     && !tokens.some((token) => OPERATOR_PATTERN.test(token));
 };
 
-// every string and template literal in the code with the offset it opens at
+// extracts all string and template literals in `code` with their start offsets
 export function literals(code) {
   const found = [];
   const walk = (node) => {
@@ -51,8 +51,8 @@ if (sentences("log('developer explanation string', `value ${1} inside template`)
 
 const BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
-// the standard base64 vlq mappings, decoded to [generatedColumn, source, line, column] segments
-// per generated line. read here so a source map costs no dependency
+// decodes Base64 VLQ source-map mappings into [generatedColumn, source, line, column] segments
+// inline to avoid adding a source-map package dependency
 function decodeMappings(mappings) {
   const lines = [];
   let source = 0;
@@ -89,8 +89,7 @@ function decodeMappings(mappings) {
   return lines;
 }
 
-// an offset in the generated code to its source as { file, line, column }, one-based, or null
-// where the map has no segment before it
+// maps a character offset in generated code back to 1-based { file, line, column }, or null
 export function sourceLocator(map, code) {
   const lines = decodeMappings(map.mappings);
   const starts = [0];

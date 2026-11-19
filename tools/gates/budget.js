@@ -1,7 +1,7 @@
-// checks the rows tools/size.js measures against ai/contributing/budget.md: the ceiling, the per-PR limits, and development text
+// checks measured bundle targets against ai/contributing/budget.md: size ceiling, per-PR limits, and dev prose stripping
 //   node tools/gates/budget.js                                          check the working tree
-//   node tools/gates/budget.js --base <dir> --title <title>             and judge what it adds to another checkout
-//   node tools/gates/budget.js --head <dir> --base <dir> --json <dir>   weigh a pull request, writing head.json and base.json
+//   node tools/gates/budget.js --base <dir> --title <title>             compare against another local checkout
+//   node tools/gates/budget.js --head <dir> --base <dir> --json <dir>   measure head and base, writing head.json and base.json
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -22,16 +22,13 @@ if (!Number.isFinite(budget.ceiling)) {
   throw new Error("ai/contributing/budget.md is missing 'ceiling' in frontmatter");
 }
 
-// one tree as the bundle bot's reporter reads it: every row in minified, gzip and brotli bytes with the
-// source files behind it, core's distance to the ceiling, and what the two checks on development text found
 export async function checkTree(dir = root) {
   const { rows, builds } = await measureRows(resolve(dir));
   const headline = rows.find((row) => row.part === 'headline');
   const overhead = rows.find((row) => row.part === 'overhead');
   const allowed = new Set((budget.prose ?? []).map(({ text }) => text));
 
-  // the strip check runs both ways, since a check that only looks for absence passes once nothing is left
-  // to look for: development text is present in the development build, and gone from the production one
+  // verify dev prose is both present in development builds and stripped from production builds
   const production = builds[headline.label];
   const development = builds[overhead.label];
   const strip = { present: false, folded: false };
@@ -46,7 +43,7 @@ export async function checkTree(dir = root) {
   }
   strip.ok = strip.present && strip.folded;
 
-  // the prose check reads every literal core and the plugins ship, and keeps each sentence with its source line
+  // scan production core and plugin bundles for surviving English prose literals
   const scanned = rows.filter((row) => row.part === 'headline' || row.part === 'plugin');
   const survivors = new Map();
   const held = {};
@@ -60,7 +57,7 @@ export async function checkTree(dir = root) {
       const at = found ? `${found.file}:${found.line}:${found.column}` : 'no source mapping';
       const key = `${literal}\n${at}`;
       held[label].add(key);
-      // a plugin's bundle holds core too, and a line core carries is core's
+      // attribute literals already present in core to core rather than repeating them on each plugin
       if (held[beside]?.has(key)) { continue; }
       if (survivors.has(key)) { survivors.get(key).bundles.push(label); }
       else { survivors.set(key, { text: literal, at, bundles: [label] }); }
@@ -88,7 +85,7 @@ export async function checkTree(dir = root) {
       stale,
       skipped,
     },
-    // a build's text and map stay here. the reporter reads bytes and the source files behind them
+    // omit raw bundle text and sourcemaps from JSON output
     rows,
   };
 }
@@ -110,8 +107,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     if (base) { writeFileSync(resolve(args.json, 'base.json'), `${JSON.stringify(base)}\n`); }
   }
 
-  // the reporter is the one judge, so the check is red exactly when the comment is. with no base the
-  // tree is weighed against itself, and only the ceiling and the two text checks can be red
+  // evaluate through buildReport() so local runs and CI status checks match the PR comment verdict
   const report = buildReport({ measurements: { head, base: base ?? head, changed: {} }, head: { msg: args.title } });
   const red = report.state === 'red';
   printRows(head.rows);
@@ -123,7 +119,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     if (report.reason.startsWith('over')) {
       console.error('See ai/contributing/budget.md for options when a change exceeds the budget.\n');
     }
-    // an annotation on the run's page, one line by construction
     if (process.env.GITHUB_ACTIONS) { console.log(`::error::${report.sentence}`); }
   }
   else {

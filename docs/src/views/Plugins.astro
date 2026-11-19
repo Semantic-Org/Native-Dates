@@ -1,6 +1,4 @@
 ---
-// the plugins landing: every plugin as a card or a row, filterable, with its size measured at build,
-// and presets that pick a set at once
 import { getCollection } from 'astro:content';
 
 import LocaleNotice from '../components/LocaleNotice.astro';
@@ -10,20 +8,18 @@ import { inline } from '../lib/markdown/inline.js';
 import { PLUGINS, PRESETS, sampleFor } from '../lib/plugins.js';
 import { formatSize, shippedPlugins, sizeOf, sizeWith } from '../lib/sizes.js';
 
-// the page is its words (plugins.… in content/strings.json): a language that has them has the page
 const locale = Astro.currentLocale;
 const writtenIn = languagesWith('plugins.');
 const translated = writtenIn.includes(locale);
 const translatedIn = languagesWith('plugins.', { reviewed: true });
 const english = translated ? {} : englishIn(locale);
-// the list is written out because the browser reads it too; the package's folder is the truth
+// verify static browser metadata in lib/plugins.js stays in sync with packages/plugins/src
 const listed = PLUGINS.map((p) => p.name).sort().join(', ');
 const shipped = shippedPlugins().join(', ');
-if (listed !== shipped) { throw new Error(`lib/plugins.js lists ${listed}, and the package ships ${shipped}`); }
+if (listed !== shipped) { throw new Error(`lib/plugins.js (${listed}) is out of sync with shipped plugins (${shipped})`); }
 const written = new Set((await getCollection('docs')).map((e) => e.id));
 const plugins = await Promise.all(PLUGINS.map(async (p) => {
   const bytes = await sizeOf(p.name);
-  // the plugin's words in the page's language; category stays the id
   const category = t(locale, `plugins.category.${p.category}`);
   const description = t(locale, `plugins.${p.name}.description`);
   return {
@@ -33,12 +29,10 @@ const plugins = await Promise.all(PLUGINS.map(async (p) => {
     bytes,
     size: formatSize(bytes),
     href: written.has(`plugins/${p.name}`) ? localePath(`/plugins/${p.name}/`, locale) : null,
-    // what the filter matches against
     text: `${p.name} ${category} ${description}`.toLowerCase().replace(/`/g, ''),
   };
 }));
-// plugins share helpers, so the size of a pick is the size of that set, measured: one build per
-// subset, keyed by which plugins are in it (bit n is plugin n)
+// plugins share helpers, so measure every subset bitmask (bit n = plugin n) rather than summing sizes
 const subsets = await Promise.all(Array.from({ length: 2 ** PLUGINS.length }, (_, mask) =>
   sizeWith(PLUGINS.filter((_, i) => mask & (1 << i)).map((p) => p.name))));
 const coreBytes = subsets[0];
@@ -47,7 +41,6 @@ const presets = PRESETS.map((preset) => ({
   size: formatSize(subsets[PLUGINS.reduce((mask, p, i) => (preset.plugins.includes(p.name) ? mask | (1 << i) : mask), 0)]),
   description: t(locale, `plugins.preset.${preset.name}.description`).replace(/`/g, ''),
 }));
-// the sample starts empty; the page fills it from the reader's picks (and ?use= in the url)
 const EXAMPLE = sampleFor([], t(locale, 'plugins.sample.empty'));
 const lede = t(locale, 'plugins.lede');
 const ICONS = {
@@ -113,7 +106,7 @@ const ICONS = {
       {plugins.map((p) => (
         <li class="plugin" data-text={p.text} data-name={p.name}>
           <input class="plugin-pick" type="checkbox" id={`pick-${p.name}`} value={p.name} />
-          {/* the whole card toggles the pick; the name (to its page) and the tag sit above it */}
+          {/* full-card label toggles the checkbox while the title link and category tag sit above it in z-order */}
           <label class="plugin-hit" for={`pick-${p.name}`}><span class="visually-hidden">{t(locale, 'plugins.add', { name: p.name })}</span></label>
           <h2 class="plugin-name">{p.href ? <a class="plugin-link" href={p.href}>{p.name}</a> : p.name}</h2>
           <button class="plugin-tag" type="button" data-tag={p.categoryName} aria-label={t(locale, 'plugins.showCategory', { category: p.categoryName })}>{p.categoryName}</button>
@@ -123,7 +116,7 @@ const ICONS = {
       ))}
     </ul>
     <script is:inline>
-      // the reader's last view, set before paint so the list never jumps from cards to rows
+      // restore saved layout mode before paint to avoid a flash from cards to list
       try { const v = localStorage.getItem('nd:plugin-view'); if (v) document.getElementById('plugin-list').dataset.view = v; } catch {}
     </script>
 

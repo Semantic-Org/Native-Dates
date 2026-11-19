@@ -1,21 +1,14 @@
-// a live example: the playground engine builds and serves the files, its editor edits them, and the
-// preview runs the app in the zone picked in its bar.
-// one per [data-playground]; the files and the import map come in a json script beside it
-
 import { PlaygroundPreview, PlaygroundProject } from '@semantic-ui/playground';
 import { createEditor } from '@semantic-ui/playground/editor';
 
 import { ui } from './strings.js';
 
-// the editor in the site's code colors: the same tokens the code blocks and shiki use, so a live
-// example reads like every other sample, in both themes
 const EDITOR_THEME = `
-  /* nested under .cm-editor, as next/docs' codemirror.css does: two classes deep, so it ties
-     codemirror's base theme and wins by coming later */
+  /* nest under .cm-editor so two-class specificity ties CodeMirror's base theme and wins by source order */
   .cm-editor {
     height: 100%; background: var(--code-bg); color: var(--text);
     &.cm-focused { outline: none; }
-    /* the padding sits on the scroller so the gutter and the code start on the same line */
+    /* pad .cm-scroller so gutter numbers and code lines stay aligned */
     .cm-scroller {
       padding: 12px 0;
       font-family: var(--font-mono); font-size: var(--code-fs); line-height: var(--code-lh);
@@ -40,9 +33,7 @@ const EDITOR_THEME = `
     .tok-typeName, .tok-className, .tok-tagName { color: var(--c-green); }
     .tok-punctuation, .tok-operator, .tok-bracket { color: var(--text-2); }
 
-    /* find and replace (ctrl/cmd+f): the panel on the code header's surface, fields in the code's
-       face, quiet buttons, the find and replace rows kept on lines of their own. scoped as
-       codemirror scopes its own search styles, so these win by coming later */
+    /* match .cm-panel.cm-search specificity so search panel overrides win by source order */
     .cm-panels { background: var(--code-head); color: var(--text-2); }
     .cm-panels-top { border-bottom: 1px solid var(--line); }
     .cm-panel.cm-search {
@@ -83,8 +74,7 @@ export function mountPlayground(root) {
     status.classList.toggle('is-error', error);
   };
 
-  // the frame is made here, not parsed with the page: the browser restores a parsed frame's last
-  // url on reload and back/forward, which would be a dead session's path
+  // create the iframe in JS since browsers restore an HTML-parsed iframe's last URL across reload, pointing at a dead session
   const frame = document.createElement('iframe');
   frame.className = 'pg-frame';
   frame.title = ui('playground.preview');
@@ -101,22 +91,19 @@ export function mountPlayground(root) {
   project.on('buildError', (error) => say(ui('playground.buildError', { message: error.message }), true));
   project.on('buildDone', () => say(ui('playground.built', { ms: Math.round(performance.now() - started) })));
 
-  // the preview reloads in place after every build. the zone picked in the bar rides its url, where
-  // the example's hidden first import reads it (lib/examples.js)
+  // pass ?zone= via the preview URL for the hidden setup import from lib/examples.js
   const preview = new PlaygroundPreview({ project, frame, path: '/' });
   preview.on('error', ({ message }) => say(ui('playground.runtimeError', { message }), true));
   $('[data-pg-reload]').addEventListener('click', () => preview.reload());
   const zones = $('[data-pg-zone]');
   zones.addEventListener('change', () => preview.navigate(zones.value ? `/?zone=${encodeURIComponent(zones.value)}` : '/'));
 
-  // the static copy of the first file stands in only until the editor is here
   root.querySelector('[data-pg-static]')?.remove();
 
-  // the editor: one tab per file, edits rebuild the preview
   const tabs = $('[data-pg-tabs]');
   const editor = createEditor({
     parent: $('[data-pg-editor]'),
-    // hidden setup lines don't leave a gap in the numbering
+    // continuous numbering avoids a gap after hidden setup lines
     lineNumbers: root.dataset.lineNumbers === 'off' ? false : 'continuous',
     theme: EDITOR_THEME,
     onChange: (name, content) => {
@@ -139,7 +126,6 @@ export function mountPlayground(root) {
     const t = e.target.closest('[data-file]');
     if (t) { open(t.dataset.file); }
   });
-  // arrow keys move between files, as in any tablist
   tabs.addEventListener('keydown', (e) => {
     const all = [...tabs.querySelectorAll('[role=tab]')];
     const i = all.indexOf(document.activeElement);

@@ -1,6 +1,4 @@
 ---
-// bespoke section shown on localized homepages: names the date and grammar traps native speakers of
-// that language look for first, prints the library's own output at build, and links to the live example
 import * as library from 'native-dates';
 
 import { HOME_LOCALES } from '../../data/home-locales.js';
@@ -22,6 +20,7 @@ if (config) {
     }));
   }
   finally {
+    // reset global locale config so subsequent pages rendered in the same build stay on the default locale
     library.configure({ locale: null });
   }
 }

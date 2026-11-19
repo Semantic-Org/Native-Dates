@@ -1,11 +1,10 @@
-// every docs page as markdown at its own path plus .md, in every language
-// (/guides/routes-and-params.md, /ja/guides/routes-and-params.md): the translation where there is
-// one, otherwise the english
 import { getCollection } from 'astro:content';
 
 import { ENABLED, inLanguage, localePath } from '../lib/i18n.js';
 import { markdownFor } from '../lib/page-markdown.js';
 
+// serves each docs page as raw markdown (/guides/types-of-time.md, /ja/guides/types-of-time.md),
+// falling back to English when a locale has no translation
 export async function getStaticPaths() {
   const entries = await getCollection('docs');
   return Promise.all(ENABLED.flatMap(({ code }) => entries.map(async (entry) => ({
