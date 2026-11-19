@@ -27,10 +27,14 @@ export const cached = (make) => {
   };
 };
 
-// spread order differs on purpose: DateTime lets options.timeZone override its zone, whereas
-// plain dates and times pin timeZone: 'UTC' last to match epochOf()'s UTC timestamps
+// DateTime lets a timeZone set in the options override its zone, and a key left undefined is no override.
+// plain dates and times pin timeZone: 'UTC' to match epochOf()'s UTC timestamps
 export const zonedDateTimeFormat = cached((locale, options, zone) =>
-  guard(() => new Intl.DateTimeFormat(locale, { timeZone: zone, ...options }), 'unknownFormat', JSON.stringify(options))
+  guard(
+    () => new Intl.DateTimeFormat(locale, { ...options, timeZone: options.timeZone ?? zone }),
+    'unknownFormat',
+    JSON.stringify(options),
+  )
 );
 export const plainDateTimeFormat = cached((locale, options) =>
   guard(
