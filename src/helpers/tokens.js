@@ -164,8 +164,18 @@ const tokenPattern = new RegExp(
   'g',
 );
 
+// refuse a style the table lacks, such as the locale in monthNames('de'), rather than answering with the default
+const tokenOf = (widths, style) =>
+  widths[style] ?? refuse('unknownFormat', String(style), {
+    explanation: isDevelopment
+      ? `expected a style in [${
+        Object.keys(widths).join(', ')
+      }] as the first argument. A locale is the last argument, as in \`monthNames('long', 'de')\` or \`weekdayNames('short', undefined, 'de')\``
+      : 0,
+  });
+
 export const weekdayNames = (style = 'short', firstDay, locale) => {
-  const table = names(pickLocale(locale))[weekdayWidths[style] ?? 'ddd'];
+  const table = names(pickLocale(locale))[tokenOf(weekdayWidths, style)];
   const first = weekStart(firstDay, locale) - 1;
   return [...table.slice(first), ...table.slice(0, first)];
 };
@@ -173,7 +183,7 @@ export const weekdayNames = (style = 'short', firstDay, locale) => {
 export const monthNames = (
   style = 'long',
   locale,
-) => [...names(pickLocale(locale))[style === 'short' ? 'MMM' : 'MMMM']];
+) => [...names(pickLocale(locale))[tokenOf({ short: 'MMM', long: 'MMMM' }, style)]];
 
 export const formatTokens = (subject, kind, named, locale) => {
   const pattern = namedFormat(named);
