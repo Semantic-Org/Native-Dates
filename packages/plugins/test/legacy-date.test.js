@@ -151,6 +151,28 @@ describe('legacy-date toLocaleString(), toLocaleDateString() and toLocaleTimeStr
     expect(newYearInTokyo.toLocaleDateString('en-US', { dateStyle: 'short' })).toBe('1/1/27');
   });
 
+  it('toLocaleString() prints only the parts its options name, in the zone of the datetime', () => {
+    const day = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    expect(newYearInTokyo.toLocaleString('en-US', day)).toBe('Friday, January 1, 2027');
+  });
+
+  it('toLocaleString() takes a timeZone option over the zone of the datetime', () => {
+    expect(newYearInTokyo.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' })).toBe('Thursday');
+  });
+
+  it('toLocaleString() and toLocaleTimeString() format in the locale the datetime carries', () => {
+    const german = newYearInTokyo.locale('de-DE');
+    expect(german.toLocaleString()).toBe('1.1.2027, 05:05:06');
+    expect(german.toLocaleTimeString()).toBe('05:05:06');
+  });
+
+  // toLocaleDateString(undefined, options) is how code written for a Date reaches the options
+  it('formats in the locale the datetime carries when the locale argument is undefined', () => {
+    const german = newYearInTokyo.locale('de-DE');
+    expect(german.toLocaleDateString(undefined, { month: 'long' })).toBe('Januar');
+    expect(german.toLocaleString(undefined, { weekday: 'long' })).toBe('Freitag');
+  });
+
   it.todo('keeps the zone of the datetime when the options carry timeZone: undefined');
   it.todo('formats in the configured locale when the datetime carries none');
 });
