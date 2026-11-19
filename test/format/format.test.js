@@ -418,6 +418,13 @@ describe('format() with an Intl options object', () => {
     expect(afternoon.format({ hour12: false }, 'en-US')).toBe('17:30');
   });
 
+  it('keeps the default fields on Time, CalendarDate, MonthDay, and YearMonth when an option is undefined', () => {
+    expect(afternoon.format({ hour12: false, timeStyle: undefined }, 'en-US')).toBe('17:30');
+    expect(monday.format({ dateStyle: undefined }, 'en-US')).toBe('Nov 16, 2026');
+    expect(birthday.format({ month: undefined }, 'en-US')).toBe('Oct 17');
+    expect(november.format({ year: undefined, era: 'short' }, 'en-US')).toBe('Nov 2026 AD');
+  });
+
   it('overrides the DateTime timezone for a single call when options include timeZone', () => {
     const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
     const clock = { hour: 'numeric', minute: '2-digit' };
