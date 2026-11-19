@@ -1,4 +1,5 @@
 import {
+  compare,
   configure,
   date,
   DateRange,
@@ -70,6 +71,13 @@ describe('dateRange()', () => {
     expect(lateMorning.toString()).toBe('2026-09-01/2026-09-03');
   });
 
+  it('reads both days from one string and carries the locale given beside it', () => {
+    const stay = dateRange('2026-09-01/2026-09-07', { locale: 'de-DE' });
+    expect(stay.toString()).toBe('2026-09-01/2026-09-07');
+    expect(stay.locale()).toBe('de-DE');
+    expect(stay.end.locale()).toBe('de-DE');
+  });
+
   it('throws invalidRange naming both days when the end is earlier than the start', () => {
     expect(() => dateRange('2026-09-07', '2026-09-01')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'invalidRange', at: '2026-09-07 to 2026-09-01' }),
@@ -105,6 +113,12 @@ describe('dateRange()', () => {
       expect.objectContaining({ name: 'TypeError', code: 'conflictingRanges', at: 'timeRange as dateRange' }),
     );
   });
+
+  // an empty object after one string is read as the end, so the string itself is refused as invalidDate
+  it.todo('reads one interval string beside an empty options object, as it does with no options');
+
+  // a range passed with { locale } comes back as it was
+  it.todo('gives a range passed with { locale } that locale, as date() gives it to a date');
 });
 
 describe('datetimeRange()', () => {
@@ -228,6 +242,12 @@ describe('timeRange()', () => {
     expect(timeRange('22:00', hours(8)).toString()).toBe('22:00:00/06:00:00');
   });
 
+  // the same number is a length under a plural key and a clock time under a singular one
+  it("reads { hours: 8 } as a length of 8 hours and { hour: 8 } as 8 o'clock", () => {
+    expect(timeRange('22:00', { hours: 8 }).toString()).toBe('22:00:00/06:00:00');
+    expect(timeRange('22:00', { hour: 8 }).toString()).toBe('22:00:00/08:00:00');
+  });
+
   it('reads both times from one string joined by a slash, a spaced hyphen, a spaced en dash or the word to', () => {
     expect(timeRange('09:00/17:00').toString()).toBe('09:00:00/17:00:00');
     expect(timeRange('9am - 5pm').toString()).toBe('09:00:00/17:00:00');
@@ -252,6 +272,9 @@ describe('timeRange()', () => {
   });
 
   it.todo('never wraps a length of 24 hours or more into an empty or shorter range');
+
+  // '9am-5pm' is refused as invalidTime, and '09:00-17:00' as missingTime at undefined, its end read as a UTC offset
+  it.todo("reads both times from one string joined by a hyphen with no spaces, such as '09:00-17:00' or '9am-5pm'");
 });
 
 describe('new DateRange(), new DateTimeRange() and new TimeRange()', () => {
@@ -785,6 +808,9 @@ describe('range.intersection()', () => {
   });
 
   it.todo('gives the shared time of two datetime ranges in the zone of the range it was called on');
+
+  // overlaps() is true for a time range from 12:00 to 12:00 inside 09:00 to 17:00, and intersection() gives null
+  it.todo('agrees with overlaps() about an empty time range that lies inside another');
 });
 
 describe('range.equals()', () => {
@@ -812,6 +838,14 @@ describe('range.equals()', () => {
     expect(timeRange('9am', '5pm').equals('09:00/17:00')).toBe(true);
     expect(timeRange('22:00', '06:00').equals(timeRange('22:00', '8h'))).toBe(true);
     expect(timeRange('22:00', '06:00').equals(timeRange('06:00', '22:00'))).toBe(false);
+  });
+});
+
+describe('compare() on ranges', () => {
+  it('sorts a range that starts first ahead of one that starts later and ends sooner', () => {
+    const month = dateRange('2026-11-01', '2026-11-30');
+    const weekend = dateRange('2026-11-07', '2026-11-08');
+    expect([weekend, month].sort(compare).map(String)).toEqual(['2026-11-01/2026-11-30', '2026-11-07/2026-11-08']);
   });
 });
 
@@ -998,6 +1032,15 @@ describe('CalendarDate.split(), splitBy() and points()', () => {
     expect(day.points('6h', 'Asia/Tokyo')[0].toString()).toBe('2026-11-15T15:00:00.000Z');
   });
 
+  it('takes a count written as a string, as a form field hands it over, before the unit and the zone', () => {
+    const day = date('2026-11-16');
+    expect(day.split('12', 'hours', 'UTC').map(String)).toEqual([
+      '2026-11-16T00:00:00.000Z/2026-11-16T12:00:00.000Z',
+      '2026-11-16T12:00:00.000Z/2026-11-17T00:00:00.000Z',
+    ]);
+    expect(day.points('6', 'hours', 'UTC')).toHaveLength(4);
+  });
+
   it('gives the same slices from splitBy()', () => {
     const day = date('2026-11-16');
     expect(day.splitBy(12, 'hours', 'UTC').map(String)).toEqual(day.split(12, 'hours', 'UTC').map(String));
@@ -1104,6 +1147,12 @@ describe('range.in()', () => {
              Output
 *******************************/
 
+describe('range.format() with a token pattern', () => {
+  it('writes both ends in the locale passed to the call', () => {
+    expect(dateRange('2026-09-01', '2026-09-07').format('D MMMM', 'fr')).toBe('1 septembre – 7 septembre');
+  });
+});
+
 describe('range.toString() and toJSON()', () => {
   const stay = dateRange('2026-09-01', '2026-09-07');
   const block = datetimeRange('2026-09-01T09:00', '2026-09-01T10:30', 'Asia/Tokyo');
@@ -1126,6 +1175,11 @@ describe('range.toString() and toJSON()', () => {
     expect(stay.toJSON()).toBe('2026-09-01/2026-09-07');
     expect(String(stay)).toBe('2026-09-01/2026-09-07');
     expect(`${night}`).toBe('22:00:00/06:00:00');
+  });
+
+  it('joins onto a string with +', () => {
+    expect('Booked ' + stay).toBe('Booked 2026-09-01/2026-09-07');
+    expect('Open ' + night).toBe('Open 22:00:00/06:00:00');
   });
 
   it('serializes as that string inside JSON.stringify()', () => {
