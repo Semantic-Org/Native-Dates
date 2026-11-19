@@ -86,6 +86,45 @@ describe('compare()', () => {
     expect(compare('9am', '5:30pm')).toBe(-1);
   });
 
+  // a createdAt column or an API field arrives as text, often several on one day
+  it('reads two timestamp strings as moments, so two on one day are ordered by their time', () => {
+    expect(compare('2026-11-16T09:00:00Z', '2026-11-16T17:30:00Z')).toBe(-1);
+    expect(compare('2026-11-16 17:30:00', '2026-11-16 09:00:00')).toBe(1);
+    const written = ['2026-11-16T17:30:00Z', '2026-11-15T23:00:00Z', '2026-11-16T09:00:00Z'];
+    expect(written.sort(compare)).toEqual(['2026-11-15T23:00:00Z', '2026-11-16T09:00:00Z', '2026-11-16T17:30:00Z']);
+  });
+
+  it('orders timestamp strings by their instant, whatever offset each was written with', () => {
+    expect(compare('2026-11-16T09:00:00+01:00', '2026-11-16T09:00:00-05:00')).toBe(-1);
+    expect(compare('2026-11-16T09:00:00+01:00', '2026-11-16T08:00:00Z')).toBe(0);
+  });
+
+  it('ignores spaces and a line break around a raw string, as a spreadsheet cell or a typed field carries them', () => {
+    expect(compare(' 9:00', '10:00\n')).toBe(-1);
+    expect(compare(' 2026-05-11 ', '2026-05-10')).toBe(1);
+    expect(earliest(' 2026-05-11 ', '2026-05-10').toString()).toBe('2026-05-10');
+  });
+
+  it.each([
+    ['Temporal.PlainDate', Temporal.PlainDate.from('2026-05-10'), Temporal.PlainDate.from('2026-08-20')],
+    ['Temporal.PlainTime', Temporal.PlainTime.from('09:00'), Temporal.PlainTime.from('17:30')],
+    [
+      'Temporal.PlainDateTime',
+      Temporal.PlainDateTime.from('2026-11-16T09:00'),
+      Temporal.PlainDateTime.from('2026-11-16T17:30'),
+    ],
+    [
+      'Temporal.ZonedDateTime',
+      Temporal.ZonedDateTime.from('2026-11-16T09:00[America/New_York]'),
+      Temporal.ZonedDateTime.from('2026-11-16T08:00[America/Los_Angeles]'),
+    ],
+    ['Temporal.Instant', Temporal.Instant.from('2026-11-16T09:00Z'), Temporal.Instant.from('2026-11-16T17:30Z')],
+  ])('reads two %s values as the kind each one holds', (name, earlier, later) => {
+    expect(compare(earlier, later)).toBe(-1);
+    expect(compare(later, earlier)).toBe(1);
+    expect(compare(earlier, earlier)).toBe(0);
+  });
+
   it('reads a Date or an epoch millisecond number standing first as a moment', () => {
     expect(compare(new Date(1794840000000), datetime('2026-11-16T18:00Z'))).toBe(-1);
     expect(compare(1794840000000, datetime('2026-11-16T18:00Z'))).toBe(-1);
@@ -202,6 +241,14 @@ describe('earliest() and latest()', () => {
     expect(isDateTime(first)).toBe(true);
     expect(first.epochMilliseconds).toBe(1794840000000);
     expect(latest(new Date(1794840000000), new Date(1794850200000)).epochMilliseconds).toBe(1794850200000);
+  });
+
+  // the last time any row was updated, read straight off a list of updatedAt strings
+  it('read timestamp strings as moments and return the DateTime of the first or the last', () => {
+    const updated = ['2026-11-16T09:00:00Z', '2026-11-16T17:30:00Z', '2026-11-15T23:00:00Z'];
+    expect(isDateTime(latest(updated))).toBe(true);
+    expect(latest(updated).toString()).toBe('2026-11-16T17:30:00.000Z');
+    expect(earliest(...updated).toString()).toBe('2026-11-15T23:00:00.000Z');
   });
 
   it('read raw values after the first as the kind of the first', () => {
