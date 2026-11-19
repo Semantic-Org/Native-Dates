@@ -258,9 +258,8 @@ describe('invalid patterns and unsupported tokens', () => {
     );
   });
 
-  // a run was once cut into the tokens it begins with, so SSSSSS printed the milliseconds twice
   it.each(['HH:mm:ss.SSSSSS', 'YYYYYY', 'MMMMM', 'SSSS', 'hhh', 'ZZZ', 'DDDo'])(
-    'throws unknownFormat for %j, a run of one token letter longer than any token',
+    'throws unknownFormat for overlong repeated token pattern %j',
     (pattern) => {
       expect(() => standup.format(pattern)).toThrowError(
         expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: pattern }),

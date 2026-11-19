@@ -48,7 +48,7 @@ describe('date() with { loose: true }', () => {
     expect(date(text, { loose: true })?.toString()).toBe('2026-09-06');
   });
 
-  // the trailing -26 or -2026 is the year, which a trailing UTC offset would also look like
+  // trailing -26 or -2026 is the year rather than a UTC offset
   it.each(['6-Sep-26', '06-SEP-26', '06-Sep-2026', 'Sep-6-26'])(
     'parses hyphenated day, month name, and year %j as 2026-09-06 in any target zone',
     (text) => {
@@ -145,8 +145,8 @@ describe('datetime() with { loose: true }', () => {
     expect(parsed?.toString()).toBe('2026-09-06T14:30:15.250Z');
   });
 
-  // loose text is untrusted, and a zone pattern that searched the text around each zone took seconds here
-  it('reads 200 KB of repeated zone abbreviations in under 500 ms', () => {
+  // guard against superlinear backtracking on untrusted inputs
+  it('parses 200 KB of repeated zone abbreviations in under 500 ms', () => {
     const stuffed = `Sep 6 2026 14:30${' EST'.repeat(50_000)}`;
     const started = performance.now();
     datetime(stuffed, { loose: true, zone: 'UTC' });

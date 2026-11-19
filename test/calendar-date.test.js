@@ -346,7 +346,6 @@ describe('today(), tomorrow(), and yesterday()', () => {
     });
   });
 
-  // the mocked year is far from the real one, so a read of the system clock cannot pass
   it('reads the same clock as now() when fake timers mock Date without Temporal.Now', () => {
     vi.useFakeTimers({ toFake: ['Date'], now: new Date('2031-03-04T12:00:00Z') });
     expect(now('UTC').date.toString()).toBe('2031-03-04');
@@ -539,7 +538,6 @@ describe('CalendarDate.set()', () => {
     expect(() => day.set('month', 13)).toThrowError(expect.objectContaining({ code: 'cannotSet' }));
   });
 
-  // a birthday on Feb 29 moved to this year, or a month picker used on the 31st
   it('constrains the day to month-end when set() updates month or year', () => {
     expect(date('2024-02-29').set('year', 2025).toString()).toBe('2025-02-28');
     expect(date('2024-02-29').set('year', 2028).toString()).toBe('2028-02-29');

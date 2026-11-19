@@ -118,7 +118,7 @@ describe('duration()', () => {
     expect(duration('1500').toFields()).toEqual({ milliseconds: 1500 });
   });
 
-  // two performance.now() readings three hours into a session differ by 113.46000000089407
+  // e.g. performance.now() delta 10800113.46 - 10800000 = 113.46000000089407
   it('rounds a millisecond count with sub-nanosecond precision to the nearest nanosecond', () => {
     expect(duration(1000 / 3).toFields()).toEqual({ milliseconds: 333, microseconds: 333, nanoseconds: 333 });
     expect(duration(1000 / 60).toFields()).toEqual({ milliseconds: 16, microseconds: 666, nanoseconds: 667 });

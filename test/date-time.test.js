@@ -598,7 +598,6 @@ describe('DateTime.set()', () => {
     expect(secondHalfPastOne.set('minute', 45).toString()).toBe('2026-11-01T06:45:00.000Z');
   });
 
-  // plus(1, 'month') from Jan 31 gives Feb 28, and so does Temporal's own with({ month: 2 })
   it('constrains the day to month-end when set() updates month or year on day 31', () => {
     const lastOfJanuary = datetime('2026-01-31T09:00', 'UTC');
     expect(lastOfJanuary.set('month', 2).toString()).toBe('2026-02-28T09:00:00.000Z');
@@ -780,8 +779,8 @@ describe('DateTime.startOf() and endOf()', () => {
     expect(friday.endOf('week', 'friday').toString()).toBe('2026-04-30T20:59:59.999Z');
   });
 
-  // on the day before, the skipped midnight is the day's end, which lands on 01:00
-  it('ends the day before a skipped midnight at the instant the next day starts', () => {
+  // Africa/Cairo skips 00:00 to 01:00 on 2026-04-24, so Apr 23 ends one millisecond before 01:00
+  it('ends the day before a skipped midnight one millisecond before the next day starts', () => {
     const thursday = datetime('2026-04-23T12:00', 'Africa/Cairo');
     expect(thursday.endOf('day').toString()).toBe('2026-04-23T21:59:59.999Z');
     expect(thursday.endOf('day')).toMatchObject({ day: 23, hour: 23, minute: 59 });

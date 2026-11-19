@@ -33,7 +33,7 @@ const rolledForward = (text, read, wallClock) => {
 };
 
 // Date.parse interprets zoned strings as instants and unzoned strings in the host timezone (UTC for date-only ISO).
-// stripping zoneMarker parses the written wall clock in the host timezone so local inputs don't shift when placed into `zone`
+// Stripping zoneMarker parses the written wall clock in the host timezone so local inputs don't shift when placed into `zone`
 export const looseZoned = (text, zone, dayFirst) => {
   const trimmed = engineOrder(text.trim(), readsDayFirst(dayFirst));
   const unzoned = trimmed.replace(zoneMarker, '$1$2');

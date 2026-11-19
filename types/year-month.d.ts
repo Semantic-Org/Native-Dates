@@ -517,12 +517,12 @@ export class YearMonth {
  */
 export function yearMonth(input: YearMonthInput, options?: Zone | (ReadOptions & { loose?: false; })): YearMonth;
 /**
- * Reads a year-month in loose mode when `@native-dates/plugins/loose` is imported, matching
+ * Parses a year-month in loose mode when `@native-dates/plugins/loose` is imported, matching
  * English or localized month names such as `'février 2026'` and returning `null` when unreadable.
  *
  * @param input - Untrusted string or year-month input
  * @param options - Options with `loose: true` and optional `locale` and `zone`
- * @returns A `YearMonth`, or `null` when `input` cannot be read
+ * @returns A `YearMonth`, or `null` when `input` cannot be parsed
  *
  * @see {@link https://nativedates.dev/api/year-month-fn/#yearmonth yearMonth}
  */
@@ -565,12 +565,12 @@ export function yearMonth(year: number | string, month: number | string): YearMo
  */
 export function monthYear(input: YearMonthInput, options?: Zone | (ReadOptions & { loose?: false; })): YearMonth;
 /**
- * Reads a month-first year-month in loose mode (with `@native-dates/plugins/loose` imported),
- * returning `null` when `input` cannot be read.
+ * Parses a month-first year-month in loose mode (with `@native-dates/plugins/loose` imported),
+ * returning `null` when `input` cannot be parsed.
  *
  * @param input - Untrusted string or year-month input
  * @param options - Options with `loose: true` and optional `locale` and `zone`
- * @returns A `YearMonth`, or `null` when `input` cannot be read
+ * @returns A `YearMonth`, or `null` when `input` cannot be parsed
  *
  * @see {@link https://nativedates.dev/api/year-month-fn/#monthyear monthYear}
  */

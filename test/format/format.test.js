@@ -435,8 +435,8 @@ describe('format() with an Intl options object', () => {
     expect(ascii(standup.format(clock, 'en-US'))).toBe('9:30 AM');
   });
 
-  // two zones so one always differs from the host, and the formatter cache keys both option objects alike
-  it('keeps the DateTime timezone when options.timeZone is undefined, in that call and in later calls', () => {
+  // test two timezones so at least one differs from the host, and check that the formatter cache does not conflate them
+  it('preserves the DateTime timezone when options.timeZone is undefined across cached calls', () => {
     const clock = { hour: 'numeric', minute: '2-digit', second: '2-digit' };
     for (const zone of ['Asia/Tokyo', 'America/Los_Angeles']) {
       const standup = datetime('2026-11-16T09:30', zone);

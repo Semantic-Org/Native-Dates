@@ -75,9 +75,8 @@ class Range {
       && Object.keys(value).every((key) => ['loose', 'zone', 'dayFirst', 'locale'].includes(key));
   }
 
-  // mask bracketed '[America/New_York]' zones before splitting on '/', and check spaced ' - ' / ' to '
-  // first so slash-delimited dates like '2026/11/06 - 2026/11/10' stay intact. a time has no hyphen
-  // of its own, so '9am-5pm' splits on one where nothing else separates it
+  // mask bracketed '[America/New_York]' zones before splitting on '/', checking spaced ' - ' / ' to ' first
+  // so '2026/11/06 - 2026/11/10' stays intact and falling back to '-' / '–' only for plain time ranges
   static #splitInterval(text, kind) {
     const blanked = text.replace(/\[[^\]]*\]/g, (zone) => ' '.repeat(zone.length));
     const separator = blanked.match(/\s(?:-|–|to)\s/) ?? blanked.match('/')
