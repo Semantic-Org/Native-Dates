@@ -664,8 +664,15 @@ describe('Time.on()', () => {
     expect(precise.on('2026-11-16', 'UTC').time.equals(precise)).toBe(true);
   });
 
-  // at 22:00 UTC on Nov 16 it is already Nov 17 in Asia/Tokyo
-  it.todo('resolves the calendar day of a Date or ISO instant in the target timezone in Time.prototype.on()');
+  // 2026-11-17T02:00:00Z is Nov 16 in Los Angeles and Nov 17 in Tokyo, so one differs from any host timezone
+  it('resolves the calendar day of a Date, ISO instant, or Temporal.Instant in the target timezone', () => {
+    const instant = new Date('2026-11-17T02:00:00Z');
+    expect(time('9:30am').on(instant, 'America/Los_Angeles').toString()).toBe('2026-11-16T17:30:00.000Z');
+    expect(time('9:30am').on(instant, 'Asia/Tokyo').toString()).toBe('2026-11-17T00:30:00.000Z');
+    expect(time('9:30am').on('2026-11-17T02:00:00Z', 'Asia/Tokyo').toString()).toBe('2026-11-17T00:30:00.000Z');
+    expect(time('9:30am').on(Temporal.Instant.from('2026-11-17T02:00:00Z'), 'Asia/Tokyo').toString())
+      .toBe('2026-11-17T00:30:00.000Z');
+  });
 
   it('throws invalidDate for an out-of-range calendar date', () => {
     expect(() => time('9:30am').on('2026-02-30', 'UTC')).toThrow(

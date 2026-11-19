@@ -64,18 +64,15 @@ export const zoneId = (id) => {
   return found;
 };
 
-export const configure = (options = {}) => {
-  const { zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats } = options;
-  // a key that is not a setting is the author's mistake, so it is refused in development and ignored in production
-  if (isDevelopment) {
-    each(options, (value, name) => {
-      if (!Object.hasOwn(settings, name)) {
-        refuse('unknownSetting', name, {
-          explanation: `expected a setting in [${Object.keys(settings).join(', ')}]`,
-        });
-      }
-    });
-  }
+export const configure = (options) => {
+  const { zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats } = options ??= {};
+  each(options, (value, name) => {
+    if (!Object.hasOwn(settings, name)) {
+      refuse('unknownSetting', name, {
+        explanation: isDevelopment ? `expected a setting in [${Object.keys(settings).join(', ')}]` : 0,
+      });
+    }
+  });
   if (zoneAliases !== undefined) {
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
@@ -169,7 +166,7 @@ export const checkedLocale = (tag) => {
         ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
         : 0,
     );
-    // a header that names no language, like '*' or 'es;q=0', reads as no locale at all
+    // headers with no accepted language (like '*' or `es;q=0`) resolve to undefined
     knownLocales.set(key, tags ? (tags.length > 1 ? Object.freeze(tags) : tags[0]) : tag);
   }
   return isString(tag) ? knownLocales.get(key) : tag;
@@ -178,7 +175,7 @@ export const checkedLocale = (tag) => {
 // checked before built-in presets so apps can redefine names like 'short'
 export const namedFormat = (spec) => (isString(spec) && settings.formats?.[spec]) || spec;
 
-// an override that names no language, like the header '*', leaves the configured locale standing
+// fall back to configured locale when an override header like '*' resolves to undefined
 export const locale = (override) =>
   override === undefined ? settings.locale : checkedLocale(override) ?? settings.locale;
 export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);

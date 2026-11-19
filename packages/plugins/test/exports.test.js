@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 describe('@native-dates/plugins exports', () => {
   // test files are ES modules, so require() runs in a second Node process started as CommonJS
-  it('attaches zones, loose, and legacy-date to the native-dates a CommonJS module loads with require()', () => {
+  it('attaches zones, loose, and legacy-date when loaded from CommonJS via require()', () => {
     const script = `
       require('@native-dates/plugins/zones');
       require('@native-dates/plugins/loose');

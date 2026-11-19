@@ -81,6 +81,7 @@ declare module 'native-dates' {
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime datetime}
    */
+  export function datetime(input: DateTimeInput, options: ReadOptions & { loose: false; }): DateTime;
   export function datetime(input: unknown, options: ReadOptions & { loose: boolean; }): DateTime | null;
 
   /**
@@ -102,6 +103,7 @@ declare module 'native-dates' {
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime date}
    */
+  export function date(input: CalendarDateInput, options: ReadOptions & { loose: false; }): CalendarDate;
   export function date(input: unknown, options: ReadOptions & { loose: boolean; }): CalendarDate | null;
 
   /**
@@ -123,6 +125,7 @@ declare module 'native-dates' {
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime time}
    */
+  export function time(input: TimeInput, options: ReadOptions & { loose: false; }): Time;
   export function time(input: unknown, options: ReadOptions & { loose: boolean; }): Time | null;
 
   /**
@@ -144,9 +147,18 @@ declare module 'native-dates' {
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime duration}
    */
+  export function duration(input: DurationInput, options: { loose: false; locale?: Locale; }): Duration;
   export function duration(input: unknown, options: { loose: boolean; locale?: Locale; }): Duration | null;
 
+  type Strict = ReadOptions & { loose: false; };
   type Loose = ReadOptions & { loose: boolean; };
+
+  export function dateRange(
+    start: CalendarDateInput,
+    end: CalendarDateInput | DurationInput,
+    options: Strict,
+  ): DateRange;
+  export function dateRange(interval: string, options: Strict): DateRange;
 
   /**
    * Parses a `DateRange` from endpoints in loose mode, returning `null` if either endpoint is unreadable
@@ -196,6 +208,12 @@ declare module 'native-dates' {
   export function datetimeRange(
     start: DateTimeInput,
     end: DateTimeInput | DurationInput,
+    options: Strict,
+  ): DateTimeRange;
+  export function datetimeRange(interval: string, options: Strict): DateTimeRange;
+  export function datetimeRange(
+    start: DateTimeInput,
+    end: DateTimeInput | DurationInput,
     options: Loose,
   ): DateTimeRange | null;
   /**
@@ -219,6 +237,8 @@ declare module 'native-dates' {
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime timeRange}
    */
+  export function timeRange(start: TimeInput, end: TimeInput | DurationInput, options: Strict): TimeRange;
+  export function timeRange(interval: string, options: Strict): TimeRange;
   export function timeRange(start: TimeInput, end: TimeInput | DurationInput, options: Loose): TimeRange | null;
   /**
    * Parses a `TimeRange` from an interval string in loose mode, returning `null` when unreadable.

@@ -271,7 +271,7 @@ export class YearMonth {
              Measure
   *******************************/
 
-  // a date measures in days, so the span between two first days is carried back up into years and months
+  // CalendarDate.until() counts in days, so rebalance the span between month starts up to years
   until(other, name) {
     const rival = other instanceof YearMonth ? other : new YearMonth(other);
     const span = this.start.until(rival.start).balance('year');

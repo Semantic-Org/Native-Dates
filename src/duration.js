@@ -308,7 +308,7 @@ export class Duration {
     const clock = fieldsOf(temporalDurationOf(clockFields(written)).round({ largestUnit: 'hour' }));
     const fields = { ...written, ...Object.fromEntries(fieldNames.slice(4).map((field) => [field, clock[field]])) };
     const large = fieldNames.slice(0, subsecond).some((field) => fields[field]);
-    // hoursDisplay 'auto' prints nothing for the zero hours, which leaves a zero length in the digital style as '00:00'
+    // hoursDisplay: 'auto' omits zero hours so digital zero formats as '00:00'
     const shown = { hours: 0 };
     each(fieldNames, (field, index) => {
       if (fields[field] && (!large || index < subsecond)) {
