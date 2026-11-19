@@ -289,7 +289,7 @@ export class DateTime {
   /**
    * Returns a new `DateTime` with one or more local calendar or clock fields replaced.
    * Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into the next month.
-   * A day left unchanged lands on the last day of its new month or year, so January 31 set to February is February 28.
+   * Updating `month` or `year` without `day` clamps an overflowing day to the end of the target month.
    *
    * @param fields - Calendar or clock fields to replace in the current time zone
    * @returns A new `DateTime` in the same time zone with updated fields
@@ -716,7 +716,7 @@ export class DateTime {
   /**
    * Measures the span from this moment to `other` as a `Duration` counted in days and clock units,
    * returning a negative duration when `other` is earlier. Remembers this starting moment
-   * so `balance('year')` and `total('months')` can read the span in calendar months and years.
+   * so `balance('year')` and `total('months')` can compute calendar months and years.
    *
    * @param other - Target moment to measure toward
    * @returns A signed `Duration` from this moment to `other`

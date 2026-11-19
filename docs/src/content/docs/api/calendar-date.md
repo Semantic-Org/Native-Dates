@@ -93,7 +93,7 @@ d.set(fields): CalendarDate
 d.set(unit, value): CalendarDate
 ```
 
-Returns a new `CalendarDate` with one or more calendar fields replaced. Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into the next month.
+Returns a new `CalendarDate` with one or more calendar fields replaced. Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into the next month. Updating `month` or `year` without `day` clamps an overflowing day to the end of the target month.
 
 **Parameters**
 

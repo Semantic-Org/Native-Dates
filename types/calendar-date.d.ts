@@ -170,7 +170,7 @@ export class CalendarDate {
   /**
    * Returns a new `CalendarDate` with one or more calendar fields replaced.
    * Out-of-range dates such as February 30 throw a `RangeError` instead of rolling into March.
-   * A day left unchanged lands on the last day of its new month or year, so January 31 set to February is February 28.
+   * Updating `month` or `year` without `day` clamps an overflowing day to the end of the target month.
    *
    * @param fields - Object with `year`, `month`, or `day` values to replace
    * @returns A new `CalendarDate` with updated calendar fields
@@ -578,7 +578,7 @@ export class CalendarDate {
   /**
    * Measures the calendar span from this date to `other` as a `Duration` counted in days,
    * returning a negative duration when `other` is earlier. Remembers this starting date so
-   * `balance('year')` and `total('months')` can read the span in calendar months and years.
+   * `balance('year')` and `total('months')` can compute calendar months and years.
    *
    * @param other - Target date to measure toward
    * @returns A signed `Duration` from this date to `other`

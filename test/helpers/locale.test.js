@@ -165,7 +165,7 @@ describe('locale() tag and Accept-Language normalization', () => {
     expect(day.format('MMMM', '*')).toBe('5月');
   });
 
-  it.each(['es;q=0', ',', '*;q=0.5'])('reads header %j, which names no language, as no locale', (header) => {
+  it.each(['es;q=0', ',', '*;q=0.5'])('treats header %j with no accepted language as undefined', (header) => {
     configure({ locale: 'ja' });
     expect(day.locale(header).locale()).toBeUndefined();
     expect(date('2026-05-15', { locale: header }).format('MMMM')).toBe('5月');

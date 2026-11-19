@@ -405,12 +405,12 @@ export class MonthDay {
  */
 export function monthDay(input: MonthDayInput, options?: Zone | (MonthDayOptions & { loose?: false; })): MonthDay;
 /**
- * Reads a month-day in loose mode when `@native-dates/plugins/loose` is imported, matching
+ * Parses a month-day in loose mode when `@native-dates/plugins/loose` is imported, matching
  * English or localized month names such as `'17 février'` and returning `null` when unreadable.
  *
  * @param input - Untrusted string or month-day input
  * @param options - Options with `loose: true` and optional `dayFirst`, `locale`, and `zone`
- * @returns A `MonthDay`, or `null` when `input` cannot be read
+ * @returns A `MonthDay`, or `null` when `input` cannot be parsed
  *
  * @see {@link https://nativedates.dev/api/month-day-fn/#monthday monthDay}
  */
@@ -433,7 +433,7 @@ export function monthDay(month: number | string, day: number | string): MonthDay
 
 /**
  * Reads day-first strings such as `'17/10'` into a `MonthDay` regardless of global settings.
- * Two-digit ISO strings across a dash (`'10-17'`) still read month-first so JSON output round-trips cleanly.
+ * Two-digit ISO strings with a hyphen (`'10-17'`) still read month-first so JSON output round-trips cleanly.
  *
  * @param input - Day-first string, fields object, `MonthDay`, or date/timestamp value
  * @param options - Time zone (for timestamps) or `MonthDayOptions`
@@ -452,12 +452,12 @@ export function monthDay(month: number | string, day: number | string): MonthDay
  */
 export function dayMonth(input: MonthDayInput, options?: Zone | (MonthDayOptions & { loose?: false; })): MonthDay;
 /**
- * Reads a day-first month-day in loose mode (with `@native-dates/plugins/loose` imported),
- * returning `null` when `input` cannot be read.
+ * Parses a day-first month-day in loose mode (with `@native-dates/plugins/loose` imported),
+ * returning `null` when `input` cannot be parsed.
  *
  * @param input - Untrusted string or month-day input
  * @param options - Options with `loose: true` and optional `locale` and `zone`
- * @returns A `MonthDay`, or `null` when `input` cannot be read
+ * @returns A `MonthDay`, or `null` when `input` cannot be parsed
  *
  * @see {@link https://nativedates.dev/api/month-day-fn/#daymonth dayMonth}
  */

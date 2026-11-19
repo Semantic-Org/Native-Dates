@@ -145,8 +145,7 @@ export const withParts = (temporal, changes) => {
   if (!wholeNumbers(Object.values(changes))) {
     fail(isDevelopment ? 'each value passed to `set()` must be a whole number' : '');
   }
-  // every value passed is held to its range, checked on a day each month has. a day left as it was
-  // then lands on the last one its new month or year has, as plus() does
+  // validate passed fields against day 1 so explicit out-of-range values reject while an unchanged day clamps to month-end
   temporal.with({ day: 1, ...changes }, { overflow: 'reject' });
   return temporal.with(changes);
 };

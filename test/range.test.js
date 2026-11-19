@@ -265,7 +265,6 @@ describe('timeRange()', () => {
     );
   });
 
-  // a time has no hyphen of its own, so '-17:00' is the end of the range and not a UTC offset
   it("parses unspaced hyphenated time intervals such as '09:00-17:00' and '9am-5pm' in timeRange()", () => {
     expect(timeRange('09:00-17:00').toString()).toBe('09:00:00/17:00:00');
     expect(timeRange('9am-5pm').toString()).toBe('09:00:00/17:00:00');
@@ -274,7 +273,6 @@ describe('timeRange()', () => {
     expect(timeRange('09:00', '17:00').overlaps('16:30-18:00')).toBe(true);
   });
 
-  // splitting on the first hyphen here would cut the start at '2026'
   it("splits on '/' before an unspaced hyphen so instants keep their dates and negative offsets", () => {
     const shift = timeRange('2026-09-01T09:00-05:00/2026-09-01T17:00-05:00', { zone: 'UTC' });
     expect(shift.toString()).toBe('14:00:00/22:00:00');
