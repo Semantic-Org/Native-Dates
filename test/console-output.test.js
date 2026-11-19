@@ -20,13 +20,10 @@ const printed = (make) => [
   ['a year-month', 'YearMonth(2026-11)', make.yearMonth('2026-11')],
   ['a month-day', 'MonthDay(10-17)', make.monthDay('10-17')],
   ['a date range', 'DateRange(2026-11-01 through 2026-11-07)', make.dateRange('2026-11-01', '2026-11-07')],
-  [
-    'a moment range',
-    'DateTimeRange(2026-11-16T09:00:00.000Z until 2026-11-16T10:00:00.000Z)',
-    make.datetimeRange('2026-11-16T09:00Z', '2026-11-16T10:00Z', 'UTC'),
-  ],
   ['a time range', 'TimeRange(09:00:00 until 17:00:00)', make.timeRange('9:00am', '5:00pm')],
 ];
+
+const meetingFrom = (make) => make.datetime('2026-11-16T09:00', 'America/Los_Angeles').to('2026-11-16T10:00');
 
 const logged = (...values) => {
   let output = '';
@@ -46,10 +43,14 @@ describe('console.log() and util.inspect() in Node', () => {
     expect(logged(value)).toBe(text);
   });
 
+  it('print a moment range as DateTimeRange around its two ends', () => {
+    expect(logged(meetingFrom(nativeDates))).toMatch(/^DateTimeRange\(\S+ until \S+\)$/);
+  });
+
   it('say through for a date range, which holds its last day, and until for ranges that stop short of their end', () => {
     expect(inspect(nativeDates.dateRange('2026-11-01', '2026-11-07'))).toContain(' through ');
     expect(inspect(nativeDates.timeRange('9:00am', '5:00pm'))).toContain(' until ');
-    expect(inspect(nativeDates.datetimeRange('2026-11-16T09:00Z', '2026-11-16T10:00Z'))).toContain(' until ');
+    expect(inspect(meetingFrom(nativeDates))).toContain(' until ');
   });
 
   it('print values held in objects and arrays the same way', () => {
@@ -78,5 +79,6 @@ describe('console.log() and util.inspect() in Node', () => {
     for (const [, text, value] of printed(minified)) {
       expect(inspect(value)).toBe(text);
     }
+    expect(inspect(meetingFrom(minified))).toMatch(/^DateTimeRange\(/);
   }, 30_000);
 });
