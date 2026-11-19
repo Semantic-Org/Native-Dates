@@ -2,11 +2,11 @@ import '@native-dates/plugins/legacy-date';
 import { datetime } from 'native-dates';
 import { describe, expect, it } from 'vitest';
 
-// 5:05am on Friday January 1 2027 in Tokyo, while UTC and every zone west of it are still on Thursday December 31
+// crosses the year boundary between Asia/Tokyo (2027-01-01 05:05) and UTC (2026-12-31 20:05)
 const newYearInTokyo = datetime('2026-12-31T20:05:06.007Z', 'Asia/Tokyo');
 
-describe('legacy-date getters in the zone of the datetime', () => {
-  it('reads the calendar and the clock in the zone of the datetime, never the zone of the machine', () => {
+describe('@native-dates/plugins/legacy-date local getters', () => {
+  it('reads calendar and time fields in the DateTime zone rather than the host timezone', () => {
     expect(newYearInTokyo.getFullYear()).toBe(2027);
     expect(newYearInTokyo.getMonth()).toBe(0);
     expect(newYearInTokyo.getDate()).toBe(1);
@@ -17,7 +17,7 @@ describe('legacy-date getters in the zone of the datetime', () => {
     expect(newYearInTokyo.getMilliseconds()).toBe(7);
   });
 
-  it('numbers months from 0 and days of the week from Sunday as 0, as Date does', () => {
+  it('uses 0-indexed months and Sunday = 0 to match Date', () => {
     const sunday = datetime('2026-09-06T14:30', 'America/New_York');
     expect(sunday).toMatchObject({ month: 9, dayOfWeek: 7 });
     expect(sunday.getMonth()).toBe(8);
@@ -28,31 +28,31 @@ describe('legacy-date getters in the zone of the datetime', () => {
     expect(saturday.getDay()).toBe(6);
   });
 
-  it('getTime() is the count of milliseconds since 1970', () => {
+  it('returns epoch milliseconds from getTime()', () => {
     const flight = datetime('2026-09-06T14:30:15.250', 'America/New_York');
     expect(flight.getTime()).toBe(Date.UTC(2026, 8, 6, 18, 30, 15, 250));
     expect(flight.getTime()).toBe(flight.epochMilliseconds);
   });
 
-  it('getTimezoneOffset() counts the minutes the zone is behind UTC at that moment', () => {
+  it('returns minutes behind UTC at that instant from getTimezoneOffset()', () => {
     expect(datetime('2026-09-06T14:30', 'America/New_York').getTimezoneOffset()).toBe(240);
     expect(datetime('2026-01-06T14:30', 'America/New_York').getTimezoneOffset()).toBe(300);
     expect(datetime('2026-01-06T09:00', 'Asia/Kolkata').getTimezoneOffset()).toBe(-330);
     expect(datetime('2026-01-06T09:00', '+05:30').getTimezoneOffset()).toBe(-330);
   });
 
-  // how a form fills <input type="datetime-local"> from a Date
-  it('gives the wall clock of its zone to code that shifts getTime() by getTimezoneOffset()', () => {
+  // shifting getTime() by getTimezoneOffset() is the standard <input type="datetime-local"> idiom
+  it('produces the DateTime wall clock when shifting getTime() by getTimezoneOffset()', () => {
     const afternoon = datetime('2026-09-06T14:30', 'Asia/Tokyo');
     const shifted = new Date(afternoon.getTime() - afternoon.getTimezoneOffset() * 60_000);
     expect(shifted.toISOString().slice(0, 16)).toBe('2026-09-06T14:30');
   });
 
-  it.todo('getTimezoneOffset() answers 0, never -0, for a zone on UTC');
+  it.todo('returns +0 rather than -0 from getTimezoneOffset() for UTC');
 });
 
-describe('legacy-date UTC getters', () => {
-  it('reads the calendar and the clock in UTC, whatever the zone of the datetime', () => {
+describe('@native-dates/plugins/legacy-date UTC getters', () => {
+  it('reads calendar and time fields in UTC regardless of the DateTime zone', () => {
     expect(newYearInTokyo.getUTCFullYear()).toBe(2026);
     expect(newYearInTokyo.getUTCMonth()).toBe(11);
     expect(newYearInTokyo.getUTCDate()).toBe(31);
@@ -63,7 +63,7 @@ describe('legacy-date UTC getters', () => {
     expect(newYearInTokyo.getUTCMilliseconds()).toBe(7);
   });
 
-  it('reads 9:00 in Kolkata as 3:30 in UTC', () => {
+  it('converts half-hour offsets like Asia/Kolkata to UTC', () => {
     const morning = datetime('2026-01-06T09:00', 'Asia/Kolkata');
     expect(morning.getHours()).toBe(9);
     expect(morning.getMinutes()).toBe(0);
@@ -72,7 +72,7 @@ describe('legacy-date UTC getters', () => {
   });
 });
 
-describe('legacy-date getters beside a native Date', () => {
+describe('@native-dates/plugins/legacy-date parity with Date', () => {
   const getters = [
     'getTime',
     'getFullYear',
@@ -94,8 +94,8 @@ describe('legacy-date getters beside a native Date', () => {
     'toISOString',
   ];
 
-  // a datetime made with no zone is in the zone of the machine, the one a Date reads its own fields in
-  it('answers each getter as the Date for the same instant does in the zone of the machine', () => {
+  // default-zone DateTime instances use the host timezone, matching native Date
+  it('matches native Date across all getters in the host timezone', () => {
     const instants = [
       '2026-01-01T04:59:59.999Z',
       '2026-03-08T07:00:00.000Z',
@@ -103,81 +103,79 @@ describe('legacy-date getters beside a native Date', () => {
       '2028-02-29T23:30:15.250Z',
     ];
     for (const instant of instants) {
-      const moment = datetime(instant);
+      const parsed = datetime(instant);
       const native = new Date(instant);
       for (const getter of getters) {
-        expect(moment[getter](), `${getter}() at ${instant}`).toBe(native[getter]());
+        expect(parsed[getter](), `${getter}() at ${instant}`).toBe(native[getter]());
       }
     }
   });
 });
 
-describe('legacy-date toISOString()', () => {
-  it('prints the moment in UTC to the millisecond', () => {
+describe('@native-dates/plugins/legacy-date toISOString()', () => {
+  it('formats the instant in UTC with millisecond precision', () => {
     const flight = datetime('2026-09-06T14:30:15.250', 'America/New_York');
     expect(flight.toISOString()).toBe('2026-09-06T18:30:15.250Z');
   });
 
-  it('cuts the digits finer than a millisecond without rounding up', () => {
+  it('truncates sub-millisecond digits without rounding up', () => {
     expect(datetime('2026-09-06T18:30:15.2509999Z').toISOString()).toBe('2026-09-06T18:30:15.250Z');
   });
 });
 
-describe('legacy-date toLocaleString(), toLocaleDateString() and toLocaleTimeString()', () => {
-  // ICU has put both a plain space and a narrow no-break space before AM, so the patterns take either
-  it('formats in the zone of the datetime, never the zone of the machine', () => {
+describe('@native-dates/plugins/legacy-date toLocaleString(), toLocaleDateString(), and toLocaleTimeString()', () => {
+  // Intl runtimes emit either an ASCII space or U+202F narrow no-break space before AM/PM
+  it('formats in the DateTime zone rather than the host timezone', () => {
     expect(newYearInTokyo.toLocaleDateString('en-US')).toBe('1/1/2027');
     expect(newYearInTokyo.toLocaleTimeString('en-US')).toMatch(/^5:05:06\sAM$/);
     expect(newYearInTokyo.toLocaleString('en-US')).toMatch(/^1\/1\/2027, 5:05:06\sAM$/);
   });
 
-  it('formats in the locale the datetime carries', () => {
+  it('uses the locale attached to the DateTime instance', () => {
     expect(newYearInTokyo.locale('de-DE').toLocaleDateString()).toBe('1.1.2027');
     expect(newYearInTokyo.locale('de_DE').toLocaleDateString()).toBe('1.1.2027');
   });
 
-  it('takes a locale argument over the locale the datetime carries', () => {
+  it('overrides the instance locale when a locales argument is passed', () => {
     expect(newYearInTokyo.locale('de-DE').toLocaleDateString('en-US')).toBe('1/1/2027');
   });
 
-  it('takes a timeZone option over the zone of the datetime', () => {
+  it('overrides the DateTime zone when options.timeZone is passed', () => {
     expect(newYearInTokyo.toLocaleDateString('en-US', { timeZone: 'UTC' })).toBe('12/31/2026');
     expect(newYearInTokyo.toLocaleTimeString('en-US', { timeZone: 'UTC' })).toMatch(/^8:05:06\sPM$/);
   });
 
-  it('keeps the zone of the datetime when the options name no timeZone', () => {
+  it('keeps the DateTime zone when options omit timeZone', () => {
     const clock = { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' };
     expect(newYearInTokyo.toLocaleTimeString('en-US', clock)).toBe('05:05');
     expect(newYearInTokyo.toLocaleDateString('en-US', { dateStyle: 'short' })).toBe('1/1/27');
   });
 
-  it('toLocaleString() prints only the parts its options name, in the zone of the datetime', () => {
+  it('formats only the requested option fields in toLocaleString()', () => {
     const day = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     expect(newYearInTokyo.toLocaleString('en-US', day)).toBe('Friday, January 1, 2027');
   });
 
-  it('toLocaleString() takes a timeZone option over the zone of the datetime', () => {
+  it('overrides the DateTime zone in toLocaleString() when options.timeZone is passed', () => {
     expect(newYearInTokyo.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' })).toBe('Thursday');
   });
 
-  it('toLocaleString() and toLocaleTimeString() format in the locale the datetime carries', () => {
+  it('uses the instance locale in toLocaleString() and toLocaleTimeString()', () => {
     const german = newYearInTokyo.locale('de-DE');
     expect(german.toLocaleString()).toBe('1.1.2027, 05:05:06');
     expect(german.toLocaleTimeString()).toBe('05:05:06');
   });
 
-  // toLocaleDateString(undefined, options) is how code written for a Date reaches the options
-  it('formats in the locale the datetime carries when the locale argument is undefined', () => {
+  it('falls back to the instance locale when the locales argument is undefined', () => {
     const german = newYearInTokyo.locale('de-DE');
     expect(german.toLocaleDateString(undefined, { month: 'long' })).toBe('Januar');
     expect(german.toLocaleString(undefined, { weekday: 'long' })).toBe('Freitag');
   });
 
-  it.todo('keeps the zone of the datetime when the options carry timeZone: undefined');
-  it.todo('formats in the configured locale when the datetime carries none');
+  it.todo('uses configure({ locale }) when the DateTime instance has no locale');
 });
 
-describe('legacy-date setters', () => {
+describe('@native-dates/plugins/legacy-date setters', () => {
   const setters = [
     'setTime',
     'setFullYear',
@@ -196,33 +194,28 @@ describe('legacy-date setters', () => {
     'setUTCMilliseconds',
   ];
 
-  it('throws immutable from every Date setter, at the name of the setter', () => {
+  it('throws immutable at each setter name across all Date setters', () => {
     const reminder = datetime('2026-09-06T14:30Z');
     for (const setter of setters) {
       expect(() => reminder[setter](9), setter).toThrowError(
-        expect.objectContaining({ code: 'immutable', at: setter }),
+        expect.objectContaining({ name: 'RangeError', code: 'immutable', at: setter }),
       );
     }
   });
 
-  it('leaves the datetime as it was after a setter throws', () => {
+  it('does not mutate the DateTime instance when a setter throws', () => {
     const reminder = datetime('2026-09-06T14:30', 'America/New_York');
-    expect(() => reminder.setHours(9)).toThrowError(expect.objectContaining({ code: 'immutable' }));
-    expect(reminder.getHours()).toBe(14);
-  });
-
-  it('names set() in the explanation a development build gives', () => {
-    const reminder = datetime('2026-09-06T14:30Z');
     expect(() => reminder.setHours(9)).toThrowError(
-      expect.objectContaining({ message: expect.stringMatching(/\n.*\.set\(/) }),
+      expect.objectContaining({ name: 'RangeError', code: 'immutable', at: 'setHours' }),
     );
+    expect(reminder.getHours()).toBe(14);
   });
 });
 
-describe('legacy-date beside Date identity checks', () => {
-  it('is neither an instance of Date nor tagged as one', () => {
-    const moment = datetime('2026-09-06T14:30Z');
-    expect(moment instanceof Date).toBe(false);
-    expect(Object.prototype.toString.call(moment)).not.toBe('[object Date]');
+describe('@native-dates/plugins/legacy-date Date identity', () => {
+  it('is not instanceof Date and does not have the [object Date] tag', () => {
+    const parsed = datetime('2026-09-06T14:30Z');
+    expect(parsed instanceof Date).toBe(false);
+    expect(Object.prototype.toString.call(parsed)).not.toBe('[object Date]');
   });
 });

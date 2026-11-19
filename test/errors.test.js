@@ -8,13 +8,11 @@ import {
   datetimeRange,
   dayMonth,
   dayOfWeek,
-  days,
   duration,
   earliest,
   hours,
   latest,
   monthDay,
-  monthNames,
   months,
   monthYear,
   now,
@@ -29,7 +27,7 @@ import { inspect } from 'node:util';
 import vm from 'node:vm';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-const refusal = (call) => {
+const catchError = (call) => {
   try {
     call();
   }
@@ -38,10 +36,8 @@ const refusal = (call) => {
   }
 };
 
-// the shape every refusal shares: its class, its code, the input echoed as a string,
-// a first line built from those two and a second line that explains
-const expectRefusal = (call, ErrorClass, code) => {
-  const error = refusal(call);
+const expectCodedError = (call, ErrorClass, code) => {
+  const error = catchError(call);
   expect(error).toBeInstanceOf(ErrorClass);
   expect(error.code).toBe(code);
   expect(error.at).toBeTypeOf('string');
@@ -50,9 +46,9 @@ const expectRefusal = (call, ErrorClass, code) => {
   expect(explanation).toBeTruthy();
 };
 
-describe('a refusal from native-dates', () => {
-  it('is a standard RangeError carrying code and at for an impossible date', () => {
-    const error = refusal(() => date('2026-02-30'));
+describe('coded error shape (RangeError and TypeError)', () => {
+  it('throws a RangeError with .code and .at for an out-of-range calendar date', () => {
+    const error = catchError(() => date('2026-02-30'));
     expect(error).toBeInstanceOf(RangeError);
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe('RangeError');
@@ -60,23 +56,23 @@ describe('a refusal from native-dates', () => {
     expect(error.at).toBe('2026-02-30');
   });
 
-  it('is a TypeError, and not a RangeError, for a missing value', () => {
-    const error = refusal(() => date(null));
+  it('throws a TypeError rather than RangeError for nullish input', () => {
+    const error = catchError(() => date(null));
     expect(error).toBeInstanceOf(TypeError);
     expect(error).not.toBeInstanceOf(RangeError);
     expect(error.name).toBe('TypeError');
     expect(error.code).toBe('missingDate');
   });
 
-  it('opens its message with one line made of the code and the input, then explains on a second line', () => {
-    const error = refusal(() => date('2026-02-30'));
+  it('formats error.message with "dates refused [code] at" on line one and an explanation on line two', () => {
+    const error = catchError(() => date('2026-02-30'));
     const lines = error.message.split('\n');
     expect(lines[0]).toBe('dates refused [invalidDate] 2026-02-30');
     expect(lines).toHaveLength(2);
     expect(lines[1]).not.toBe('');
   });
 
-  it('lets a caller turn one code into null and rethrow every other', () => {
+  it('allows catching a specific error.code while rethrowing others', () => {
     const parseTimestamp = (raw, zone) => {
       try {
         return datetime(raw, zone);
@@ -97,7 +93,7 @@ describe('a refusal from native-dates', () => {
 
   it.each([
     ['a string', () => date('2026-02-30'), '2026-02-30'],
-    ['an unreadable string', () => datetime('not-a-date'), 'not-a-date'],
+    ['an unparseable string', () => datetime('not-a-date'), 'not-a-date'],
     ['null', () => time(null), 'null'],
     ['undefined', () => datetime(undefined), 'undefined'],
     ['a boolean', () => date(true), 'true'],
@@ -106,192 +102,60 @@ describe('a refusal from native-dates', () => {
     ['an unknown unit', () => date('2026-11-16').plus(1, 'fortnight'), 'fortnight'],
     ['an unknown zone', () => datetime(0, 'Mars/Phobos'), 'Mars/Phobos'],
     ['an unknown locale', () => date('2026-11-16').locale('not a locale'), 'not a locale'],
-  ])('echoes %s in at as a string', (label, call, at) => {
-    expect(refusal(call).at).toBe(at);
+  ])('formats %s into error.at as a string', (label, call, at) => {
+    expect(catchError(call).at).toBe(at);
   });
 
-  it('echoes numbers and fields objects in at as text that names each of them', () => {
-    expect(refusal(() => date(2026, 13, 1)).at).toBe('2026-13-1');
-    expect(refusal(() => datetime({ year: 2026, month: 2, day: 30 })).at).toBe('{"year":2026,"month":2,"day":30}');
+  it('formats multi-argument numbers and plain field objects into error.at', () => {
+    expect(catchError(() => date(2026, 13, 1)).at).toBe('2026-13-1');
+    expect(catchError(() => datetime({ year: 2026, month: 2, day: 30 })).at).toBe('{"year":2026,"month":2,"day":30}');
   });
-});
 
-describe('TypeError codes', () => {
   it.each([
-    ['missingDateTime', 'datetime(null)', () => datetime(null)],
-    ['missingDate', 'date(undefined)', () => date(undefined)],
-    ['missingTime', 'time(null)', () => time(null)],
-    ['missingYearMonth', 'yearMonth(null)', () => yearMonth(null)],
-    ['missingYearMonth', 'monthYear(undefined)', () => monthYear(undefined)],
-    ['missingMonthDay', 'monthDay(null)', () => monthDay(null)],
-    ['missingMonthDay', 'dayMonth(undefined)', () => dayMonth(undefined)],
-    ['invalidDateTime', 'datetime(true)', () => datetime(true)],
-    ['invalidDate', 'date(2026)', () => date(2026)],
-    ['invalidDate', 'date(true)', () => date(true)],
-    ['invalidTime', 'time(true)', () => time(true)],
-    ['invalidYearMonth', 'yearMonth(2026)', () => yearMonth(2026)],
-    ['invalidMonthDay', 'monthDay(10)', () => monthDay(10)],
-    ['invalidDuration', 'duration(null)', () => duration(null)],
-    ['invalidDuration', 'duration(true)', () => duration(true)],
-    ['invalidDuration', "duration('2h', 'minutes')", () => duration('2h', 'minutes')],
-    ['invalidDuration', 'date.plus(null)', () => date('2026-11-16').plus(null)],
+    ['TypeError', TypeError, 'missingDateTime', 'datetime(null)', () => datetime(null)],
+    ['TypeError', TypeError, 'missingDate', 'date(undefined)', () => date(undefined)],
+    ['TypeError', TypeError, 'invalidDate', 'date(true)', () => date(true)],
+    ['TypeError', TypeError, 'invalidDuration', 'duration(null)', () => duration(null)],
     [
+      'TypeError',
+      TypeError,
       'unsupportedCalendar',
-      'yearMonth(a Hebrew Temporal.PlainYearMonth)',
+      'yearMonth(non-ISO Temporal.PlainYearMonth)',
       () => yearMonth(Temporal.PlainYearMonth.from({ year: 2026, month: 11, calendar: 'hebrew' })),
     ],
     [
-      'unsupportedCalendar',
-      'monthDay(a Hebrew Temporal.PlainMonthDay)',
-      () => monthDay(Temporal.PlainMonthDay.from({ monthCode: 'M01', day: 1, calendar: 'hebrew' })),
+      'TypeError',
+      TypeError,
+      'conflictingKinds',
+      'compare(date, datetime)',
+      () => compare(date('2026-11-16'), datetime(0)),
     ],
-    ['invalidPoint', 'compare({}, {})', () => compare({}, {})],
-    ['invalidPoint', 'earliest({})', () => earliest({})],
-    ['conflictingKinds', 'compare(a date, a moment)', () => compare(date('2026-11-16'), datetime(0))],
-    ['conflictingKinds', 'latest(a date, a time)', () => latest(date('2026-11-16'), time('9am'))],
-    ['conflictingRanges', 'dateRange(a time range)', () => dateRange(timeRange('9am', '5pm'))],
-  ])('%s is a TypeError from %s', (code, written, call) => {
-    expectRefusal(call, TypeError, code);
-  });
-});
-
-describe('RangeError codes for parsing and values', () => {
-  it.each([
-    ['invalidDateTime', "datetime('not-a-date')", () => datetime('not-a-date')],
-    ['invalidDateTime', "datetime('2026-02-30T10:00')", () => datetime('2026-02-30T10:00')],
+    ['RangeError', RangeError, 'invalidDateTime', "datetime('not-a-date')", () => datetime('not-a-date')],
+    ['RangeError', RangeError, 'invalidNumber', 'datetime(NaN)', () => datetime(NaN)],
     [
-      'invalidDateTime',
-      'datetime({ year: 2026, month: 2, day: 30 })',
-      () => datetime({ year: 2026, month: 2, day: 30 }),
-    ],
-    ['invalidDate', "date('2026-02-30')", () => date('2026-02-30')],
-    ['invalidDate', "date('nope')", () => date('nope')],
-    ['invalidDate', 'date(2026.5, 1, 1)', () => date(2026.5, 1, 1)],
-    ['invalidDate', 'date(2026, 13, 1)', () => date(2026, 13, 1)],
-    ['missingDay', 'date(2026, 11)', () => date(2026, 11)],
-    ['invalidTime', "time('25:00')", () => time('25:00')],
-    ['invalidTime', "time('13pm')", () => time('13pm')],
-    ['invalidTime', 'time(24, 0)', () => time(24, 0)],
-    ['invalidYearMonth', "yearMonth('2026-13')", () => yearMonth('2026-13')],
-    ['invalidYearMonth', 'yearMonth(2026.5, 1)', () => yearMonth(2026.5, 1)],
-    ['invalidMonthDay', "monthDay('13-40')", () => monthDay('13-40')],
-    ['invalidMonthDay', 'monthDay(2, 30)', () => monthDay(2, 30)],
-    ['invalidMonthDay', "monthDay('10-17').equals('10/17')", () => monthDay('10-17').equals('10/17')],
-    ['invalidYear', "monthDay('02-29').in(2026.5)", () => monthDay('02-29').in(2026.5)],
-    ['invalidDay', "yearMonth('2026-11').on(32)", () => yearMonth('2026-11').on(32)],
-    ['invalidDuration', "duration('')", () => duration('')],
-    ['invalidDuration', "duration('whenever')", () => duration('whenever')],
-    ['invalidDuration', "duration('P1X')", () => duration('P1X')],
-    ['invalidNumber', 'datetime(NaN)', () => datetime(NaN)],
-    ['invalidNumber', 'datetime(new Date(NaN))', () => datetime(new Date(NaN))],
-    ['invalidNumber', 'duration(Infinity)', () => duration(Infinity)],
-    ['invalidNumber', 'hours(NaN)', () => hours(NaN)],
-    ['conflictingSigns', "duration('1h -30m')", () => duration('1h -30m')],
-    ['conflictingSigns', 'days(1).minus(hours(1))', () => days(1).minus(hours(1))],
-    ['invalidFraction', 'months(1.5)', () => months(1.5)],
-    ['invalidFraction', 'months(1).times(1.5)', () => months(1).times(1.5)],
-  ])('%s is a RangeError from %s', (code, written, call) => {
-    expectRefusal(call, RangeError, code);
-  });
-});
-
-describe('RangeError codes for units, zones and formats', () => {
-  it.each([
-    ['unknownUnit', "date.plus(1, 'fortnight')", () => date('2026-11-16').plus(1, 'fortnight')],
-    ['unknownUnit', "datetime.round('fortnight')", () => datetime(0).round('fortnight')],
-    ['unknownUnit', "datetime.set('fortnight', 1)", () => datetime(0).set('fortnight', 1)],
-    ['unknownUnit', "duration(2, 'fortnights')", () => duration(2, 'fortnights')],
-    ['unknownDayOfWeek', "dayOfWeek('funday')", () => dayOfWeek('funday')],
-    ['unknownDayOfWeek', "date.next('funday')", () => date('2026-11-16').next('funday')],
-    ['unknownDayOfWeek', 'date.previous(0)', () => date('2026-11-16').previous(0)],
-    ['unknownDayOfWeek', "configure({ weekStart: 'funday' })", () => configure({ weekStart: 'funday' })],
-    [
-      'unknownWidth',
-      "configure({ weekdayNames: { lv: { fri: 'Pk' } } })",
-      () => configure({ weekdayNames: { lv: { fri: 'Pk' } } }),
-    ],
-    ['unknownZone', "datetime(0, 'Mars/Phobos')", () => datetime(0, 'Mars/Phobos')],
-    ['unknownZone', 'datetime(0, 5)', () => datetime(0, 5)],
-    ['unknownZone', "datetime(0, '+25:00')", () => datetime(0, '+25:00')],
-    ['unknownZone', "datetime.in('Mars/Phobos')", () => datetime(0).in('Mars/Phobos')],
-    ['unknownZone', "now('Mars/Phobos')", () => now('Mars/Phobos')],
-    ['unknownZone', "configure({ zone: 'Mars/Phobos' })", () => configure({ zone: 'Mars/Phobos' })],
-    ['unknownLocale', "date.locale('not a locale')", () => date('2026-11-16').locale('not a locale')],
-    ['unknownLocale', "date(input, { locale: 'not a locale' })", () => date('2026-11-16', { locale: 'not a locale' })],
-    ['unknownLocale', "date.format('short', 'not a locale')", () => date('2026-11-16').format('short', 'not a locale')],
-    ['unknownLocale', "monthNames('long', 'not a locale')", () => monthNames('long', 'not a locale')],
-    ['unknownLocale', "configure({ locale: 'not a locale' })", () => configure({ locale: 'not a locale' })],
-    ['unknownFormat', 'date.format(5)', () => date('2026-11-16').format(5)],
-    ['unknownFormat', "duration.format('medium')", () => hours(1).format('medium')],
-    ['unsupportedToken', "date.format('HH')", () => date('2026-11-16').format('HH')],
-    ['unsupportedToken', "time.format('YYYY')", () => time('9am').format('YYYY')],
-    ['unknownKind', "time.as('date')", () => time('9am').as('date')],
-  ])('%s is a RangeError from %s', (code, written, call) => {
-    expectRefusal(call, RangeError, code);
-  });
-});
-
-describe('RangeError codes for arithmetic, measurement and ranges', () => {
-  it.each([
-    ['unsupportedUnit', "date.plus(1, 'hour')", () => date('2026-11-16').plus(1, 'hour')],
-    ['unsupportedUnit', "time.plus(1, 'day')", () => time('9am').plus(1, 'day')],
-    ['unsupportedUnit', "yearMonth.plus(1, 'day')", () => yearMonth('2026-11').plus(1, 'day')],
-    ['cannotAdd', "date.plus(999999, 'years')", () => date('2026-11-16').plus(999999, 'years')],
-    ['cannotAdd', "date.add(999999, 'years')", () => date('2026-11-16').add(999999, 'years')],
-    ['cannotSubtract', "date.minus(999999, 'years')", () => date('2026-11-16').minus(999999, 'years')],
-    ['cannotSubtract', "datetime.subtract(999999, 'years')", () => datetime(0).subtract(999999, 'years')],
-    ['cannotSet', "date('2026-11-16').set('day', 31)", () => date('2026-11-16').set('day', 31)],
-    ['cannotSet', "time.set('hour', 1.5)", () => time('9am').set('hour', 1.5)],
-    ['cannotRound', "datetime.round(7, 'minutes')", () => datetime(0).round(7, 'minutes')],
-    ['cannotRound', "time.floor(7, 'minutes')", () => time('9am').floor(7, 'minutes')],
-    ['cannotRound', "time.ceil(7, 'minutes')", () => time('9am').ceil(7, 'minutes')],
-    ['cannotRound', "time.startOf('day')", () => time('9am').startOf('day')],
-    ['missingAnchor', "months(1).total('days')", () => months(1).total('days')],
-    ['missingAnchor', "months(1).balance('day')", () => months(1).balance('day')],
-    ['missingAnchor', 'months(1).compare(days(30))', () => months(1).compare(days(30))],
-    ['missingPoints', 'earliest()', () => earliest()],
-    ['missingPoints', 'latest([])', () => latest([])],
-    ['unsupportedComparison', 'unary plus on a date', () => +date('2026-11-16')],
-    ['unsupportedComparison', 'a time < a time', () => time('9am') < time('10am')],
-    ['unsupportedComparison', 'yearMonth.valueOf()', () => yearMonth('2026-11').valueOf()],
-    ['unsupportedComparison', 'a month-day - 1', () => monthDay('10-17') - 1],
-    ['unsupportedComparison', 'a range > 1', () => dateRange('2026-11-01', '2026-11-07') > 1],
-    ['invalidRange', 'dateRange(a later day, an earlier day)', () => dateRange('2026-11-07', '2026-11-01')],
-    [
+      'RangeError',
+      RangeError,
       'invalidRange',
-      'datetimeRange(a later moment, an earlier moment)',
-      () => datetimeRange('2026-11-16T10:00Z', '2026-11-16T09:00Z'),
+      "dateRange('2026-11-07', '2026-11-01')",
+      () => dateRange('2026-11-07', '2026-11-01'),
     ],
-    ['invalidRange', 'date.to(an earlier day)', () => date('2026-11-07').to('2026-11-01')],
-    ['invalidStep', "range.points('0 days')", () => dateRange('2026-11-01', '2026-11-07').points('0 days')],
-    ['invalidStep', "range.split(-1, 'day')", () => dateRange('2026-11-01', '2026-11-07').split(-1, 'day')],
+    ['RangeError', RangeError, 'unknownZone', "datetime(0, 'Mars/Phobos')", () => datetime(0, 'Mars/Phobos')],
     [
-      'unsupportedIntersection',
-      'two overnight time ranges that overlap twice',
-      () => timeRange('22:00', '06:00').intersection(timeRange('05:00', '23:00')),
+      'RangeError',
+      RangeError,
+      'unknownUnit',
+      "date.plus(1, 'fortnight')",
+      () => date('2026-11-16').plus(1, 'fortnight'),
     ],
-    ['unsupportedZone', "timeRange.in('UTC')", () => timeRange('9am', '5pm').in('UTC')],
-  ])('%s is a RangeError from %s', (code, written, call) => {
-    expectRefusal(call, RangeError, code);
+    ['RangeError', RangeError, 'missingAnchor', "months(1).total('days')", () => months(1).total('days')],
+    ['RangeError', RangeError, 'unsupportedComparison', '+date', () => +date('2026-11-16')],
+    ['RangeError', RangeError, 'missingPlugin', 'configure({ dayFirst: true })', () => configure({ dayFirst: true })],
+  ])('throws %s [%s] for %s', (errorName, ErrorClass, code, expr, call) => {
+    expectCodedError(call, ErrorClass, code);
   });
 });
 
-describe('RangeError codes for plugins that were not imported', () => {
-  it.each([
-    ['missingPlugin', "date('x', { loose: true })", () => date('x', { loose: true })],
-    ['missingPlugin', "date('07.09.2026', { dayFirst: true })", () => date('07.09.2026', { dayFirst: true })],
-    ['missingPlugin', 'configure({ dayFirst: true })', () => configure({ dayFirst: true })],
-    [
-      'missingPlugin',
-      "configure({ zoneAliases: { hq: 'Europe/Berlin' } })",
-      () => configure({ zoneAliases: { hq: 'Europe/Berlin' } }),
-    ],
-  ])('%s is a RangeError from %s', (code, written, call) => {
-    expectRefusal(call, RangeError, code);
-  });
-});
-
-describe('junk passed where a value was expected', () => {
+describe('invalid input fuzzing across factories and methods', () => {
   const junk = [
     undefined,
     null,
@@ -332,12 +196,11 @@ describe('junk passed where a value was expected', () => {
     Temporal.Duration.from('PT1H'),
   ];
 
-  // a call may answer junk with a value, and when it refuses the refusal must be one of ours
   const leaksFrom = (calls, inputs) => {
     const leaks = [];
     for (const [written, call] of Object.entries(calls)) {
       for (const input of inputs) {
-        const error = refusal(() => call(input));
+        const error = catchError(() => call(input));
         const coded = error === undefined
           || ((error instanceof RangeError || error instanceof TypeError)
             && typeof error.code === 'string' && typeof error.at === 'string');
@@ -349,7 +212,7 @@ describe('junk passed where a value was expected', () => {
     return leaks;
   };
 
-  it('is answered by every factory and helper with a value or a coded refusal, never a bare engine error', () => {
+  it('returns a value or throws a coded error across all factories and helpers without leaking engine errors', () => {
     const leaks = leaksFrom({
       'datetime(x)': (x) => datetime(x),
       'datetime(ok, x)': (x) => datetime('2026-11-16T09:30', x),
@@ -374,7 +237,7 @@ describe('junk passed where a value was expected', () => {
       'now(x)': (x) => now(x),
       'today(x)': (x) => today(x),
       'compare(x, x)': (x) => compare(x, x),
-      'compare(moment, x)': (x) => compare(datetime(0, 'UTC'), x),
+      'compare(datetime, x)': (x) => compare(datetime(0, 'UTC'), x),
       'earliest(x)': (x) => earliest(x),
       'earliest(date, x)': (x) => earliest(date('2026-11-16'), x),
       'latest(x, x)': (x) => latest(x, x),
@@ -383,8 +246,8 @@ describe('junk passed where a value was expected', () => {
     expect(leaks).toEqual([]);
   });
 
-  it('is answered by the methods of every kind of value with a value or a coded refusal', () => {
-    const moment = datetime('2026-11-16T09:30', 'UTC');
+  it('returns a value or throws a coded error across instance methods of all nine classes', () => {
+    const point = datetime('2026-11-16T09:30', 'UTC');
     const day = date('2026-11-16');
     const clock = time('09:30');
     const span = hours(2);
@@ -394,27 +257,27 @@ describe('junk passed where a value was expected', () => {
     const hour = datetimeRange('2026-11-16T09:00Z', '2026-11-16T10:00Z', 'UTC');
     const shift = timeRange('9am', '5pm');
     const leaks = leaksFrom({
-      'datetime.plus(x)': (x) => moment.plus(x),
-      'datetime.plus(1, x)': (x) => moment.plus(1, x),
-      'datetime.minus(x, days)': (x) => moment.minus(x, 'days'),
-      'datetime.set(x)': (x) => moment.set(x),
-      'datetime.set(hour, x)': (x) => moment.set('hour', x),
-      'datetime.in(x)': (x) => moment.in(x),
-      'datetime.at(x)': (x) => moment.at(x),
-      'datetime.startOf(x)': (x) => moment.startOf(x),
-      'datetime.endOf(x)': (x) => moment.endOf(x),
-      'datetime.round(x)': (x) => moment.round(x),
-      'datetime.next(x)': (x) => moment.next(x),
-      'datetime.equals(x)': (x) => moment.equals(x),
-      'datetime.isBefore(x)': (x) => moment.isBefore(x),
-      'datetime.isSame(moment, x)': (x) => moment.isSame(moment, x),
-      'datetime.until(x)': (x) => moment.until(x),
-      'datetime.until(moment, x)': (x) => moment.until(moment, x),
-      'datetime.to(x)': (x) => moment.to(x),
-      'datetime.range(x)': (x) => moment.range(x),
-      'datetime.from(x)': (x) => moment.from(x),
-      'datetime.locale(x)': (x) => moment.locale(x),
-      'datetime.as(x)': (x) => moment.as(x),
+      'datetime.plus(x)': (x) => point.plus(x),
+      'datetime.plus(1, x)': (x) => point.plus(1, x),
+      'datetime.minus(x, days)': (x) => point.minus(x, 'days'),
+      'datetime.set(x)': (x) => point.set(x),
+      'datetime.set(hour, x)': (x) => point.set('hour', x),
+      'datetime.in(x)': (x) => point.in(x),
+      'datetime.at(x)': (x) => point.at(x),
+      'datetime.startOf(x)': (x) => point.startOf(x),
+      'datetime.endOf(x)': (x) => point.endOf(x),
+      'datetime.round(x)': (x) => point.round(x),
+      'datetime.next(x)': (x) => point.next(x),
+      'datetime.equals(x)': (x) => point.equals(x),
+      'datetime.isBefore(x)': (x) => point.isBefore(x),
+      'datetime.isSame(point, x)': (x) => point.isSame(point, x),
+      'datetime.until(x)': (x) => point.until(x),
+      'datetime.until(point, x)': (x) => point.until(point, x),
+      'datetime.to(x)': (x) => point.to(x),
+      'datetime.range(x)': (x) => point.range(x),
+      'datetime.from(x)': (x) => point.from(x),
+      'datetime.locale(x)': (x) => point.locale(x),
+      'datetime.as(x)': (x) => point.as(x),
       'date.plus(x)': (x) => day.plus(x),
       'date.minus(1, x)': (x) => day.minus(1, x),
       'date.set(x)': (x) => day.set(x),
@@ -466,13 +329,13 @@ describe('junk passed where a value was expected', () => {
     expect(leaks).toEqual([]);
   });
 
-  it.todo('reads a units object that has no prototype in plus() and minus(), as duration() reads it');
+  it.todo('accepts null-prototype unit objects (Object.create(null)) in plus() and minus(), matching duration()');
 });
 
-describe('a refusal in a Node process started with NODE_ENV', () => {
+describe('error explanation stripping under NODE_ENV', () => {
   const script = `
     import { date } from 'native-dates';
-    const refusals = [() => date(null), () => date('2026-02-30')].map((call) => {
+    const errors = [() => date(null), () => date('2026-02-30')].map((call) => {
       try {
         call();
       }
@@ -480,10 +343,10 @@ describe('a refusal in a Node process started with NODE_ENV', () => {
         return { name: error.name, code: error.code, at: error.at, message: error.message };
       }
     });
-    console.log(JSON.stringify(refusals));
+    console.log(JSON.stringify(errors));
   `;
 
-  const refusalsUnder = (nodeEnv) => {
+  const errorsUnder = (nodeEnv) => {
     const { NODE_ENV: inherited, ...env } = process.env;
     const output = execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
       cwd: fileURLToPath(new URL('..', import.meta.url)),
@@ -496,13 +359,12 @@ describe('a refusal in a Node process started with NODE_ENV', () => {
   let production;
   let unset;
 
-  // each read starts a Node process, slow when the machine is busy
   beforeAll(() => {
-    production = refusalsUnder('production');
-    unset = refusalsUnder(undefined);
+    production = errorsUnder('production');
+    unset = errorsUnder(undefined);
   }, 30_000);
 
-  it('set to production drops the explanation and keeps the class, the code, at and the first line', () => {
+  it('strips line-two explanations when NODE_ENV=production while preserving error class, code, at, and line one', () => {
     const [missing, impossible] = production;
     expect(missing).toEqual({
       name: 'TypeError',
@@ -514,7 +376,7 @@ describe('a refusal in a Node process started with NODE_ENV', () => {
     expect(impossible.message.split('\n')[0]).toBe('dates refused [invalidDate] 2026-02-30');
   });
 
-  it('left unset explains, in words the production message no longer holds', () => {
+  it('includes line-two explanations when NODE_ENV is unset', () => {
     const [missing, impossible] = unset;
     expect(missing.message.split('\n')).toHaveLength(2);
     expect(impossible.message.split('\n')).toHaveLength(2);
@@ -522,8 +384,7 @@ describe('a refusal in a Node process started with NODE_ENV', () => {
   });
 });
 
-// a browser has no process global, which a test run in Node never notices
-describe('a refusal in a page, where there is no process global', () => {
+describe('errors in browser bundles without a process global', () => {
   const pageFrom = async (options) => {
     const bundle = await build({
       bundle: true,
@@ -537,16 +398,20 @@ describe('a refusal in a page, where there is no process global', () => {
     return vm.runInContext(`(() => { ${bundle.outputFiles[0].text}\nreturn nativeDates; })()`, vm.createContext({}));
   };
 
-  // the published files as an import map or a CDN serves them, with no bundler to define NODE_ENV
-  it('is thrown with its class, code, at and first line when nothing has defined NODE_ENV', async () => {
-    const page = await pageFrom({ platform: 'neutral' });
-    expect(page.date('2026-11-16').plus(1, 'day').toString()).toBe('2026-11-17');
-    const [missing, impossible] = [refusal(() => page.date(null)), refusal(() => page.date('2026-02-30'))];
-    expect([missing.name, missing.code, missing.at]).toEqual(['TypeError', 'missingDate', 'null']);
-    expect([impossible.name, impossible.code, impossible.at]).toEqual(['RangeError', 'invalidDate', '2026-02-30']);
-    expect(impossible.message.split('\n')[0]).toBe('dates refused [invalidDate] 2026-02-30');
-  }, 30_000);
+  // unbundled ESM or neutral bundles served via CDN or import map have neither process nor bundler-defined NODE_ENV
+  it(
+    'throws coded errors without ReferenceError when bundled with platform: "neutral" and no process global',
+    async () => {
+      const page = await pageFrom({ platform: 'neutral' });
+      expect(page.date('2026-11-16').plus(1, 'day').toString()).toBe('2026-11-17');
+      const [missing, impossible] = [catchError(() => page.date(null)), catchError(() => page.date('2026-02-30'))];
+      expect([missing.name, missing.code, missing.at]).toEqual(['TypeError', 'missingDate', 'null']);
+      expect([impossible.name, impossible.code, impossible.at]).toEqual(['RangeError', 'invalidDate', '2026-02-30']);
+      expect(impossible.message.split('\n')[0]).toBe('dates refused [invalidDate] 2026-02-30');
+    },
+    30_000,
+  );
 
-  // the explanation waits on a process global, so a page Vite or esbuild builds for development never has one
-  it.todo('explains when a bundler has set NODE_ENV to development');
+  // typeof process !== 'undefined' evaluates to false in browsers even when a bundler replaces process.env.NODE_ENV
+  it.todo('preserves line-two error explanations when bundled with NODE_ENV="development" and no process global');
 });

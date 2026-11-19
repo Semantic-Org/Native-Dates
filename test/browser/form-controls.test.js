@@ -4,7 +4,7 @@ import { cdp } from 'vitest/browser';
 
 const setBrowserZone = (timezoneId) => cdp().send('Emulation.setTimezoneOverride', { timezoneId });
 
-// a control goes blank when it is handed a string it cannot read
+// HTML date/time inputs sanitize invalid value strings to ''
 const control = (type, value) => {
   const input = document.createElement('input');
   input.type = type;
@@ -43,14 +43,14 @@ describe('HTML form controls', () => {
     expect(time(input.value).equals(lap)).toBe(true);
   });
 
-  it('fills a datetime-local control with the wall clock of a moment and reads it back in the same zone', () => {
+  it('fills a datetime-local control with the wall clock of a DateTime and reads it back in the same zone', () => {
     const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
     const input = control('datetime-local', standup.format('YYYY-MM-DDTHH:mm'));
     expect(input.value).toBe('2026-11-16T09:30');
     expect(datetime(input.value, 'America/Los_Angeles').equals(standup)).toBe(true);
   });
 
-  // new Date('2026-11-16') is midnight UTC, which is still the 15th anywhere west of it
+  // new Date('2026-11-16') parses as UTC midnight, which falls on the 15th in timezones west of UTC
   it('reads a date control as the day picked in a browser west of UTC', async () => {
     await setBrowserZone('America/Los_Angeles');
     const input = control('date', '2026-11-16');
