@@ -1,6 +1,6 @@
 import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 
-import { DateTime } from './date-time.js';
+import { DateTime, now } from './date-time.js';
 import { anchored, duration } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
@@ -473,7 +473,8 @@ export const date = (input, monthOrOptions, day) => {
   return isPlainObject(monthOrOptions) && monthOrOptions.loose ? loosely(build) : build();
 };
 
-export const today = (zone) => new CalendarDate(Temporal.Now.plainDateISO(zoneId(zone)));
+// read the clock through now() so a test clock that mocks Date alone moves today() with it
+export const today = (zone) => now(zone).date;
 export const tomorrow = (zone) => today(zone).plus({ days: 1 });
 export const yesterday = (zone) => today(zone).minus({ days: 1 });
 

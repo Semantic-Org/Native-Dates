@@ -6,6 +6,7 @@ import {
   days,
   duration,
   monthDay,
+  now,
   time,
   today,
   tomorrow,
@@ -343,6 +344,15 @@ describe('today(), tomorrow(), and yesterday()', () => {
       month: local.getMonth() + 1,
       day: local.getDate(),
     });
+  });
+
+  // the mocked year is far from the real one, so a read of the system clock cannot pass
+  it('reads the same clock as now() when fake timers mock Date without Temporal.Now', () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2031-03-04T12:00:00Z') });
+    expect(now('UTC').date.toString()).toBe('2031-03-04');
+    expect(today('UTC').toString()).toBe('2031-03-04');
+    expect(tomorrow('UTC').toString()).toBe('2031-03-05');
+    expect(yesterday('UTC').toString()).toBe('2031-03-03');
   });
 
   it("chains today().plus(2, 'days').at('9am') into a DateTime", () => {
