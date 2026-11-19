@@ -1,9 +1,7 @@
-// the size bar: switching a plugin on or off, or pressing a preset, sets the bar and the total to
-// the measured size of core with exactly those plugins (bit n is plugin n)
-
 import { formatSizeBytes } from '../format.js';
 
 export function mountBytes(root) {
+  // precomputed bundle sizes indexed by bitmask so plugin combinations use measured totals
   const sizes = JSON.parse(root.dataset.sizes);
   const picks = [...root.querySelectorAll('[data-bytes-pick]')];
   const presets = [...root.querySelectorAll('[data-preset]')];
@@ -21,7 +19,6 @@ export function mountBytes(root) {
     });
   };
   picks.forEach((pick) => pick.addEventListener('change', render));
-  // a preset is its plugins, switched on at once; pressing it again switches them off
   presets.forEach((button) => button.addEventListener('click', () => {
     const set = button.getAttribute('aria-pressed') === 'true' ? [] : button.dataset.preset.split(',');
     picks.forEach((pick) => {

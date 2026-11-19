@@ -1,4 +1,4 @@
-// a share card for every page: /og/index.png for the homepage, /og/<page id>.png for the rest
+// generate Open Graph share cards at /og/index.png and /og/<slug>.png
 import { getCollection } from 'astro:content';
 
 import { SECTIONS } from '../../lib/nav.js';
@@ -12,8 +12,8 @@ export async function getStaticPaths() {
     {
       params: { slug: 'index' },
       props: {
-        title: 'Temporal, spoken plainly',
-        lede: 'Dates, times, zones and durations on the calendar your browser already ships.',
+        title: 'Dates written in natural language',
+        lede: "Immutable dates, times, time zones, durations, and ranges on the browser's Temporal and Intl APIs.",
       },
     },
     {
@@ -21,7 +21,7 @@ export async function getStaticPaths() {
       props: {
         title: 'Plugins',
         section: 'Plugins',
-        lede: 'Each plugin adds one more thing when you import it, so you ship only the ones you use.',
+        lede: 'Opt-in subpath modules for city time zones, lenient parsing, and legacy Date methods.',
       },
     },
     ...entries.map((e) => ({

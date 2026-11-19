@@ -10,10 +10,8 @@ import { rehypeDocs } from './src/lib/markdown/rehype-docs.js';
 import { remarkDocs } from './src/lib/markdown/remark-docs.js';
 import { transformerFenceMeta } from './src/lib/markdown/shiki-meta.js';
 
-// shiki writes css variables; tokens.css maps them onto the site's syntax colors, so code follows
-// the theme toggle with no second highlighting pass
+// Shiki emits CSS variables mapped in tokens.css so syntax colors follow theme toggles without re-highlighting
 const theme = createCssVariablesTheme({ name: 'native-dates', variablePrefix: '--shiki-', fontStyle: true });
-// read as the site reads code: object keys as keys, the colon after them as punctuation, comments set back
 theme.tokenColors.push(
   {
     scope: ['meta.object-literal.key', 'support.type.property-name'],
@@ -35,20 +33,17 @@ const hasCert = existsSync(CERT.key) && existsSync(CERT.cert);
 if (!hasCert) { console.warn('[site] no cert in cert/: dev runs over http on :4321. Run `npm run cert`.'); }
 
 export default defineConfig({
-  // where the site is served: share cards and canonical links are absolute, so a staging build
-  // sets SITE_URL=https://staging.nativedates.dev (the staging environment's own variable on vercel)
+  // staging builds set SITE_URL=https://staging.nativedates.dev so canonical links and share cards use the staging domain
   site: process.env.SITE_URL ?? 'https://nativedates.dev',
   trailingSlash: 'always',
-  // the languages (lib/locales.js); english at the root, the rest under their path
   i18n: astroI18n,
-  // the dev origin: https://local.nativedates.dev on :443, every interface, one site up at a time (the
-  // house pattern). without the cert (npm run cert, see cert/README.md), plain http on :4321
+  // serves https://local.nativedates.dev on :443 when cert/ exists, falling back to plain http on :4321
   server: { host: true, port: hasCert ? 443 : 4321 },
   devToolbar: { enabled: false },
   vite: {
     server: {
       allowedHosts: [HOST],
-      // the sizes are measured from the package above these docs (lib/sizes.js)
+      // allow reading parent workspace packages for bundle size measurement in lib/sizes.js
       fs: { allow: ['..'] },
       ...(hasCert && {
         https: { key: readFileSync(CERT.key), cert: readFileSync(CERT.cert) },
@@ -59,7 +54,7 @@ export default defineConfig({
   markdown: {
     processor: unified({
       remarkPlugins: [remarkDirective, remarkDocs],
-      // ids first, so the docs plugin can anchor headings; astro then skips its own pass
+      // run rehypeHeadingIds before rehypeDocs so custom heading anchors are already assigned
       rehypePlugins: [rehypeHeadingIds, rehypeDocs],
     }),
     shikiConfig: {

@@ -1,7 +1,7 @@
 {
   "name": "@native-dates/plugins",
   "version": "0.0.6",
-  "description": "The plugins of Native Dates, each installed by importing it",
+  "description": "Opt-in subpath plugins for native-dates",
   "author": "Jack Lukic",
   "license": "ISC",
   "type": "module",

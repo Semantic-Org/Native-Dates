@@ -1,15 +1,9 @@
-/* a live example's frame: editor and preview side by side, stacked on narrow screens. imported by
-   the Playground component, so it comes along wherever one is used */
-
-
 .pg {
-  /* the code is what an example shows, so the editor gets the larger share */
   display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   border: 1px solid var(--line-2); border-radius: var(--r-4); overflow: hidden;
   height: 600px; position: relative;
 }
-/* the divider: a 12px grab area centered on the line between the panes. the line itself is the
-   editor pane's border; while hovered, focused or dragged it lights up */
+/* 12px drag target centered over the 1px border between editor and preview */
 .pg-split {
   position: absolute; z-index: 2; top: 0; bottom: 0; inset-inline-start: calc(var(--pg-at, 58.333%) - 6px); width: 12px;
   cursor: col-resize; touch-action: none; outline: none;
@@ -18,15 +12,13 @@
   content: ''; position: absolute; top: 0; bottom: 0; inset-inline-start: 5px; width: 2px;
   background: var(--accent); opacity: 0; transition: opacity 0.12s var(--ease);
 }
-/* the lit line is the focus indicator, so the usual ring would only box the grab area */
+/* ::after acts as the visible focus indicator so the 12px hit target needs no outline box */
 .pg-split:focus-visible { outline: none; }
 .pg-split:hover::after, .pg-split:focus-visible::after, .pg.is-resizing .pg-split::after { opacity: 1; }
 .pg.is-resizing { cursor: col-resize; user-select: none; }
 .pg.is-resizing .pg-frame { pointer-events: none; }
 .pg-editor-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-inline-end: 1px solid var(--line-2); background: var(--code-bg); }
-.pg-tabs { flex: none; }
-/* more files than the bar is wide: the tabs scroll sideways under the finger, with no scrollbar */
-.pg-tabs { overflow-x: auto; scrollbar-width: none; }
+.pg-tabs { flex: none; overflow-x: auto; scrollbar-width: none; }
 .pg-tabs::-webkit-scrollbar { display: none; }
 .pg-editor { flex: 1; min-height: 0; overflow: auto; }
 .pg-preview-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--surface-2); }
@@ -38,7 +30,6 @@
 .pg-nav:hover:not(:disabled) { color: var(--text); background: var(--surface-3); }
 .pg-nav:disabled { opacity: 0.35; cursor: default; }
 .pg-nav svg { width: 16px; height: 16px; }
-/* the zone the example runs in: a native select, as wide as its longest zone name */
 .pg-zone {
   display: flex; align-items: center; gap: 8px; margin-inline-start: 4px; min-width: 0;
   font: 400 var(--fs-xs)/1 var(--font-sans); color: var(--text-3);
@@ -61,8 +52,7 @@
   .pg-preview-pane { height: 420px; }
 }
 
-
-/* the first file as text, until the editor loads: set as the editor sets it, line numbers aside */
+/* pre-rendered source shown before CodeMirror mounts */
 .pg-static {
   margin: 0; padding-block: 12px; padding-inline: 56px 20px;
   font-family: var(--font-mono); font-size: var(--code-fs); line-height: var(--code-lh);

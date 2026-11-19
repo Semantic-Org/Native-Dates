@@ -1,7 +1,5 @@
 ---
-// what an app ships: core as one bar, and each plugin as the length it adds when it is switched
-// on. every length is measured (lib/sizes.js). a set of plugins shares code, so the total is that
-// set's own measurement, looked up by which plugins are on, never the sum of the parts
+// plugins share helpers, so precompute every subset bitmask instead of summing individual deltas
 import { getCollection } from 'astro:content';
 
 import { localePath, t } from '../../lib/i18n.js';

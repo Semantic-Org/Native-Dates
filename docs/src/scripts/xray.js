@@ -1,7 +1,3 @@
-// an x-ray: one operation in native-dates, and switched over, the same value made on Temporal
-// alone, or on Date as it was done before either. the panel grows to that code's height under one
-// scan, so the difference in code is something the reader sees as well as counts.
-
 import { plural } from './strings.js';
 
 const lines = (pre) => (pre.dataset.raw ?? pre.textContent).trim().split('\n').length;
@@ -27,15 +23,14 @@ export function mountXray(root) {
       b.setAttribute('aria-checked', on);
       b.tabIndex = on ? 0 : -1;
     });
-    // anything but ours is code written against the platform
     root.classList.toggle('is-native', mode !== 'ours');
     count.textContent = label(mode);
     if (still.matches) { return; }
-    // the panel grows or shrinks to the code it now shows, under one pass of the scan
     const to = body.offsetHeight;
     body.animate([{ height: `${from}px` }, { height: `${to}px` }], { duration: 520, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)' });
     root.style.setProperty('--scan-to', `${Math.max(from, to)}px`);
     root.classList.remove('is-scanning');
+    // force reflow so rapid switches restart the xr-scan animation
     void root.offsetWidth;
     root.classList.add('is-scanning');
   };

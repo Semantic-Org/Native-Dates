@@ -1,9 +1,4 @@
-// the hero's sentences. each is a chain, and each link is one thought: `say` names its words
-// (home.say.<say> in content/strings.json), `code` is the call, and `run` takes the value so far to
-// the next, given the library. a link with several options is one a reader can turn through.
-// the build runs these for the page it ships, and the browser runs them again for the reader's own
-// day and zone, so both read from this one list
-
+// shared by build-time SSR and browser hydration so both evaluate identical chains (`say` maps to home.say.* in content/strings.json)
 const at = (say, clock, zone) => ({ say: `at.${say}`, code: `.at('${clock}', '${zone}')`, run: (value) => value.at(clock, zone) });
 const into = (say, zone) => ({ say: `in.${say}`, code: `.in('${zone}')`, run: (value) => value.in(zone) });
 const next = (weekday) => ({ say: `next.${weekday}`, code: `.next('${weekday}')`, run: (value) => value.next(weekday) });
@@ -38,7 +33,7 @@ const IN = {
   montreal: into('montreal', 'America/Montreal'),
 };
 
-// each locale opens with its own city and a realistic daytime partner city across time zones
+// pair each locale's primary city with daytime partner zones so converted meeting times stay realistic
 const MEETINGS = {
   en: [[AT.losAngeles, AT.newYork, AT.london, AT.tokyo], [IN.berlin, IN.kolkata, IN.sydney, IN.saoPaulo]],
   ja: [[AT.tokyoEvening, AT.london, AT.paris, AT.saoPaulo], [IN.london, IN.sydney, IN.kolkata, IN.saoPaulo]],
@@ -96,12 +91,10 @@ export function sentencesFor(locale = 'en') {
 
 export const SENTENCES = sentencesFor('en');
 
-// what a value is, as the class a developer would name, and how it reads. a string is itself
 const NOUN = { datetime: 'DateTime', date: 'CalendarDate', time: 'Time', duration: 'Duration' };
 export const describe = (value, { kindOf }) =>
   typeof value === 'string' ? { noun: 'string', text: `'${value}'` } : { noun: NOUN[kindOf(value)], text: value.text };
 
-// a sentence with one option picked per link: what each link is, in order
 export function read(sentence, picks, library, locale = 'en') {
   let value;
   return sentence.steps.map((options, i) => {

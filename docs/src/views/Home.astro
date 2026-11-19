@@ -1,7 +1,4 @@
 ---
-// the homepage: the pitch, then one made thing per argument. a sentence that is also code, the
-// primitives Temporal ships and the call for each, Date and Temporal asked the same questions, a year of one standup across two cities, the same dates on
-// Temporal alone, a running app, and what it all weighs
 import { getCollection } from 'astro:content';
 
 import Bytes from '../components/home/Bytes.astro';
@@ -24,10 +21,7 @@ import '../styles/home.css';
 
 const locale = Astro.currentLocale;
 const to = (path) => localePath(path, locale);
-// the core's size wherever the page's words quote it ({size}), measured like every other size here
 const size = formatSize(await sizeOf('core')).replace(' ', '&nbsp;');
-// the page's words are keys (t() here and in its components, ui() in its scripts) from
-// content/strings.json, and a language that has translated them is one the page is written in
 const translatedIn = languagesWith('home.', { reviewed: true });
 const writtenIn = languagesWith('home.');
 const translated = writtenIn.includes(locale);
@@ -43,7 +37,7 @@ const tryZones = homeLocale?.try?.zones;
 const tryFiles = filesFor(tryEntry.id);
 if (tryZones) {
   tryFiles['cities.js'] = [
-    "// IANA zone names. the platform knows each one's offset on any date",
+    '// IANA time zones resolved by Intl and Temporal',
     'export const CITIES = [',
     ...tryZones.map((zone) => `  '${zone}',`),
     '];',
@@ -69,13 +63,11 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
         <button class="icon-btn" type="button" data-theme-toggle aria-label={t(locale, 'nav.theme')} set:html={ICON.theme} />
       </div>
     </div>
-    {/* the sections, for screens too narrow for the topnav */}
     <nav class="home-menu" id="home-menu" aria-label={t(locale, 'nav.sections')} hidden>
       {SECTIONS.map(([name, path]) => <a href={to(path)}>{t(locale, name)}</a>)}
       <Fragment set:html={languageSelect(Astro.url.pathname, locale)} />
     </nav>
   </header>
-  {/* an untranslated homepage or an unreviewed machine translation says so under the topbar */}
   {notice && <p class="archive-banner" lang={locale} dir={localeOf(locale).dir}>{notice} <a href="/" hreflang="en" lang="en" data-language-pick="en">{t(locale, 'language.readEnglish')}</a></p>}
 
   <main id="content" {...english}>
@@ -203,9 +195,7 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
     document.querySelectorAll('[data-primitives]').forEach(mountPrimitives);
     document.querySelectorAll('[data-verdict]').forEach(mountVerdict);
 
-    // the parts that compute dates run on the reader's own Temporal, read again for their day, zone
-    // and locale. a browser that doesn't ship Temporal yet loads it first, as an app there would.
-    // until then, and if none of it loads, the page reads with the build's answers
+    // load temporal-polyfill on browsers without native Temporal, then re-evaluate interactive widgets for the visitor's clock and locale
     (async () => {
       if (!globalThis.Temporal) {
         const { Temporal } = await import('temporal-polyfill');
@@ -214,7 +204,6 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
       const library = await import('native-dates');
       document.querySelectorAll('[data-say]').forEach((root) => mountSay(root, library));
       document.querySelectorAll('[data-consoles]').forEach((root) => mountConsoles(root, library));
-      // the closer tells the time to the second, and reads it again whenever now() is clicked
       const clockFormat = Object.freeze({
         year: 'numeric',
         month: 'short',
@@ -237,10 +226,8 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
       });
     })();
 
-    // the menu on narrow screens: opens under the topbar, closes on a pick, a tap outside or Escape
     const toggle = document.querySelector('[data-menu-toggle]');
     const menu = document.getElementById('home-menu');
-    // both labels come with the button, in the page's language
     const openLabel = toggle.getAttribute('aria-label');
     const setMenu = (open) => {
       menu.hidden = !open;

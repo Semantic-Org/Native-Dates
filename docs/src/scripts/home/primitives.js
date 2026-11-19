@@ -1,11 +1,3 @@
-// the primitives ribbon: what Temporal ships, and the shortest call that hands you each one.
-// `ours` and `temporal` are the same value written both ways, as text. the build runs both and
-// stops if they differ (components/home/Primitives.astro). `built` is the Temporal type underneath,
-// and `plugin` names the plugin a row needs, while it needs one. Temporal has no type for a span, so
-// that row's Temporal side is the two values it is made of, a line each.
-// `legacy` is how the same thing was kept before Temporal, in whatever would hold it, and `stored`
-// is what that was. the build checks it holds the same thing too
-
 const DATETIME_ZONES = {
   en: ['America/Los_Angeles', '2026-11-16T17:30Z'],
   ja: ['Asia/Tokyo', '2026-11-16T00:30Z'],
@@ -18,6 +10,7 @@ const DATETIME_ZONES = {
   fr: ['Europe/Paris', '2026-11-16T08:30Z'],
 };
 
+// components/home/Primitives.astro runs ours, temporal, and legacy at build time and fails if they disagree
 export function primitivesFor(locale = 'en') {
   const [zone, utc] = DATETIME_ZONES[locale] ?? DATETIME_ZONES.en;
   return [
@@ -83,7 +76,6 @@ export function primitivesFor(locale = 'en') {
 
 export const PRIMITIVES = primitivesFor('en');
 
-// the switch: every row's call in native-dates, on Temporal alone, or as it was kept before either
 export function mountPrimitives(root) {
   const buttons = [...root.querySelectorAll('[data-prims]')];
   const set = (mode) => {
@@ -92,7 +84,6 @@ export function mountPrimitives(root) {
       button.setAttribute('aria-checked', on);
       button.tabIndex = on ? 0 : -1;
     });
-    // a row's call, and the label that goes with that way of writing it
     root.querySelectorAll('[data-prim]').forEach((code) => {
       code.hidden = code.dataset.prim !== mode;
     });

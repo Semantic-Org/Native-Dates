@@ -1,8 +1,7 @@
 name: Bundle Size Report
 
-# posts the bundle size comment after a Bundle Size run, whatever its conclusion, so a red check
-# still gets its comment. workflow_run gives it the base repo's secrets and main's tools/ci/bundle,
-# so a PR never authors the tool that judges it
+# posts or updates the bundle size PR comment after Bundle Size finishes, regardless of pass or fail.
+# Runs via workflow_run from main so untrusted PR code never runs with write permissions or bot secrets
 
 on:
   workflow_run:
@@ -12,7 +11,6 @@ on:
 permissions:
   contents: read
 
-# a group per run: GitHub keeps one waiting run per group and cancels the one before it
 concurrency:
   group: bundle-size-report-${{ github.event.workflow_run.id }}
   cancel-in-progress: false
@@ -33,7 +31,7 @@ jobs:
         env:
           HAS_BOT: ${{ secrets.SEMANTIC_BUNDLE_BOT_CLIENT_ID != '' && secrets.SEMANTIC_BUNDLE_BOT_PRIVATE_KEY != '' }}
         run: echo "has=$HAS_BOT" >> "$GITHUB_OUTPUT"
-      # continue-on-error on purpose: the comment posts under the workflow token when the app is missing or down
+      # fall back to github.token if the GitHub App is unconfigured or unreachable
       - name: Create Bot Token
         id: bot-token
         if: steps.bot.outputs.has == 'true'
@@ -42,7 +40,6 @@ jobs:
         with:
           client-id: ${{ secrets.SEMANTIC_BUNDLE_BOT_CLIENT_ID }}
           private-key: ${{ secrets.SEMANTIC_BUNDLE_BOT_PRIVATE_KEY }}
-      # sticky-bot-comment finds the prior comment by this login
       - name: Choose Token
         id: token
         env:
@@ -53,8 +50,7 @@ jobs:
           echo "value=${BOT_TOKEN:-$WORKFLOW_TOKEN}" >> "$GITHUB_OUTPUT"
           if [ -n "$BOT_TOKEN" ] && [ -n "$BOT_SLUG" ]; then echo "login=$BOT_SLUG[bot]" >> "$GITHUB_OUTPUT"; else echo "login=github-actions[bot]" >> "$GITHUB_OUTPUT"; fi
 
-      # main, for the tool. the reported run comes from the event. the reporter imports nothing, so
-      # nothing is installed in the job that holds the token
+      # reporter.js uses only Node built-ins so no npm install is needed in this privileged job
       - name: Checkout Main
         uses: actions/checkout@v7
         with:
@@ -64,7 +60,7 @@ jobs:
         with:
           node-version-file: .node-version
 
-      # github.token, not the app's: the app holds pull requests alone and cannot list another run's artifacts
+      # use github.token because the GitHub App only requests pull-requests permission, not actions:read
       - name: Download Size Results
         id: results
         env:
@@ -87,18 +83,17 @@ jobs:
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           REPO: ${{ github.repository }}
         run: |
-          # a PR from a fork is not in the event, so it is found by its branch
+          # fork PRs omit pull_requests in workflow_run payloads, so look up by head branch
           if [ -z "$NUMBER" ] || [ "$NUMBER" = "null" ]; then
             NUMBER=$(gh pr list --repo "$REPO" --head "$HEAD_BRANCH" --state open --json number --jq '.[0].number // ""')
           fi
           if [ -n "$NUMBER" ]; then
             HEAD=$(gh pr view "$NUMBER" --repo "$REPO" --json headRefOid --jq .headRefOid)
-            if [ "$HEAD" != "$HEAD_SHA" ]; then echo "#$NUMBER has moved on to ${HEAD:0:7}, so this run on ${HEAD_SHA:0:7} leaves the comment to it"; NUMBER=''; fi
+            if [ "$HEAD" != "$HEAD_SHA" ]; then echo "PR #$NUMBER is now at ${HEAD:0:7}, skipping stale report for ${HEAD_SHA:0:7}"; NUMBER=''; fi
           fi
           echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
           echo "Resolved PR number: $NUMBER"
 
-      # the reporter quotes the body's Expected bytes: line
       - name: Read Pull Request Body
         if: steps.results.outputs.report == 'true' && steps.pr.outputs.number != ''
         env:
@@ -137,7 +132,6 @@ jobs:
           name: size-report
           path: size-report
 
-      # post is the reporter's call. a zero says so on the summary page instead
       - name: Post Comment
         if: steps.results.outputs.report == 'true' && steps.render.outputs.post == 'true' && steps.pr.outputs.number != ''
         uses: ./.github/actions/sticky-bot-comment

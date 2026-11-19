@@ -1,8 +1,5 @@
 ---
-// one question at a time, asked of Date and of native-dates on Temporal. the reader picks a question
-// from the four, both consoles answer it together, each answer is stamped wrong or right, and then
-// a line says why Date misses. the page
-// ships the build's answers; the browser asks again itself (scripts/home/consoles-live.js)
+// pre-render build-time console output and re-evaluate in the browser (scripts/home/consoles-live.js)
 import * as library from 'native-dates';
 
 import { HOME_LOCALES } from '../../data/home-locales.js';
@@ -22,7 +19,7 @@ const cases = consolesFor(pageLocale).map((c) => ({
 }));
 ---
 <div class="ask" data-consoles={pageLocale}>
-  {/* a rubber stamp's ink: worn through in specks, and ragged at its edges. the stamps name it as their filter */}
+  {/* referenced via url(#stamp-ink) in home.css */}
   <svg class="stamp-ink" width="0" height="0" aria-hidden="true">
     <filter id="stamp-ink" x="-10%" y="-20%" width="120%" height="140%" color-interpolation-filters="sRGB">
       <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="grain" />

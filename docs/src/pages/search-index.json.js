@@ -1,10 +1,8 @@
-// the search index `astro dev` uses where the built site uses pagefind: per page, each h2/h3 with
-// the plain text under it. the same pages, the same headings, so results look alike in both
 import { getCollection, render } from 'astro:content';
 
 import { SECTIONS } from '../lib/nav.js';
 
-// markdown to searchable text: fences, directives, tables' pipes and inline marks dropped
+// fallback search index for astro dev because Pagefind only runs against built HTML output
 const plain = (md) =>
   md
     .replace(/```[\s\S]*?```/g, ' ')
@@ -23,7 +21,7 @@ export async function GET() {
     const [sectionKey] = entry.id.split('/');
     const section = SECTIONS.find((s) => s.key === sectionKey);
     const group = section.groups.find((g) => g.items.some((it) => it.slug === entry.id));
-    // split the body at its h2/h3 lines, outside fences, in step with the collected headings
+    // skip fenced blocks when splitting on ##/### so code comments stay aligned with render(entry) headings
     const parts = [];
     let inFence = false;
     for (const line of entry.body.split('\n')) {

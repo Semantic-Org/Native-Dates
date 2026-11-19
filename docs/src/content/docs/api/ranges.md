@@ -105,7 +105,7 @@ t.for(length, unit?): TimeRange
 
 Builds a range from this point to an end point or across a duration. On a [calendar date](/api/calendar-date/), passing a length of 7 days lands six days after the start day because both endpoints are included.
 
-Given a length, the same call is also spelled `for()`. A calendar date also answers to `through()`, since its range includes the last day.
+Given a length, the same call is also aliased as `for()`. A calendar date also provides `through()`, since its range includes the last day.
 
 **Parameters**
 
@@ -412,7 +412,7 @@ range.format(spec?, locale?): string
 
 Formats the range with localized `Intl` range formatting for presets and options objects, collapsing shared dates or months automatically. Token patterns format each endpoint and join them with `' – '`.
 
-Custom formats named in [`configure()`](/api/configure/) print here too. See [Formatting](/guides/formatting/) for preset and token details.
+Custom formats registered in [`configure()`](/api/configure/) work here too. See [Formatting](/guides/formatting/) for preset and token details.
 
 **Parameters**
 

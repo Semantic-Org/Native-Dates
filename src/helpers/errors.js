@@ -26,7 +26,7 @@ export const fail = (explanation) => {
 export const readAs = (kind, readings) => {
   if (!Object.hasOwn(readings, kind)) {
     refuse('unknownKind', String(kind), {
-      explanation: isDevelopment ? `\`as()\` on this value only supports ${Object.keys(readings).join(' or ')}` : 0,
+      explanation: isDevelopment ? `\`as()\` on this value only supports [${Object.keys(readings).join(', ')}]` : 0,
     });
   }
   return readings[kind]();

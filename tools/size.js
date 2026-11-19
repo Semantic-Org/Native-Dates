@@ -1,4 +1,4 @@
-// measures production minified, gzip and Brotli-11 sizes for core, a named import, what each plugin adds, and all plugins
+// measures production minified, gzip, and Brotli-11 sizes for core, a single import, marginal plugins, and all plugins
 
 import { build } from 'esbuild';
 import { readdirSync } from 'node:fs';
@@ -23,7 +23,7 @@ export async function measure(contents, resolveDir = root, { dev = false, map = 
       'process.env.NODE_ENV': dev ? '"development"' : '"production"',
       __DEV__: dev ? 'true' : 'false',
     },
-    // an external map leaves the bundle byte for byte what it is without one
+    // external sourcemaps keep the emitted JS bundle identical to a build without sourcemaps
     ...(map ? { sourcemap: 'external', outfile: resolve(resolveDir, 'bundle.js') } : {}),
     stdin: { contents, resolveDir },
   });
@@ -33,7 +33,7 @@ export async function measure(contents, resolveDir = root, { dev = false, map = 
   const br = brotliCompressSync(raw, {
     params: { [constants.BROTLI_PARAM_QUALITY]: 11 },
   });
-  // minified bytes each source file left in the bundle, without the measured snippet itself
+  // per-file minified byte attribution excluding the synthetic <stdin> entry snippet
   const [, { inputs }] = Object.entries(result.metafile.outputs).find(([file]) => !file.endsWith('.map'));
   delete inputs['<stdin>'];
   return {
@@ -61,14 +61,11 @@ export const pluginNames = (resolveDir = root) =>
 
 const CORE = 'native-dates (full)';
 
-/*
-  the rows, defined once: this script prints them, tools/gates/budget.js judges them, and the
-  bundle bot's reporter (tools/ci/bundle) reads the part each plays in the pull request comment
-    headline    all of native-dates. the ceiling's number and the comment's title
-    diagnostic  shown with every other row and never judged
-    plugin      what a plugin adds to an app that already has all of native-dates
-    overhead    the development text a production build folds out, a health line and never a row
-*/
+// shared target list printed by `npm run size`, checked by budget.js, and rendered by reporter.js
+// headline    full core package, used for the size ceiling and headline PR delta
+// diagnostic  reference row shown in All bundles without failing budget checks
+// plugin      marginal bytes added when importing one plugin alongside core
+// overhead    dev-only diagnostic bytes stripped in production builds
 export const rowsFrom = (plugins) => [
   { label: 'import { now }', part: 'diagnostic', entry: `import { now } from 'native-dates'; console.log(now());` },
   { label: CORE, part: 'headline', entry: entryWith() },
@@ -83,15 +80,13 @@ export const rowsFrom = (plugins) => [
   },
 ];
 
-// esbuild's first message with its place, or an error's first line
 function firstLine(error) {
   const first = error?.errors?.[0];
   if (first) { return `${first.location ? `${first.location.file}:${first.location.line}: ` : ''}${first.text}`; }
   return String(error?.message ?? error).split('\n')[0];
 }
 
-// every row of the tree at dir, and the builds behind them for the checks that read a bundle's text.
-// a row that does not build is recorded with its error and the others are still measured
+// builds every target for `dir`, recording per-target build errors so remaining targets still measure
 export async function measureRows(dir = root) {
   const builds = {};
   const rows = [];
@@ -101,13 +96,12 @@ export async function measureRows(dir = root) {
       const apart = builds[beside ?? minus];
       if ((beside || minus) && !apart) { throw new Error(`${beside ?? minus} did not build`); }
       const built = await measure(entry, dir, { dev, map: part === 'headline' || part === 'plugin' });
-      // without its own install a worktree resolves native-dates to the checkout above it
+      // un-installed git worktrees resolve workspace packages to the parent checkout's node_modules
       const outside = Object.keys(built.inputs).find((file) => file.startsWith('..'));
-      if (outside) { throw new Error(`an import resolved outside this tree, to ${outside}. Run npm install in it`); }
+      if (outside) { throw new Error(`import resolved outside ${dir} (${outside}). Run npm install in ${dir}`); }
       builds[label] = built;
       const less = (key) => built[key] - (apart ? apart[key] : 0);
       row.sizes = { min: less('min'), gz: less('gz'), br: less('br') };
-      // a plugin's files are what each adds to the bundle beside core
       if (beside) {
         row.inputs = Object.fromEntries(
           Object.entries(built.inputs)

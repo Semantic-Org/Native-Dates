@@ -112,7 +112,7 @@ const restored = datetime(legacy, 'America/New_York');
 
 When downstream helpers still call legacy getters like `getFullYear()` directly on values, import the [`legacy-date`](/plugins/legacy-date/) plugin.
 
-Read methods answer in the value's own time zone while keeping zero-indexed months for drop-in compatibility. Mutating setters throw immediately so hidden in-place edits surface in tests.
+Getter methods read fields in the value's own time zone while keeping zero-indexed months for drop-in compatibility. Mutating setters throw immediately so hidden in-place edits surface in tests.
 
 ```js
 import '@native-dates/plugins/legacy-date';
