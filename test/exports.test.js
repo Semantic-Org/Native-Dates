@@ -70,12 +70,12 @@ const brands = [
 ];
 
 describe('native-dates exports', () => {
-  it('are the nine classes, their factories and guards, eight helpers and ten brand symbols, and nothing else', () => {
+  it('exports the complete set of public classes, factories, guards, helpers, and brand symbols', () => {
     const expected = [...classes, ...factories, ...guards, ...helpers, ...brands];
     expect(Object.keys(nativeDates).sort()).toEqual(expected.sort());
   });
 
-  it('are classes named as they are exported, functions, and symbols', () => {
+  it('preserves class .name and expected runtime typeof for every export', () => {
     for (const name of classes) {
       expect(nativeDates[name].name).toBe(name);
     }
@@ -87,8 +87,7 @@ describe('native-dates exports', () => {
     }
   });
 
-  // a name declared and never exported compiles and then fails at import, and the reverse has no types
-  it('match, name for name, the values that types/index.d.ts declares', () => {
+  it('matches every value export declared in types/index.d.ts', () => {
     const declarations = readFileSync(new URL('../types/index.d.ts', import.meta.url), 'utf8');
     const declared = [...declarations.matchAll(/^export \{([^}]+)\} from/gm)]
       .flatMap(([, names]) => names.split(','))
@@ -96,7 +95,4 @@ describe('native-dates exports', () => {
       .filter(Boolean);
     expect(declared.sort()).toEqual(Object.keys(nativeDates).sort());
   });
-
-  // the exports map names only the import condition, so require('native-dates') finds no entry
-  it.todo('load with require() from a CommonJS file, as Node 26 loads any ES module');
 });

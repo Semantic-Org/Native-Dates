@@ -18,56 +18,56 @@ import {
 import { describe, expect, it } from 'vitest';
 
 describe('compare()', () => {
-  it('sorts calendar dates from earliest to latest when passed to Array.prototype.sort()', () => {
+  it('sorts CalendarDates from earliest to latest when passed to Array.prototype.sort()', () => {
     const dates = [date('2026-12-01'), date('2026-05-10'), date('2026-08-20')];
     expect(dates.sort(compare).map(String)).toEqual(['2026-05-10', '2026-08-20', '2026-12-01']);
   });
 
   it.each([
-    ['calendar dates', date, '2026-05-10', '2026-08-20'],
-    ['moments a millisecond apart', datetime, '2026-11-16T17:30:00.000Z', '2026-11-16T17:30:00.001Z'],
-    ['times of day', time, '9:00am', '5:30pm'],
-    ['durations', duration, '45m', '2h'],
-    ['year-months', yearMonth, '2026-10', '2026-11'],
-    ['date ranges', dateRange, '2026-11-01/2026-11-05', '2026-11-10/2026-11-14'],
-    ['moment ranges', datetimeRange, '2026-11-16T09:00Z/2026-11-16T10:00Z', '2026-11-16T10:00Z/2026-11-16T11:00Z'],
-    ['time ranges', timeRange, '09:00/12:00', '13:00/17:00'],
-  ])('returns -1, 1 and 0 for two %s in order, reversed and equal', (kind, read, earlier, later) => {
-    expect(compare(read(earlier), read(later))).toBe(-1);
-    expect(compare(read(later), read(earlier))).toBe(1);
-    expect(compare(read(earlier), read(earlier))).toBe(0);
+    ['CalendarDates', date, '2026-05-10', '2026-08-20'],
+    ['DateTimes a millisecond apart', datetime, '2026-11-16T17:30:00.000Z', '2026-11-16T17:30:00.001Z'],
+    ['Times', time, '9:00am', '5:30pm'],
+    ['Durations', duration, '45m', '2h'],
+    ['YearMonths', yearMonth, '2026-10', '2026-11'],
+    ['DateRanges', dateRange, '2026-11-01/2026-11-05', '2026-11-10/2026-11-14'],
+    ['DateTimeRanges', datetimeRange, '2026-11-16T09:00Z/2026-11-16T10:00Z', '2026-11-16T10:00Z/2026-11-16T11:00Z'],
+    ['TimeRanges', timeRange, '09:00/12:00', '13:00/17:00'],
+  ])('returns -1, 1, and 0 for %s in ascending, descending, and equal order', (kind, parse, earlier, later) => {
+    expect(compare(parse(earlier), parse(later))).toBe(-1);
+    expect(compare(parse(later), parse(earlier))).toBe(1);
+    expect(compare(parse(earlier), parse(earlier))).toBe(0);
   });
 
-  it('orders moments by instant, so 9:00 in New York sorts before 8:00 the same day in Los Angeles', () => {
+  it('orders DateTimes by instant across timezones', () => {
     const newYork = datetime('2026-11-16T09:00', 'America/New_York');
     const losAngeles = datetime('2026-11-16T08:00', 'America/Los_Angeles');
     expect(compare(newYork, losAngeles)).toBe(-1);
-    expect([losAngeles, newYork].sort(compare).map((moment) => moment.zone)).toEqual([
+    expect([losAngeles, newYork].sort(compare).map((value) => value.zone)).toEqual([
       'America/New_York',
       'America/Los_Angeles',
     ]);
   });
 
-  it('returns 0 for one instant viewed in two zones', () => {
+  it('returns 0 for the same instant in two timezones', () => {
     expect(compare(datetime('2026-11-16T12:00', 'America/New_York'), datetime('2026-11-16T17:00Z', 'UTC'))).toBe(0);
   });
 
-  it('tells apart moments and times that differ by one nanosecond', () => {
+  it('distinguishes DateTimes and Times that differ by one nanosecond', () => {
     expect(compare(datetime('2026-11-16T17:30:00.000000001Z'), datetime('2026-11-16T17:30:00.000000002Z'))).toBe(-1);
     expect(compare(time('09:00:00.000000002'), time('09:00:00.000000001'))).toBe(1);
   });
 
-  it('ignores the locale a value carries', () => {
+  it('ignores instance locale when comparing values', () => {
     expect(compare(date('2026-11-16').locale('de'), date('2026-11-16').locale('ja'))).toBe(0);
   });
 
-  it('orders durations by length whatever unit they were written in', () => {
+  it('orders Durations by elapsed time regardless of unit', () => {
     const spans = [hours(2), minutes(45), minutes(90)].sort(compare);
     expect(spans.map(String)).toEqual(['PT45M', 'PT90M', 'PT2H']);
     expect(compare(hours(1), minutes(60))).toBe(0);
   });
 
-  it('sorts ranges by their start and breaks a tie by their end', () => {
+  it('sorts ranges by start and breaks ties by end', () => {
     const windows = [
       dateRange('2026-11-10', '2026-11-20'),
       dateRange('2026-11-10', '2026-11-14'),
@@ -80,26 +80,25 @@ describe('compare()', () => {
     ]);
   });
 
-  it('reads two raw strings as dates or times by their shape, never as text', () => {
+  it('compares raw date and time strings chronologically rather than alphabetically', () => {
     expect(compare('2026-05-10', '2026-05-11')).toBe(-1);
     expect(compare('10:00', '9:00')).toBe(1);
     expect(compare('9am', '5:30pm')).toBe(-1);
   });
 
-  // a createdAt column or an API field arrives as text, often several on one day
-  it('reads two timestamp strings as moments, so two on one day are ordered by their time', () => {
+  it('parses two timestamp strings as DateTimes and orders same-day values by time', () => {
     expect(compare('2026-11-16T09:00:00Z', '2026-11-16T17:30:00Z')).toBe(-1);
     expect(compare('2026-11-16 17:30:00', '2026-11-16 09:00:00')).toBe(1);
     const written = ['2026-11-16T17:30:00Z', '2026-11-15T23:00:00Z', '2026-11-16T09:00:00Z'];
     expect(written.sort(compare)).toEqual(['2026-11-15T23:00:00Z', '2026-11-16T09:00:00Z', '2026-11-16T17:30:00Z']);
   });
 
-  it('orders timestamp strings by their instant, whatever offset each was written with', () => {
+  it('orders timestamp strings by instant across different UTC offsets', () => {
     expect(compare('2026-11-16T09:00:00+01:00', '2026-11-16T09:00:00-05:00')).toBe(-1);
     expect(compare('2026-11-16T09:00:00+01:00', '2026-11-16T08:00:00Z')).toBe(0);
   });
 
-  it('ignores spaces and a line break around a raw string, as a spreadsheet cell or a typed field carries them', () => {
+  it('trims surrounding spaces and newlines from raw input strings', () => {
     expect(compare(' 9:00', '10:00\n')).toBe(-1);
     expect(compare(' 2026-05-11 ', '2026-05-10')).toBe(1);
     expect(earliest(' 2026-05-11 ', '2026-05-10').toString()).toBe('2026-05-10');
@@ -119,61 +118,69 @@ describe('compare()', () => {
       Temporal.ZonedDateTime.from('2026-11-16T08:00[America/Los_Angeles]'),
     ],
     ['Temporal.Instant', Temporal.Instant.from('2026-11-16T09:00Z'), Temporal.Instant.from('2026-11-16T17:30Z')],
-  ])('reads two %s values as the kind each one holds', (name, earlier, later) => {
+  ])('compares two %s instances by their Temporal kind', (name, earlier, later) => {
     expect(compare(earlier, later)).toBe(-1);
     expect(compare(later, earlier)).toBe(1);
     expect(compare(earlier, earlier)).toBe(0);
   });
 
-  it('reads a Date or an epoch millisecond number standing first as a moment', () => {
+  it('coerces a Date or epoch millisecond number as the first argument to DateTime', () => {
     expect(compare(new Date(1794840000000), datetime('2026-11-16T18:00Z'))).toBe(-1);
     expect(compare(1794840000000, datetime('2026-11-16T18:00Z'))).toBe(-1);
     expect(compare(1794850200000, 1794840000000)).toBe(1);
   });
 
-  it('reads a raw value standing second as the kind of the first', () => {
+  it('coerces a raw value as the second argument to the kind of the first argument', () => {
     expect(compare(date('2026-05-10'), '2026-05-10')).toBe(0);
     expect(compare(yearMonth('2026-11'), '2026-10')).toBe(1);
     expect(compare(hours(2), '45m')).toBe(1);
   });
 
-  it('reads a number beside a time of day as an hour', () => {
+  it('coerces a numeric second argument to an hour when comparing with a Time', () => {
     expect(compare(time('09:00'), 9)).toBe(0);
     expect(compare(time('09:00'), 17)).toBe(-1);
   });
 
-  it("reads a wall-clock string beside a moment in that moment's zone", () => {
+  it("interprets an offset-less string as the second argument in the first DateTime's zone", () => {
     expect(compare(datetime('2026-11-16T09:00', 'Asia/Tokyo'), '2026-11-16T09:00')).toBe(0);
     expect(compare(datetime('2026-11-16T09:00', 'Pacific/Honolulu'), '2026-11-16T09:00')).toBe(0);
   });
 
-  it('sorts a list that mixes moments with epoch millisecond numbers', () => {
+  it('sorts a mixed array of DateTimes and epoch millisecond numbers', () => {
     expect([3000, datetime(2000), 1000].sort(compare).map(Number)).toEqual([1000, 2000, 3000]);
   });
 
   it.each([
-    ['a date beside a moment', () => compare(date('2026-11-16'), datetime('2026-11-16T00:00Z')), 'date with datetime'],
-    ['a moment beside a date', () => compare(datetime('2026-11-16T00:00Z'), date('2026-11-16')), 'datetime with date'],
-    ['a date beside a time', () => compare(date('2026-11-16'), time('9:00am')), 'date with time'],
-    ['a date beside a year-month', () => compare(date('2026-11-16'), yearMonth('2026-11')), 'date with yearMonth'],
-    ['a year-month beside a date', () => compare(yearMonth('2026-11'), date('2026-11-16')), 'yearMonth with date'],
-    ['a date beside a duration', () => compare(date('2026-11-16'), hours(2)), 'date with duration'],
     [
-      'a date range beside a time range',
+      'CalendarDate and DateTime',
+      () => compare(date('2026-11-16'), datetime('2026-11-16T00:00Z')),
+      'date with datetime',
+    ],
+    [
+      'DateTime and CalendarDate',
+      () => compare(datetime('2026-11-16T00:00Z'), date('2026-11-16')),
+      'datetime with date',
+    ],
+    ['CalendarDate and Time', () => compare(date('2026-11-16'), time('9:00am')), 'date with time'],
+    ['CalendarDate and YearMonth', () => compare(date('2026-11-16'), yearMonth('2026-11')), 'date with yearMonth'],
+    ['YearMonth and CalendarDate', () => compare(yearMonth('2026-11'), date('2026-11-16')), 'yearMonth with date'],
+    ['CalendarDate and Duration', () => compare(date('2026-11-16'), hours(2)), 'date with duration'],
+    [
+      'DateRange and TimeRange',
       () => compare(dateRange('2026-11-01', '2026-11-07'), timeRange('9am', '5pm')),
       'dateRange with timeRange',
     ],
-  ])('refuses %s with a conflictingKinds TypeError naming both kinds', (pair, call, at) => {
+  ])('throws conflictingKinds TypeError when comparing %s', (pair, call, at) => {
     expect(call).toThrowError(expect.objectContaining({ name: 'TypeError', code: 'conflictingKinds', at }));
   });
 
-  it('refuses a calendar date beside an epoch number, since a bare number names no day', () => {
+  it('throws invalidDate TypeError when comparing a CalendarDate with an epoch millisecond number', () => {
     expect(() => compare(date('2026-11-16'), 1794850200000)).toThrowError(
       expect.objectContaining({ name: 'TypeError', code: 'invalidDate', at: '1794850200000' }),
     );
   });
 
-  it('refuses month-days, which have no order, with an invalidPoint TypeError', () => {
+  it('throws invalidPoint TypeError when comparing unordered MonthDays', () => {
     expect(() => compare(monthDay('10-17'), monthDay('10-18'))).toThrowError(
       expect.objectContaining({ name: 'TypeError', code: 'invalidPoint', at: '10-17' }),
     );
@@ -184,35 +191,35 @@ describe('compare()', () => {
     ['undefined', undefined, 'undefined'],
     ['a plain object', {}, '[object Object]'],
     ['a boolean', true, 'true'],
-  ])('refuses %s with an invalidPoint TypeError', (label, value, at) => {
+  ])('throws invalidPoint TypeError when given %s', (label, value, at) => {
     expect(() => compare(value, date('2026-11-16'))).toThrowError(
       expect.objectContaining({ name: 'TypeError', code: 'invalidPoint', at }),
     );
   });
 
-  it.todo('reads an interval string beside a range, as it reads a raw string beside every other kind');
+  it.todo('coerces an ISO interval string as the second argument when the first argument is a Range');
 });
 
 describe('earliest() and latest()', () => {
-  it('return the first and the last of several dates passed as arguments', () => {
+  it('returns the earliest and latest value from variadic arguments', () => {
     const dates = [date('2026-11-20'), date('2026-11-04'), date('2026-11-16')];
     expect(earliest(...dates).toString()).toBe('2026-11-04');
     expect(latest(...dates).toString()).toBe('2026-11-20');
   });
 
-  it('accept one array in place of separate arguments', () => {
+  it('accepts an array in place of variadic arguments', () => {
     const times = [time('5:30pm'), time('9:00am'), time('12:15pm')];
     expect(earliest(times).toString()).toBe('09:00:00');
     expect(latest(times).toString()).toBe('17:30:00');
   });
 
-  it('pick among year-months', () => {
+  it('selects the earliest and latest YearMonth', () => {
     const months = [yearMonth('2026-11'), yearMonth('2025-12'), yearMonth('2026-02')];
     expect(earliest(months).toString()).toBe('2025-12');
     expect(latest(months).toString()).toBe('2026-11');
   });
 
-  it('return the very value passed in, so its zone and locale come back with it', () => {
+  it('returns the original instance preserving its zone and locale', () => {
     const berlin = datetime('2026-11-16T09:00', 'Europe/Berlin').locale('de');
     const tokyo = datetime('2026-11-17T09:00', 'Asia/Tokyo').locale('ja');
     expect(earliest(tokyo, berlin)).toBe(berlin);
@@ -221,13 +228,13 @@ describe('earliest() and latest()', () => {
     expect(latest(berlin, tokyo).locale()).toBe('ja');
   });
 
-  it('return the only value when given one', () => {
+  it('returns the input unchanged when given a single value', () => {
     const only = date('2026-11-16');
     expect(earliest(only)).toBe(only);
     expect(latest([only])).toBe(only);
   });
 
-  it('keep the earlier item in the list when two moments are the same instant', () => {
+  it('returns the first matching instance when two DateTimes represent the same instant', () => {
     const newYork = datetime('2026-11-16T12:00', 'America/New_York');
     const utc = datetime('2026-11-16T17:00Z', 'UTC');
     expect(earliest(newYork, utc)).toBe(newYork);
@@ -236,27 +243,26 @@ describe('earliest() and latest()', () => {
     expect(latest(utc, newYork)).toBe(utc);
   });
 
-  it('turn Dates and epoch millisecond numbers into DateTimes', () => {
+  it('coerces Dates and epoch millisecond numbers to DateTimes', () => {
     const first = earliest(1794850200000, 1794840000000);
     expect(isDateTime(first)).toBe(true);
     expect(first.epochMilliseconds).toBe(1794840000000);
     expect(latest(new Date(1794840000000), new Date(1794850200000)).epochMilliseconds).toBe(1794850200000);
   });
 
-  // the last time any row was updated, read straight off a list of updatedAt strings
-  it('read timestamp strings as moments and return the DateTime of the first or the last', () => {
+  it('coerces timestamp strings to DateTimes and returns the earliest or latest instance', () => {
     const updated = ['2026-11-16T09:00:00Z', '2026-11-16T17:30:00Z', '2026-11-15T23:00:00Z'];
     expect(isDateTime(latest(updated))).toBe(true);
     expect(latest(updated).toString()).toBe('2026-11-16T17:30:00.000Z');
     expect(earliest(...updated).toString()).toBe('2026-11-15T23:00:00.000Z');
   });
 
-  it('read raw values after the first as the kind of the first', () => {
+  it('coerces subsequent raw arguments to the kind of the first argument', () => {
     expect(earliest(date('2026-11-20'), '2026-11-04').toString()).toBe('2026-11-04');
     expect(earliest(time('09:00'), 8).toString()).toBe('08:00:00');
   });
 
-  it('clamp a value between two bounds when combined', () => {
+  it('clamps a value between min and max bounds when composed', () => {
     const [min, max] = [date('2026-11-01'), date('2026-11-30')];
     const clamp = (picked) => earliest(max, latest(min, picked)).toString();
     expect(clamp(date('2026-12-12'))).toBe('2026-11-30');
@@ -264,7 +270,7 @@ describe('earliest() and latest()', () => {
     expect(clamp(date('2026-11-12'))).toBe('2026-11-12');
   });
 
-  it('leave the array passed in as it was', () => {
+  it('does not mutate the input array', () => {
     const [later, sooner] = [date('2026-11-20'), date('2026-11-04')];
     const list = [later, sooner];
     earliest(list);
@@ -279,23 +285,23 @@ describe('earliest() and latest()', () => {
     ['earliest() with an empty array', () => earliest([]), 'earliest'],
     ['latest() with no arguments', () => latest(), 'latest'],
     ['latest() with an empty array', () => latest([]), 'latest'],
-  ])('%s is refused with a missingPoints RangeError', (label, call, at) => {
+  ])('throws missingPoints RangeError for %s', (label, call, at) => {
     expect(call).toThrowError(expect.objectContaining({ name: 'RangeError', code: 'missingPoints', at }));
   });
 
-  it('refuse a mix of kinds with a conflictingKinds TypeError', () => {
+  it('throws conflictingKinds TypeError for mixed temporal kinds', () => {
     expect(() => latest(date('2026-11-16'), time('9:00am'))).toThrowError(
       expect.objectContaining({ name: 'TypeError', code: 'conflictingKinds' }),
     );
   });
 
   it.each([
-    ['durations', () => earliest(hours(2), minutes(45))],
-    ['ranges', () => earliest(dateRange('2026-11-10', '2026-11-20'), dateRange('2026-11-01', '2026-11-05'))],
-    ['month-days', () => latest(monthDay('10-17'), monthDay('01-01'))],
-  ])('refuse %s, which are not points on a timeline, with an invalidPoint TypeError', (label, call) => {
+    ['Durations', () => earliest(hours(2), minutes(45))],
+    ['Ranges', () => earliest(dateRange('2026-11-10', '2026-11-20'), dateRange('2026-11-01', '2026-11-05'))],
+    ['MonthDays', () => latest(monthDay('10-17'), monthDay('01-01'))],
+  ])('throws invalidPoint TypeError for %s', (label, call) => {
     expect(call).toThrowError(expect.objectContaining({ name: 'TypeError', code: 'invalidPoint' }));
   });
 
-  it.todo('read a year-month string beside a YearMonth, as compare() does');
+  it.todo('coerces a year-month string alongside a YearMonth instance');
 });
