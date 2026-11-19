@@ -757,6 +757,128 @@ describe('CalendarDate.startOf() and endOf()', () => {
   });
 });
 
+describe('CalendarDate.startOfNext() and startOfPrevious()', () => {
+  const monday = date('2026-11-16');
+
+  it.each([
+    ['year', '2027-01-01', '2025-01-01'],
+    ['quarter', '2027-01-01', '2026-07-01'],
+    ['month', '2026-12-01', '2026-10-01'],
+    ['day', '2026-11-17', '2026-11-15'],
+  ])('returns the first day of the next and the previous %s', (unit, next, previous) => {
+    expect(monday.startOfNext(unit).toString()).toBe(next);
+    expect(monday.startOfPrevious(unit).toString()).toBe(previous);
+  });
+
+  it('moves a whole unit when the date is already the first day of its unit', () => {
+    const firstOfDecember = date('2026-12-01');
+    expect(firstOfDecember.startOfNext('month').toString()).toBe('2027-01-01');
+    expect(firstOfDecember.startOfPrevious('month').toString()).toBe('2026-11-01');
+    expect(date('2027-01-01').startOfPrevious('year').toString()).toBe('2026-01-01');
+  });
+
+  it('returns the first day of a shorter month from the 31st and of the next or previous year from February 29', () => {
+    expect(date('2026-01-31').startOfNext('month').toString()).toBe('2026-02-01');
+    expect(date('2026-03-31').startOfPrevious('month').toString()).toBe('2026-02-01');
+    expect(date('2024-02-29').startOfNext('year').toString()).toBe('2025-01-01');
+    expect(date('2024-02-29').startOfPrevious('year').toString()).toBe('2023-01-01');
+  });
+
+  it('starts the next and the previous week on the first day of the week of the instance locale', () => {
+    expect(monday.locale('en-US').startOfNext('week').toString()).toBe('2026-11-22');
+    expect(monday.locale('de-DE').startOfNext('week').toString()).toBe('2026-11-23');
+    expect(monday.locale('en-US').startOfPrevious('week').toString()).toBe('2026-11-08');
+    expect(monday.locale('de-DE').startOfPrevious('week').toString()).toBe('2026-11-09');
+  });
+
+  it('starts the next and the previous week on a weekday name or ISO number passed as the second argument', () => {
+    const american = date('2026-11-18', { locale: 'en-US' });
+    expect(american.startOfNext('week', 'monday').toString()).toBe('2026-11-23');
+    expect(american.startOfPrevious('week', 1).toString()).toBe('2026-11-09');
+    expect(date('2026-12-31').startOfNext('week', 'monday').toString()).toBe('2027-01-04');
+  });
+
+  it('returns the same date as next() and previous() for a weekday', () => {
+    expect(monday.startOfNext('wednesday').toString()).toBe('2026-11-18');
+    expect(monday.startOfPrevious('wednesday').toString()).toBe('2026-11-11');
+    expect(monday.startOfNext('wednesday').equals(monday.next('wednesday'))).toBe(true);
+    expect(monday.startOfPrevious('wednesday').equals(monday.previous('wednesday'))).toBe(true);
+  });
+
+  it('moves a full 7 days when already on the target weekday', () => {
+    expect(monday.startOfNext('monday').toString()).toBe('2026-11-23');
+    expect(monday.startOfPrevious('monday').toString()).toBe('2026-11-09');
+  });
+
+  it('accepts 3-letter weekday abbreviations, mixed case, and surrounding spaces', () => {
+    expect(monday.startOfNext('wed').toString()).toBe('2026-11-18');
+    expect(monday.startOfNext('Wednesday').toString()).toBe('2026-11-18');
+    expect(monday.startOfPrevious(' SUN ').toString()).toBe('2026-11-15');
+  });
+
+  // next(3) is Wednesday, but beside a unit a number reads as a count, and startOfNext(2, 'months') must not be Tuesday
+  it('throws unknownUnit for a weekday written as a number and for a count before a unit', () => {
+    expect(() => monday.startOfNext(3)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: '3' }),
+    );
+    expect(() => monday.startOfPrevious(0)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: '0' }),
+    );
+    expect(() => monday.startOfNext(2, 'months')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: '2' }),
+    );
+  });
+
+  // the previous Sunday is yesterday, while the previous week that starts on Sunday began eight days ago
+  it('reads a weekday as that day rather than as the week it starts', () => {
+    expect(monday.startOfPrevious('sunday').toString()).toBe('2026-11-15');
+    expect(monday.startOfPrevious('week', 'sunday').toString()).toBe('2026-11-08');
+    expect(monday.startOfNext('wednesday').toString()).toBe(monday.startOfNext('week', 'wednesday').toString());
+  });
+
+  it('returns a new CalendarDate without mutating the original', () => {
+    expect(monday.startOfNext('day')).not.toBe(monday);
+    expect(monday.startOfPrevious('day')).not.toBe(monday);
+    expect(monday.toString()).toBe('2026-11-16');
+  });
+
+  it('throws unsupportedUnit for clock units', () => {
+    expect(() => monday.startOfNext('hour')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnit', at: 'hour' }),
+    );
+    expect(() => monday.startOfPrevious('minute')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnit', at: 'minute' }),
+    );
+  });
+
+  it.each([['fortnight', 'fortnight'], ['funday', 'funday'], [undefined, 'undefined']])(
+    'throws unknownUnit for %s, which names neither a unit nor a weekday',
+    (target, at) => {
+      expect(() => monday.startOfNext(target)).toThrowError(
+        expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at }),
+      );
+      expect(() => monday.startOfPrevious(target)).toThrowError(
+        expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at }),
+      );
+    },
+  );
+
+  it('throws unknownUnit for a MonthDay, which only next() and previous() accept', () => {
+    expect(() => monday.startOfNext(monthDay('12-25'))).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: '12-25' }),
+    );
+  });
+
+  it('throws unknownDayOfWeek for an unrecognized week start argument', () => {
+    expect(() => monday.startOfNext('week', 'funday')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: 'funday' }),
+    );
+    expect(() => monday.startOfPrevious('week', 8)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: '8' }),
+    );
+  });
+});
+
 describe('CalendarDate.next() and previous()', () => {
   const monday = date('2026-11-16');
 

@@ -101,22 +101,25 @@ export const plural = (name) => `${name}s`;
 
 const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
+// 1-7 for a weekday name or its first three letters or more, and 0 for anything else, a number included.
+// startOfNext() reads a weekday by name only because a number beside a unit reads as a count
+export const weekdayNamed = (input) => {
+  const key = isString(input) ? input.trim().toLowerCase() : '';
+  return key.length > 2 ? weekdays.findIndex((name) => name.startsWith(key)) + 1 : 0;
+};
+
 // canonical range is ISO 1-7 (7 = Sunday), accepting 0 only as grace for Date.prototype.getDay()
 export const dayOfWeek = (input) => {
   if (isNumber(input) && Number.isInteger(input) && input >= 0 && input <= 7) {
     return input || 7;
   }
-  const key = isString(input) ? input.trim().toLowerCase() : '';
-  const index = key.length > 2 ? weekdays.findIndex((name) => name.startsWith(key)) : -1;
-  return index === -1
-    ? refuse('unknownDayOfWeek', String(input), {
-      explanation: isDevelopment
-        ? `expected a weekday in [${
-          weekdays.join(', ')
-        }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday)`
-        : 0,
-    })
-    : index + 1;
+  return weekdayNamed(input) || refuse('unknownDayOfWeek', String(input), {
+    explanation: isDevelopment
+      ? `expected a weekday in [${
+        weekdays.join(', ')
+      }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday)`
+      : 0,
+  });
 };
 
 export const isZonedDateTime = (value) => value instanceof Temporal.ZonedDateTime;
