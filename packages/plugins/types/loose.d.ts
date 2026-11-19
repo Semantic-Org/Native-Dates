@@ -81,7 +81,7 @@ declare module 'native-dates' {
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime datetime}
    */
-  export function datetime(input: unknown, options: ReadOptions & { loose: true; }): DateTime | null;
+  export function datetime(input: unknown, options: ReadOptions & { loose: boolean; }): DateTime | null;
 
   /**
    * Parses untrusted or informal date input in loose mode, returning `null` instead of throwing
@@ -102,7 +102,7 @@ declare module 'native-dates' {
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime date}
    */
-  export function date(input: unknown, options: ReadOptions & { loose: true; }): CalendarDate | null;
+  export function date(input: unknown, options: ReadOptions & { loose: boolean; }): CalendarDate | null;
 
   /**
    * Parses untrusted or informal time input in loose mode, returning `null` instead of throwing
@@ -123,7 +123,7 @@ declare module 'native-dates' {
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime time}
    */
-  export function time(input: unknown, options: ReadOptions & { loose: true; }): Time | null;
+  export function time(input: unknown, options: ReadOptions & { loose: boolean; }): Time | null;
 
   /**
    * Parses untrusted duration input in loose mode, returning `null` instead of throwing
@@ -144,9 +144,9 @@ declare module 'native-dates' {
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime duration}
    */
-  export function duration(input: unknown, options: { loose: true; locale?: Locale; }): Duration | null;
+  export function duration(input: unknown, options: { loose: boolean; locale?: Locale; }): Duration | null;
 
-  type Loose = ReadOptions & { loose: true; };
+  type Loose = ReadOptions & { loose: boolean; };
 
   /**
    * Parses a `DateRange` from endpoints in loose mode, returning `null` if either endpoint is unreadable
