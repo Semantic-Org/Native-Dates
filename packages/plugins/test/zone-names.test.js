@@ -61,6 +61,21 @@ describe('zones plugin city names', () => {
     expect(datetime(noonInJuly, 'ho chi minh').zone).toBe('Asia/Ho_Chi_Minh');
   });
 
+  // V8 lists no zone ending in any of these names, only Toronto for Montreal and Katmandu for Kathmandu
+  it('reads a city the runtime lists under another name, such as Montreal, Canberra and Kathmandu', () => {
+    const offsetsInJuly = [
+      ['Montreal', '-04:00'],
+      ['Canberra', '+10:00'],
+      ['Belfast', '+01:00'],
+      ['Tel Aviv', '+03:00'],
+      ['Kathmandu', '+05:45'],
+      ['Asmara', '+03:00'],
+    ];
+    for (const [city, offset] of offsetsInJuly) {
+      expect(datetime(noonInJuly, city).offset, city).toBe(offset);
+    }
+  });
+
   it('throws unknownZone at the name when it is no city, abbreviation or zone', () => {
     expect(() => datetime(noonInJuly, 'Atlantis')).toThrowError(
       expect.objectContaining({ code: 'unknownZone', at: 'Atlantis' }),
@@ -129,6 +144,9 @@ describe('zones plugin abbreviations', () => {
   });
 
   it.todo('does not read IRST, Iran Standard Time, as Europe/Dublin');
+
+  // WEST is what WET becomes in summer, and it reads as Perth since Australia/West is an old name for that zone
+  it.todo('does not read WEST, Western European Summer Time, as Australia/West');
 });
 
 describe('zones plugin with IANA names, fixed offsets and UTC', () => {
