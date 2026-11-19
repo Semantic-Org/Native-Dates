@@ -74,8 +74,6 @@ describe('date() from a calendar day', () => {
     expect(date(Temporal.PlainDateTime.from('2026-11-16T23:30')).toString()).toBe('2026-11-16');
   });
 
-  it.todo('reads a Temporal.PlainDate in another calendar as the same ISO day');
-
   it('gives a CalendarDate back as the same day', () => {
     expect(date(date(2026, 11, 16)).toString()).toBe('2026-11-16');
   });
@@ -259,8 +257,6 @@ describe('date() refusals', () => {
       expect.objectContaining({ name: 'RangeError', code: 'invalidDate' }),
     );
   });
-
-  it.todo('refuses a fraction in a fields object');
 
   it('refuses strings that lead with the day or the month, where the order would be a guess', () => {
     expect(() => date('03/05/2026')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '03/05/2026' }));
@@ -532,8 +528,6 @@ describe('CalendarDate set()', () => {
       expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: 'fortnight' }),
     );
   });
-
-  it.todo('throws unsupportedUnit at the unit when asked to set a clock field');
 });
 
 describe('CalendarDate plus() and minus()', () => {

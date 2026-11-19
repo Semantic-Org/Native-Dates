@@ -472,9 +472,4 @@ describe('locale precedence when printing', () => {
     expect(date('2026-05-15').format('MMMM', 'fr_FR')).toBe('mai');
     expect(date('2026-05-15').format('MMMM', 'ja,en;q=0.5')).toBe('5月');
   });
-
-  it.todo('treats null or an empty string passed to format() as no locale for that call');
-
-  // jp for Japanese is the usual slip, and today it prints in the language of the machine and not the configured one
-  it.todo('prints in the configured locale when the runtime has data for no language the value carries');
 });

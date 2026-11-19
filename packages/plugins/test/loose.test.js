@@ -74,12 +74,7 @@ describe('date() with { loose: true }', () => {
     expect(date(date('2026-09-06'), { loose: true })?.toString()).toBe('2026-09-06');
   });
 
-  it.todo('returns null for a date with no year, like "Sep 6" or "9/6", instead of filling in 2001');
-  it.todo('returns null for a run of digits that is no date, like "46271", instead of reading it as a year');
   it.todo('reads a day, month name and year joined by hyphens, like "6-Sep-26", as that day on any machine');
-  it.todo(
-    'never reads a month from the first three letters of a word in another language, like March from the Finnish "6. marraskuuta 2026"',
-  );
 });
 
 describe('datetime() with { loose: true }', () => {
@@ -159,9 +154,6 @@ describe('datetime() with { loose: true }', () => {
   });
 
   it.todo('reads a zone the engine knows by its letters, like "10:30:00 EDT", as the moment it names on any machine');
-  it.todo(
-    'keeps a written clock time that this machine skips for daylight saving, like 2:30 AM on 8 March in New York',
-  );
   it.todo('returns null for text ending in an impossible offset, like "14:30 +2500", instead of an error with no code');
   // the engine reads "GMT+2" as an offset and the plugin does not, so the clock comes back in the zone of the machine
   it.todo(

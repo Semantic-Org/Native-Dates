@@ -90,7 +90,6 @@ describe('zones plugin city names', () => {
     expect(() => datetime(noonInJuly, '  ')).toThrowError(expect.objectContaining({ code: 'unknownZone', at: '  ' }));
   });
 
-  it.todo('reads Singapore, a city that is also a legacy IANA link, as Asia/Singapore');
   it.todo('reads a full IANA name typed with spaces when the runtime lists its zone under an older name');
 });
 

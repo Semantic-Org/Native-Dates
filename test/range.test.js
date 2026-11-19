@@ -271,8 +271,6 @@ describe('timeRange()', () => {
     );
   });
 
-  it.todo('never wraps a length of 24 hours or more into an empty or shorter range');
-
   // '9am-5pm' is refused as invalidTime, and '09:00-17:00' as missingTime at undefined, its end read as a UTC offset
   it.todo("reads both times from one string joined by a hyphen with no spaces, such as '09:00-17:00' or '9am-5pm'");
 });
@@ -524,13 +522,13 @@ describe('range.isEmpty()', () => {
 describe('DateRange.contains() and includes()', () => {
   const stay = dateRange('2026-09-01', '2026-09-07');
 
-  it('containsits first and last day and every day between', () => {
+  it('contains its first and last day and every day between', () => {
     expect(stay.contains('2026-09-01')).toBe(true);
     expect(stay.contains('2026-09-04')).toBe(true);
     expect(stay.contains('2026-09-07')).toBe(true);
   });
 
-  it('does not containthe day before its start or the day after its end', () => {
+  it('does not contain the day before its start or the day after its end', () => {
     expect(stay.contains('2026-08-31')).toBe(false);
     expect(stay.contains('2026-09-08')).toBe(false);
   });
@@ -545,12 +543,12 @@ describe('DateRange.contains() and includes()', () => {
     expect(stay.contains(datetime('2026-09-07T23:30Z', 'Asia/Tokyo'))).toBe(false);
   });
 
-  it('containsa date range that lies inside it, itself included', () => {
+  it('contains a date range that lies inside it, itself included', () => {
     expect(stay.contains(dateRange('2026-09-02', '2026-09-05'))).toBe(true);
     expect(stay.contains(dateRange('2026-09-01', '2026-09-07'))).toBe(true);
   });
 
-  it('does not containa date range that runs past either end', () => {
+  it('does not contain a date range that runs past either end', () => {
     expect(stay.contains(dateRange('2026-09-05', '2026-09-08'))).toBe(false);
     expect(stay.contains(dateRange('2026-08-31', '2026-09-02'))).toBe(false);
   });
@@ -577,12 +575,12 @@ describe('DateRange.contains() and includes()', () => {
 describe('DateTimeRange.contains() and includes()', () => {
   const block = datetimeRange('2026-09-01T09:00', '2026-09-01T10:30', 'Asia/Tokyo');
 
-  it('containsits start and every moment before its end', () => {
+  it('contains its start and every moment before its end', () => {
     expect(block.contains(datetime('2026-09-01T09:00', 'Asia/Tokyo'))).toBe(true);
     expect(block.contains(datetime('2026-09-01T10:29:59.999', 'Asia/Tokyo'))).toBe(true);
   });
 
-  it('does not containits end or any moment before its start', () => {
+  it('does not contain its end or any moment before its start', () => {
     expect(block.contains(datetime('2026-09-01T10:30', 'Asia/Tokyo'))).toBe(false);
     expect(block.contains(datetime('2026-09-01T08:59:59.999', 'Asia/Tokyo'))).toBe(false);
   });
@@ -598,12 +596,12 @@ describe('DateTimeRange.contains() and includes()', () => {
     expect(block.contains('2026-09-01T01:00:00Z')).toBe(true);
   });
 
-  it('containsa datetime range that ends where it ends, itself included', () => {
+  it('contains a datetime range that ends where it ends, itself included', () => {
     expect(block.contains(datetimeRange('2026-09-01T09:30', '2026-09-01T10:30', 'Asia/Tokyo'))).toBe(true);
     expect(block.contains(block)).toBe(true);
   });
 
-  it('does not containa datetime range that runs past its end', () => {
+  it('does not contain a datetime range that runs past its end', () => {
     expect(block.contains(datetimeRange('2026-09-01T09:30', '2026-09-01T10:31', 'Asia/Tokyo'))).toBe(false);
   });
 
@@ -617,25 +615,25 @@ describe('TimeRange.contains() and includes()', () => {
   const office = timeRange('09:00', '17:00');
   const night = timeRange('22:00', '06:00');
 
-  it('containsits start and every time before its end', () => {
+  it('contains its start and every time before its end', () => {
     expect(office.contains('9am')).toBe(true);
     expect(office.contains('4:59pm')).toBe(true);
     expect(office.contains(time('12:00'))).toBe(true);
   });
 
-  it('does not containits end or a time outside it', () => {
+  it('does not contain its end or a time outside it', () => {
     expect(office.contains('5pm')).toBe(false);
     expect(office.contains('8:59am')).toBe(false);
   });
 
-  it('containstimes on both sides of midnight when it wraps', () => {
+  it('contains times on both sides of midnight when it wraps', () => {
     expect(night.contains('22:00')).toBe(true);
     expect(night.contains('23:30')).toBe(true);
     expect(night.contains('00:00')).toBe(true);
     expect(night.contains('02:15')).toBe(true);
   });
 
-  it('does not containits end or the daytime it skips when it wraps', () => {
+  it('does not contain its end or the daytime it skips when it wraps', () => {
     expect(night.contains('06:00')).toBe(false);
     expect(night.contains('12:00')).toBe(false);
     expect(night.contains('21:59:59')).toBe(false);
@@ -646,14 +644,14 @@ describe('TimeRange.contains() and includes()', () => {
     expect(office.contains(datetime('2026-09-01T12:00Z', 'Asia/Tokyo'))).toBe(false);
   });
 
-  it('containsa time range inside it, across midnight or on either side of it', () => {
+  it('contains a time range inside it, across midnight or on either side of it', () => {
     expect(night.contains(timeRange('23:00', '01:00'))).toBe(true);
     expect(night.contains(timeRange('22:30', '23:30'))).toBe(true);
     expect(night.contains(timeRange('01:00', '05:00'))).toBe(true);
     expect(night.contains(night)).toBe(true);
   });
 
-  it('does not containa time range that runs past its end or covers the hours it skips', () => {
+  it('does not contain a time range that runs past its end or covers the hours it skips', () => {
     expect(night.contains(timeRange('05:00', '07:00'))).toBe(false);
     expect(night.contains(office)).toBe(false);
     expect(office.contains(night)).toBe(false);
@@ -1095,7 +1093,7 @@ describe('range.in()', () => {
     expect(days.toString()).toBe('2026-09-01T00:00:00.000Z/2026-09-04T00:00:00.000Z');
   });
 
-  it('containsevery moment of the last day of the date range and not the midnight after it', () => {
+  it('contains every moment of the last day of the date range and not the midnight after it', () => {
     const days = dateRange('2026-09-01', '2026-09-03').in('UTC');
     expect(days.contains('2026-09-03T23:59:59.999Z')).toBe(true);
     expect(days.contains('2026-09-04T00:00:00Z')).toBe(false);

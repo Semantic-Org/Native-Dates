@@ -615,9 +615,6 @@ describe('Duration round()', () => {
       expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: 'fortnight' }),
     );
   });
-
-  it.todo("rounds days to weeks of 7 days: days(10).round('week') is 1 week");
-  it.todo("rounds months to years of 12 months with no date to count from: months(18).round('year') is 2 years");
 });
 
 describe('Duration equals() and compare()', () => {
@@ -994,7 +991,4 @@ describe('Duration toString(), toJSON(), valueOf() and toTemporal()', () => {
     expect(shift.toTemporal().toString()).toBe('PT7H30M');
     expect(shift.toTemporal()).toBe(shift.toTemporal());
   });
-
-  // passes in Chromium, see test/browser/duration.test.js. Node 26.1 prints 'PT1H' for an hour and 500 milliseconds
-  it.todo('keeps what is below a second in the ISO string when the whole seconds are zero, on Node');
 });

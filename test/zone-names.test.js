@@ -101,6 +101,4 @@ describe('unknownZone refusal with no plugin imported', () => {
   ])('throws unknownZone at the name when it is passed to %s', (door, call) => {
     expect(call).toThrowError(expect.objectContaining({ name: 'RangeError', code: 'unknownZone', at: 'Berlin' }));
   });
-
-  it.todo('refuses the abbreviations EST and MST as it refuses PST and EDT');
 });
