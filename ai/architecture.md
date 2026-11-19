@@ -44,7 +44,7 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, with `"
 
 `npm run check` runs the local verification suite:
 
-- `npm test`: Vitest across `test/` and `packages/*/test/`. Tests import public package names and assert errors by `error.code` and `error.at`.
+- `npm test`: Vitest across `test/`, `packages/*/test/`, and `tools/`. Package tests import public package names and assert errors by `error.code` and `error.at`.
 - `npm run size`: `tools/gates/budget.js`, which prints and checks the rows of `tools/size.js`.
 
 ## Measuring Size

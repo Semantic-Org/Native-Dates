@@ -16,10 +16,14 @@ export default defineConfig({
       {
         test: {
           include: [
-            '**/test/unit/**/*.test.{ts,js}',
-            '**/test/*.test.{ts,js}',
+            '**/test/**/*.test.{ts,js}',
+            'tools/**/*.test.{ts,js}',
           ],
-          exclude,
+          exclude: [
+            ...exclude,
+            '**/test/dom/**',
+            '**/test/browser/**',
+          ],
           name: 'node',
           environment: 'node',
         },
