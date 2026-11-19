@@ -9,16 +9,16 @@ afterEach(() => {
 });
 
 describe('DateTime from()', () => {
-  it('says now for the same instant', () => {
+  it('returns "now" for an equal instant', () => {
     expect(noon.from(noon, 'en-US')).toBe('now');
   });
 
-  it('counts back from the other moment for a moment before it and forward for one after', () => {
+  it('formats past instants as "... ago" and future instants as "in ..."', () => {
     expect(noon.minus(3, 'hours').from(noon, 'en-US')).toBe('3 hours ago');
     expect(noon.plus(3, 'hours').from(noon, 'en-US')).toBe('in 3 hours');
   });
 
-  it('counts in the unit that fits the distance, from seconds up to years', () => {
+  it('selects units from seconds up to years based on elapsed duration', () => {
     expect(noon.plus(30, 'seconds').from(noon, 'en-US')).toBe('in 30 seconds');
     expect(noon.plus(5, 'minutes').from(noon, 'en-US')).toBe('in 5 minutes');
     expect(noon.plus(3, 'hours').from(noon, 'en-US')).toBe('in 3 hours');
@@ -27,14 +27,14 @@ describe('DateTime from()', () => {
     expect(noon.plus(730, 'days').from(noon, 'en-US')).toBe('in 2 years');
   });
 
-  it('rounds up to an hour from 45 minutes and to a day by 23 hours, as Moment and Day.js do', () => {
+  it('rounds up to 1 hour at 45 minutes and to 1 day at 23 hours, matching Moment and Day.js thresholds', () => {
     expect(noon.plus(44, 'minutes').from(noon, 'en-US')).toBe('in 44 minutes');
     expect(noon.plus(45, 'minutes').from(noon, 'en-US')).toBe('in 1 hour');
     expect(noon.minus(21, 'hours').from(noon, 'en-US')).toBe('21 hours ago');
     expect(noon.minus(23, 'hours').from(noon, 'en-US')).toBe('1 day ago');
   });
 
-  it('moves up to minutes at 45 seconds, to months at 26 days and to years at 320 days', () => {
+  it('transitions to minutes at 45 seconds, months at 26 days, and years at 320 days', () => {
     expect(noon.plus(44, 'seconds').from(noon, 'en-US')).toBe('in 44 seconds');
     expect(noon.plus(45, 'seconds').from(noon, 'en-US')).toBe('in 1 minute');
     expect(noon.minus(25, 'days').from(noon, 'en-US')).toBe('25 days ago');
@@ -43,39 +43,39 @@ describe('DateTime from()', () => {
     expect(noon.minus(320, 'days').from(noon, 'en-US')).toBe('1 year ago');
   });
 
-  it('rounds the past and the future alike', () => {
+  it('applies symmetric rounding thresholds to past and future instants', () => {
     expect(noon.minus(90, 'seconds').from(noon, 'en-US')).toBe('2 minutes ago');
     expect(noon.plus(90, 'seconds').from(noon, 'en-US')).toBe('in 2 minutes');
   });
 
-  it('counts a day in numbers and never says yesterday or tomorrow', () => {
+  it('formats 1-day offsets numerically ("1 day ago", "in 1 day") rather than "yesterday" or "tomorrow"', () => {
     expect(noon.minus(1, 'day').from(noon, 'en-US')).toBe('1 day ago');
     expect(noon.plus(1, 'day').from(noon, 'en-US')).toBe('in 1 day');
   });
 
-  // 01:00 and 23:00 fall on the same day, so yesterday would be a false claim
-  it('says 1 day ago for 22 hours earlier on the same calendar day', () => {
+  // 01:00 and 23:00 fall on the same calendar day, so "yesterday" would be inaccurate
+  it('returns "1 day ago" for an instant 22 hours earlier on the same calendar day', () => {
     const lateEvening = datetime('2026-11-16T23:00', 'UTC');
     expect(datetime('2026-11-16T01:00', 'UTC').from(lateEvening, 'en-US')).toBe('1 day ago');
   });
 
-  it('measures elapsed time whatever zone either moment is read in', () => {
+  it('compares exact instants regardless of each DateTime timezone', () => {
     expect(noon.in('Asia/Tokyo').from(noon.minus(1, 'hour').in('America/New_York'), 'en-US')).toBe('in 1 hour');
   });
 
-  it('reads the other moment from a string, a Date or epoch milliseconds', () => {
+  it('accepts an ISO string, Date instance, or epoch millisecond number as the anchor', () => {
     const earlier = noon.minus(2, 'hours');
     expect(noon.from('2026-11-16T10:00:00Z', 'en-US')).toBe('in 2 hours');
     expect(noon.from(earlier.toJSDate(), 'en-US')).toBe('in 2 hours');
     expect(noon.from(earlier.epochMilliseconds, 'en-US')).toBe('in 2 hours');
   });
 
-  it('reads a string with no zone or offset in the zone of the moment it is called on', () => {
+  it('interprets a string without an offset in the receiver timezone', () => {
     const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
     expect(standup.from('2026-11-16T07:30', 'en-US')).toBe('in 2 hours');
   });
 
-  it('writes the phrase in the locale passed, then the one the value carries, then the configured one', () => {
+  it('resolves call-site locale over instance locale over configured locale', () => {
     const earlier = noon.minus(3, 'hours');
     configure({ locale: 'es' });
     expect(earlier.from(noon)).toBe('hace 3 horas');
@@ -83,15 +83,15 @@ describe('DateTime from()', () => {
     expect(earlier.locale('fr').from(noon, 'de')).toBe('vor 3 Stunden');
   });
 
-  it('keeps the locale of the moment it is called on when the other moment carries a different one', () => {
+  it('uses the receiver locale when the anchor DateTime has a different locale', () => {
     expect(noon.minus(3, 'hours').locale('fr').from(noon.locale('de'))).toBe('il y a 3 heures');
   });
 
-  it('gives the same phrase from formatRelative()', () => {
+  it('returns the same result from formatRelative() as from()', () => {
     expect(noon.minus(3, 'hours').formatRelative(noon, 'en-US')).toBe('3 hours ago');
   });
 
-  it('throws invalidDateTime at the input when the other moment cannot be read', () => {
+  it('throws invalidDateTime when the anchor input cannot be parsed', () => {
     expect(() => noon.from('soon')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime', at: 'soon' }),
     );
@@ -99,22 +99,22 @@ describe('DateTime from()', () => {
 });
 
 describe('DateTime fromNow()', () => {
-  it('says now for the current moment', () => {
+  it('returns "now" for now()', () => {
     expect(now().fromNow('en-US')).toBe('now');
   });
 
-  it('measures from the current moment', () => {
+  it('formats elapsed time relative to now()', () => {
     expect(now().minus(5, 'minutes').fromNow('en-US')).toBe('5 minutes ago');
     expect(now().plus(2, 'hours').fromNow('en-US')).toBe('in 2 hours');
   });
 
-  it('gives the same phrase as from() and formatRelative() called with no other moment', () => {
+  it('matches from() and formatRelative() when the anchor is omitted', () => {
     const later = now().plus(3, 'hours');
     expect(later.from(undefined, 'en-US')).toBe('in 3 hours');
     expect(later.formatRelative(undefined, 'en-US')).toBe('in 3 hours');
   });
 
-  it('writes the phrase in the locale the value carries unless one is passed', () => {
+  it('uses the instance locale unless overridden at the call site', () => {
     const earlier = now().minus(3, 'hours').locale('fr');
     expect(earlier.fromNow()).toBe('il y a 3 heures');
     expect(earlier.fromNow('de')).toBe('vor 3 Stunden');
@@ -122,18 +122,18 @@ describe('DateTime fromNow()', () => {
 });
 
 describe('CalendarDate from()', () => {
-  it('says yesterday, today and tomorrow for the days either side of the other date', () => {
+  it('returns "yesterday", "today", and "tomorrow" for -1, 0, and +1 day offsets', () => {
     expect(date('2026-11-15').from(monday, 'en-US')).toBe('yesterday');
     expect(date('2026-11-16').from(monday, 'en-US')).toBe('today');
     expect(date('2026-11-17').from(monday, 'en-US')).toBe('tomorrow');
   });
 
-  it('counts days up to six days away', () => {
+  it('formats offsets of 2 through 6 days in days', () => {
     expect(monday.plus(3, 'days').from(monday, 'en-US')).toBe('in 3 days');
     expect(monday.minus(6, 'days').from(monday, 'en-US')).toBe('6 days ago');
   });
 
-  it('counts weeks, months and years in numbers beyond that, never as next week or last year', () => {
+  it('formats offsets of 7 days or more numerically in weeks, months, or years', () => {
     expect(monday.plus(7, 'days').from(monday, 'en-US')).toBe('in 1 week');
     expect(monday.plus(14, 'days').from(monday, 'en-US')).toBe('in 2 weeks');
     expect(monday.plus(30, 'days').from(monday, 'en-US')).toBe('in 1 month');
@@ -142,28 +142,28 @@ describe('CalendarDate from()', () => {
     expect(monday.plus(730, 'days').from(monday, 'en-US')).toBe('in 2 years');
   });
 
-  it('counts weeks up to 25 days away, months up to 319 days and years from 320', () => {
+  it('transitions from weeks to months at 26 days and from months to years at 320 days', () => {
     expect(monday.plus(25, 'days').from(monday, 'en-US')).toBe('in 4 weeks');
     expect(monday.plus(26, 'days').from(monday, 'en-US')).toBe('in 1 month');
     expect(monday.minus(319, 'days').from(monday, 'en-US')).toBe('10 months ago');
     expect(monday.minus(320, 'days').from(monday, 'en-US')).toBe('1 year ago');
   });
 
-  it('counts to the nearest week, so 13 days is 2 weeks', () => {
+  it('rounds day counts to the nearest week within the weeks range', () => {
     expect(monday.plus(13, 'days').from(monday, 'en-US')).toBe('in 2 weeks');
     expect(monday.minus(13, 'days').from(monday, 'en-US')).toBe('2 weeks ago');
   });
 
-  it('reads the other date from a string', () => {
+  it('accepts an ISO date string as the anchor', () => {
     expect(monday.from('2026-11-15', 'en-US')).toBe('tomorrow');
   });
 
-  // 03:00 in Tokyo is still the 14th in UTC and in New York
-  it('reads a moment as the day it falls on in its own zone', () => {
+  // 03:00 in Tokyo is still the 14th in UTC and New York
+  it('uses the calendar date of a DateTime anchor in its own timezone', () => {
     expect(monday.from(datetime('2026-11-15T03:00', 'Asia/Tokyo'), 'en-US')).toBe('tomorrow');
   });
 
-  it('writes the phrase in the locale passed, then the one the value carries, then the configured one', () => {
+  it('resolves call-site locale over instance locale over configured locale', () => {
     const sunday = date('2026-11-15');
     configure({ locale: 'es' });
     expect(sunday.from(monday)).toBe('ayer');
@@ -171,11 +171,11 @@ describe('CalendarDate from()', () => {
     expect(sunday.locale('de').from(monday, 'fr')).toBe('hier');
   });
 
-  it('gives the same phrase from formatRelative()', () => {
+  it('returns the same result from formatRelative() as from()', () => {
     expect(date('2026-11-15').formatRelative(monday, 'en-US')).toBe('yesterday');
   });
 
-  it('throws invalidDate at the input when the other date cannot be read', () => {
+  it('throws invalidDate when the anchor input cannot be parsed', () => {
     expect(() => monday.from('soon')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'invalidDate', at: 'soon' }),
     );
@@ -183,28 +183,28 @@ describe('CalendarDate from()', () => {
 });
 
 describe('CalendarDate fromNow()', () => {
-  it('measures from today', () => {
+  it('formats relative day offsets against today()', () => {
     expect(today().fromNow('en-US')).toBe('today');
     expect(today().minus(1, 'day').fromNow('en-US')).toBe('yesterday');
     expect(today().plus(1, 'day').fromNow('en-US')).toBe('tomorrow');
     expect(today().plus(3, 'days').fromNow('en-US')).toBe('in 3 days');
   });
 
-  it('gives the same phrase as from() and formatRelative() called with no other date', () => {
+  it('matches from() and formatRelative() when the anchor is omitted', () => {
     const nextWeek = today().plus(14, 'days');
     expect(nextWeek.from(undefined, 'en-US')).toBe('in 2 weeks');
     expect(nextWeek.formatRelative(undefined, 'en-US')).toBe('in 2 weeks');
   });
 
-  // Honolulu is always exactly a day behind Kiritimati, and neither has daylight time
-  it('takes today from the configured zone', () => {
+  // Honolulu is always a day behind Kiritimati and neither observes DST
+  it('resolves today against the configured default timezone', () => {
     configure({ zone: 'Pacific/Kiritimati' });
     expect(today('Pacific/Honolulu').fromNow('en-US')).toBe('yesterday');
     configure({ zone: 'Pacific/Honolulu' });
     expect(today('Pacific/Kiritimati').fromNow('en-US')).toBe('tomorrow');
   });
 
-  it('writes the phrase in the locale the value carries unless one is passed', () => {
+  it('uses the instance locale unless overridden at the call site', () => {
     const yesterday = today().minus(1, 'day').locale('de');
     expect(yesterday.fromNow()).toBe('gestern');
     expect(yesterday.fromNow('fr')).toBe('hier');
