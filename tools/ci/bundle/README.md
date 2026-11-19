@@ -179,7 +179,7 @@ literal text, and a source link is built only for a path inside the repository.
 | `.github/workflows/bundle-size.yml` | the workflow, which a PR runs from its own copy |
 | `package-lock.json`, `.node-version` | the bundler's version, and the node whose zlib compresses |
 
-`test/budget.test.js` holds the list to the measurement, so a file that enters a bundle from a
+`tools/ci/bundle/budget.test.js` holds the list to the measurement, so a file that enters a bundle from a
 folder the list leaves out reddens the suite. With no run there is no summary page and no Bundle
 Size check on the PR, which is how a change the measurement does not read looks.
 
@@ -215,6 +215,6 @@ writes `comment.md` only when a cell differs or a check is red.
 | file | role |
 |---|---|
 | `reporter.js` | two `budget.js` measurements into `comment.md`, `summary.md` and `size-report.json` |
-| `test/bundle-bot.test.js` | the decisions above, and a real comment rendered byte for byte from `test/fixtures/bundle-bot/core-grew/` |
-| `test/budget.test.js` | the row list as data, the measurement's shape, and the paths that start the workflow |
-| `test/fixtures/bundle-bot/core-grew/` | `budget.js --json` output for main at `c9bccab` and the same tree with one getter added to `CalendarDate`, with its `changed.json` and the comment it renders |
+| `reporter.test.js` | the decisions above, and a real comment rendered byte for byte from `fixtures/core-grew/` |
+| `budget.test.js` | the row list as data, the measurement's shape, and the paths that start the workflow |
+| `fixtures/core-grew/` | `budget.js --json` output for main at `c9bccab` and the same tree with one getter added to `CalendarDate`, with its `changed.json` and the comment it renders |
