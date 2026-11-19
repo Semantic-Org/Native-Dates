@@ -735,7 +735,7 @@ describe('Duration anchored arithmetic and totals', () => {
   });
 
   it('totals calendar months in days using the spanned calendar months', () => {
-    const span = date('2026-01-15').until('2026-04-15');
+    const span = date('2026-01-15').until('2026-04-15').balance('month');
     expect(span.toString()).toBe('P3M');
     expect(span.total('months')).toBe(3);
     expect(span.total('days')).toBe(90);
@@ -749,8 +749,9 @@ describe('Duration anchored arithmetic and totals', () => {
 
   it('computes a negative duration and negative day total when until() targets an earlier date', () => {
     const back = date('2026-04-01').until('2026-01-01');
-    expect(back.toString()).toBe('-P3M');
+    expect(back.toString()).toBe('-P90D');
     expect(back.total('days')).toBe(-90);
+    expect(back.balance('month').toString()).toBe('-P3M');
   });
 
   it('totals a Duration measured between two YearMonth instances in days', () => {
@@ -760,19 +761,20 @@ describe('Duration anchored arithmetic and totals', () => {
   });
 
   it('compares an anchored month duration symmetrically against an unanchored day duration', () => {
-    const january = date('2026-01-01').until('2026-02-01');
+    const january = date('2026-01-01').until('2026-02-01').balance('month');
     expect(january.compare(days(31))).toBe(0);
     expect(january.equals(days(30))).toBe(false);
     expect(days(31).equals(january)).toBe(true);
   });
 
   it('balances an anchored month duration into days when no largest unit is specified', () => {
-    expect(date('2026-01-01').until('2026-04-01').balance().toString()).toBe('P90D');
+    expect(date('2026-01-01').until('2026-04-01').balance('month').balance().toString()).toBe('P90D');
   });
 
   it('balances across days, weeks, months, and years using the anchor calendar', () => {
     const span = date('2026-01-01').until('2027-04-05');
-    expect(span.toString()).toBe('P1Y3M4D');
+    expect(span.toString()).toBe('P459D');
+    expect(span.balance('year').toString()).toBe('P1Y3M4D');
     expect(span.balance('month').toString()).toBe('P15M4D');
     expect(span.balance('week').toString()).toBe('P65W4D');
     expect(span.balance('day').toString()).toBe('P459D');
@@ -785,7 +787,7 @@ describe('Duration anchored arithmetic and totals', () => {
   });
 
   it('converts anchored months to milliseconds for toMilliseconds() and relational operators', () => {
-    const quarter = date('2026-01-01').until('2026-04-01');
+    const quarter = date('2026-01-01').until('2026-04-01').balance('month');
     expect(quarter.toMilliseconds()).toBe(90 * 24 * 60 * 60 * 1000);
     expect(quarter > days(89)).toBe(true);
     expect(quarter < days(91)).toBe(true);
@@ -828,7 +830,7 @@ describe('Duration anchored arithmetic and totals', () => {
   });
 
   it('omits the anchor from JSON serialization so a parsed ISO 8601 duration is unanchored', () => {
-    const wire = JSON.stringify(date('2026-01-15').until('2026-04-15'));
+    const wire = JSON.stringify(date('2026-01-15').until('2026-04-15').balance('month'));
     const restored = duration(JSON.parse(wire));
     expect(restored.toString()).toBe('P3M');
     expect(restored.anchor).toBeUndefined();

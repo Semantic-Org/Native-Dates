@@ -427,7 +427,7 @@ export class DateTime {
 
   until(other, name) {
     const end = new DateTime(other, this.zone);
-    const span = anchored(this.#zoned.until(end.toTemporal(), { largestUnit: 'year' }), this.#zoned, this.#locale);
+    const span = anchored(this.#zoned.until(end.toTemporal(), { largestUnit: 'day' }), this.#zoned, this.#locale);
     return name === undefined ? span : span.total(name);
   }
 

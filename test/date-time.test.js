@@ -1123,9 +1123,10 @@ describe('DateTime.until() and since()', () => {
     expect(doors.until(datetime('2026-11-17T02:00', 'Asia/Tokyo'), 'hours')).toBe(1);
   });
 
-  it('balances multi-year spans across years, months, days, and clock units', () => {
+  it("measures multi-year spans in days and clock units, and in years and months through balance('year')", () => {
     const start = datetime('2026-01-15T09:00', 'America/New_York');
-    expect(start.until('2027-03-18T10:30').toString()).toBe('P1Y2M3DT1H30M');
+    expect(start.until('2027-03-18T10:30').toString()).toBe('P427DT1H30M');
+    expect(start.until('2027-03-18T10:30').balance('year').toString()).toBe('P1Y2M3DT1H30M');
   });
 
   it('counts 1 calendar day across 23-hour and 25-hour DST transitions while counting exact hours', () => {
@@ -1145,11 +1146,12 @@ describe('DateTime.until() and since()', () => {
     expect(start.until('2026-03-15T09:00', 'hours')).toBe(1415);
   });
 
-  it("anchors the returned Duration so total('days') resolves calendar months", () => {
+  it("anchors the returned Duration so total('months') and balance('month') resolve calendar months", () => {
     const start = datetime('2026-01-15T09:00', 'America/New_York');
     const span = start.until('2026-03-15T09:00');
-    expect(span.toString()).toBe('P2M');
-    expect(span.total('days')).toBe(59);
+    expect(span.toString()).toBe('P59D');
+    expect(span.total('months')).toBe(2);
+    expect(span.balance('month').toString()).toBe('P2M');
   });
 
   // from Saturday 09:00 to Sunday 09:00 in New York across spring-forward is P1D locally and PT23H in UTC
