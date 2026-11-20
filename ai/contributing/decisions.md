@@ -100,7 +100,7 @@ Reopen: migration feedback shows omitting `.epoch` causes widespread friction wi
 
 Naming the `1`-`7` property `.weekday` made `sunday.weekday` return `7` while `sunday.isWeekday()` returned `false`, and collided with custom display names in `configure({ weekdayNames })`. Format token `d` keeps `0` = Sunday through `6` = Saturday to match Moment and Day.js token strings, omitting the ISO `1`-`7` token `E` until requested.
 
-Reopen: callers hit bugs from `format('d')` returning `0` on Sunday while `.dayOfWeek` returns `7`, or request the `E` token.
+Superseded by 2026-11-20.
 
 ## `Duration` uses `balance()` without a `normalize()` alias, and `total(unit)` instead of `in(unit)` (2026-11-17)
 
@@ -119,3 +119,9 @@ Reopen: callers pass endpoints to `.for()` expecting runtime rejection, or expec
 Overloading `next('month')` conflicts with `DateTime.prototype.next('friday')`, which preserves the time of day (`09:30`) while a unit boundary resets to `00:00`, and callers split on whether `next('month')` means the 1st of next month or `plus(1, 'month')`. Numeric weekdays are rejected in `startOfNext()` so misplaced counts like `startOfNext(2, 'months')` cannot silently resolve `2` as Tuesday.
 
 Reopen: callers consistently try unit names in `next()` and `previous()`, or expect numeric weekdays in `startOfNext()`.
+
+## Numeric day of the week is `dayOfWeek` (`1`-`7`), with token `E` for ISO `1`-`7` and `d` for Moment's `0`-`6` (2026-11-20)
+
+Naming the `1`-`7` property `.weekday` made `sunday.weekday` return `7` while `sunday.isWeekday()` returned `false`, and collided with custom display names in `configure({ weekdayNames })`. In format patterns, `E` outputs ISO `1` = Monday through `7` = Sunday to match `.dayOfWeek` (-3 B Brotli), while `d` retains `0` = Sunday through `6` = Saturday so Moment and Day.js format strings behave as expected.
+
+Reopen: callers hit bugs from `format('d')` returning `0` on Sunday while `.dayOfWeek` and `format('E')` return `7`.
