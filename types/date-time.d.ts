@@ -418,7 +418,7 @@ export class DateTime {
    * A weekday name in place of a unit returns the start of the previous day with that name, whereas `previous()` keeps the time of day.
    *
    * @param unit - Calendar or clock unit from `'year'` down to `'nanosecond'`, or a weekday name such as `'wednesday'`
-   * @param firstDay - First day of the week when `unit` is `'week'`
+   * @param firstDay - First day of the week when `unit` is `'week'`, such as `'sunday'` or 7
    * @returns A new `DateTime` at the start of the previous `unit`, or of the previous given weekday
    *
    * @example
@@ -426,6 +426,7 @@ export class DateTime {
    * const standup = datetime('2026-11-16T09:30', 'America/New_York');
    * standup.startOfPrevious('day').toString(); // '2026-11-15T05:00:00.000Z'
    * standup.startOfPrevious('hour').hour; // 8
+   * standup.startOfPrevious('wednesday').toString(); // '2026-11-11T05:00:00.000Z'
    * ```
    *
    * @see {@link https://nativedates.dev/api/date-time/#startofprevious startOfPrevious}

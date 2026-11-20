@@ -1,7 +1,7 @@
 ---
 title: Date math
 lede: Add and subtract durations, snap to calendar boundaries, round clock times, and step across weekdays or ranges without mutating values.
-updated: 2026-11-12
+updated: 2026-11-20
 ---
 
 Every date, time, and moment in Native Dates is immutable. Methods that shift or round a value always return a new instance and leave the original untouched.
@@ -88,7 +88,7 @@ wednesday.locale('de-DE').startOf('week').toString(); // '2026-11-16'
 wednesday.startOf('week', 'monday').toString(); // '2026-11-16'
 ```
 
-Call `startOfNext()` or `startOfPrevious()` to reach the start of the unit after or before the current one. Always steps into the adjacent unit, so calling `startOfNext('month')` on December 1 returns January 1:
+Call `startOfNext()` or `startOfPrevious()` to reach the start of the unit after or before the current one. Both always step into the adjacent unit, so calling `startOfNext('month')` on December 1 returns January 1:
 
 ```js
 const invoiced = date('2026-11-16');

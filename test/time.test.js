@@ -446,11 +446,13 @@ describe('Time.startOfNext() and Time.startOfPrevious()', () => {
 
   it('wraps around midnight in both directions', () => {
     expect(time('23:37:22').startOfNext('hour').toString()).toBe('00:00:00');
+    expect(time('23:37:22').endOf('hour').toString()).toBe('23:59:59.999');
     expect(time('00:15:00').startOfPrevious('hour').toString()).toBe('23:00:00');
   });
 
   it('returns a new Time without mutating the original', () => {
     expect(afternoon.startOfNext('hour')).not.toBe(afternoon);
+    expect(afternoon.startOfPrevious('hour')).not.toBe(afternoon);
     expect(afternoon.toString()).toBe('14:37:22.123456789');
   });
 
