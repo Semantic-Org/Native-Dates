@@ -18,7 +18,7 @@ Standards bodies produce brilliant, highly technical, rigorous APIs that get shi
 
 #### Lowercase "c" correctness
 
-There is always a more [C]orrect way to do things, especially when working with things like time. But its important to always model the common case first before playing the game of "I can spot a weird scenario that proves you wrong". If a changeset makes the common case harder, but solves a Correctness claim then it should be weighed slowly. If a change costs bytes shipped to every website, to handle the bizarre habits of a island nation with 50 people, satisficing should be considered. 
+There is always a more [C]orrect way to do things, especially when working with things like time. But its important to always model the common case first before playing the game of "I can spot a weird scenario that proves you wrong". If a changeset makes the common case harder, but solves a Correctness claim then it should be weighed slowly. If a change costs bytes shipped to every website, to handle the bizarre habits of a island nation with 500 people (Lord Howe's half hour DST), satisficing should be considered. 
 
 #### Conciseness
 
