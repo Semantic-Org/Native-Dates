@@ -7,6 +7,19 @@ if grep -qi 'Co-Authored-By:' "$MSG_FILE"; then
   exit 1
 fi
 
+if grep -qiE 'Claude-Session:|claude\.ai/code/session' "$MSG_FILE"; then
+  echo 'Error: Commit messages must not contain Claude-Session lines or session links.'
+  exit 1
+fi
+
+# the subject is the whole message, since a body is where generated prose gets in.
+# git's own merge and revert messages keep the body git writes for them
+if tail -n +2 "$MSG_FILE" | sed '/^# -* >8 -*$/,$d' | grep -v '^#' | grep -q '[^[:space:]]' \
+  && ! head -1 "$MSG_FILE" | grep -qE '^(Merge |Revert ")'; then
+  echo 'Error: Commit messages are a subject line only. Remove the body.'
+  exit 1
+fi
+
 if [ -n "$CLAUDECODE" ]; then
   subject=$(head -1 "$MSG_FILE")
   vocab='Feat|Bug|Docs|Chore|Harness|Test|Perf|Refactor|Build|Bench|BREAKING'
