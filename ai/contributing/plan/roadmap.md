@@ -1,6 +1,6 @@
 # Roadmap
 
-> status: active (2026-11-20). Durable project roadmap for `native-dates`. Completed milestones live in [`landed.md`](landed.md).
+> status: active (2026-11-20). Project roadmap for `native-dates`. Completed milestones live in [`landed.md`](landed.md).
 
 One row per planned feature or workstream. Plans requiring a detailed spec keep a single file in `plan/scopes/<name>.md` covering the goal and approved design. When a row finishes, move it from this table to [`landed.md`](landed.md).
 
