@@ -4,6 +4,7 @@ Completed roadmap items, newest first. When a planned feature in [`roadmap.md`](
 
 | Date | Milestone | Summary | Brotli delta |
 |---|---|---|---|
+| 2026-11-20 | Consumer agent skills | Downstream usage skills in [`ai/skills/`](../../skills/native-dates.md) published with the npm package and served at `/skills/<name>.md`, `/llms.txt`, and `/llms-full.txt` | 0 B |
 | 2026-11-20 | North star | Project goals and design principles in [`north-star.md`](../north-star.md) | 0 B |
 | 2026-11-19 | Test suite | Unit and Chromium Playwright test suites across core, plugins, and polyfill | 0 B |
 | 2026-11-18 | Type declarations | Hand-authored `.d.ts` declarations, JSDoc examples, and `@see` links to `nativedates.dev` | 0 B |

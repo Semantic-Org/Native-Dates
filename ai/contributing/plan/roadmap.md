@@ -6,7 +6,6 @@ Larger features with open design details keep a spec in `scopes/<name>.md`.
 
 | Feature | Status | Summary |
 |---|---|---|
-| Consumer agent skills | Ready to build | Publish downstream usage skills in `ai/skills/` with the npm package and serve them at `/skills/<name>.md` and `/llms.txt` on the docs site |
 | Benchmark suite | Needs design | Automated browser benchmark suite in `bench/` measuring parsing, arithmetic, formatting, and range iteration across changes |
 | Documentation translations | Ready to build | Translated and reviewed guides, API references, and examples across the 8 supported locales |
 
