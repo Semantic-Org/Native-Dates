@@ -24,7 +24,7 @@ Read [`ai/contributing/curriculum.md`](ai/contributing/curriculum.md) before aut
 Ask the maintainer rather than inventing conventions for:
 
 - **Changelog format:** No `CHANGELOG.md` convention is settled. The docs version menu links directly to GitHub Releases.
-- **Post-launch MCP and CDN (`tools/mcp`, `tools/cdn`):** Standalone MCP server (`tools/mcp`) and CDN worker/bundle infrastructure (`tools/cdn`) from `next` are optional post-launch additions.
+- **MCP and CDN (`tools/mcp`, `tools/cdn`):** Standalone MCP server (`tools/mcp`) and CDN worker/bundle infrastructure (`tools/cdn`) from `next` are iceboxed until requested (`ai/contributing/plan/roadmap.md`).
 
 ## Commands
 

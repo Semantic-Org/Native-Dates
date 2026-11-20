@@ -103,3 +103,9 @@ Reopen: callers pass endpoints to `.for()` expecting runtime rejection, or expec
 Overloading `next('month')` conflicts with `DateTime.prototype.next('friday')`, which preserves the time of day (`09:30`) while a unit boundary resets to `00:00`, and callers split on whether `next('month')` means the 1st of next month or `plus(1, 'month')`. Numeric weekdays are rejected in `startOfNext()` so misplaced counts like `startOfNext(2, 'months')` cannot silently resolve `2` as Tuesday.
 
 Reopen: callers consistently try unit names in `next()` and `previous()`, or expect numeric weekdays in `startOfNext()`.
+
+## D18: `native-dates/helpers/*` stays open for official plugins without semver guarantees (2026-11-20)
+
+Narrowing `"./helpers/*"` to the four files `@native-dates/plugins` currently imports would make internal helpers look like curated public API and force a core version bump whenever a future official plugin needs another helper. Omitting `"types"` on `"./helpers/*"` keeps those modules out of editor autocomplete while lockstep `@native-dates/plugins` releases coordinate internal changes.
+
+Reopen: third-party consumers couple to `native-dates/helpers/*` in production and break on minor releases.
