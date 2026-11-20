@@ -1,14 +1,31 @@
-# North Star: User Needs and Verified Claims
+> This file is hand maintained by the framework author to express the core goals of the project.
 
-> status: stub (2026-11-19). Mission statement draft below for the maintainer to refine before finalizing verified claims.
+## Golden Rule
 
-Records what application developers need from `native-dates` and the claims backed up with concrete evidence.
+The same moral software that most of the universe began on. When authoring code as an open source maintainer your primary goal is to reason about what you would want yourself to have yourself as a downstream user. If someone *thrust this library onto you and forced you to use it*. If a choice feels correct from the maintainers seat but would have repercussions for the user its important to model that and notice it when authoring. This requires a bit of anthropic and probabilistic reasoning as you might need to imagine yourself as a representative sample of that reference class.
 
-## Mission
+## Project North Star
 
-`native-dates` gives JavaScript's native `Temporal` and `Intl` standards plain-English nouns and natural-language callsites (`today().plus(2, 'days').at('9am').in('Europe/Berlin')`). Calendar math, time zones, daylight transitions, and localization stay delegated to the browser's standards-committee implementations rather than userland tables or runtime dependencies.
+This library is designed to wrap Temporal and Intl in a way that provides the highest SNR (Signal to Noise Ratio) at a call site. This means when a developer is watching diffs fly across the screen as agents produce work they can easily understand *intent* when reviewing change sets. 
 
-## To Populate
+This also means developers don't have to learn your idiosyncrasies as a framework author. The moment when you where "the naming hat" and decide what to call something people have to model *you* and that makes their life difficult. Instead its easier for them to just to be able to guess intent through common language. Naming things simply with natural language often provides the best way for that to be achieved.
 
-- **User needs:** Concrete problems and failure modes developers run into with `Date`, raw `Temporal`, and legacy date libraries, written in plain user terms rather than internal architecture terms.
-- **Verified claims:** How `native-dates` addresses each need along with its proof (passing test, measured Brotli size or benchmark number, [`decisions.md`](decisions.md) entry, or [`plan/roadmap.md`](plan/roadmap.md) row). Omit any claim without proof.
+### Key Sub Goals
+
+#### Legibility 
+
+Standards bodies produce brilliant, highly technical, rigorous APIs that get shipped in browsers but oftentimes the actual mechanisms in how that is encoded is obtuse. For agents who deeply understand the standards they can produce output that correctly complies with these APIs but it significantly reduces **callsite legibility**
+
+#### Lowercase "c" correctness
+
+There is always a more [C]orrect way to do things, especially when working with things like time. But its important to always model the common case first before playing the game of "I can spot a weird scenario that proves you wrong". If a changeset makes the common case harder, but solves a Correctness claim then it should be weighed slowly. If a change costs bytes shipped to every website, to handle the bizarre habits of a island nation with 50 people, satisficing should be considered. 
+
+#### Conciseness
+
+There are many ways to express things naturally, but a solution that solves something elegantly in a few words beats one that solves it verbosely. 
+
+Additionally when reasoning about lines of code count and how to write code. Be mindful, this library has a very low target kb size. Time is suppose to shrink into the background so you can focus on the bigger problems in your domain and not take up downstream users own budget for their app's code.
+
+#### Judiciousness
+
+Decisions in this library are bayesian and built of rulings with systems to overturn them. This way a project can evolve with a record like common law, making our best effort in each moment to make a choice, but having humility that we do not know everything. New evidence can always overturn old decisions, but some things are more calcified than others. The truth that the walls of my apartment wont collapse today might be near 100% but not fully, there is no "rule" that the walls of my house cannot falter. 
