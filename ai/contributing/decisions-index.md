@@ -27,10 +27,10 @@ Active decisions grouped by area, newest first.
 
 ### Arithmetic, Boundaries, and Weekdays
 
-- [L123](decisions.md#numeric-day-of-the-week-is-dayofweek-1-7-with-token-e-for-iso-1-7-and-d-for-moments-0-6-2026-11-20) · Numeric day of the week is `dayOfWeek` (`1`-`7`), with token `E` for ISO `1`-`7` and `d` for Moment's `0`-`6` (2026-11-20)
-  - Reopen: callers hit bugs from `format('d')` returning `0` on Sunday while `.dayOfWeek` and `format('E')` return `7`.
 - [L117](decisions.md#adjacent-unit-boundaries-use-startofnext-and-startofprevious-instead-of-overloading-next-and-previous-2026-11-19) · Adjacent unit boundaries use `startOfNext()` and `startOfPrevious()` instead of overloading `next()` and `previous()` (2026-11-19)
   - Reopen: callers consistently try unit names in `next()` and `previous()`, or expect numeric weekdays in `startOfNext()`.
+- [L99](decisions.md#numeric-day-of-the-week-is-dayofweek-1-7-while-token-d-keeps-moments-0-6-2026-11-17) · Numeric day of the week is `dayOfWeek` (`1`-`7`) while token `d` keeps Moment's `0`-`6` (2026-11-17)
+  - Reopen: callers hit bugs from `format('d')` returning `0` on Sunday while `.dayOfWeek` and `format('E')` return `7`.
 - [L57](decisions.md#default-week-boundaries-follow-the-locale-while-weekofyear-stays-iso-monday-2026-11-14) · Default week boundaries follow the locale while `weekOfYear` stays ISO Monday (2026-11-14)
   - Reopen: server code accidentally partitions stored weekly aggregates differently across requests carrying different `.locale()` tags.
 
@@ -95,12 +95,10 @@ Every entry in file order.
 - [L93](decisions.md#unix-timestamp-properties-include-their-unit-epochseconds-epochmilliseconds-epochnanoseconds-with-no-bare-epoch-2026-11-17) · Unix timestamp properties include their unit (`epochSeconds`, `epochMilliseconds`, `epochNanoseconds`) with no bare `.epoch` (2026-11-17)
   - Reopen: migration feedback shows omitting `.epoch` causes widespread friction without preventing real seconds-vs-milliseconds bugs.
 - [L99](decisions.md#numeric-day-of-the-week-is-dayofweek-1-7-while-token-d-keeps-moments-0-6-2026-11-17) · Numeric day of the week is `dayOfWeek` (`1`-`7`) while token `d` keeps Moment's `0`-`6` (2026-11-17)
-  - Superseded by 2026-11-20
+  - Reopen: callers hit bugs from `format('d')` returning `0` on Sunday while `.dayOfWeek` and `format('E')` return `7`.
 - [L105](decisions.md#duration-uses-balance-without-a-normalize-alias-and-totalunit-instead-of-inunit-2026-11-17) · `Duration` uses `balance()` without a `normalize()` alias, and `total(unit)` instead of `in(unit)` (2026-11-17)
   - Reopen: cold-reader studies or user issues show callers repeatedly reaching for `duration.in(unit)` or `duration.normalize()`.
 - [L111](decisions.md#ranges-accept-for-for-durations-alongside-to-and-only-calendardate-has-through-2026-11-17) · Ranges accept `.for()` for durations alongside `.to()`, and only `CalendarDate` has `.through()` (2026-11-17)
   - Reopen: callers pass endpoints to `.for()` expecting runtime rejection, or expect `.through()` on `DateTime` with inclusive end semantics.
 - [L117](decisions.md#adjacent-unit-boundaries-use-startofnext-and-startofprevious-instead-of-overloading-next-and-previous-2026-11-19) · Adjacent unit boundaries use `startOfNext()` and `startOfPrevious()` instead of overloading `next()` and `previous()` (2026-11-19)
   - Reopen: callers consistently try unit names in `next()` and `previous()`, or expect numeric weekdays in `startOfNext()`.
-- [L123](decisions.md#numeric-day-of-the-week-is-dayofweek-1-7-with-token-e-for-iso-1-7-and-d-for-moments-0-6-2026-11-20) · Numeric day of the week is `dayOfWeek` (`1`-`7`), with token `E` for ISO `1`-`7` and `d` for Moment's `0`-`6` (2026-11-20)
-  - Reopen: callers hit bugs from `format('d')` returning `0` on Sunday while `.dayOfWeek` and `format('E')` return `7`.
