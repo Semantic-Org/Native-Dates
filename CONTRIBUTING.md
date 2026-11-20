@@ -15,7 +15,7 @@ Short guide for contributors and coding agents working on their behalf.
 
 Read these files in order so new code matches existing conventions:
 
-1. [`ai/contributing/north-star.md`](ai/contributing/north-star.md): project goals, the Golden Rule, call-site SNR, lowercase-"c" correctness, conciseness, and Bayesian rulings
+1. [`ai/contributing/north-star.md`](ai/contributing/north-star.md): hand-authored by the maintainer on project goals, the Golden Rule, call-site SNR, lowercase-"c" correctness, conciseness, and Bayesian rulings
 2. [`ai/contributing/standards/lessons/naming-lessons.md`](ai/contributing/standards/lessons/naming-lessons.md) and [`ai/contributing/standards/lessons/simplicity-lessons.md`](ai/contributing/standards/lessons/simplicity-lessons.md): callsite design, naming, and mental-model simplicity across Semantic packages
 3. [`ai/contributing/standards/coding-standards.md`](ai/contributing/standards/coding-standards.md) and [`ai/contributing/standards/code-comments.md`](ai/contributing/standards/code-comments.md)
 4. [`ai/contributing/budget.md`](ai/contributing/budget.md): bundle size ceilings and per-PR limits
