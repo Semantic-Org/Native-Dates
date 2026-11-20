@@ -144,7 +144,7 @@ function weekKey(day) {
 }
 ```
 
-ISO week numbers read from `weekOfYear` and the `'W'` token always count weeks from Monday.
+ISO week numbers from `weekOfYear` and `'W'` always count weeks from Monday. ISO weekday numbers from `dayOfWeek` and `'E'` follow the same Monday-first numbering.
 
 ## One-off calendar and dialect overrides
 
