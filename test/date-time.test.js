@@ -787,10 +787,14 @@ describe('DateTime.startOf() and endOf()', () => {
   });
 
   // Lord Howe shifts clocks back 30 minutes at 02:00 on 2026-04-05, repeating 01:30 to 02:00
-  it('keeps an hour one elapsed hour long across a 30-minute DST transition', () => {
+  it('spans the full 90-minute 01:xx wall-clock hour across a 30-minute fall-back transition', () => {
     const early = datetime('2026-04-05T01:15+11:00', 'Australia/Lord_Howe');
-    expect(early.endOf('hour').toString()).toBe('2026-04-04T14:59:59.999Z');
-    expect(early.range('hour').toString()).toBe('2026-04-04T14:00:00.000Z/2026-04-04T15:00:00.000Z');
+    const repeated = datetime('2026-04-05T01:45+10:30', 'Australia/Lord_Howe');
+    expect(early.endOf('hour').toString()).toBe('2026-04-04T15:29:59.999Z');
+    expect(repeated.endOf('hour').toString()).toBe('2026-04-04T15:29:59.999Z');
+    expect(early.range('hour').toString()).toBe('2026-04-04T14:00:00.000Z/2026-04-04T15:30:00.000Z');
+    expect(early.range('hour').contains(early)).toBe(true);
+    expect(repeated.range('hour').contains(repeated)).toBe(true);
   });
 
   it('computes microsecond boundaries to nanosecond precision', () => {
@@ -924,7 +928,23 @@ describe('DateTime.startOfNext() and startOfPrevious()', () => {
     const firstPass = datetime('2026-11-01T01:30-04:00', 'America/New_York');
     const secondPass = datetime('2026-11-01T01:30-05:00', 'America/New_York');
     expect(firstPass.startOfNext('hour').toString()).toBe('2026-11-01T06:00:00.000Z');
+    expect(firstPass.startOfPrevious('hour').toString()).toBe('2026-11-01T04:00:00.000Z');
+    expect(secondPass.startOfNext('hour').toString()).toBe('2026-11-01T07:00:00.000Z');
     expect(secondPass.startOfPrevious('hour').toString()).toBe('2026-11-01T05:00:00.000Z');
+  });
+
+  // Lord Howe falls back 30 minutes on 2026-04-05 (02:00 -> 01:30) and springs forward 30 minutes on 2026-10-04 (02:00 -> 02:30)
+  it('aligns startOfNext("hour") and startOfPrevious("hour") across 30-minute DST transitions', () => {
+    const early = datetime('2026-04-05T01:15+11:00', 'Australia/Lord_Howe');
+    const repeated = datetime('2026-04-05T01:45+10:30', 'Australia/Lord_Howe');
+    expect(early.startOfNext('hour').toString()).toBe('2026-04-04T15:30:00.000Z');
+    expect(repeated.startOfNext('hour').toString()).toBe('2026-04-04T15:30:00.000Z');
+    expect(repeated.startOfPrevious('hour').toString()).toBe('2026-04-04T13:00:00.000Z');
+    const afterSpring = datetime('2026-10-04T02:45+11:00', 'Australia/Lord_Howe');
+    expect(afterSpring.startOfNext('hour')).toMatchObject({ hour: 3, minute: 0 });
+    expect(afterSpring.startOfNext('hour').toString()).toBe('2026-10-03T16:00:00.000Z');
+    expect(afterSpring.startOfPrevious('hour')).toMatchObject({ hour: 1, minute: 0 });
+    expect(afterSpring.startOfPrevious('hour').toString()).toBe('2026-10-03T14:30:00.000Z');
   });
 
   it('returns midnight on either side of 23-hour and 25-hour DST transition days', () => {
@@ -972,10 +992,12 @@ describe('DateTime.startOfNext() and startOfPrevious()', () => {
     expect(sundayLate.startOfPrevious('saturday')).toMatchObject({ day: 28, dayOfWeek: 6, hour: 0, minute: 0 });
   });
 
-  it('computes microsecond boundaries to nanosecond precision', () => {
+  it('computes microsecond and nanosecond boundaries to nanosecond precision', () => {
     const precise = datetime('2026-11-18T14:45:12.345678912Z', 'UTC');
     expect(precise.startOfNext('microsecond').toString()).toBe('2026-11-18T14:45:12.345679Z');
     expect(precise.startOfPrevious('microsecond').toString()).toBe('2026-11-18T14:45:12.345677Z');
+    expect(precise.startOfNext('nanosecond').toString()).toBe('2026-11-18T14:45:12.345678913Z');
+    expect(precise.startOfPrevious('nanosecond').toString()).toBe('2026-11-18T14:45:12.345678911Z');
   });
 
   it('keeps the timezone of the original and does not mutate it', () => {

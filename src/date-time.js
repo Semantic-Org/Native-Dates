@@ -27,7 +27,6 @@ import {
   quarterStart,
   singularKeys,
   stepOf,
-  timeUnits,
   unit,
   weekdayNamed,
   withParts,
@@ -317,10 +316,12 @@ export class DateTime {
     return this.#nextStart(name, firstDay).minus(endPrecision(unit(name)));
   }
 
-  // re-anchor day and larger boundaries with startOf() in case a skipped midnight shifted the start to 01:00
+  // re-anchor after stepping so skipped midnights or 30-minute DST transitions land on the next true boundary
   #nextStart(name, firstDay) {
-    const next = this.startOf(name, firstDay).plus(stepOf(unit(name)));
-    return timeUnits.includes(unit(name)) ? next : next.startOf(name, firstDay);
+    const step = stepOf(unit(name));
+    const first = this.startOf(name, firstDay).plus(step);
+    const next = first.startOf(name, firstDay);
+    return next.isAfter(this) ? next : first.plus(step).startOf(name, firstDay);
   }
 
   startOfNext(target, firstDay) {
