@@ -9,7 +9,7 @@
 | `src/` | `native-dates` | Core date library: `index.js` barrel, one noun class per file (`range.js` holds `Range` and its three subclasses), and category-grouped utilities in `helpers/` |
 | `types/` | | Hand-authored TypeScript declarations mirroring `src/`. Their doc comments power editor hover/autocomplete (`@see` links follow [`types.md`](../standards/types.md)) |
 | `ai/skills/` | | Downstream agent skills (`*.md` in house form), to be published in `package.json` `"files"` and served via `/skills/<skill>.md` and `/llms.txt` ([`ai-author-context.md`](../standards/ai-author-context.md)) |
-| `ai/contributing/` | private | Internal design decisions, bundle budget, launch plan, upstream standards, and contributor workflows |
+| `ai/contributing/` | private | Internal design decisions, bundle budget, project roadmap, upstream standards, and contributor workflows |
 | `packages/core/` | `@native-dates/core` | Thin scoped re-export of `native-dates` |
 | `packages/plugins/` | `@native-dates/plugins` | Opt-in side-effect plugins (`zones`, `loose`, `legacy-date`) in `src/`, with module-augmentation declarations in `types/` |
 | `packages/polyfill/` | `@native-dates/polyfill` | Conditional `temporal-polyfill` loader that dynamically imports the polyfill only when `globalThis.Temporal` is absent |

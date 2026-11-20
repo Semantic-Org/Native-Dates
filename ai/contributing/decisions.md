@@ -57,6 +57,8 @@ Active package decisions grouped by area, newest first.
 
 ### Plugins, Errors, and Dependencies
 
+- **D18:** `native-dates/helpers/*` stays open for official plugins without semver guarantees (2026-11-20) [L107-L111](decisions/package.md#d18-native-dateshelpers-stays-open-for-official-plugins-without-semver-guarantees-2026-11-20)
+  - Reopen: third-party consumers couple to `native-dates/helpers/*` in production and break on minor releases.
 - **D10:** Error explanations use inline `isDevelopment` checks, and `{ loose: true }` still throws on bad options (2026-11-16) [L59-L63](decisions/package.md#d10-error-explanations-use-inline-isdevelopment-checks-and--loose-true--still-throws-on-bad-options-2026-11-16)
   - Reopen: callers building dynamic zone or format inputs from untrusted user text need a non-throwing validation helper.
 - **D9:** Core has zero runtime dependencies and trims forked `@semantic-ui/utils` helpers to used branches (2026-11-16) [L53-L57](decisions/package.md#d9-core-has-zero-runtime-dependencies-and-trims-forked-semantic-uiutils-helpers-to-used-branches-2026-11-16)
@@ -102,3 +104,5 @@ Every package decision (`D1`..`Dn`) in file order.
   - Reopen: callers pass endpoints to `.for()` expecting runtime rejection, or expect `.through()` on `DateTime` with inclusive end semantics.
 - **D17:** Adjacent unit boundaries use `startOfNext()` and `startOfPrevious()` instead of overloading `next()` and `previous()` (2026-11-19) [L101-L105](decisions/package.md#d17-adjacent-unit-boundaries-use-startofnext-and-startofprevious-instead-of-overloading-next-and-previous-2026-11-19)
   - Reopen: callers consistently try unit names in `next()` and `previous()`, or expect numeric weekdays in `startOfNext()`.
+- **D18:** `native-dates/helpers/*` stays open for official plugins without semver guarantees (2026-11-20) [L107-L111](decisions/package.md#d18-native-dateshelpers-stays-open-for-official-plugins-without-semver-guarantees-2026-11-20)
+  - Reopen: third-party consumers couple to `native-dates/helpers/*` in production and break on minor releases.

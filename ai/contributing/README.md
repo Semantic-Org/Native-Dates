@@ -11,7 +11,7 @@ Internal records and workflows for developing `native-dates`. Application develo
 | Check or record design and process decisions | [`decisions.md`](decisions.md) for the topic index, [`decisions/README.md`](decisions/README.md) before adding or reopening an entry, [`decisions/package.md`](decisions/package.md) (`D1`..`Dn`), and [`decisions/project.md`](decisions/project.md) (`P1`..`Pn`) |
 | Check bundle size limits | [`budget.md`](budget.md), checked by `npm run size` |
 | Configure GitHub secrets, bots, and Vercel deploys | [`reference/setup.md`](reference/setup.md) |
-| View pending and completed launch tasks | [`plan/roadmap.md`](plan/roadmap.md) and [`plan/landed.md`](plan/landed.md) |
+| View project roadmap and completed milestones | [`plan/roadmap.md`](plan/roadmap.md) and [`plan/landed.md`](plan/landed.md) |
 | Design a class, method signature, or public name | [`naming-lessons.md`](standards/lessons/naming-lessons.md), [`simplicity-lessons.md`](standards/lessons/simplicity-lessons.md), and [`name-public-api.md`](standards/name-public-api.md) |
 | Write or update `.d.ts` declarations and `@see` links | [`types.md`](standards/types.md), checked by `npm run types` |
 | Write an error message, warning, or log line | [`errors-and-logs.md`](standards/legibility/errors-and-logs.md), checked by `npm run errors` |
@@ -30,7 +30,7 @@ Internal records and workflows for developing `native-dates`. Application develo
 | Decisions index | [`decisions.md`](decisions.md) | Generated topic and chronological index of package decisions (`npm run ai:index`) |
 | Decision logs | [`decisions/`](decisions/README.md) | Authoring rules in `README.md`, package rationales in `package.md` (`D1`..`Dn`), and repo/CI process calls in `project.md` (`P1`..`Pn`) |
 | Size budget | [`budget.md`](budget.md) | Entry bundles, Brotli ceilings, and per-PR growth rules, updated only by the maintainer |
-| Launch plan | [`plan/`](plan/roadmap.md) | Pending rows in `roadmap.md`, completed rows in `landed.md`, and briefs in `plan/scopes/` |
+| Project roadmap | [`plan/`](plan/roadmap.md) | Active and iceboxed work in `roadmap.md`, completed milestones in `landed.md`, and briefs in `plan/scopes/` |
 | Shared standards | [`standards/`](standards/README.md) | Synced from upstream Semantic repos and not edited directly here |
 | Repo workflows | [`workflows/`](workflows/README.md) | Contributor procedures for this repository |
 | Technical reference | [`reference/`](reference/architecture.md) | Architecture and external setup docs |
