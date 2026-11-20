@@ -18,16 +18,16 @@ Internal records and workflows for developing `native-dates`. Application develo
 | Author or evaluate downstream user skills | [`ai-author-context.md`](standards/ai-author-context.md) and [`workflows/author-user-skill.md`](workflows/author-user-skill.md) |
 | Run a clean-room DX review on public API surface | [`workflows/clean-room-dx-review.md`](workflows/clean-room-dx-review.md) |
 | Write documentation pages or update the docs site | [`workflows/docs-writing.md`](workflows/docs-writing.md) and [`workflows/docs-authoring.md`](workflows/docs-authoring.md) |
-| Review user needs and verified product claims | [`north-star.md`](north-star.md) |
+| Read the project's core goals and tradeoffs | [`north-star.md`](north-star.md) (hand-authored by the maintainer) |
 
 ## Directory Layout
 
 | Record | Path | Policy |
 |---|---|---|
+| North star | [`north-star.md`](north-star.md) | Hand-authored by the maintainer on project goals, the Golden Rule, call-site SNR, lowercase-"c" correctness, conciseness, and Bayesian rulings (do not edit or polish) |
 | Package decisions | [`decisions.md`](decisions.md) | Append-only dated entries with maintainer confidence score and reopen condition |
 | Project decisions | [`project-decisions.md`](project-decisions.md) | Append-only dated entries for repo process, CI, and docs conventions |
 | Size budget | [`budget.md`](budget.md) | Entry bundles, Brotli ceilings, and per-PR growth rules, updated only by the maintainer |
-| North star | [`north-star.md`](north-star.md) | Mission statement, user needs, and verified claims for the homepage and README |
 | Launch plan | [`plan/`](plan/roadmap.md) | Pending rows in `roadmap.md`, completed rows in `landed.md`, and briefs in `plan/scopes/` |
 | Shared standards | [`standards/`](standards/README.md) | Synced from upstream Semantic repos and not edited directly here |
 | Repo workflows | [`workflows/`](workflows/README.md) | Contributor procedures for this repository |

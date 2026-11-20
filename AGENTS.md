@@ -6,12 +6,13 @@ Read [`ai/contributing/README.md`](ai/contributing/README.md) first for the cont
 
 Before authoring or editing code in this repository, read:
 
-1. **[`ai/contributing/standards/lessons/naming-lessons.md`](ai/contributing/standards/lessons/naming-lessons.md)**: Hand-authored by the maintainer on callsite legibility, plain industry terms over metaphors, function signatures, and naming. Read with the weight of a live user turn.
-2. **[`ai/contributing/standards/lessons/simplicity-lessons.md`](ai/contributing/standards/lessons/simplicity-lessons.md)**: Mental-model simplicity over clever mechanisms, synthetic adapters, or cross-module monkey-patching.
-3. **[`ai/contributing/standards/coding-standards.md`](ai/contributing/standards/coding-standards.md)** and **[`ai/contributing/standards/code-comments.md`](ai/contributing/standards/code-comments.md)**: Class anatomy with `Symbol.for` branding, plus folder homogeneity and comment standards.
-4. **[`ai/contributing/reference/architecture.md`](ai/contributing/reference/architecture.md)**: Package boundaries across `native-dates` (`src/`), `@native-dates/plugins` (`packages/plugins/`), `@native-dates/polyfill` (`packages/polyfill/`), and `ai/skills/`, plus invariants and size measurement.
-5. **[`ai/contributing/budget.md`](ai/contributing/budget.md)**: Bundle ceilings, per-PR byte limits, and the size budget rules.
-6. **[`ai/contributing/decisions.md`](ai/contributing/decisions.md)**: Package design decisions. Grep the noun you are about to touch and check the latest dated entry.
+1. **[`ai/contributing/north-star.md`](ai/contributing/north-star.md)**: Hand-authored by the maintainer on project goals, the Golden Rule, call-site SNR, lowercase-"c" correctness, conciseness, and Bayesian rulings. Read with the weight of a live user turn, and never edit or polish its human voice.
+2. **[`ai/contributing/standards/lessons/naming-lessons.md`](ai/contributing/standards/lessons/naming-lessons.md)**: Hand-authored by the maintainer on callsite legibility, plain industry terms over metaphors, function signatures, and naming. Read with the weight of a live user turn.
+3. **[`ai/contributing/standards/lessons/simplicity-lessons.md`](ai/contributing/standards/lessons/simplicity-lessons.md)**: Mental-model simplicity over clever mechanisms, synthetic adapters, or cross-module monkey-patching.
+4. **[`ai/contributing/standards/coding-standards.md`](ai/contributing/standards/coding-standards.md)** and **[`ai/contributing/standards/code-comments.md`](ai/contributing/standards/code-comments.md)**: Class anatomy with `Symbol.for` branding, plus folder homogeneity and comment standards.
+5. **[`ai/contributing/reference/architecture.md`](ai/contributing/reference/architecture.md)**: Package boundaries across `native-dates` (`src/`), `@native-dates/plugins` (`packages/plugins/`), `@native-dates/polyfill` (`packages/polyfill/`), and `ai/skills/`, plus invariants and size measurement.
+6. **[`ai/contributing/budget.md`](ai/contributing/budget.md)**: Bundle ceilings, per-PR byte limits, and the size budget rules.
+7. **[`ai/contributing/decisions.md`](ai/contributing/decisions.md)**: Package design decisions. Grep the noun you are about to touch and check the latest dated entry.
 
 Load task-specific guides when relevant:
 
@@ -35,11 +36,11 @@ Files in [`ai/contributing/standards/`](ai/contributing/standards/README.md) are
 - **Zero runtime dependencies:** `native-dates` installs nothing. Fork and copy only minimal needed helpers from `@semantic-ui/utils` into `src/helpers/` rather than adding dependencies or inventing ad-hoc names.
 - **Comment voice:** Comment only non-obvious constraints, invariants, or gotchas (`npm run comments`). Start with a lowercase word, avoid em-dashes, prose semicolons, and unicode arrows, and omit trailing periods on single-line comments.
 - **Commit format:** `Category: Description` (both capitalized, without a trailing period or `Co-Authored-By` trailer). Categories: `Feat`, `Bug`, `Docs`, `Chore`, `Harness`, `Test`, `Perf`, `Refactor`, `Build`, `Bench`, `BREAKING`. Git hooks in `tools/hooks/` enforce this format and block agent commits directly to `main`.
-- **Hand-authored `README.md`:** Leave the root `README.md` untouched. Keep READMEs under `packages/` as brief factual descriptions until the maintainer authors them.
+- **Hand-authored maintainer files (`README.md`, `ai/contributing/north-star.md`, `ai/contributing/standards/lessons/naming-lessons.md`):** Written by the maintainer in his own voice. Leave them untouched and never edit or polish them unless explicitly asked; keep READMEs under `packages/` as brief factual descriptions until the maintainer authors them.
 - **Bespoke homepage:** `docs/src/views/Home.astro` is custom-built around `native-dates`'s specific value proposition with interactive demos verified at build time.
 - **Bundle size budget:** Run `npm run size` after editing `src/` or `packages/`. Bug fixes aim for 0 added bytes, features declare expected bytes up front, and unused headroom is not a justification (`ai/contributing/budget.md`).
 - **Structured errors:** Build every error via `refuse()` or `refuseType()` in `src/helpers/errors.js` (`dates refused [code] at`). Explanations are gated behind `isDevelopment` (`NODE_ENV !== 'production'`) so production builds omit diagnostic prose (`ai/contributing/standards/legibility/errors-and-logs.md`, checked by `npm run errors` and `npm run size`).
-- **Behavioral tests and environments:** Assert `error.code` and `error.at` rather than matching prose sentences (`ai/contributing/standards/legibility/tests-and-test-names.md`). Each package's tests live with it (`test/` for `native-dates` and `packages/<name>/test/` for the others) and import packages by their public names; repo and CI tooling tests live under `tools/`. Place pure Node tests in `test/*.test.js` or `test/unit/`, DOM tests in `test/dom/`, and real Chromium Playwright tests in `test/browser/` (`vitest.config.js`).
+- **Behavioral tests and environments:** Assert `error.code` and `error.at` rather than matching prose sentences (`ai/contributing/standards/legibility/tests-and-test-names.md`). Each package's tests live with it (`test/` for `native-dates` and `packages/<name>/test/` for the others) and import packages by their public names; repo and CI tooling tests live under `tools/`. Place pure Node tests in `test/` (core nouns at the top, cross-cutting suites in subfolders like `test/format/` and `test/helpers/`), DOM tests in `test/dom/`, and real Chromium Playwright tests in `test/browser/` (`vitest.config.js`).
 - **Category-grouped helpers:** Group free functions by domain in `src/helpers/` (`intl.js`, `zones.js`, `parse.js`, `format.js`, `errors.js`, `utils.js`, `environment.js`).
 - **Decision records:** Record package behavior decisions in `ai/contributing/decisions.md` and repository process decisions in `ai/contributing/project-decisions.md`, each dated with the maintainer's confidence score and a reopen condition.
 - **Scratch directory:** Put temporary plans and notes in git-ignored `ai/workspace/`.
@@ -50,8 +51,6 @@ Ask the maintainer rather than inventing conventions for:
 
 - **Changelog format:** No `CHANGELOG.md` convention is settled. The docs version menu links directly to GitHub Releases.
 - **Post-launch MCP and CDN (`tools/mcp`, `tools/cdn`):** Standalone MCP server (`tools/mcp`) and CDN worker/bundle infrastructure (`tools/cdn`) from `next` are optional post-launch additions.
-- **Behavioral tests and environments:** Assert `error.code` and `error.at` rather than matching prose sentences. Each package's tests live with it, `test/` for `native-dates` and `packages/<name>/test/` for the others, and import packages by their public names. Repo and CI tooling tests live with their scripts under `tools/`. Place pure Node tests in `test/` (the core nouns at the top, cross-cutting suites in subfolders like `test/format/` and `test/helpers/`), DOM tests in `test/dom/`, and real Chromium Playwright tests in `test/browser/` (`vitest.config.js`).
-- **Commit format:** `Category: Description` (both capitalized, no trailing period, no `Co-Authored-By`). Categories: `Feat`, `Bug`, `Docs`, `Chore`, `Harness`, `Test`, `Perf`, `Refactor`, `Build`, `Bench`, `BREAKING`.
 
 ## Commands
 
