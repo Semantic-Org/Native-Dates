@@ -1,8 +1,9 @@
-// validates markdown links, #anchors, GFM tables, unclosed fences, ai/ paths, and AGENTS.md symlinks
+// validates YAML frontmatter, markdown links, #anchors, GFM tables, unclosed fences, ai/ paths, and AGENTS.md symlinks
 
 import { existsSync, lstatSync, readdirSync, readFileSync, readlinkSync, statSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse as parseYaml } from 'yaml';
 
 import { checkDecisions } from './decisions-index.js';
 
@@ -99,12 +100,24 @@ function countCells(line) {
 export function checkMarkdownStructure(source) {
   const lines = source.split('\n');
   const findings = [];
+  let startIndex = 0;
+  const frontMatch = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(source);
+  if (frontMatch) {
+    startIndex = frontMatch[0].split('\n').length - (frontMatch[0].endsWith('\n') ? 1 : 0);
+    try {
+      parseYaml(frontMatch[1]);
+    }
+    catch (err) {
+      findings.push(`L1: invalid YAML frontmatter (${err.message.split('\n')[0]})`);
+    }
+  }
   let fence = null;
   let fenceLine = 0;
   let table = null;
   let previous = '';
 
   lines.forEach((line, index) => {
+    if (index < startIndex) { return; }
     const lineNumber = index + 1;
     const fenceMatch = /^\s*(`{3,}|~{3,})/.exec(line);
     if (fenceMatch) {
