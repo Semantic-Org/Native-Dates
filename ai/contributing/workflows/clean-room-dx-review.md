@@ -60,6 +60,6 @@ Treat every finding as a hypothesis. Verify each claim against `src/` before pre
 
 After landing approved changes:
 
-1. Record settled naming or signature choices in [`../decisions.md`](../decisions.md) so later rounds do not flip-flop on taste calls.
+1. Record non-obvious naming or signature tradeoffs in [`../decisions/package.md`](../decisions/package.md) (following [`../decisions/README.md`](../decisions/README.md)) so later rounds do not flip-flop on taste calls.
 2. Regenerate `ai/workspace/surface-capture.txt`.
 3. If substantive API changes were merged, run a second round using a **brand-new** subagent with zero mention of round 1. Convergence shows up when round 1's fixes appear in round 2's "What must not change" list.

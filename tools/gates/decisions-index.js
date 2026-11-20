@@ -1,14 +1,14 @@
-// builds and checks ai/contributing/decisions-index.md from ai/contributing/decisions.md
+// builds and checks ai/contributing/decisions.md from ai/contributing/decisions/package.md
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const decisionsPath = resolve(root, 'ai/contributing/decisions.md');
-const indexPath = resolve(root, 'ai/contributing/decisions-index.md');
+const packagePath = resolve(root, 'ai/contributing/decisions/package.md');
+const indexPath = resolve(root, 'ai/contributing/decisions.md');
 
-const headingPattern = /^##\s+(.+?)\s+\((\d{4}-\d{2}-\d{2})\)\s*$/;
+const headingPattern = /^##\s+D(\d+):\s+(.+?)\s+\((\d{4}-\d{2}-\d{2})\)\s*$/;
 const confidencePattern = /^\*(\d{1,3})%\s+confident\*$/i;
 const reopenPattern = /^Reopen:\s*(.+)$/i;
 const supersededPattern = /^Superseded by\s+(.+?)\.?\s*$/i;
@@ -70,15 +70,24 @@ export function parseDecisions(source) {
     if (!line.startsWith('## ')) { return; }
     const parsed = headingPattern.exec(line);
     if (!parsed) {
-      findings.push(`L${index + 1}: expected '## <Plain claim> (<YYYY-MM-DD>)' heading`);
+      findings.push(`L${index + 1}: expected '## D<n>: <Plain claim> (<YYYY-MM-DD>)' heading`);
       return;
     }
-    headings.push({ line: index + 1, title: parsed[1].trim(), date: parsed[2], anchor });
+    const id = Number(parsed[1]);
+    const expectedId = headings.length + 1;
+    if (id !== expectedId) {
+      findings.push(`L${index + 1}: expected sequential ID D${expectedId}, got D${id}`);
+    }
+    headings.push({ id, line: index + 1, title: parsed[2].trim(), date: parsed[3], anchor });
   });
 
   const entries = headings.map((entry, index) => {
-    const nextLine = index + 1 < headings.length ? headings[index + 1].line - 1 : lines.length;
-    const paragraphs = paragraphsOf(lines.slice(entry.line, nextLine).join('\n'));
+    const bound = index + 1 < headings.length ? headings[index + 1].line - 1 : lines.length;
+    let endLine = bound;
+    while (endLine > entry.line && lines[endLine - 1].trim() === '') {
+      endLine--;
+    }
+    const paragraphs = paragraphsOf(lines.slice(entry.line, bound).join('\n'));
     let confidence = null;
     let reopen = '';
     let supersededBy = '';
@@ -115,7 +124,7 @@ export function parseDecisions(source) {
       findings.push(`L${entry.line}: date ${entry.date} precedes earlier entry ${headings[index - 1].date}`);
     }
 
-    return { ...entry, confidence, reopen, supersededBy, topic };
+    return { ...entry, endLine, confidence, reopen, supersededBy, topic };
   });
 
   return { entries, findings };
@@ -123,7 +132,8 @@ export function parseDecisions(source) {
 
 const formatItem = (entry) => {
   const stamp = entry.confidence === null ? entry.date : `${entry.date}, ${entry.confidence}% confident`;
-  const lines = [`- [L${entry.line}](decisions.md#${entry.anchor}) · ${entry.title} (${stamp})`];
+  const range = `L${entry.line}-L${entry.endLine}`;
+  const lines = [`- **D${entry.id}:** ${entry.title} (${stamp}) [${range}](decisions/package.md#${entry.anchor})`];
   if (entry.supersededBy) {
     lines.push(`  - Superseded by ${entry.supersededBy}`);
   }
@@ -135,20 +145,20 @@ const formatItem = (entry) => {
 
 export function renderDecisionsIndex(entries) {
   const out = [
-    '# Decisions Index',
+    '# Decisions',
     '',
-    '> Generated from [`decisions.md`](decisions.md) by `npm run ai:index` and checked by `npm run ai`. Do not edit by hand.',
+    '> Generated from [`decisions/package.md`](decisions/package.md) by `npm run ai:index` and checked by `npm run ai`. Do not edit by hand. Read [`decisions/README.md`](decisions/README.md) before adding or reopening an entry (features and bug fixes do not belong here, and repo process calls belong in [`decisions/project.md`](decisions/project.md)).',
     '',
     '## By Topic',
     '',
-    'Active decisions grouped by area, newest first.',
+    'Active package decisions grouped by area, newest first.',
     '',
   ];
 
   for (const [name] of topicGroups) {
     const matching = entries
       .filter((entry) => entry.topic === name && !entry.supersededBy)
-      .sort((a, b) => b.date.localeCompare(a.date) || b.line - a.line);
+      .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
     if (!matching.length) { continue; }
     out.push(`### ${name}`, '');
     for (const entry of matching) {
@@ -157,7 +167,7 @@ export function renderDecisionsIndex(entries) {
     out.push('');
   }
 
-  out.push('## Chronological', '', 'Every entry in file order.', '');
+  out.push('## Chronological', '', 'Every package decision (`D1`..`Dn`) in file order.', '');
   for (const entry of entries) {
     out.push(formatItem(entry));
   }
@@ -166,22 +176,22 @@ export function renderDecisionsIndex(entries) {
 }
 
 export function checkDecisions(
-  source = readFileSync(decisionsPath, 'utf8'),
+  source = readFileSync(packagePath, 'utf8'),
   indexSource = existsSync(indexPath) ? readFileSync(indexPath, 'utf8') : '',
 ) {
   const { entries, findings } = parseDecisions(source);
-  const issues = findings.map((finding) => `ai/contributing/decisions.md: ${finding}`);
+  const issues = findings.map((finding) => `ai/contributing/decisions/package.md: ${finding}`);
   if (!findings.length && indexSource !== renderDecisionsIndex(entries)) {
-    issues.push('ai/contributing/decisions-index.md: stale index (run `npm run ai:index`)');
+    issues.push('ai/contributing/decisions.md: stale index (run `npm run ai:index`)');
   }
   return issues;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { entries, findings } = parseDecisions(readFileSync(decisionsPath, 'utf8'));
+  const { entries, findings } = parseDecisions(readFileSync(packagePath, 'utf8'));
   if (findings.length) {
     for (const finding of findings) {
-      console.error(`  x ai/contributing/decisions.md: ${finding}`);
+      console.error(`  x ai/contributing/decisions/package.md: ${finding}`);
     }
     process.exitCode = 1;
   }

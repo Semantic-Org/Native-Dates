@@ -6,8 +6,9 @@ Internal records and workflows for developing `native-dates`. Application develo
 
 | Task | Reading order |
 |---|---|
+| Onboard a coding agent before working | [`curriculum.md`](curriculum.md) (stages 1–4) |
 | Fix a bug, add a feature, or file a bug report | [`CONTRIBUTING.md`](../../CONTRIBUTING.md), then [`workflows/contribute.md`](workflows/contribute.md) |
-| Check design or process rulings | [`decisions-index.md`](decisions-index.md) and [`decisions.md`](decisions.md) for package behavior, [`project-decisions.md`](project-decisions.md) for repo process |
+| Check or record design and process decisions | [`decisions.md`](decisions.md) for the topic index, [`decisions/README.md`](decisions/README.md) before adding or reopening an entry, [`decisions/package.md`](decisions/package.md) (`D1`..`Dn`), and [`decisions/project.md`](decisions/project.md) (`P1`..`Pn`) |
 | Check bundle size limits | [`budget.md`](budget.md), checked by `npm run size` |
 | Configure GitHub secrets, bots, and Vercel deploys | [`reference/setup.md`](reference/setup.md) |
 | View pending and completed launch tasks | [`plan/roadmap.md`](plan/roadmap.md) and [`plan/landed.md`](plan/landed.md) |
@@ -24,9 +25,10 @@ Internal records and workflows for developing `native-dates`. Application develo
 
 | Record | Path | Policy |
 |---|---|---|
+| Agent curriculum | [`curriculum.md`](curriculum.md) | Ordered 4-stage reading list for coding agents |
 | North star | [`north-star.md`](north-star.md) | Hand-authored by the maintainer on project goals, the Golden Rule, call-site SNR, lowercase-"c" correctness, conciseness, and Bayesian rulings (do not edit or polish) |
-| Package decisions | [`decisions.md`](decisions.md), [`decisions-index.md`](decisions-index.md) | Append-only dated entries with reopen conditions and optional maintainer confidence scores (`npm run ai:index` updates the index) |
-| Project decisions | [`project-decisions.md`](project-decisions.md) | Append-only dated entries for repo process, CI, and docs conventions |
+| Decisions index | [`decisions.md`](decisions.md) | Generated topic and chronological index of package decisions (`npm run ai:index`) |
+| Decision logs | [`decisions/`](decisions/README.md) | Authoring rules in `README.md`, package rationales in `package.md` (`D1`..`Dn`), and repo/CI process calls in `project.md` (`P1`..`Pn`) |
 | Size budget | [`budget.md`](budget.md) | Entry bundles, Brotli ceilings, and per-PR growth rules, updated only by the maintainer |
 | Launch plan | [`plan/`](plan/roadmap.md) | Pending rows in `roadmap.md`, completed rows in `landed.md`, and briefs in `plan/scopes/` |
 | Shared standards | [`standards/`](standards/README.md) | Synced from upstream Semantic repos and not edited directly here |
@@ -38,9 +40,9 @@ Create `reopened-decisions.md` or folders for research and archived records only
 
 ## Conventions
 
-- Decisions that constrain package behavior or public API belong in `decisions.md`. Repo process and tooling calls belong in `project-decisions.md`.
-- Supersede an older decision by appending a new dated entry rather than editing history. The latest date wins.
-- `decisions.md` records intent, while `plan/landed.md` records what merged. Source code and tests define current behavior.
+- Read [`decisions/README.md`](decisions/README.md) before recording a decision: features, enhancements, and bug fixes do not belong in `decisions/package.md`, and repo process calls belong in `decisions/project.md`.
+- Supersede an older decision by appending a new `D<n>` entry and marking the earlier entry `Superseded by D<n> (<YYYY-MM-DD>).` rather than deleting history.
+- `decisions/package.md` records non-obvious design constraints, while `plan/landed.md` records milestones that merged. Source code and tests define current behavior.
 - Bundle ceilings and benchmark settings are calibrated per package. Only [`standards/`](standards/README.md) is shared across repos.
 - Open mutable reference docs with a dated status line instead of writing "not yet built" in body paragraphs.
 - Run `npm run ai` after editing files here to check links, heading anchors, Markdown tables, and root symlinks.

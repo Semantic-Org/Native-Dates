@@ -42,6 +42,7 @@
     "types": "tsc --noEmit && tsc --noEmit --module preserve --moduleResolution bundler",
     "check": "npm test && npm run ai && npm run size",
     "format": "npx dprint fmt",
+    "prepare": "simple-git-hooks",
     "setup": "npx simple-git-hooks"
   },
   "devDependencies": {
