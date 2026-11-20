@@ -258,8 +258,15 @@ export class Time {
   }
 
   endOf(name) {
-    const target = unit(name);
-    return this.startOf(target).plus(stepOf(target)).minus(endPrecision(target));
+    return this.startOfNext(name).minus(endPrecision(unit(name)));
+  }
+
+  startOfNext(name) {
+    return this.startOf(name).plus(stepOf(unit(name)));
+  }
+
+  startOfPrevious(name) {
+    return this.startOf(name).minus(stepOf(unit(name)));
   }
 
   round(increment, name) {

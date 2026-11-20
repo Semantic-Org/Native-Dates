@@ -187,6 +187,39 @@ export class Time {
   endOf(unit: Unit): Time;
 
   /**
+   * Moves forward to the start of the clock unit after the one containing this time, wrapping at midnight.
+   * Always advances into the next unit, so from `14:00:00` the next hour starts at `15:00:00`.
+   *
+   * @param unit - Clock unit from `'hour'` down to `'nanosecond'`
+   * @returns A new `Time` at the start of the next `unit`
+   *
+   * @example
+   * ```ts
+   * time('14:37:22').startOfNext('hour').toString(); // '15:00:00'
+   * time('23:37:22').startOfNext('hour').toString(); // '00:00:00'
+   * ```
+   *
+   * @see {@link https://nativedates.dev/api/time/#startofnext startOfNext}
+   */
+  startOfNext(unit: Unit): Time;
+
+  /**
+   * Moves back to the start of the clock unit before the one containing this time, wrapping at midnight.
+   *
+   * @param unit - Clock unit from `'hour'` down to `'nanosecond'`
+   * @returns A new `Time` at the start of the previous `unit`
+   *
+   * @example
+   * ```ts
+   * time('14:37:22').startOfPrevious('hour').toString(); // '13:00:00'
+   * time('00:15:00').startOfPrevious('hour').toString(); // '23:00:00'
+   * ```
+   *
+   * @see {@link https://nativedates.dev/api/time/#startofprevious startOfPrevious}
+   */
+  startOfPrevious(unit: Unit): Time;
+
+  /**
    * Rounds to the nearest clock unit, with half-way ties rounding up.
    *
    * @param unit - Clock unit to round to, from `'hour'` down to `'nanosecond'`

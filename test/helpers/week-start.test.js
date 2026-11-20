@@ -90,6 +90,29 @@ describe('dayOfWeek()', () => {
     expect(dayOfWeek('Thurs')).toBe(4);
     expect(dayOfWeek('wednes')).toBe(3);
   });
+
+  // distinguishes the two branches sharing unknownDayOfWeek when a caller passes a unit to next() or previous()
+  it('points to plus() and startOfNext() in development when given a unit name instead of a weekday', () => {
+    let unitError;
+    let typoError;
+    try {
+      date('2026-06-14').next('months');
+    }
+    catch (error) {
+      unitError = error;
+    }
+    try {
+      date('2026-06-14').next('funday');
+    }
+    catch (error) {
+      typoError = error;
+    }
+    expect(unitError).toMatchObject({ code: 'unknownDayOfWeek', at: 'months' });
+    expect(unitError.message).toContain(".plus(1, 'month')");
+    expect(unitError.message).toContain(".startOfNext('month')");
+    expect(typoError).toMatchObject({ code: 'unknownDayOfWeek', at: 'funday' });
+    expect(typoError.message).not.toContain('startOfNext');
+  });
 });
 
 describe('weekStart resolution', () => {
@@ -152,6 +175,14 @@ describe('weekStart resolution', () => {
 
   it('falls back to locale weekStart when the call-site argument is undefined', () => {
     expect(wednesday.locale('en-US').startOf('week', undefined).toString()).toBe('2026-11-15');
+  });
+
+  it('starts startOfNext("week") and startOfPrevious("week") on configure({ weekStart }) over the instance locale', () => {
+    configure({ weekStart: 'saturday' });
+    expect(wednesday.locale('en-US').startOfNext('week').toString()).toBe('2026-11-21');
+    expect(wednesday.locale('en-US').startOfPrevious('week').toString()).toBe('2026-11-07');
+    expect(datetime('2026-11-18T14:45', 'UTC').startOfNext('week').toString()).toBe('2026-11-21T00:00:00.000Z');
+    expect(wednesday.startOfNext('week', 'monday').toString()).toBe('2026-11-23');
   });
 
   it('keeps ISO weekOfYear and format("W") anchored to Monday regardless of configured weekStart', () => {

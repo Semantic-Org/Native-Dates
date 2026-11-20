@@ -30,6 +30,7 @@ import {
   stepOf,
   timeUnits,
   unit,
+  weekdayNamed,
   wholeNumbers,
   withParts,
 } from './helpers/units.js';
@@ -283,6 +284,14 @@ export class CalendarDate {
 
   endOf(name, firstDay) {
     return this.startOf(name, firstDay).plus(stepOf(unit(name))).minus({ days: 1 });
+  }
+
+  startOfNext(target, firstDay) {
+    return weekdayNamed(target) ? this.next(target) : this.startOf(target, firstDay).plus(stepOf(unit(target)));
+  }
+
+  startOfPrevious(target, firstDay) {
+    return weekdayNamed(target) ? this.previous(target) : this.startOf(target, firstDay).minus(stepOf(unit(target)));
   }
 
   // always steps strictly forward (monday.next('monday') is 7 days later, matching birthday.after(day))

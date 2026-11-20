@@ -820,6 +820,198 @@ describe('DateTime.startOf() and endOf()', () => {
   });
 });
 
+describe('DateTime.startOfNext() and startOfPrevious()', () => {
+  const wednesday = datetime('2026-11-18T14:45:12.345', 'UTC');
+  const standup = datetime('2026-11-16T09:30', 'America/New_York');
+
+  it.each([
+    ['year', '2027-01-01T00:00:00.000Z', '2025-01-01T00:00:00.000Z'],
+    ['quarter', '2027-01-01T00:00:00.000Z', '2026-07-01T00:00:00.000Z'],
+    ['month', '2026-12-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z'],
+    ['day', '2026-11-19T00:00:00.000Z', '2026-11-17T00:00:00.000Z'],
+    ['hour', '2026-11-18T15:00:00.000Z', '2026-11-18T13:00:00.000Z'],
+    ['minute', '2026-11-18T14:46:00.000Z', '2026-11-18T14:44:00.000Z'],
+    ['second', '2026-11-18T14:45:13.000Z', '2026-11-18T14:45:11.000Z'],
+    ['millisecond', '2026-11-18T14:45:12.346Z', '2026-11-18T14:45:12.344Z'],
+  ])('returns the first instant of the next and the previous %s', (unit, next, previous) => {
+    expect(wednesday.startOfNext(unit).toString()).toBe(next);
+    expect(wednesday.startOfPrevious(unit).toString()).toBe(previous);
+  });
+
+  it('moves a whole unit when already at the first instant of its unit', () => {
+    const firstOfDecember = datetime('2026-12-01T00:00', 'UTC');
+    expect(firstOfDecember.startOfNext('month').toString()).toBe('2027-01-01T00:00:00.000Z');
+    expect(firstOfDecember.startOfPrevious('month').toString()).toBe('2026-11-01T00:00:00.000Z');
+    expect(firstOfDecember.startOfPrevious('day').toString()).toBe('2026-11-30T00:00:00.000Z');
+  });
+
+  // New York is on EST (UTC-5) in November and December, and on EDT (UTC-4) on October 1
+  it('returns midnight in the instance timezone at the UTC offset active on that day', () => {
+    expect(standup.startOfNext('day').toString()).toBe('2026-11-17T05:00:00.000Z');
+    expect(standup.startOfNext('month').toString()).toBe('2026-12-01T05:00:00.000Z');
+    expect(standup.startOfPrevious('day').toString()).toBe('2026-11-15T05:00:00.000Z');
+    expect(standup.startOfPrevious('month').toString()).toBe('2026-10-01T04:00:00.000Z');
+  });
+
+  it('starts the next and the previous week on the first day of the week of the instance locale', () => {
+    expect(wednesday.locale('en-US').startOfNext('week').toString()).toBe('2026-11-22T00:00:00.000Z');
+    expect(wednesday.locale('de-DE').startOfNext('week').toString()).toBe('2026-11-23T00:00:00.000Z');
+    expect(wednesday.locale('en-US').startOfPrevious('week').toString()).toBe('2026-11-08T00:00:00.000Z');
+    expect(wednesday.locale('de-DE').startOfPrevious('week').toString()).toBe('2026-11-09T00:00:00.000Z');
+  });
+
+  it('starts the next and the previous week on a weekday name or ISO number passed as the second argument', () => {
+    const american = wednesday.locale('en-US');
+    expect(american.startOfNext('week', 'monday').toString()).toBe('2026-11-23T00:00:00.000Z');
+    expect(american.startOfPrevious('week', 1).toString()).toBe('2026-11-09T00:00:00.000Z');
+  });
+
+  it('returns midnight on the next or previous given weekday, where next() and previous() keep the time of day', () => {
+    expect(standup.startOfNext('wednesday').toString()).toBe('2026-11-18T05:00:00.000Z');
+    expect(standup.next('wednesday').toString()).toBe('2026-11-18T14:30:00.000Z');
+    expect(standup.startOfPrevious('wednesday').toString()).toBe('2026-11-11T05:00:00.000Z');
+    expect(standup.previous('wednesday').toString()).toBe('2026-11-11T14:30:00.000Z');
+  });
+
+  it('moves a full 7 days when already on the target weekday, even at midnight', () => {
+    const mondayMidnight = datetime('2026-11-16T00:00', 'America/New_York');
+    expect(standup.startOfNext('monday').toString()).toBe('2026-11-23T05:00:00.000Z');
+    expect(standup.startOfPrevious('monday').toString()).toBe('2026-11-09T05:00:00.000Z');
+    expect(mondayMidnight.startOfNext('monday').toString()).toBe('2026-11-23T05:00:00.000Z');
+    expect(mondayMidnight.startOfPrevious('monday').toString()).toBe('2026-11-09T05:00:00.000Z');
+  });
+
+  it('accepts 3-letter weekday abbreviations, mixed case, and surrounding spaces', () => {
+    expect(standup.startOfNext('wed').day).toBe(18);
+    expect(standup.startOfNext('Wednesday').day).toBe(18);
+    expect(standup.startOfPrevious(' SUN ').day).toBe(15);
+  });
+
+  // next(3) is Wednesday, but beside a unit a number reads as a count, and startOfNext(2, 'months') must not be Tuesday
+  it('throws unknownUnit for a weekday written as a number and for a count before a unit', () => {
+    expect(() => standup.startOfNext(3)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: '3' }),
+    );
+    expect(() => standup.startOfPrevious(0)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: '0' }),
+    );
+    expect(() => standup.startOfNext(2, 'months')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: '2' }),
+    );
+  });
+
+  // the previous Sunday is yesterday, while the previous week that starts on Sunday began eight days ago
+  it('reads a weekday as that day rather than as the week it starts', () => {
+    expect(standup.startOfPrevious('sunday').day).toBe(15);
+    expect(standup.startOfPrevious('week', 'sunday').day).toBe(8);
+    expect(standup.startOfNext('wednesday').equals(standup.startOfNext('week', 'wednesday'))).toBe(true);
+  });
+
+  it.each(['year', 'quarter', 'month', 'week', 'day', 'hour', 'minute', 'second'])(
+    'returns the end of range(%s) and steps back from it to startOf()',
+    (unit) => {
+      expect(standup.startOfNext(unit).equals(standup.range(unit).end)).toBe(true);
+      expect(standup.startOfNext(unit).startOfPrevious(unit).equals(standup.startOf(unit))).toBe(true);
+    },
+  );
+
+  // New York skips 02:00 to 03:00 on 2026-03-08 and repeats 01:00 to 02:00 on 2026-11-01
+  it('steps across the skipped hour and between the two repeated hours of a DST transition', () => {
+    const beforeGap = datetime('2026-03-08T01:30', 'America/New_York');
+    const afterGap = datetime('2026-03-08T03:30', 'America/New_York');
+    expect(beforeGap.startOfNext('hour').toString()).toBe('2026-03-08T07:00:00.000Z');
+    expect(afterGap.startOfPrevious('hour').toString()).toBe('2026-03-08T06:00:00.000Z');
+    const firstPass = datetime('2026-11-01T01:30-04:00', 'America/New_York');
+    const secondPass = datetime('2026-11-01T01:30-05:00', 'America/New_York');
+    expect(firstPass.startOfNext('hour').toString()).toBe('2026-11-01T06:00:00.000Z');
+    expect(secondPass.startOfPrevious('hour').toString()).toBe('2026-11-01T05:00:00.000Z');
+  });
+
+  it('returns midnight on either side of 23-hour and 25-hour DST transition days', () => {
+    const springForward = datetime('2026-03-08T12:00', 'America/New_York');
+    const fallBack = datetime('2026-11-01T12:00', 'America/New_York');
+    expect(springForward.startOfNext('day').toString()).toBe('2026-03-09T04:00:00.000Z');
+    expect(springForward.startOfPrevious('day').toString()).toBe('2026-03-07T05:00:00.000Z');
+    expect(fallBack.startOfNext('day').toString()).toBe('2026-11-02T05:00:00.000Z');
+    expect(fallBack.startOfPrevious('day').toString()).toBe('2026-10-31T04:00:00.000Z');
+  });
+
+  // Cairo springs forward from 00:00 to 01:00 on Friday 2026-04-24, skipping midnight
+  it('returns 01:00 for a day or weekday whose midnight is skipped by DST', () => {
+    const thursday = datetime('2026-04-23T12:00', 'Africa/Cairo');
+    const saturday = datetime('2026-04-25T12:00', 'Africa/Cairo');
+    expect(thursday.startOfNext('day')).toMatchObject({ day: 24, hour: 1, minute: 0 });
+    expect(thursday.startOfNext('day').toString()).toBe('2026-04-23T22:00:00.000Z');
+    expect(thursday.startOfNext('friday').toString()).toBe('2026-04-23T22:00:00.000Z');
+    expect(saturday.startOfPrevious('day').toString()).toBe('2026-04-23T22:00:00.000Z');
+    expect(saturday.startOfPrevious('friday').toString()).toBe('2026-04-23T22:00:00.000Z');
+  });
+
+  it('returns midnight of the day before one whose own start is 01:00', () => {
+    const friday = datetime('2026-04-24T12:00', 'Africa/Cairo');
+    expect(friday.startOfPrevious('day')).toMatchObject({ day: 23, hour: 0, minute: 0 });
+    expect(friday.startOfPrevious('day').toString()).toBe('2026-04-22T22:00:00.000Z');
+  });
+
+  // Samoa moved across the date line at the end of 2011-12-29, so Pacific/Apia has no 2011-12-30
+  it('steps over a calendar day that the timezone skipped', () => {
+    const saturday = datetime('2011-12-31T09:00', 'Pacific/Apia');
+    const thursday = datetime('2011-12-29T09:00', 'Pacific/Apia');
+    expect(saturday.startOfPrevious('day')).toMatchObject({ day: 29, hour: 0 });
+    expect(saturday.startOfPrevious('day').toString()).toBe('2011-12-29T10:00:00.000Z');
+    expect(thursday.startOfNext('day')).toMatchObject({ day: 31, hour: 0 });
+    expect(thursday.startOfNext('day').toString()).toBe('2011-12-30T10:00:00.000Z');
+    expect(thursday.startOfNext('saturday')).toMatchObject({ day: 31, dayOfWeek: 6, hour: 0 });
+  });
+
+  // Nuuk springs forward from 23:00 on Saturday 2026-03-28 to 00:00 on Sunday 2026-03-29
+  it('resolves weekday boundaries on the calendar date when the current evening hour is skipped into midnight', () => {
+    const fridayLate = datetime('2026-03-27T23:30', 'America/Nuuk');
+    const sundayLate = datetime('2026-03-29T23:30', 'America/Nuuk');
+    expect(fridayLate.startOfNext('saturday')).toMatchObject({ day: 28, dayOfWeek: 6, hour: 0, minute: 0 });
+    expect(sundayLate.startOfPrevious('saturday')).toMatchObject({ day: 28, dayOfWeek: 6, hour: 0, minute: 0 });
+  });
+
+  it('computes microsecond boundaries to nanosecond precision', () => {
+    const precise = datetime('2026-11-18T14:45:12.345678912Z', 'UTC');
+    expect(precise.startOfNext('microsecond').toString()).toBe('2026-11-18T14:45:12.345679Z');
+    expect(precise.startOfPrevious('microsecond').toString()).toBe('2026-11-18T14:45:12.345677Z');
+  });
+
+  it('keeps the timezone of the original and does not mutate it', () => {
+    expect(standup.startOfNext('month').zone).toBe('America/New_York');
+    expect(standup.startOfPrevious('wednesday').zone).toBe('America/New_York');
+    expect(standup.toString()).toBe('2026-11-16T14:30:00.000Z');
+  });
+
+  it.each([['fortnight', 'fortnight'], ['funday', 'funday'], [undefined, 'undefined']])(
+    'throws unknownUnit for %s, which names neither a unit nor a weekday',
+    (target, at) => {
+      expect(() => standup.startOfNext(target)).toThrowError(
+        expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at }),
+      );
+      expect(() => standup.startOfPrevious(target)).toThrowError(
+        expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at }),
+      );
+    },
+  );
+
+  it('throws unknownUnit for a MonthDay, which only next() and previous() accept', () => {
+    expect(() => standup.startOfNext(monthDay('12-25'))).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: '12-25' }),
+    );
+  });
+
+  it('throws unknownDayOfWeek for an unrecognized week start argument', () => {
+    expect(() => standup.startOfNext('week', 'funday')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: 'funday' }),
+    );
+    expect(() => standup.startOfPrevious('week', 8)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: '8' }),
+    );
+  });
+});
+
 describe('DateTime.round(), floor(), and ceil()', () => {
   const stamp = datetime('2026-11-16T09:23:40', 'UTC');
 

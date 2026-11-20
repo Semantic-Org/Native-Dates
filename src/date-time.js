@@ -29,6 +29,7 @@ import {
   stepOf,
   timeUnits,
   unit,
+  weekdayNamed,
   withParts,
   zoneOptions,
 } from './helpers/units.js';
@@ -320,6 +321,19 @@ export class DateTime {
   #nextStart(name, firstDay) {
     const next = this.startOf(name, firstDay).plus(stepOf(unit(name)));
     return timeUnits.includes(unit(name)) ? next : next.startOf(name, firstDay);
+  }
+
+  startOfNext(target, firstDay) {
+    return weekdayNamed(target)
+      ? this.date.next(target).at(undefined, this.zone)
+      : this.#nextStart(target, firstDay);
+  }
+
+  // step 1ns before startOf() rather than subtracting 1 unit, which can land inside a skipped DST day or hour
+  startOfPrevious(target, firstDay) {
+    return weekdayNamed(target)
+      ? this.date.previous(target).at(undefined, this.zone)
+      : this.startOf(target, firstDay).minus({ nanoseconds: 1 }).startOf(target, firstDay);
   }
 
   round(increment, name) {
