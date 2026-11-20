@@ -35,7 +35,7 @@ Read these documents before editing code:
 5. [`ai/contributing/reference/architecture.md`](../reference/architecture.md): workspace package responsibilities, zero-dependency rules, and invariants.
 6. [`ai/contributing/budget.md`](../budget.md): bundle ceilings and per-PR byte limits.
 7. [`ai/contributing/standards/legibility/errors-and-logs.md`](../standards/legibility/errors-and-logs.md): required whenever adding or editing error explanations (`npm run errors`).
-8. [`ai/contributing/decisions.md`](../decisions.md): grep the relevant noun and read the latest dated decision. Decisions scored 90+ require new empirical evidence to reopen, whereas decisions whose `reopen:` condition is met should be surfaced.
+8. [`ai/contributing/decisions.md`](../decisions.md): grep the relevant noun and read the latest dated decision. Surface a decision to reopen when its `reopen:` condition is met or new counter-evidence appears rather than silently overriding it.
 
 Next, read the target source files and tests directly on `HEAD` rather than relying on prior assumptions.
 
