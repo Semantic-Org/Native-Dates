@@ -4,6 +4,8 @@ import { existsSync, lstatSync, readdirSync, readFileSync, readlinkSync, statSyn
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { checkDecisions } from './decisions-index.js';
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const errors = [];
 
@@ -192,6 +194,8 @@ for (const link of ['CLAUDE.md', 'GEMINI.md']) {
   const linked = existsSync(path) && lstatSync(path).isSymbolicLink() && readlinkSync(path) === 'AGENTS.md';
   if (!linked) { errors.push(`${link}: not a symlink to AGENTS.md`); }
 }
+
+errors.push(...checkDecisions());
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   for (const error of errors) { console.error(`  x ${error}`); }

@@ -7,7 +7,7 @@ Internal records and workflows for developing `native-dates`. Application develo
 | Task | Reading order |
 |---|---|
 | Fix a bug, add a feature, or file a bug report | [`CONTRIBUTING.md`](../../CONTRIBUTING.md), then [`workflows/contribute.md`](workflows/contribute.md) |
-| Check design or process rulings | [`decisions.md`](decisions.md) for package behavior and [`project-decisions.md`](project-decisions.md) for repo process |
+| Check design or process rulings | [`decisions-index.md`](decisions-index.md) and [`decisions.md`](decisions.md) for package behavior, [`project-decisions.md`](project-decisions.md) for repo process |
 | Check bundle size limits | [`budget.md`](budget.md), checked by `npm run size` |
 | Configure GitHub secrets, bots, and Vercel deploys | [`reference/setup.md`](reference/setup.md) |
 | View pending and completed launch tasks | [`plan/roadmap.md`](plan/roadmap.md) and [`plan/landed.md`](plan/landed.md) |
@@ -25,7 +25,7 @@ Internal records and workflows for developing `native-dates`. Application develo
 | Record | Path | Policy |
 |---|---|---|
 | North star | [`north-star.md`](north-star.md) | Hand-authored by the maintainer on project goals, the Golden Rule, call-site SNR, lowercase-"c" correctness, conciseness, and Bayesian rulings (do not edit or polish) |
-| Package decisions | [`decisions.md`](decisions.md) | Append-only dated entries with maintainer confidence score and reopen condition |
+| Package decisions | [`decisions.md`](decisions.md), [`decisions-index.md`](decisions-index.md) | Append-only dated entries with reopen conditions and optional maintainer confidence scores (`npm run ai:index` updates the index) |
 | Project decisions | [`project-decisions.md`](project-decisions.md) | Append-only dated entries for repo process, CI, and docs conventions |
 | Size budget | [`budget.md`](budget.md) | Entry bundles, Brotli ceilings, and per-PR growth rules, updated only by the maintainer |
 | Launch plan | [`plan/`](plan/roadmap.md) | Pending rows in `roadmap.md`, completed rows in `landed.md`, and briefs in `plan/scopes/` |

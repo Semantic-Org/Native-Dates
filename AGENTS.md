@@ -35,14 +35,14 @@ Files in [`ai/contributing/standards/`](ai/contributing/standards/README.md) are
 - **Natural-language legibility wins:** Judge every method and signature by how clearly it reads aloud at the callsite (`today().plus(2, 'days').at('9am').in('Europe/Berlin')`).
 - **Zero runtime dependencies:** `native-dates` installs nothing. Fork and copy only minimal needed helpers from `@semantic-ui/utils` into `src/helpers/` rather than adding dependencies or inventing ad-hoc names.
 - **Comment voice:** Comment only non-obvious constraints, invariants, or gotchas (`npm run comments`). Start with a lowercase word, avoid em-dashes, prose semicolons, and unicode arrows, and omit trailing periods on single-line comments.
-- **Commit format:** `Category: Description` (both capitalized, without a trailing period or `Co-Authored-By` trailer). Categories: `Feat`, `Bug`, `Docs`, `Chore`, `Harness`, `Test`, `Perf`, `Refactor`, `Build`, `Bench`, `BREAKING`. Git hooks in `tools/hooks/` enforce this format and block agent commits directly to `main`.
+- **Commit and PR format:** Single-line commit subject only: `Category: Description` (both capitalized, without a body, trailing period, `Co-Authored-By`, or session trailer). Leave pull request descriptions blank (`--body ""`) for human authorship. Categories: `Feat`, `Bug`, `Docs`, `Chore`, `Harness`, `Test`, `Perf`, `Refactor`, `Build`, `Bench`, `BREAKING`. Git hooks in `tools/hooks/` enforce this format and block agent commits directly to `main`.
 - **Hand-authored maintainer files (`README.md`, `ai/contributing/north-star.md`, `ai/contributing/standards/lessons/naming-lessons.md`):** Written by the maintainer in his own voice. Leave them untouched and never edit or polish them unless explicitly asked; keep READMEs under `packages/` as brief factual descriptions until the maintainer authors them.
 - **Bespoke homepage:** `docs/src/views/Home.astro` is custom-built around `native-dates`'s specific value proposition with interactive demos verified at build time.
 - **Bundle size budget:** Run `npm run size` after editing `src/` or `packages/`. Bug fixes aim for 0 added bytes, features declare expected bytes up front, and unused headroom is not a justification (`ai/contributing/budget.md`).
 - **Structured errors:** Build every error via `refuse()` or `refuseType()` in `src/helpers/errors.js` (`dates refused [code] at`). Explanations are gated behind `isDevelopment` (`NODE_ENV !== 'production'`) so production builds omit diagnostic prose (`ai/contributing/standards/legibility/errors-and-logs.md`, checked by `npm run errors` and `npm run size`).
 - **Behavioral tests and environments:** Assert `error.code` and `error.at` rather than matching prose sentences (`ai/contributing/standards/legibility/tests-and-test-names.md`). Each package's tests live with it (`test/` for `native-dates` and `packages/<name>/test/` for the others) and import packages by their public names; repo and CI tooling tests live under `tools/`. Place pure Node tests in `test/` (core nouns at the top, cross-cutting suites in subfolders like `test/format/` and `test/helpers/`), DOM tests in `test/dom/`, and real Chromium Playwright tests in `test/browser/` (`vitest.config.js`).
 - **Category-grouped helpers:** Group free functions by domain in `src/helpers/` (`intl.js`, `zones.js`, `parse.js`, `format.js`, `errors.js`, `utils.js`, `environment.js`).
-- **Decision records:** Record package behavior decisions in `ai/contributing/decisions.md` and repository process decisions in `ai/contributing/project-decisions.md`, each dated with the maintainer's confidence score and a reopen condition.
+- **Decision records:** Record package behavior decisions in `ai/contributing/decisions.md` and repository process decisions in `ai/contributing/project-decisions.md`, each dated with a reopen condition and an optional maintainer confidence score.
 - **Scratch directory:** Put temporary plans and notes in git-ignored `ai/workspace/`.
 
 ## Undecided
@@ -59,7 +59,8 @@ Ask the maintainer rather than inventing conventions for:
 - `npm run types`: Type-check `.d.ts` declarations via `tsc --noEmit` under NodeNext and `bundler` resolution (`test/types.ts`)
 - `npm run errors`: Check error and log prose register (`tools/gates/errors.js`)
 - `npm run comments`: Check comment density, overlap, and banned jargon (`tools/gates/comments.js`)
-- `npm run ai`: Validate markdown links, `#anchors`, GFM tables, `ai/` paths, and `AGENTS.md` symlinks (`tools/gates/ai.js`)
+- `npm run ai`: Validate markdown links, `#anchors`, GFM tables, `ai/` paths, `decisions-index.md`, and `AGENTS.md` symlinks (`tools/gates/ai.js`)
+- `npm run ai:index`: Regenerate `ai/contributing/decisions-index.md` from `ai/contributing/decisions.md` (`tools/gates/decisions-index.js`)
 - `npm run size`: Measure minified and Brotli-11 sizes for `native-dates` and every plugin in `@native-dates/plugins`, and check `ai/contributing/budget.md` ([`tools/ci/bundle/README.md`](tools/ci/bundle/README.md))
 - `npm run docs`: Start the Astro docs dev server (`docs/`, see [`docs/README.md`](docs/README.md))
 - `npm run format`: Format files with `dprint`
