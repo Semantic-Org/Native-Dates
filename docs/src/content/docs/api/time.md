@@ -4,7 +4,7 @@ kind: class
 lede: A time of day with no calendar date and no time zone.
 import: import { Time } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-20
 ---
 
 ## Creating a Time

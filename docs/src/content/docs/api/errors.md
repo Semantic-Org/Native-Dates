@@ -1,7 +1,7 @@
 ---
 title: Errors
 lede: Every invalid input or unsupported operation throws a standard Error carrying a machine-readable code.
-updated: 2026-11-16
+updated: 2026-11-20
 ---
 
 ## Error shape
@@ -110,7 +110,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | Code | Thrown by | Cause |
 |---|---|---|
 | `unknownUnit` | Arithmetic, boundaries, rounding, `set()`, `duration()` | Unrecognized unit name or abbreviation. |
-| `unknownDayOfWeek` | `dayOfWeek()`, `next()`, `previous()`, `startOf()`, `startOfNext()`, `startOfPrevious()`, `configure()` | Day name is not recognized, or the day of the week as a number is outside 1 to 7. |
+| `unknownDayOfWeek` | `dayOfWeek()`, `next()`, `previous()`, week boundaries, `configure()` | Day name is not recognized, or the day of the week as a number is outside 1 to 7. |
 | `unknownSetting` | `configure()` | Setting key passed to `configure()` is not recognized. |
 | `unknownWidth` | `configure()` | A `weekdayNames` entry names a width other than `narrow`, `short`, or `long`, or leaves the width out. |
 | `unknownZone` | Factories, `in()`, `configure()` | Unknown IANA time zone ID, non-string zone, or malformed UTC offset. |

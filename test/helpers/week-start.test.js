@@ -108,10 +108,13 @@ describe('dayOfWeek()', () => {
       typoError = error;
     }
     expect(unitError).toMatchObject({ code: 'unknownDayOfWeek', at: 'months' });
-    expect(unitError.message).toContain(".plus(1, 'month')");
-    expect(unitError.message).toContain(".startOfNext('month')");
+    expect(unitError.message).toContain('.plus(1, unit)');
+    expect(unitError.message).toContain('.startOfNext(unit)');
     expect(typoError).toMatchObject({ code: 'unknownDayOfWeek', at: 'funday' });
     expect(typoError.message).not.toContain('startOfNext');
+    expect(() => dayOfWeek('toString')).toThrowError(
+      expect.objectContaining({ code: 'unknownDayOfWeek', at: 'toString' }),
+    );
   });
 });
 

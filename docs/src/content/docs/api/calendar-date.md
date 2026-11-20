@@ -4,7 +4,7 @@ kind: class
 lede: A calendar date with no time of day and no time zone.
 import: import { CalendarDate } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-20
 ---
 
 ## Creating a CalendarDate
@@ -291,7 +291,7 @@ Pass a weekday name in place of a unit to get the next day with that name, the s
 
 ```params
 - name: unit
-  type: DateUnit | string
+  type: DateUnit | Exclude<DayOfWeek, number>
   required: true
   description: Calendar unit from `'year'` down to `'day'`, or a weekday name such as `'wednesday'`.
 - name: firstDay
@@ -329,7 +329,7 @@ Returns the first day of the calendar unit before the one containing this date. 
 
 ```params
 - name: unit
-  type: DateUnit | string
+  type: DateUnit | Exclude<DayOfWeek, number>
   required: true
   description: Calendar unit from `'year'` down to `'day'`, or a weekday name such as `'wednesday'`.
 - name: firstDay

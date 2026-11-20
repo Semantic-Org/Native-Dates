@@ -260,7 +260,7 @@ export class CalendarDate {
    * A weekday name in place of a unit returns the most recent day with that name, as `previous()` does.
    *
    * @param unit - Calendar unit from `'year'` down to `'day'`, or a weekday name such as `'wednesday'`
-   * @param firstDay - First day of the week when `unit` is `'week'`
+   * @param firstDay - First day of the week when `unit` is `'week'`, such as `'sunday'` or 7
    * @returns The first `CalendarDate` of the previous `unit`, or the previous given weekday
    *
    * @example

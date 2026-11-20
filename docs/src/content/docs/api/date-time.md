@@ -4,7 +4,7 @@ kind: class
 lede: A specific moment in time, viewed in a time zone.
 import: import { DateTime } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-20
 ---
 
 ## Creating a DateTime
@@ -331,7 +331,7 @@ Pass a weekday name in place of a unit to get the start of the next day with tha
 
 ```params
 - name: unit
-  type: Unit | string
+  type: Unit | Exclude<DayOfWeek, number>
   required: true
   description: Calendar or clock unit from `'year'` down to `'nanosecond'`, or a weekday name such as `'wednesday'`.
 - name: firstDay
@@ -369,7 +369,7 @@ Moves back to the start of the calendar or clock unit before the one containing 
 
 ```params
 - name: unit
-  type: Unit | string
+  type: Unit | Exclude<DayOfWeek, number>
   required: true
   description: Calendar or clock unit from `'year'` down to `'nanosecond'`, or a weekday name such as `'wednesday'`.
 - name: firstDay
