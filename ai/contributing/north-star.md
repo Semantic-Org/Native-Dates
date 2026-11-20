@@ -2,19 +2,19 @@
 
 ## Golden Rule
 
-The same moral software that most of the universe began on. When authoring code as an open source maintainer your primary goal is to reason about what you would want yourself to have yourself as a downstream user. If someone *thrust this library onto you and forced you to use it*. If a choice feels correct from the maintainers seat but would have repercussions for the user its important to model that and notice it when authoring. This requires a bit of anthropic and probabilistic reasoning as you might need to imagine yourself as a representative sample of that reference class.
+Use the same shared moral firmware that ethical reasoning is built on. When authoring code as an open source maintainer your primary goal is to reason about what you would want to have yourself as a downstream user--if someone *thrust this library onto you and forced you to use it*. If a choice feels correct from the maintainers seat but would have repercussions for the user its important to model that and notice it when authoring. This requires a bit of anthropic and probabilistic reasoning as you might need to imagine yourself as a representative sample of that reference class.
 
 ## Project North Star
 
 This library is designed to wrap Temporal and Intl in a way that provides the highest SNR (Signal to Noise Ratio) at a call site. This means when a developer is watching diffs fly across the screen as agents produce work they can easily understand *intent* when reviewing change sets. 
 
-This also means developers don't have to learn your idiosyncrasies as a framework author. The moment when you where "the naming hat" and decide what to call something people have to model *you* and that makes their life difficult. Instead its easier for them to just to be able to guess intent through common language. Naming things simply with natural language often provides the best way for that to be achieved.
+This also means developers don't have to learn your idiosyncrasies as a framework author. The moment when you wear "the naming hat" and decide what to call something people have to model *you* and that makes their life difficult. Instead its easier for them to just to be able to guess intent through common language. Naming things simply with natural language often provides the best way for that to be achieved.
 
 ### Key Sub Goals
 
 #### Legibility 
 
-Standards bodies produce brilliant, highly technical, rigorous APIs that get shipped in browsers but oftentimes the actual mechanisms in how that is encoded is obtuse. For agents who deeply understand the standards they can produce output that correctly complies with these APIs but it significantly reduces **callsite legibility**
+Standards bodies produce brilliant, highly technical, rigorous APIs that get shipped in browsers but oftentimes the actual mechanisms in how that is encoded is obtuse. For agents who deeply understand the standards they can produce output that correctly complies with these APIs but it significantly reduces **call site legibility**. The goal of this library is to return legibility to time so intent reads plainly and can be reasoned about without deeply understanding all the difficulty underneath required to achieve that simplicity.
 
 #### Lowercase "c" correctness
 
@@ -24,7 +24,7 @@ There is always a more [C]orrect way to do things, especially when working with 
 
 There are many ways to express things naturally, but a solution that solves something elegantly in a few words beats one that solves it verbosely. 
 
-Additionally when reasoning about lines of code count and how to write code. Be mindful, this library has a very low target kb size. Time is suppose to shrink into the background so you can focus on the bigger problems in your domain and not take up downstream users own budget for their app's code.
+Additionally when reasoning about lines of code count and how to write code, be mindful, this library has a very low target file size. Time is suppose to shrink into the background so you can focus on the bigger problems in your domain and not take up downstream users own budget for their app's code.
 
 #### Judiciousness
 
