@@ -41,6 +41,6 @@ Append new entries to the bottom of [`package.md`](package.md) (next `D<n>`) or 
 Reopen: observable condition that justifies revisiting this call.
 ```
 
-- **Confidence line (`*0-100% confident*`):** Optional probability assigned by the maintainer at decision time; omit the line when unscored. Calibrated scores reflect actual reversal odds rather than finality: a `70%` call expects roughly 3 in 10 such calls to flip with new evidence, and a `90%` call still expects 1 in 10 to prove wrong (`~60-75%` working tradeoff, `<50%` provisional default).
+- **Confidence line (`*0-100% confident*`):** Optional probability decided by the contributor at decision time (omit the line when unscored). Calibrated scores reflect actual reversal odds rather than finality: a `70%` call expects roughly 3 in 10 such calls to flip with new evidence, and a `90%` call still expects 1 in 10 to prove wrong (`~60-75%` working tradeoff, `<50%` provisional default).
 - **Superseding an earlier entry:** Append the new `D<k>` entry at the bottom and replace the earlier entry's `Reopen:` line with `Superseded by D<k> (<YYYY-MM-DD>).` so history stays intact while the topic index shows only active calls.
 - **Reopening:** Surface an entry to reopen whenever concrete evidence shows its `Reopen:` condition has been met, exposes a tradeoff not weighed in the entry, or reveals a clear usability hazard.
