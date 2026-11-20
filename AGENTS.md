@@ -35,7 +35,7 @@ Files in [`ai/contributing/standards/`](ai/contributing/standards/README.md) are
 - **Natural-language legibility wins:** Judge every method and signature by how clearly it reads aloud at the callsite (`today().plus(2, 'days').at('9am').in('Europe/Berlin')`).
 - **Zero runtime dependencies:** `native-dates` installs nothing. Fork and copy only minimal needed helpers from `@semantic-ui/utils` into `src/helpers/` rather than adding dependencies or inventing ad-hoc names.
 - **Comment voice:** Comment only non-obvious constraints, invariants, or gotchas (`npm run comments`). Start with a lowercase word, avoid em-dashes, prose semicolons, and unicode arrows, and omit trailing periods on single-line comments.
-- **Commit format:** `Category: Description` (both capitalized, without a trailing period or `Co-Authored-By` trailer). Categories: `Feat`, `Bug`, `Docs`, `Chore`, `Harness`, `Test`, `Perf`, `Refactor`, `Build`, `Bench`, `BREAKING`. Git hooks in `tools/hooks/` enforce this format and block agent commits directly to `main`.
+- **Commit and PR format:** Single-line commit subject only: `Category: Description` (both capitalized, without a body, trailing period, `Co-Authored-By`, or session trailer). Leave pull request descriptions blank (`--body ""`) for human authorship. Categories: `Feat`, `Bug`, `Docs`, `Chore`, `Harness`, `Test`, `Perf`, `Refactor`, `Build`, `Bench`, `BREAKING`. Git hooks in `tools/hooks/` enforce this format and block agent commits directly to `main`.
 - **Hand-authored maintainer files (`README.md`, `ai/contributing/north-star.md`, `ai/contributing/standards/lessons/naming-lessons.md`):** Written by the maintainer in his own voice. Leave them untouched and never edit or polish them unless explicitly asked; keep READMEs under `packages/` as brief factual descriptions until the maintainer authors them.
 - **Bespoke homepage:** `docs/src/views/Home.astro` is custom-built around `native-dates`'s specific value proposition with interactive demos verified at build time.
 - **Bundle size budget:** Run `npm run size` after editing `src/` or `packages/`. Bug fixes aim for 0 added bytes, features declare expected bytes up front, and unused headroom is not a justification (`ai/contributing/budget.md`).
@@ -59,7 +59,8 @@ Ask the maintainer rather than inventing conventions for:
 - `npm run types`: Type-check `.d.ts` declarations via `tsc --noEmit` under NodeNext and `bundler` resolution (`test/types.ts`)
 - `npm run errors`: Check error and log prose register (`tools/gates/errors.js`)
 - `npm run comments`: Check comment density, overlap, and banned jargon (`tools/gates/comments.js`)
-- `npm run ai`: Validate markdown links, `#anchors`, GFM tables, `ai/` paths, and `AGENTS.md` symlinks (`tools/gates/ai.js`)
+- `npm run ai`: Validate markdown links, `#anchors`, GFM tables, `ai/` paths, `decisions-index.md`, and `AGENTS.md` symlinks (`tools/gates/ai.js`)
+- `npm run ai:index`: Regenerate `ai/contributing/decisions-index.md` from `ai/contributing/decisions.md` (`tools/gates/decisions-index.js`)
 - `npm run size`: Measure minified and Brotli-11 sizes for `native-dates` and every plugin in `@native-dates/plugins`, and check `ai/contributing/budget.md` ([`tools/ci/bundle/README.md`](tools/ci/bundle/README.md))
 - `npm run docs`: Start the Astro docs dev server (`docs/`, see [`docs/README.md`](docs/README.md))
 - `npm run format`: Format files with `dprint`

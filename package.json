@@ -37,6 +37,7 @@
     "errors": "node tools/gates/errors.js --all",
     "comments": "node tools/gates/comments.js --all",
     "ai": "node tools/gates/ai.js",
+    "ai:index": "node tools/gates/decisions-index.js --write",
     "size": "node tools/gates/budget.js",
     "types": "tsc --noEmit && tsc --noEmit --module preserve --moduleResolution bundler",
     "check": "npm test && npm run ai && npm run size",

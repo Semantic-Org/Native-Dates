@@ -1,6 +1,6 @@
 # Decisions: Package Design Log
 
-Append-only log of decisions governing what `native-dates` exports and how it behaves: semantics, public API names, option shapes, bundle ceilings, and constraints on future surface. Entries are ordered chronologically, and the latest entry on a topic supersedes earlier ones while preserving prior entries for context.
+Append-only log of decisions governing what `native-dates` exports and how it behaves: semantics, public API names, option shapes, bundle ceilings, and constraints on future surface. Entries are ordered chronologically, and the latest entry on a topic supersedes earlier ones while preserving prior entries for context (see [`decisions-index.md`](decisions-index.md) for the generated topic and chronological index).
 
 **Inclusion test.** Record decisions here when they bind package behavior across multiple changes. One-off implementation choices belong in the PR, obvious facts already visible in source stay tacit, and repository conventions (CI, docs workflow, release process) belong in [`project-decisions.md`](project-decisions.md). Ask: *Does someone modifying this package two years from now need to follow this rule?*
 
