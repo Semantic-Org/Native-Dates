@@ -1,18 +1,18 @@
 # Roadmap
 
-> status: active (2026-11-20). Project roadmap for `native-dates`. Completed milestones live in [`landed.md`](landed.md).
+Confirmed features and workstreams planned for `native-dates`. Items land here once agreed on as part of the project. Open a [GitHub issue](https://github.com/Semantic-Org/Native-Dates/issues) to propose new features or discuss design before starting work, and move completed milestones to [`landed.md`](landed.md).
 
-One row per planned feature or workstream. Plans requiring a detailed spec keep a single file in `plan/scopes/<name>.md` covering the goal and approved design. When a row finishes, move it from this table to [`landed.md`](landed.md).
+Larger features with open design details keep a spec in `scopes/<name>.md`.
 
-- **Maturity:** `initial` (open design questions) or `scoped` (concrete implementation plan agreed).
-
-| Row | Maturity | Scope |
+| Feature | Status | Summary |
 |---|---|---|
-| User skills | scoped | Author and cold-evaluate downstream skills in `ai/skills/`, publish in `package.json` `"files"`, and expose via `/skills/<skill>.md` and `/llms.txt` (`ai/contributing/workflows/author-user-skill.md`) |
-| Benchmark suite | initial | Port tachometer `bench/` runner and add hot-path operations (`ai/contributing/workflows/extend-bench-suite.md`) |
-| Localization | scoped | Translate and review localized documentation across enabled locales (`ai/contributing/workflows/docs-i18n.md`) |
+| Consumer agent skills | Ready to build | Publish downstream usage skills in `ai/skills/` with the npm package and serve them at `/skills/<name>.md` and `/llms.txt` on the docs site |
+| Benchmark suite | Needs design | Automated browser benchmark suite in `bench/` measuring parsing, arithmetic, formatting, and range iteration across changes |
+| Documentation translations | Ready to build | Translated and reviewed guides, API references, and examples across the 8 supported locales |
 
-## Icebox
+## Deferred
 
-- **Standalone MCP and CDN (`tools/mcp`, `tools/cdn`):** Add under `tools/mcp/` or `tools/cdn/` when adoption or distribution calls for them.
-- **Retire `@native-dates/polyfill`:** Once baseline Safari ships native `Temporal`, retire `packages/polyfill`, remove playground polyfill shims in `docs/`, and simplify `Intl` epoch stand-ins that exist only for polyfilled `Temporal` objects.
+Confirmed direction, waiting on external platform support or demonstrated demand:
+
+- **Retire `@native-dates/polyfill`:** Once baseline Safari ships native `Temporal`, sunset `@native-dates/polyfill` and drop polyfill-only shims in the docs playground and `Intl` formatting helpers.
+- **Standalone MCP server and CDN bundle:** Optional distribution targets if downstream tooling or script-tag usage warrants them.
