@@ -12,7 +12,7 @@ type: skill
 > **Skill:** `native-dates-plugins`
 > **Purpose:** Guide to `@native-dates/plugins/{zones,loose,legacy-date}`, `@native-dates/polyfill`, and custom prototype plugins
 
-Each `@native-dates/plugins/*` subpath mutates `native-dates` hooks or prototypes once process-wide when imported (with no per-instance scoping or unload), and `@native-dates/polyfill` installs `temporal-polyfill` only when `globalThis.Temporal` is absent.
+Each `@native-dates/plugins/*` subpath mutates `native-dates` hooks or prototypes once process-wide when imported (with no per-instance scoping or unload), and `@native-dates/polyfill` installs `temporal-polyfill` only when `globalThis.Temporal` is absent. Point factories (`datetime`, `date`, `time`, `monthDay`, `dayMonth`, `yearMonth`, `monthYear`) take `(input, zoneOrOpts?)`, range factories (`dateRange`, `datetimeRange`, `timeRange`) take `(start, end, zoneOrOpts?)` or `(intervalString, zoneOrOpts?)` where `zoneOrOpts` is a bare `zone` string or `{ zone, locale, loose, dayFirst }`, and `now(zone?)`, `today(zone?)`, `dt.in(zone)`, and `d.at(time?, zone?)` take a bare `zone` string.
 
 **Golden rule: Import plugin subpaths once at startup without `.use()`, pass `{ loose: true }` per call, and treat `{ loose: true }` as returning `null` for unreadable data while still throwing on bad options.**
 
@@ -35,7 +35,7 @@ import { datetime } from 'native-dates';
 datetime('Nov 16, 2026 9:30am', { zone: 'Berlin', loose: true });
 ```
 
-**2. Strict core parsing always runs first; `{ loose: true }` is per-call only, defaults `'06/11/2026'` to US month-first (`June 11`), and still throws on bad caller options.** `configure({ loose: true })` throws `unknownSetting`, and `configure({ dayFirst: true })` only affects calls that also pass `{ loose: true }`. Under `{ loose: true }`, `null`, `undefined`, `""`, `NaN`, `'16/11/2026'` (without `dayFirst`), rolled-forward `'Feb 30, 2026'`, and non-English month names in `date()`/`datetime()` all return `null` (`T | null` in TypeScript, never *now*), whereas bad options (`zone: 'Mars/Olympus'`, `locale: '123'`) still throw `unknownZone` or `unknownLocale`.
+**2. Strict core parsing always runs first; `{ loose: true }` is per-call only, defaults `'06/11/2026'` to US month-first (`June 11`), and still throws on bad caller options.** `configure({ loose: true })` throws `unknownSetting`, and `configure({ dayFirst: true })` only affects calls that also pass `{ loose: true }`. Under `{ loose: true }`, `null`, `undefined`, `""`, `NaN`, `new Date(NaN)`, booleans, `{}` (empty fields), `'16/11/2026'` (without `dayFirst`), rolled-forward `'Feb 30, 2026'`, and non-English month names in `date()`/`datetime()` all return `null` (`T | null` in TypeScript, never *now*), whereas bad options (`zone: 'Mars/Olympus'`, `locale: '123'`) still throw `unknownZone` or `unknownLocale`.
 
 ```js
 // ❌ WRONG - omitting { loose: true } after configure({ dayFirst: true }), or assuming French date() works
@@ -49,7 +49,7 @@ date(undefined, { loose: true }); // null (never defaults to today/now)
 monthDay('17 octobre', { loose: true, locale: 'fr' }); // MonthDay(10-17) — partials DO match Intl locales
 ```
 
-**3. `@native-dates/plugins/zones` maps `'EST'`/`'MST'`/`'HST'` to DST-observing zones and resolves IANA leaf cities, NOT arbitrary world cities.** Without `zones`, `Temporal` treats `'EST'` as fixed `-05:00`; with `zones`, `'EST'`/`'EDT'`/`'ET'` map to `'America/New_York'` (pass `'-05:00'` for a fixed offset). City lookup indexes `Intl.supportedValuesOf('timeZone')` leaf names and tzdb links, so `'Berlin'`, `'Los Angeles'`, and `'Ho Chi Minh'` resolve, while non-IANA cities like `'San Francisco'`, `'Munich'`, or `'Mumbai'` throw `unknownZone` unless mapped via `configure({ zoneAliases })`.
+**3. `@native-dates/plugins/zones` resolves `zone` parameters and `[Zone]` suffixes — NOT inline tokens inside `loose` strings — and indexes IANA leaf cities rather than all world cities.** With `zones` loaded, `'EST'`/`'MST'`/`'HST'` map to DST-observing `'America/New_York'`/`'America/Denver'`/`'Pacific/Honolulu'` (pass `'-05:00'` for a fixed offset), and IANA leaf cities (`'Berlin'`, `'Los Angeles'`, `'Ho Chi Minh'`) resolve while non-IANA cities (`'San Francisco'`, `'Munich'`, `'Mumbai'`) throw `unknownZone` unless added to `zoneAliases`. Inside loose text (`'Nov 16, 2026 9am IST'` or `'... HQ'`), inline zone tokens hit native `Date.parse` and do **not** consult `zones` — pass `{ zone: 'IST' }` separately.
 
 **4. `legacy-date` attaches only to `DateTime.prototype`, evaluates local `Date` getters in `dt.zone` (not the host OS timezone), and throws `immutable` on setters.** `CalendarDate` and `Time` get no `Date` methods. On `DateTime`, `dt.getHours()` and `dt.getDay()` (`0`–`6`) read in `dt.zone` even on a UTC server, `dt.getMonth()` returns `0`–`11` (`dt.month` stays `1`–`12`), and all `set*`/`setUTC*` mutators throw `RangeError` (`code: 'immutable'`).
 
@@ -63,13 +63,13 @@ tokyo.getMonth(); // 10 (0-indexed; tokyo.month is 11)
 tokyo.setHours(12); // RangeError [immutable] — use tokyo.set('hour', 12)
 ```
 
-**5. Node `<26` (Node 20/22/24 LTS) and Safari require both `@native-dates/polyfill` AND `"temporal-polyfill": ">=0.3.0"` in your app's `dependencies`.** Bundlers statically resolve `import('temporal-polyfill')`, so omitting `"temporal-polyfill"` from `package.json` breaks builds even when targeting Chrome. Use `'@native-dates/polyfill/sync'` in CommonJS or build targets without top-level `await`.
+**5. Node `<26` (Node 20/22/24 LTS) and Safari require both `@native-dates/polyfill` AND `"temporal-polyfill": ">=0.3.0"` in your app's `dependencies`.** Bundlers statically resolve `import('temporal-polyfill')`, so omitting `"temporal-polyfill"` from `package.json` breaks builds even when targeting Chrome. Use `'@native-dates/polyfill/sync'` in CommonJS, build targets without top-level `await`, or when sibling static imports call `today()`/`now()` at module top level.
 
 ---
 
 ## @native-dates/plugins/zones
 
-Resolves IANA leaf cities, tzdb links, timezone abbreviations, and custom `zoneAliases` anywhere a `zone` parameter or `[Zone]` suffix is accepted (`datetime`, `date`, `time`, `now`, `today`, `in`, `at`, `configure`). Named `import { timezones } from '@native-dates/plugins/zones'` registers the plugin automatically without a second bare import.
+Named `import { timezones } from '@native-dates/plugins/zones'` registers the plugin automatically without a second bare import:
 
 ```js
 import { timezones } from '@native-dates/plugins/zones';
@@ -82,47 +82,47 @@ datetime('2026-11-16T09:30', 'HQ').zone; // 'Europe/Berlin' (case/space/undersco
 datetime('2026-11-16T09:30', 'são_paulo').zone; // 'America/Sao_Paulo'
 ```
 
-| Precedence (1 = highest) | Source & examples | Override / behavior |
+| Precedence (1 = highest) | Exhaustive set / lookup source | Override / behavior |
 |---|---|---|
-| 1. `configure({ zoneAliases })` | `{ hq: 'Berlin', sf: 'America/Los_Angeles' }` | Merges across calls; validates/resolves targets eagerly (`unknownZone` if invalid); `{ hq: null }` deletes one key, `zoneAliases: null` clears all |
-| 2. Exported `timezones` object | `ET`, `CT`, `MT`, `PT`, `AKT`, `HT`, `AT`, `UK`, `WET`, `CET`, `ECT`, `EET`, `IRST`, `AET`, `ACT`, `AWT`, `NZT`, `BRT`, `IST` (`Asia/Kolkata`), `INST`, `JST`, `SGT` | Mutable map for ambiguous regional codes (`timezones.IST = '...'`) |
-| 3. Built-in abbreviations | `EST`/`EDT`/`Eastern`, `CST`/`CDT`/`Central`, `MST`/`MDT`/`Mountain`, `PST`/`PDT`/`Pacific`, `AKST`/`AKDT`/`Alaska`, `HST`/`Hawaii`, `BST`, `CEST`, `KST`, `AEST`/`AEDT`, `NZST`/`NZDT`, `HKT`, `GMT`, `Z` | Maps to DST-observing IANA zones (`GMT` & `Z` -> `'UTC'`); override via `zoneAliases` |
-| 4. IANA IDs, leaf cities & tzdb links | `'los angeles'`, `'buenos aires'`, `'ho chi minh'`, `'europe/paris'` | Case/accent/separator-insensitive against `Intl.supportedValuesOf('timeZone')` and `Temporal` `<Region>/<City>` links |
+| 1. `configure({ zoneAliases })` | App-defined `{ hq: 'Berlin', sf: 'America/Los_Angeles' }` | Merges across calls; validates/resolves targets eagerly (`unknownZone` if invalid); `{ hq: null }` deletes one key, `zoneAliases: null` clears all |
+| 2. Exported `timezones` (all 22 keys) | `ET`, `CT`, `MT`, `PT`, `AKT`, `HT`, `AT`, `UK`, `WET`, `CET`, `ECT`, `EET`, `IRST`, `AET`, `ACT`, `AWT`, `NZT`, `BRT`, `IST` (`Asia/Kolkata`), `INST`, `JST`, `SGT` | Mutable map (`timezones.IST = '...'`); unlisted regional codes (`MSK`, `ICT`, `ART`, `EAT`) require `zoneAliases` or IANA IDs |
+| 3. Built-in abbreviations (all 30 keys) | `EST`/`EDT`/`Eastern`, `CST`/`CDT`/`Central`, `MST`/`MDT`/`Mountain`, `PST`/`PDT`/`Pacific`, `AKST`/`AKDT`/`Alaska`, `HST`/`Hawaii`, `BST`, `CEST`, `JST`, `KST`, `AEST`/`AEDT`, `NZST`/`NZDT`, `SGT`, `HKT`, `GMT`, `Z` | Maps to DST-observing IANA zones (`GMT` & `Z` -> `'UTC'`); override via `zoneAliases` |
+| 4. IANA IDs, leaf cities & tzdb links | Any `Intl.supportedValuesOf('timeZone')` ID/leaf (`'los angeles'`, `'buenos aires'`) or `<Region>/<City>` link (`'ho chi minh'`) | Case-, accent-, space-, hyphen-, and underscore-insensitive |
 
 ---
 
 ## @native-dates/plugins/loose
 
-When strict core parsing fails and `{ loose: true }` is passed, factories fall back as follows (`T | null` in TypeScript):
+Every factory tries its strict core parser first (`'2026/11/06'`, `'5:30 PM'`, and `'2h 30m'` already succeed in core, so `dayFirst` never disturbs 4-digit year-first strings). When strict parsing fails and `{ loose: true }` is set (`T | null` in TypeScript):
 
-- **`datetime()` and `date()` (`Date.parse` fallback):**
-  - Accepts English month names (`'Oct 17, 2026'`) and numeric slash/dot/hyphen dates (`'11/06/2026'`, `'06.11.2026'`, `'06-11-2026'`, 2-digit years `'11/06/26'` -> `2026`). Without `dayFirst: true`, `'16/11/2026'` returns `null` (never auto-flips `16 > 12`).
-  - Catches `Date.parse` calendar rollovers (`'Feb 30, 2026'`, `'11/31/2026'` -> `null`), as well as `null`, `undefined`, `""`, `NaN`, `{}` (`-> null`).
-  - **Zone handling:** Unzoned strings keep their written wall clock in `zone` (defaulting to `configure({ zone })` or system local IANA zone). Inline zone tokens inside strings rely strictly on native `Date.parse` (`Z`, numeric `+02:00`, `GMT`/`UTC`, US `EST`/`EDT`/`CST`/`CDT`/`MST`/`MDT`/`PST`/`PDT`) to fix the instant and convert to `zone` — inline tokens do **not** consult `zones` plugin `timezones` or `zoneAliases` (`'Nov 16, 2026 9am IST'` or `'... HQ'`; pass `{ zone: 'IST' }` as an option instead).
-- **`time()`:** Extracts `.toPlainTime()` from any loose date-time string (`time('Nov 16, 2026 5:30 PM', { loose: true })` -> `17:30:00`), or returns `null`.
+- **`datetime()` and `date()` 3-step pipeline:**
+  1. **Leading numeric order:** Strings starting with `1–2` digits + `[./-]` + `1–2` digits + `[./-]` + `2–4` digits (`'11/06/2026'`, `'16.11.2026'`, `'16-11-26'`) normalize to slashes, swapping fields 1 & 2 only when `dayFirst` is enabled.
+  2. **Engine `Date.parse` + rollover check:** Parses English month names and numeric dates (engine 2-digit years map `'00`–`'49` -> `2000`–`2049` and `'50`–`'99` -> `1950`–`1999`; yearless `'Oct 17'` defaults to `2001` in V8, so use `monthDay('Oct 17', { loose: true })` for recurring dates), then re-tests day `28` to reject rolled-forward dates (`'Feb 30, 2026'`, `'11/31/2026'` -> `null`).
+  3. **Zone & instant placement:** Unzoned strings keep their written wall clock in `zone` (`configure({ zone })` or system local IANA zone). Strings carrying `Z`, numeric `+02:00`, `GMT`/`UTC`, or US `EST`/`EDT`/`CST`/`CDT`/`MST`/`MDT`/`PST`/`PDT` fix that instant and convert to `zone`.
+- **`time()`:** Standalone `'5:30 PM'` succeeds in core; `{ loose: true }` also extracts `.toPlainTime()` from full date-time strings (`time('Nov 16, 2026 5:30 PM', { loose: true })` -> `17:30:00`) or returns `null`.
 - **`monthDay()`, `dayMonth()`, `yearMonth()`, `monthYear()`:** Matches English month names first (`'Mar 17'` stays March under `'fi'`), then localized `Intl` month names in `{ locale }` or `configure({ locale })`. Two-digit ISO `'10-17'` with a hyphen stays month-first even in `dayMonth('10-17')`, whereas `'17/10'` reads day-first.
-- **`duration()`:** Core already parses `'2h 30m'` and `'90 mins'`; `{ loose: true }` returns `null` on unreadable text, `unknownUnit` (`'5 lightyears'`), `conflictingSigns`, `invalidFraction`, or `NaN`.
+- **`duration()`:** Core parses `'2h 30m'` and `'90 mins'`; `{ loose: true }` returns `null` on unreadable text, `unknownUnit` (`'5 lightyears'`), `conflictingSigns`, `invalidFraction`, or `NaN`.
 - **`dateRange()`, `datetimeRange()`, `timeRange()`:** Forwards `{ loose: true, dayFirst, zone, locale }` to both endpoints and returns `null` if either endpoint is unreadable; valid endpoints with `end < start` on `DateRange`/`DateTimeRange` still throw `invalidRange`.
 
 ---
 
 ## @native-dates/plugins/legacy-date
 
-Attaches `Date.prototype` shims to `DateTime.prototype` only (`valueOf()` / `+dt` and `toJSDate()` already exist in core):
+Shims `Date.prototype` onto `DateTime.prototype` (`valueOf()` / `+dt` and `toJSDate()` are already in core):
 
-- **Shimmed reads (22):** Zone-local `get{FullYear,Month,Date,Day,Hours,Minutes,Seconds,Milliseconds}()` and `getTimezoneOffset()` (minutes positive west of UTC in `this.zone`); UTC `getTime()` and `getUTC*()` (8 methods); `toISOString()` (fixed `.sssZ`); and `toLocale{,Date,Time}String(locales?, opts?)` (defaulting to `this.locale()` and `this.zone`).
-- **Not shimmed / blocked:** `toDateString()` and `toUTCString()` are omitted (use `dt.toJSDate().toUTCString()`); all 15 `set*` and `setUTC*` methods throw `RangeError` (`code: 'immutable'`).
+- **22 shimmed reads:** Zone-local `get{FullYear,Month,Date,Day,Hours,Minutes,Seconds,Milliseconds}()` and `getTimezoneOffset()` (positive west of UTC in `this.zone`); UTC `getTime()` and `getUTC*()` (8 methods); `toISOString()` (fixed `.sssZ`); and `toLocale{,Date,Time}String(locales?, opts?)` (defaulting to `this.locale()` and `this.zone`).
+- **Omitted / blocked:** `toDateString()` and `toUTCString()` are not shimmed (`dt.toJSDate().toUTCString()`); all 15 `set*`/`setUTC*` methods throw `RangeError` (`code: 'immutable'`).
 
 ---
 
 ## @native-dates/polyfill
 
-`native-dates` reads `globalThis.Temporal` lazily at call time; import the polyfill at entrypoint startup before calling factories (with `"temporal-polyfill": ">=0.3.0"` installed):
+`native-dates` reads `globalThis.Temporal` lazily at call time (`"temporal-polyfill": ">=0.3.0"` required in `dependencies`):
 
-| Entrypoint | Mechanism | Target environments |
+| Entrypoint | Mechanism | When to use |
 |---|---|---|
-| `import '@native-dates/polyfill'` | `if (!globalThis.Temporal) await import('temporal-polyfill')` | ESM browsers (0 B downloaded on Chrome/Firefox/Edge; dynamic chunk on Safari) & ESM on Node `<26` |
-| `import '@native-dates/polyfill/sync'` | Sync `import { Temporal } from 'temporal-polyfill'` + `if (!globalThis.Temporal)` | CommonJS bundles, test setups, or bundler targets disallowing top-level `await` |
+| `import '@native-dates/polyfill'` | `if (!globalThis.Temporal) await import('temporal-polyfill')` | ESM browser entrypoints (0 B downloaded on Chrome/Firefox/Edge; dynamic chunk on Safari) & async ESM on Node `<26` |
+| `import '@native-dates/polyfill/sync'` | Sync `import { Temporal } from 'temporal-polyfill'` + `if (!globalThis.Temporal)` | CommonJS, test setups, targets without top-level `await`, or when sibling static imports call `today()`/`now()` during module evaluation |
 
 ---
 
@@ -130,7 +130,7 @@ Attaches `Date.prototype` shims to `DateTime.prototype` only (`valueOf()` / `+dt
 
 Parser and zone hooks (`native-dates/helpers/*`) are private to `@native-dates/plugins` without semver guarantees. Third-party plugins extend the 9 exported class prototypes (`DateTime`, `CalendarDate`, `Time`, `Duration`, `MonthDay`, `YearMonth`, `DateRange`, `DateTimeRange`, `TimeRange`):
 
-- **Cross-realm identity:** `kindOf(v)` returns `'datetime' | 'date' | 'time' | 'duration' | 'monthDay' | 'yearMonth' | 'dateRange' | 'datetimeRange' | 'timeRange' | undefined`. Exported `Symbol.for` keys (`IS_DATE_TIME`, `IS_CALENDAR_DATE`, `IS_TIME`, `IS_DURATION`, `IS_MONTH_DAY`, `IS_YEAR_MONTH`, `IS_RANGE`, `IS_DATE_RANGE`, `IS_DATE_TIME_RANGE`, `IS_TIME_RANGE`) are **property keys** (`Boolean(v?.[IS_CALENDAR_DATE])`, never called as functions), alongside predicate functions `isDateTime(v)`, `isCalendarDate(v)`, etc.
+- **Cross-realm identity:** `kindOf(v)` returns `'datetime' | 'date' | 'time' | 'duration' | 'monthDay' | 'yearMonth' | 'dateRange' | 'datetimeRange' | 'timeRange' | undefined`. Exported predicates are `isDateTime`, `isCalendarDate`, `isTime`, `isDuration`, `isMonthDay`, `isYearMonth`, `isDateRange`, `isDateTimeRange`, and `isTimeRange` (there is no `isRange` function — use `Boolean(v?.[IS_RANGE])`). All 10 `IS_*` exports (`IS_DATE_TIME`, `IS_CALENDAR_DATE`, `IS_TIME`, `IS_DURATION`, `IS_MONTH_DAY`, `IS_YEAR_MONTH`, `IS_RANGE`, `IS_DATE_RANGE`, `IS_DATE_TIME_RANGE`, `IS_TIME_RANGE`) are `Symbol.for` **property keys**, never callable functions.
 - **Immutability & packaging:** Instances are frozen (`this.date`, `this.time`, `this.zone` are getters; `this.locale()` is a 0-arg getter / 1-arg clone method). Return new instances, list entry files in `"sideEffects": ["./index.js"]`, and put `"native-dates"` in `"peerDependencies"`.
 
 ```ts
@@ -162,13 +162,12 @@ export const isSupportedPoint = (v: unknown) => Boolean((v as any)?.[IS_CALENDAR
 
 ## Quick Reference
 
-| Untrusted / edge-case situation | Outcome | Idiom |
+| Cross-plugin / boundary scenario | What happens | Recommended pattern |
 |---|---|---|
-| Untrusted `rawText` AND untrusted `zoneName` | `loose` returns `null` for `rawText`, but throws `unknownZone` on `zoneName` | Wrap in `try/catch` checking `err?.code === 'unknownZone'` |
-| Non-IANA city (`'San Francisco'`, `'Mumbai'`) | Throws `unknownZone` | Register `configure({ zoneAliases: { sf: 'America/Los_Angeles', mumbai: 'Asia/Kolkata' } })` |
-| Non-US inline zone in string (`'Nov 16 9am IST'`) | `Date.parse` returns `null` (doesn't read `timezones`) | Strip or pass zone separately: `datetime('Nov 16, 2026 9am', { zone: 'IST', loose: true })` |
-| `16/11/2026` without `dayFirst: true` | Returns `null` under `{ loose: true }` | Pass `{ loose: true, dayFirst: true }` (or `configure({ dayFirst: true })` + `{ loose: true }`) |
-| Fixed `-05:00` year-round after importing `zones` | `'EST'` now observes EDT in summer | Pass explicit offset string `'-05:00'` instead of `'EST'` |
+| Both `rawText` and `rawZone` come from untrusted CSV/form input | `loose` turns bad `rawText` into `null`, while bad `rawZone` still throws `unknownZone` | Wrap call in `try/catch` checking `err?.code === 'unknownZone'` |
+| Bracketed ISO `'2026-11-16T09:00[Berlin]'` vs loose `'Nov 16, 2026 9am IST'` | `[Berlin]` resolves through `zones`; inline `'IST'` hits `Date.parse` and returns `null` | Pass zone via option: `datetime('Nov 16, 2026 9am', { zone: 'IST', loose: true })` |
+| Sibling `import './config.js'` calls `today()` at top level on Node 22 / Safari | Static sibling imports evaluate before default polyfill's top-level `await` settles | Import `'@native-dates/polyfill/sync'` first at entrypoint |
+| Yearless `'Oct 17'` vs historical `'05/14/85'` in `date(..., { loose: true })` | Engine `Date.parse` defaults `'Oct 17'` to year `2001`, and maps `'85` -> `1985` (`'00`–`'49` -> `20xx`) | Use `monthDay('Oct 17', { loose: true })` for yearless dates; require 4-digit years past `2049`/`1950` |
 
 ```js
 import '@native-dates/polyfill/sync';
@@ -181,7 +180,7 @@ configure({ dayFirst: true, zoneAliases: { sf: 'America/Los_Angeles' } });
 
 export function parseCsvTimestamp(rawText, rawZone) {
   try {
-    return datetime(rawText, { zone: rawZone, loose: true }); // DateTime | null (null if rawText is null/""/invalid)
+    return datetime(rawText, { zone: rawZone, loose: true }); // DateTime | null
   } catch (err) {
     if (err?.code === 'unknownZone') { return null; }
     throw err;
