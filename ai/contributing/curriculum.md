@@ -1,6 +1,6 @@
 # Agent Curriculum
 
-Required reading order for coding agents before authoring or modifying code in `native-dates`. Human contributors do not need to read these context files (see [`CONTRIBUTING.md`](../../CONTRIBUTING.md)).
+Required reading order for coding agents before authoring or modifying code in `native-dates` (see [`CONTRIBUTING.md`](../../CONTRIBUTING.md)).
 
 ## 1. Goals and Maintainer Lessons
 

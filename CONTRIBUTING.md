@@ -13,7 +13,7 @@ Short guide for contributors and coding agents working on their behalf.
 
 ## 2. Before Coding
 
-- **Human developers:** Scan [`ai/contributing/decisions.md`](ai/contributing/decisions.md) (and [`ai/contributing/decisions/project.md`](ai/contributing/decisions/project.md) for repo process) to see prior design decisions on the area you are touching, and run `npm install` so the pre-commit hook formats staged files with `dprint` automatically. You do not need to read the agent curriculum files under `ai/contributing/`.
+- **Human developers:** Scan [`ai/contributing/decisions.md`](ai/contributing/decisions.md) (and [`ai/contributing/decisions/project.md`](ai/contributing/decisions/project.md) for repo process) to see prior design decisions on the area you are touching, and run `npm install` so the pre-commit hook formats staged files with `dprint` automatically.
 - **Coding agents:** Read [`ai/contributing/curriculum.md`](ai/contributing/curriculum.md) before working, and load [`ai/contributing/workflows/contribute.md`](ai/contributing/workflows/contribute.md) when assisting on an issue or pull request.
 
 ## 3. Pull Requests

@@ -25,7 +25,7 @@ Internal records and workflows for developing `native-dates`. Application develo
 
 | Record | Path | Policy |
 |---|---|---|
-| Agent curriculum | [`curriculum.md`](curriculum.md) | Ordered 4-stage reading list for coding agents (not required for human developers) |
+| Agent curriculum | [`curriculum.md`](curriculum.md) | Ordered 4-stage reading list for coding agents |
 | North star | [`north-star.md`](north-star.md) | Hand-authored by the maintainer on project goals, the Golden Rule, call-site SNR, lowercase-"c" correctness, conciseness, and Bayesian rulings (do not edit or polish) |
 | Decisions index | [`decisions.md`](decisions.md) | Generated topic and chronological index of package decisions (`npm run ai:index`) |
 | Decision logs | [`decisions/`](decisions/README.md) | Authoring rules in `README.md`, package rationales in `package.md` (`D1`..`Dn`), and repo/CI process calls in `project.md` (`P1`..`Pn`) |
