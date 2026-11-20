@@ -26,18 +26,7 @@ Every issue and pull request has a human author accountable for the submission (
 
 ## Required Reading Order
 
-Read these documents before editing code:
-
-1. [`ai/contributing/north-star.md`](../north-star.md): hand-authored by the maintainer on project goals, the Golden Rule, call-site SNR, lowercase-"c" correctness, conciseness, and Bayesian rulings.
-2. [`ai/contributing/standards/lessons/naming-lessons.md`](../standards/lessons/naming-lessons.md): maintainer-authored lessons on callsite signatures, industry terms over metaphors, and naming.
-3. [`ai/contributing/standards/lessons/simplicity-lessons.md`](../standards/lessons/simplicity-lessons.md): class boundaries and simple data flow over synthetic adapters or monkey-patching.
-4. [`ai/contributing/standards/coding-standards.md`](../standards/coding-standards.md) and [`ai/contributing/standards/code-comments.md`](../standards/code-comments.md): class anatomy, `Symbol.for` branding, folder homogeneity, and comment style.
-5. [`ai/contributing/reference/architecture.md`](../reference/architecture.md): workspace package responsibilities, zero-dependency rules, and invariants.
-6. [`ai/contributing/budget.md`](../budget.md): bundle ceilings and per-PR byte limits.
-7. [`ai/contributing/standards/legibility/errors-and-logs.md`](../standards/legibility/errors-and-logs.md): required whenever adding or editing error explanations (`npm run errors`).
-8. [`ai/contributing/decisions.md`](../decisions.md): grep the relevant noun and read the latest dated decision. Surface a decision to reopen when its `reopen:` condition is met or new counter-evidence appears rather than silently overriding it.
-
-Next, read the target source files and tests directly on `HEAD` rather than relying on prior assumptions.
+Complete stages 1–3 of [`ai/contributing/curriculum.md`](../curriculum.md) (and load any relevant stage 4 workflows) before editing code, then read the target source files and tests directly on `HEAD` rather than relying on prior assumptions. Surface a decision to reopen when its `Reopen:` condition is met or new counter-evidence appears rather than silently overriding it.
 
 ## Fixing a Bug
 

@@ -6,6 +6,7 @@ Internal records and workflows for developing `native-dates`. Application develo
 
 | Task | Reading order |
 |---|---|
+| Onboard a coding agent before working | [`curriculum.md`](curriculum.md) (stages 1–4) |
 | Fix a bug, add a feature, or file a bug report | [`CONTRIBUTING.md`](../../CONTRIBUTING.md), then [`workflows/contribute.md`](workflows/contribute.md) |
 | Check or record design and process decisions | [`decisions.md`](decisions.md) for the topic index, [`decisions/README.md`](decisions/README.md) before adding or reopening an entry, [`decisions/package.md`](decisions/package.md) (`D1`..`Dn`), and [`decisions/project.md`](decisions/project.md) (`P1`..`Pn`) |
 | Check bundle size limits | [`budget.md`](budget.md), checked by `npm run size` |
@@ -24,6 +25,7 @@ Internal records and workflows for developing `native-dates`. Application develo
 
 | Record | Path | Policy |
 |---|---|---|
+| Agent curriculum | [`curriculum.md`](curriculum.md) | Ordered 4-stage reading list for coding agents (not required for human developers) |
 | North star | [`north-star.md`](north-star.md) | Hand-authored by the maintainer on project goals, the Golden Rule, call-site SNR, lowercase-"c" correctness, conciseness, and Bayesian rulings (do not edit or polish) |
 | Decisions index | [`decisions.md`](decisions.md) | Generated topic and chronological index of package decisions (`npm run ai:index`) |
 | Decision logs | [`decisions/`](decisions/README.md) | Authoring rules in `README.md`, package rationales in `package.md` (`D1`..`Dn`), and repo/CI process calls in `project.md` (`P1`..`Pn`) |

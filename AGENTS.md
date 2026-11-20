@@ -1,35 +1,8 @@
 # Working in `native-dates`
 
-Read [`ai/contributing/README.md`](ai/contributing/README.md) first for the contributor routing table (`ai/skills/` is reserved for downstream user skills published with the npm package, while `ai/contributing/` holds internal repository records).
+Read [`ai/contributing/curriculum.md`](ai/contributing/curriculum.md) before authoring or editing code (`ai/skills/` is reserved for downstream user skills published with the npm package, while [`ai/contributing/`](ai/contributing/README.md) holds internal agent context and repository records).
 
-**Fixing or reporting a bug, or adding a feature?** Read [`CONTRIBUTING.md`](CONTRIBUTING.md), then load [`ai/contributing/workflows/contribute.md`](ai/contributing/workflows/contribute.md) for the reading order, workflow steps, and human-author requirements.
-
-Before authoring or editing code in this repository, read:
-
-1. **[`ai/contributing/north-star.md`](ai/contributing/north-star.md)**: Hand-authored by the maintainer on project goals, the Golden Rule, call-site SNR, lowercase-"c" correctness, conciseness, and Bayesian rulings. Read with the weight of a live user turn, and never edit or polish its human voice.
-2. **[`ai/contributing/standards/lessons/naming-lessons.md`](ai/contributing/standards/lessons/naming-lessons.md)**: Hand-authored by the maintainer on callsite legibility, plain industry terms over metaphors, function signatures, and naming. Read with the weight of a live user turn.
-3. **[`ai/contributing/standards/lessons/simplicity-lessons.md`](ai/contributing/standards/lessons/simplicity-lessons.md)**: Mental-model simplicity over clever mechanisms, synthetic adapters, or cross-module monkey-patching.
-4. **[`ai/contributing/standards/coding-standards.md`](ai/contributing/standards/coding-standards.md)** and **[`ai/contributing/standards/code-comments.md`](ai/contributing/standards/code-comments.md)**: Class anatomy with `Symbol.for` branding, plus folder homogeneity and comment standards.
-5. **[`ai/contributing/reference/architecture.md`](ai/contributing/reference/architecture.md)**: Package boundaries across `native-dates` (`src/`), `@native-dates/plugins` (`packages/plugins/`), `@native-dates/polyfill` (`packages/polyfill/`), and `ai/skills/`, plus invariants and size measurement.
-6. **[`ai/contributing/budget.md`](ai/contributing/budget.md)**: Bundle ceilings, per-PR byte limits, and the size budget rules.
-7. **[`ai/contributing/decisions.md`](ai/contributing/decisions.md)**: Generated topic and chronological index of package design decisions (`D1`..`Dn`), linking into [`ai/contributing/decisions/package.md`](ai/contributing/decisions/package.md). Grep the noun you are about to touch and check the latest entry.
-
-Load task-specific guides when relevant:
-
-- **[`ai/contributing/decisions/README.md`](ai/contributing/decisions/README.md)**: Adding or reopening a decision in `decisions/package.md` or `decisions/project.md` (what belongs vs. normal features and bug fixes, `D<n>` format, and confidence calibration).
-- **[`ai/contributing/standards/legibility/`](ai/contributing/standards/legibility/README.md)**: Craft guides for `code-structures`, `errors-and-logs`, `folders-and-filenames`, `tests-and-test-names`, and `traces-and-timelines`. Paths in those files reference the upstream repo they were written in, while the rules apply here.
-- **[`ai/contributing/workflows/author-user-skill.md`](ai/contributing/workflows/author-user-skill.md)** and **[`ai/contributing/standards/ai-author-context.md`](ai/contributing/standards/ai-author-context.md)**: Authoring, chunking, and evaluating downstream user skills in `ai/skills/`.
-- **[`ai/contributing/workflows/clean-room-dx-review.md`](ai/contributing/workflows/clean-room-dx-review.md)**: Running a quarantined fresh-reader DX review over candidate public API surface.
-- **[`ai/contributing/workflows/read-ci-reports.md`](ai/contributing/workflows/read-ci-reports.md)**: Interpreting Bundle Size and Bench pull request comments (`Unsure` is unresolved noise, and within budget does not mean free).
-- **[`ai/contributing/workflows/extend-bench-suite.md`](ai/contributing/workflows/extend-bench-suite.md)**: Adding or modifying benchmark operations in `bench/`.
-- **[`ai/contributing/workflows/docs-writing.md`](ai/contributing/workflows/docs-writing.md)**: Writing or editing guide, API, or plugin pages under `docs/src/content/`.
-- **[`ai/contributing/workflows/docs-authoring.md`](ai/contributing/workflows/docs-authoring.md)**: Updating the Astro docs site and its required features.
-- **[`ai/contributing/workflows/docs-i18n.md`](ai/contributing/workflows/docs-i18n.md)**: Translating finalized documentation before a release or changing locale routing.
-- **[`ai/contributing/standards/name-public-api.md`](ai/contributing/standards/name-public-api.md)** and **[`ai/contributing/standards/author-pull-requests.md`](ai/contributing/standards/author-pull-requests.md)**: Naming public API symbols and titling pull requests.
-- **[`ai/contributing/standards/types.md`](ai/contributing/standards/types.md)**: Hand-authoring `.d.ts` files in `types/` and `packages/plugins/types/`. Their doc comments power editor hover/autocomplete, and each `@see` link opens the matching docs page on `nativedates.dev`.
-- **[`ai/contributing/standards/utility-functions.md`](ai/contributing/standards/utility-functions.md)**: Reference for `@semantic-ui/utils`. **`native-dates` has zero runtime dependencies** — never install or import `@semantic-ui/utils`; check here for canonical names and behavior, then copy only the minimal reached implementation into `src/helpers/utils.js` or `src/helpers/environment.js`.
-
-Files in [`ai/contributing/standards/`](ai/contributing/standards/README.md) are synced from upstream Semantic repositories. Some internal links reference skills outside this repo, and those files are not edited directly here.
+**Fixing or reporting a bug, or adding a feature?** Read [`CONTRIBUTING.md`](CONTRIBUTING.md), follow [`ai/contributing/curriculum.md`](ai/contributing/curriculum.md), and load [`ai/contributing/workflows/contribute.md`](ai/contributing/workflows/contribute.md) for the workflow steps and human-author requirements.
 
 ## House Rules
 
