@@ -16,6 +16,7 @@ import { checkedLocale } from './zones.js';
 export const inspect = Symbol.for('nodejs.util.inspect.custom');
 
 const spellings = {
+  __proto__: null,
   y: 'year',
   yr: 'year',
   yrs: 'year',
@@ -87,8 +88,7 @@ export const isCount = (value) => isNumber(value) || isDigits(value);
 // preserve uppercase 'M' as month before lowercasing ('m' is minute, matching Moment and Day.js)
 export const unit = (input) => {
   const key = input === 'M' ? 'month' : isString(input) ? input.trim().toLowerCase() : '';
-  const found = Object.hasOwn(spellings, key) && spellings[key];
-  return found || refuse('unknownUnit', String(input), {
+  return spellings[key] || refuse('unknownUnit', String(input), {
     explanation: isDevelopment
       ? `expected a time unit in [${
         units.join(', ')
@@ -114,15 +114,13 @@ export const dayOfWeek = (input) => {
   }
   return weekdayNamed(input) || refuse('unknownDayOfWeek', String(input), {
     explanation: isDevelopment
-      ? (() => {
-        const key = input === 'M' ? 'month' : isString(input) ? input.trim().toLowerCase() : '';
-        const namedUnit = Object.hasOwn(spellings, key) && spellings[key];
-        return namedUnit
-          ? `'${input}' is a unit, not a weekday. Use \`.plus(1, '${namedUnit}')\` or \`.minus(1, '${namedUnit}')\` to shift by 1 ${namedUnit}, or \`.startOfNext('${namedUnit}')\` or \`.startOfPrevious('${namedUnit}')\` for the start of the next or previous ${namedUnit}`
-          : `expected a weekday in [${
-            weekdays.join(', ')
-          }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday)`;
-      })()
+      ? spellings[input === 'M' ? 'month' : isString(input) ? input.trim().toLowerCase() : '']
+        ? `'${input}' is a unit, not a weekday (expected [${
+          weekdays.join(', ')
+        }] or 1 to 7). To step by a supported unit instead of a weekday, use \`.plus(1, unit)\` / \`.minus(1, unit)\` or \`.startOfNext(unit)\` / \`.startOfPrevious(unit)\``
+        : `expected a weekday in [${
+          weekdays.join(', ')
+        }] (or 3-letter shorthand like 'mon'), or a day of the week as a number from 1 (Monday) to 7 (Sunday)`
       : 0,
   });
 };
