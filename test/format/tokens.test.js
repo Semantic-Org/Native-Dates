@@ -99,6 +99,14 @@ describe('weekday and ISO week tokens', () => {
     expect(date('2026-11-14').format('d')).toBe('6');
   });
 
+  it('formats E as ISO day of the week from 1 for Monday through 7 for Sunday', () => {
+    expect(standup.format('E')).toBe('1');
+    expect(friday.format('E')).toBe('5');
+    expect(date('2026-11-14').format('E')).toBe('6');
+    expect(date('2026-11-15').format('E')).toBe('7');
+    expect(datetime('2026-11-15T20:00', 'America/Los_Angeles').format('E')).toBe('7');
+  });
+
   it('formats dd, ddd, and dddd as narrow, short, and long weekday names', () => {
     expect(date('2026-11-16').format('dd ddd dddd', 'en-US')).toBe('Mo Mon Monday');
   });
@@ -258,7 +266,7 @@ describe('invalid patterns and unsupported tokens', () => {
     );
   });
 
-  it.each(['HH:mm:ss.SSSSSS', 'YYYYYY', 'MMMMM', 'SSSS', 'hhh', 'ZZZ', 'DDDo'])(
+  it.each(['HH:mm:ss.SSSSSS', 'YYYYYY', 'MMMMM', 'SSSS', 'hhh', 'ZZZ', 'DDDo', 'EE'])(
     'throws unknownFormat for overlong repeated token pattern %j',
     (pattern) => {
       expect(() => standup.format(pattern)).toThrowError(
@@ -280,7 +288,7 @@ describe('invalid patterns and unsupported tokens', () => {
   });
 
   it('throws unsupportedToken when formatting Time with date, week, or timezone tokens', () => {
-    for (const token of ['YYYY', 'MMMM', 'D', 'dddd', 'W', 'Z']) {
+    for (const token of ['YYYY', 'MMMM', 'D', 'E', 'dddd', 'W', 'Z']) {
       expect(() => time('17:30').format(token)).toThrowError(
         expect.objectContaining({ code: 'unsupportedToken', at: `${token} in '${token}'` }),
       );
@@ -297,7 +305,7 @@ describe('invalid patterns and unsupported tokens', () => {
   });
 
   it('throws unsupportedToken when formatting MonthDay with weekday, day-of-year, or week tokens', () => {
-    for (const token of ['d', 'dddd', 'DDD', 'W']) {
+    for (const token of ['d', 'E', 'dddd', 'DDD', 'W']) {
       expect(() => monthDay('11-16').format(token)).toThrowError(expect.objectContaining({ code: 'unsupportedToken' }));
     }
   });

@@ -1,7 +1,7 @@
 ---
 title: Coming from Moment
 lede: Move off Moment and moment-timezone to immutable values, built-in tokens and ranges, zero bundled timezone data, and incremental Date interop.
-updated: 2026-11-12
+updated: 2026-11-20
 ---
 
 Moment and `moment-timezone` carried JavaScript date handling for years, at the cost of mutable objects, zero-indexed months, and heavy timezone bundles.
@@ -88,7 +88,7 @@ quarter.overlaps(date('2026-12-15').to('2027-01-15')); // true
 | `m.clone().add(7, 'days')` | `d.plus(7, 'days')` | Always immutable, and `add()` alias works too |
 | `m.tz('Europe/Berlin')` | `dt.in('Europe/Berlin')` | Views the same moment in another zone |
 | `m.month()`, `m.date()` | `d.month`, `d.day` | Plain properties with months from 1 to 12 |
-| `m.day()`, `m.isoWeekday()` | `d.dayOfWeek` | ISO day of the week from 1 on Monday to 7 on Sunday |
+| `m.day()`, `m.isoWeekday()` | `d.dayOfWeek` | ISO 1 on Monday to 7 on Sunday, with tokens `'E'` for 1–7 and `'d'` for 0–6 |
 | `m.unix()`, `m.valueOf()` | `dt.epochSeconds`, `dt.epochMilliseconds` | Each count since 1970 names its unit |
 | `b.diff(a, 'hours', true)` | `a.until(b, 'hours')` | Fractional total in the requested unit |
 | `moment.duration(2, 'h')` | `hours(2)` or `duration('2h')` | Built into core |

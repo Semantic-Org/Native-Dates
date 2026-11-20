@@ -128,6 +128,7 @@ const tokenReaders = {
   DDD: ['dayOfYear', (subject) => String(subject.dayOfYear)],
   DDDD: ['dayOfYear', (subject) => pad(subject.dayOfYear, 3)],
   d: ['dayOfWeek', (subject) => String(subject.dayOfWeek % 7)], // Sunday = 0 (Moment/Day.js convention)
+  E: ['dayOfWeek', (subject) => String(subject.dayOfWeek)],
   dd: ['dayOfWeek', (subject, locale) => names(locale).dd[subject.dayOfWeek - 1]],
   ddd: ['dayOfWeek', (subject, locale) => names(locale).ddd[subject.dayOfWeek - 1]],
   dddd: ['dayOfWeek', (subject, locale) => names(locale).dddd[subject.dayOfWeek - 1]],

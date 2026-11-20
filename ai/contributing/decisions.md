@@ -98,9 +98,9 @@ Reopen: migration feedback shows omitting `.epoch` causes widespread friction wi
 
 ## Numeric day of the week is `dayOfWeek` (`1`-`7`) while token `d` keeps Moment's `0`-`6` (2026-11-17)
 
-Naming the `1`-`7` property `.weekday` made `sunday.weekday` return `7` while `sunday.isWeekday()` returned `false`, and collided with custom display names in `configure({ weekdayNames })`. Format token `d` keeps `0` = Sunday through `6` = Saturday to match Moment and Day.js token strings, omitting the ISO `1`-`7` token `E` until requested.
+Naming the `1`-`7` property `.weekday` made `sunday.weekday` return `7` while `sunday.isWeekday()` returned `false`, and collided with custom display names in `configure({ weekdayNames })`. Format token `d` keeps `0` = Sunday through `6` = Saturday to match Moment and Day.js alongside `E` for ISO `1`-`7`.
 
-Reopen: callers hit bugs from `format('d')` returning `0` on Sunday while `.dayOfWeek` returns `7`, or request the `E` token.
+Reopen: callers hit bugs from `format('d')` returning `0` on Sunday while `.dayOfWeek` and `format('E')` return `7`.
 
 ## `Duration` uses `balance()` without a `normalize()` alias, and `total(unit)` instead of `in(unit)` (2026-11-17)
 

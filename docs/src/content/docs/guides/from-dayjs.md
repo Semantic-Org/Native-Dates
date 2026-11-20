@@ -1,7 +1,7 @@
 ---
 title: Coming from Day.js
 lede: Replace dayjs() wrappers and plugin chains with dedicated date types, 1-indexed months, built-in ranges, and zero-setup time zones.
-updated: 2026-11-12
+updated: 2026-11-20
 ---
 
 Day.js wraps a JavaScript date in a single `dayjs()` object and adds time zones, UTC, ranges, and durations through plugins. Moving here keeps the lightweight, immutable style while giving calendar days, clock times, moments, partial dates, ranges, and durations their own types in core.
@@ -43,7 +43,7 @@ d.dayOfWeek; // 1, Monday
 ```
 
 :::warning[Check month and weekday numbers]
-Day.js numbers months from 0 to 11 and starts weekdays on Sunday at 0. Here, `month` runs from 1 through 12, and `dayOfWeek` runs from 1 on Monday through 7 on Sunday.
+Day.js numbers months from 0 to 11 and starts weekdays on Sunday at 0. Here, `month` runs from 1 through 12, and `dayOfWeek` runs from 1 on Monday through 7 on Sunday. In token patterns, `'E'` prints ISO 1 through 7 while `'d'` keeps Day.js's 0 through 6.
 :::
 
 ## Time zones, durations, and ranges built in
@@ -99,7 +99,7 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 |---|---|---|
 | `dayjs()` | `now()` or `today()` | Choose an exact moment or a calendar day |
 | `d.month()`, `d.date()` | `d.month`, `d.day` | Plain properties with months from 1 to 12 |
-| `d.day()`, `d.isoWeekday()` | `d.dayOfWeek` | ISO day of the week from 1 on Monday to 7 on Sunday |
+| `d.day()`, `d.isoWeekday()` | `d.dayOfWeek` | ISO 1 on Monday to 7 on Sunday, with tokens `'E'` for 1–7 and `'d'` for 0–6 |
 | `d.unix()`, `d.valueOf()` | `dt.epochSeconds`, `dt.epochMilliseconds` | Each count since 1970 names its unit |
 | `d.add(2, 'day')` | `d.plus(2, 'days')` | `add()` and `subtract()` aliases also work |
 | `dayjs.tz(x, zone)` | `datetime(x, zone)` | Built into core with no `timezone` plugin |

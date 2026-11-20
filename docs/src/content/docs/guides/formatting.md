@@ -1,7 +1,7 @@
 ---
 title: Formatting
 lede: Format dates, times, ranges, and durations with Intl presets, locale tags, token patterns, and relative phrases.
-updated: 2026-11-16
+updated: 2026-11-20
 ---
 
 Native Dates uses the platform's built-in `Intl` formatters and caches them automatically. You get localized output across languages and regions without adding locale files to your bundle.
@@ -128,7 +128,8 @@ Month and weekday names inside token patterns come from `Intl` in the active loc
 | `D`, `DD` | `'5'`, `'05'` | Day of the month, unpadded or zero-padded. |
 | `Do` | `'16th'` | Day of the month with English ordinals, the locale's day marker like `'6.'` or `'6日'`, or custom [`ordinals`](/api/configure/). |
 | `DDD`, `DDDD` | `'320'`, `'045'` | Day of the year, unpadded or zero-padded to three digits. |
-| `d` | `'1'` | Day of the week from 0 to 6, starting on Sunday at 0. |
+| `E` | `'7'` | ISO day of the week from 1 on Monday through 7 on Sunday, matching `dayOfWeek`. |
+| `d` | `'0'` | Day of the week from 0 on Sunday through 6 on Saturday, matching Moment and Day.js. |
 | `dd`, `ddd`, `dddd` | `'Mo'`, `'Mon'`, `'Monday'` | Localized shortest, abbreviated, or full weekday name, customizable via [`weekdayNames`](/api/configure/). |
 | `W`, `WW` | `'47'`, `'05'` | ISO week of the year, unpadded or zero-padded. |
 | `H`, `HH` | `'9'`, `'09'` | Hour on the 24-hour clock, unpadded or zero-padded. |
