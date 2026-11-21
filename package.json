@@ -21,9 +21,13 @@
     },
     "./helpers/*": "./src/helpers/*.js"
   },
+  "bin": {
+    "native-dates": "bin/native-dates.js"
+  },
   "files": [
     "src",
     "types",
+    "bin",
     "skills",
     "README.md",
     "LICENSE"
