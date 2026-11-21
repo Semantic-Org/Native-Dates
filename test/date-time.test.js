@@ -1478,18 +1478,18 @@ describe('DateTime serialization and conversion', () => {
   });
 });
 
-describe('datetime() year-first strings with any separator', () => {
+describe('datetime() year-first string parsing with any separator', () => {
   it.each([
     ['Han units before a clock', '2026年11月16日 14:30'],
     ['Hangul units before a clock', '2026년 11월 16일 14:30'],
     ['Korean spaced dots before a clock', '2026. 11. 16. 14:30'],
-  ])('reads %s (%j) as a wall clock in the zone', (_form, text) => {
+  ])('parses %s (%j) as wall-clock time in the target zone', (_form, text) => {
     expect(datetime(text, 'Asia/Tokyo')).toMatchObject({ year: 2026, month: 11, day: 16, hour: 14, minute: 30 });
   });
 });
 
 describe('datetime() from Temporal values and strings in another calendar', () => {
-  it('reads a Persian ZonedDateTime, PlainDateTime, and PlainDate with ISO fields', () => {
+  it('converts a Persian ZonedDateTime, PlainDateTime, and PlainDate to ISO fields', () => {
     const zoned = Temporal.ZonedDateTime.from('2026-11-16T10:00[Asia/Tehran][u-ca=persian]');
     const moment = datetime(zoned);
     expect(moment).toMatchObject({ year: 2026, month: 11, day: 16, zone: 'Asia/Tehran' });
@@ -1499,13 +1499,13 @@ describe('datetime() from Temporal values and strings in another calendar', () =
     expect(datetime(zoned.toPlainDate(), 'UTC')).toMatchObject({ year: 2026, month: 11, day: 16 });
   });
 
-  it('reads a [u-ca=] annotated string with ISO fields', () => {
+  it('converts a [u-ca=persian] string to ISO fields', () => {
     expect(datetime('2026-11-16T10:00[Asia/Tokyo][u-ca=persian]')).toMatchObject({ year: 2026, month: 11, day: 16 });
   });
 });
 
 describe('DateTime.isWeekend() and isWeekday() by locale', () => {
-  it('follows the Friday and Saturday weekend of ar-SA in the instance timezone', () => {
+  it('returns true on Friday and false on Sunday for ar-SA in the instance timezone', () => {
     const friday = datetime('2026-11-20T12:00', 'Asia/Riyadh').locale('ar-SA');
     expect([friday.isWeekend(), friday.isWeekday()]).toEqual([true, false]);
     expect(friday.plus(2, 'days').isWeekend()).toBe(false);

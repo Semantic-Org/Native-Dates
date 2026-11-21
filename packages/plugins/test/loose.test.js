@@ -572,7 +572,7 @@ describe('{ loose: true, dayFirst }', () => {
 });
 
 describe('configure({ dayFirst })', () => {
-  it('defaults to undefined, leaving the order to the locale, and reflects updates from configure()', () => {
+  it('defaults to undefined and reflects updates from configure()', () => {
     expect(configure().dayFirst).toBe(undefined);
     expect(configure({ dayFirst: true }).dayFirst).toBe(true);
     expect(configure().dayFirst).toBe(true);
@@ -603,7 +603,7 @@ describe('configure({ dayFirst })', () => {
     expect(date('Jul 9, 2026', { loose: true })?.toString()).toBe('2026-07-09');
   });
 
-  it('reads month-first when set to false and returns to the locale order when set to null', () => {
+  it('parses month-first when set to false and by the locale order when reset to null', () => {
     configure({ dayFirst: true });
     configure({ dayFirst: false });
     expect(date('7/9/2026', { loose: true })?.toString()).toBe('2026-07-09');
@@ -878,7 +878,7 @@ describe('{ loose: true } across host TZ offsets', () => {
   );
 });
 
-describe("date() in the locale's words with { loose: true, locale }", () => {
+describe('date() localized month names with { loose: true, locale }', () => {
   it.each([
     ['es', '16 de noviembre de 2026'],
     ['es', 'lunes, 16 de noviembre de 2026'],
@@ -895,7 +895,7 @@ describe("date() in the locale's words with { loose: true, locale }", () => {
     ['ar-AE', '16 نوفمبر 2026'],
     ['ar-LB', '16 تشرين الثاني 2026'],
     ['hi', '16 नवंबर 2026'],
-  ])('reads %s %j as 2026-11-16', (locale, text) => {
+  ])('parses %s %j as 2026-11-16', (locale, text) => {
     expect(date(text, { loose: true, locale })?.toString()).toBe('2026-11-16');
   });
 
@@ -906,22 +906,21 @@ describe("date() in the locale's words with { loose: true, locale }", () => {
     ['pt-BR', '16 fev 2026', '2026-02-16'],
     ['de', '16. März 2026', '2026-03-16'],
     ['en-US', 'the 6th of September, 2026', '2026-09-06'],
-  ])('reads %s %j with ordinals, abbreviations, and connecting words as %s', (locale, text, expected) => {
+  ])('parses %s %j with an ordinal, abbreviation, or connecting word as %s', (locale, text, expected) => {
     expect(date(text, { loose: true, locale })?.toString()).toBe(expected);
   });
 
-  // an engine reads the first three letters, taking Finnish November and a Filipino or Welsh Tuesday for March
   it.each([
     ['fi', '16. marraskuuta 2026', '2026-11-16'],
     ['fil', 'Martes, Hunyo 16, 2026', '2026-06-16'],
     ['cy', 'Dydd Mawrth, 6 Hydref 2026', '2026-10-06'],
     ['es', 'mar, 16 jun 2026', '2026-06-16'],
     ['es', '16 mar 2026', '2026-03-16'],
-  ])('reads the month of %s %j from the locale rather than its English lookalike', (locale, text, expected) => {
+  ])('parses %s %j, which Date.parse reads as March or cannot read, as %s', (locale, text, expected) => {
     expect(date(text, { loose: true, locale })?.toString()).toBe(expected);
   });
 
-  it('reads English month names under any locale', () => {
+  it('parses English month names under locale "fi" and "ja"', () => {
     expect(date('Mar 17, 2026', { loose: true, locale: 'fi' })?.toString()).toBe('2026-03-17');
     expect(date('16 November 2026', { loose: true, locale: 'ja' })?.toString()).toBe('2026-11-16');
   });
@@ -931,13 +930,13 @@ describe("date() in the locale's words with { loose: true, locale }", () => {
     expect(date('16 de enero de 2026', { loose: true })?.toString()).toBe('2026-01-16');
   });
 
-  it('returns null for a nonexistent day, a two-digit year beside a month name, or a stray number', () => {
+  it('returns null for a nonexistent day, a two-digit year beside a month name, or an extra number', () => {
     expect(date('30 de febrero de 2026', { loose: true, locale: 'es' })).toBeNull();
     expect(date('16 de enero de 26', { loose: true, locale: 'es' })).toBeNull();
     expect(date('16 de enero de 2026, sala 4', { loose: true, locale: 'es' })).toBeNull();
   });
 
-  it('reads every preset of 24 locales back to the date that printed it', () => {
+  it('parses format() output of all four presets back to the same date in 24 locales', () => {
     const locales = [
       'en-US',
       'en-GB',
@@ -976,7 +975,7 @@ describe("date() in the locale's words with { loose: true, locale }", () => {
   });
 });
 
-describe('numeric date order with { loose: true, locale }', () => {
+describe('date() numeric day and month order with { loose: true, locale }', () => {
   it.each([
     ['fr', '06/11/2026'],
     ['es', '06/11/2026'],
@@ -986,33 +985,33 @@ describe('numeric date order with { loose: true, locale }', () => {
     ['es-CL', '06-11-2026'],
     ['zh-HK', '6/11/2026'],
     ['ar-AE', '06/11/2026'],
-  ])('reads %s %j day-first as 2026-11-06', (locale, text) => {
+  ])('parses %s %j day-first as 2026-11-06', (locale, text) => {
     expect(date(text, { loose: true, locale })?.toString()).toBe('2026-11-06');
   });
 
-  it('reads the same digits month-first in en-US and es-PR', () => {
+  it('parses "06/11/2026" month-first in en-US and es-PR', () => {
     expect(date('06/11/2026', { loose: true, locale: 'en-US' })?.toString()).toBe('2026-06-11');
     expect(date('06/11/2026', { loose: true, locale: 'es-PR' })?.toString()).toBe('2026-06-11');
   });
 
-  it('reads Korean two-digit years year-first', () => {
+  it('parses two-digit years year-first in ko', () => {
     expect(date('26. 5. 5.', { loose: true, locale: 'ko' })?.toString()).toBe('2026-05-05');
     expect(date('12.11.26', { loose: true, locale: 'ko' })?.toString()).toBe('2012-11-26');
   });
 
-  it('lets an explicit dayFirst option or setting override the locale', () => {
+  it('uses the dayFirst option or configure({ dayFirst }) over the locale order', () => {
     expect(date('06/11/2026', { loose: true, locale: 'fr', dayFirst: false })?.toString()).toBe('2026-06-11');
     expect(date('06/11/2026', { loose: true, locale: 'en-US', dayFirst: true })?.toString()).toBe('2026-11-06');
     configure({ dayFirst: false });
     expect(date('06/11/2026', { loose: true, locale: 'fr' })?.toString()).toBe('2026-06-11');
   });
 
-  it('returns null where the locale order names a month past 12', () => {
+  it('returns null when the locale order puts a number above 12 in the month', () => {
     expect(date('16/11/2026', { loose: true, locale: 'en-US' })).toBeNull();
     expect(date('11/16/2026', { loose: true, locale: 'fr' })).toBeNull();
   });
 
-  it('carries the order through datetime(), time(), and ranges', () => {
+  it('applies the locale order in datetime(), time(), and dateRange()', () => {
     const options = { loose: true, locale: 'ru', zone: 'UTC' };
     expect(datetime('16.11.2026, 14:30', options)?.toString()).toBe('2026-11-16T14:30:00.000Z');
     expect(time('16.11.2026 14:30', options)?.toString()).toBe('14:30:00');
@@ -1020,7 +1019,7 @@ describe('numeric date order with { loose: true, locale }', () => {
   });
 });
 
-describe('digits and widths with { loose: true }', () => {
+describe('date() and datetime() non-ASCII digits with { loose: true }', () => {
   it.each([
     ['Arabic-Indic digits', 'ar-EG', '٢٠٢٦-١١-١٦'],
     ['Arabic-Indic digits with direction marks', 'ar-EG', '١٦‏/١١‏/٢٠٢٦'],
@@ -1029,16 +1028,16 @@ describe('digits and widths with { loose: true }', () => {
     ['Devanagari digits', 'hi', '१६/११/२०२६'],
     ['fullwidth digits and slashes', 'ja', '２０２６／１１／１６'],
     ['fullwidth digits with Han units', 'ja', '２０２６年１１月１６日'],
-  ])('reads %s (%s %j) as 2026-11-16', (_form, locale, text) => {
+  ])('parses %s (%s %j) as 2026-11-16', (_form, locale, text) => {
     expect(date(text, { loose: true, locale })?.toString()).toBe('2026-11-16');
   });
 
-  it('reads a fullwidth colon and digits in a clock', () => {
+  it('parses fullwidth digits and a fullwidth colon in a clock time', () => {
     expect(datetime('2026/11/16 １４：３０', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-11-16T14:30:00.000Z');
   });
 });
 
-describe("clock times in the locale's words with { loose: true, locale }", () => {
+describe('time() and datetime() localized AM/PM with { loose: true, locale }', () => {
   it.each([
     ['ko', '오후 2:30', '14:30:00'],
     ['ko', '오전 9:05', '09:05:00'],
@@ -1046,7 +1045,7 @@ describe("clock times in the locale's words with { loose: true, locale }", () =>
     ['ja', '午後2:30', '14:30:00'],
     ['ar-EG', '٢:٣٠ م', '14:30:00'],
     ['es-MX', '5:30 p. m.', '17:30:00'],
-  ])('time() reads %s %j as %s', (locale, text, expected) => {
+  ])('time() parses %s %j as %s', (locale, text, expected) => {
     expect(time(text, { loose: true, locale })?.toString()).toBe(expected);
   });
 
@@ -1057,7 +1056,7 @@ describe("clock times in the locale's words with { loose: true, locale }", () =>
     ['pt-BR', '16 de novembro de 2026 às 14:30'],
     ['fr', 'lundi 16 novembre 2026 à 14h30'],
     ['es', '16 de noviembre de 2026 a las 14:30'],
-  ])('datetime() reads %s %j as 14:30 on 2026-11-16 in the zone', (locale, text) => {
+  ])('datetime() parses %s %j as 14:30 on 2026-11-16 in the target zone', (locale, text) => {
     expect(datetime(text, { loose: true, locale, zone: 'Asia/Tokyo' })).toMatchObject({
       zone: 'Asia/Tokyo',
       year: 2026,
@@ -1068,7 +1067,7 @@ describe("clock times in the locale's words with { loose: true, locale }", () =>
     });
   });
 
-  it("reads German 'am' before the day as a preposition rather than AM", () => {
+  it("parses German 'am' before the day without treating it as AM", () => {
     const options = { loose: true, locale: 'de', zone: 'UTC' };
     expect(datetime('am 16. November 2026 um 14:30 Uhr', options)?.toString()).toBe('2026-11-16T14:30:00.000Z');
     expect(datetime('am 16. November 2026 um 12:30', options)?.toString()).toBe('2026-11-16T12:30:00.000Z');
@@ -1079,13 +1078,13 @@ describe("clock times in the locale's words with { loose: true, locale }", () =>
     expect(time('오후 14:30', { loose: true, locale: 'ko' })).toBeNull();
   });
 
-  it("keeps '14h' and '8h' unread so they stay durations in ranges", () => {
+  it("returns null from time() for '14h' and parses '8h' as a duration in timeRange()", () => {
     expect(time('14h', { loose: true, locale: 'fr' })).toBeNull();
     expect(timeRange('22:00', '8h', { loose: true })?.toString()).toBe('22:00:00/06:00:00');
   });
 });
 
-describe("monthDay() and yearMonth() in the locale's words with { loose: true, locale }", () => {
+describe('monthDay() and yearMonth() connecting words and unit labels with { loose: true, locale }', () => {
   it.each([
     ['es', '16 del agosto', '08-16'],
     ['es-PE', '16 set.', '09-16'],
@@ -1096,7 +1095,7 @@ describe("monthDay() and yearMonth() in the locale's words with { loose: true, l
     ['ja', '11月16日', '11-16'],
     ['ko', '11월 16일', '11-16'],
     ['en-US', 'Nov 16, 2026', '11-16'],
-  ])('monthDay() reads %s %j as %s', (locale, text, expected) => {
+  ])('monthDay() parses %s %j as %s', (locale, text, expected) => {
     expect(monthDay(text, { loose: true, locale })?.toString()).toBe(expected);
   });
 
@@ -1106,23 +1105,23 @@ describe("monthDay() and yearMonth() in the locale's words with { loose: true, l
     ['fr', 'févr. 2026', '2026-02'],
     ['ar-LB', 'تشرين الثاني 2026', '2026-11'],
     ['ar-EG', 'نوفمبر ٢٠٢٦', '2026-11'],
-  ])('yearMonth() reads %s %j as %s', (locale, text, expected) => {
+  ])('yearMonth() parses %s %j as %s', (locale, text, expected) => {
     expect(yearMonth(text, { loose: true, locale })?.toString()).toBe(expected);
   });
 
-  it('returns null where the one number is the wrong part', () => {
+  it('returns null from monthDay() for a month and year and from yearMonth() for a month and day', () => {
     expect(monthDay('noviembre de 2026', { loose: true, locale: 'es' })).toBeNull();
     expect(yearMonth('16 de noviembre', { loose: true, locale: 'es' })).toBeNull();
   });
 });
 
-describe('zone abbreviations inside a string with { loose: true }', () => {
-  it('reads EST as the fixed -05:00 zone Temporal knows and leaves EDT to the engine', () => {
+describe('datetime() zone abbreviations in the input string with { loose: true }', () => {
+  it('parses EST as the fixed -05:00 IANA zone and EDT through Date.parse', () => {
     expect(datetime('2026-01-15 09:30 EST', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-01-15T14:30:00.000Z');
     expect(datetime('2026-07-15 09:30 EDT', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-07-15T13:30:00.000Z');
   });
 
-  it('returns null for capitals after the clock that neither Temporal nor the engine can place', () => {
+  it('returns null for an unknown uppercase abbreviation after the clock', () => {
     expect(datetime('2026-11-16 14:30 KST', { loose: true, zone: 'UTC' })).toBeNull();
     expect(datetime('16 de noviembre de 2026 14:30 XYZ', { loose: true, zone: 'UTC', locale: 'es' })).toBeNull();
   });

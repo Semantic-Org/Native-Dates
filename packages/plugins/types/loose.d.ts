@@ -17,18 +17,18 @@ import type {
 } from 'native-dates';
 
 /**
- * Reads an informal date-time string in the active locale's month names, AM/PM words, digits, and
- * day-month order, falling back to `Date.parse` for machine formats and rejecting impossible calendar days.
+ * Parses an informal date-time string with `Date.parse`, or with the active locale's month names,
+ * AM/PM words, digits, and day-month order from `Intl`, rejecting impossible calendar days.
+ * `timeOnly` also accepts a clock time with no date.
  * @internal
  */
 export function looseZoned(
   text: string,
-  options?: { zone?: Zone; dayFirst?: boolean; locale?: Locale; },
-  clockOnly?: boolean,
+  options?: { zone?: Zone; dayFirst?: boolean; locale?: Locale; timeOnly?: boolean; },
 ): TemporalValue | undefined;
 
 /**
- * Reads the year, month, and day that an informal partial date names (`'16 de enero'`, `'ноябрь 2026 г.'`).
+ * Parses the year, month, and day named by an informal partial date (`'16 de enero'`, `'ноябрь 2026 г.'`).
  * @internal
  */
 export function looseParts(

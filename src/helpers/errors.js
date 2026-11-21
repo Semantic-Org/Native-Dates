@@ -75,9 +75,9 @@ export const requireLoose = (at = 'loose') => {
   }
 };
 
-export const parseLoose = (text, options, clockOnly) => {
+export const parseLoose = (text, options) => {
   requireLoose();
-  return looseParser(text, options, clockOnly);
+  return looseParser(text, options);
 };
 
 // month and day or year and month written in words ('16 de enero', 'ноябрь 2026 г.')

@@ -256,7 +256,7 @@ describe('date() validation errors', () => {
     expect(() => date('16.11.2026')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '16.11.2026' }));
   });
 
-  it('throws invalidDate when a year-first string holds a clock or only two parts', () => {
+  it('throws invalidDate for a year followed by a clock time or by a month alone', () => {
     expect(() => date('2026 10:30')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '2026 10:30' }));
     expect(() => date('2026年11月')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '2026年11月' }));
   });
@@ -1250,7 +1250,7 @@ describe('CalendarDate.toJSDate(), toTemporal(), and as()', () => {
   });
 });
 
-describe('date() year-first strings with any separator', () => {
+describe('date() year-first string parsing with any separator', () => {
   it.each([
     ['Han year, month, and day units', '2026年11月16日'],
     ['unpadded Han units', '2026年1月5日', '2026-01-05'],
@@ -1258,11 +1258,11 @@ describe('date() year-first strings with any separator', () => {
     ['Korean spaced dots with a closing dot', '2026. 11. 16.'],
     ['spaces', '2026 11 16'],
     ['mixed slash and hyphen', '2026/11-16'],
-  ])('reads %s (%j)', (_form, text, expected = '2026-11-16') => {
+  ])('parses %s (%j)', (_form, text, expected = '2026-11-16') => {
     expect(date(text).toString()).toBe(expected);
   });
 
-  it('reads the long and medium presets of ja, zh-CN, and ko back to the same date', () => {
+  it('parses long and medium format() output of ja, zh-CN, and ko back to the same date', () => {
     const day = date('2026-11-16');
     for (
       const [locale, preset] of [['ja', 'long'], ['zh-CN', 'long'], ['zh-CN', 'medium'], ['ko', 'long'], [
@@ -1275,21 +1275,26 @@ describe('date() year-first strings with any separator', () => {
     }
   });
 
-  it('keeps refusing day-first and month-first strings without a leading year', () => {
-    expect(() => date('16年11月2026日')).toThrowError(expect.objectContaining({ code: 'invalidDate' }));
-    expect(() => date('11/16/2026')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '11/16/2026' }));
+  it.each(['16年11月2026日', '11/16/2026'])('throws invalidDate for %j, which has no leading year', (text) => {
+    expect(() => date(text)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidDate', at: text }),
+    );
   });
 
-  // a letter between the numbers marks an ISO week or quarter, never a month
-  it.each(['2026-W05-1', '2026W051', '2026-Q4-1', '2026x11y16'])('throws invalidDate for %j', (text) => {
-    expect(() => date(text)).toThrowError(expect.objectContaining({ code: 'invalidDate', at: text }));
-  });
+  it.each(['2026-W05-1', '2026W051', '2026-Q4-1', '2026x11y16'])(
+    'throws invalidDate for %j, where a letter separates the numbers as in ISO weeks and quarters',
+    (text) => {
+      expect(() => date(text)).toThrowError(
+        expect.objectContaining({ name: 'RangeError', code: 'invalidDate', at: text }),
+      );
+    },
+  );
 });
 
 describe('date() from Temporal values and strings in another calendar', () => {
   const persian = Temporal.PlainDate.from('2026-11-16').withCalendar('persian');
 
-  it('reads a Persian, Hebrew, or Japanese-era PlainDate as the same ISO day', () => {
+  it('converts a Persian, Hebrew, or Japanese-era Temporal.PlainDate to the same ISO date', () => {
     const reiwa = Temporal.PlainDate.from({ calendar: 'japanese', era: 'reiwa', eraYear: 8, month: 11, day: 16 });
     for (const plain of [persian, persian.withCalendar('hebrew'), reiwa]) {
       const day = date(plain);
@@ -1299,7 +1304,7 @@ describe('date() from Temporal values and strings in another calendar', () => {
     }
   });
 
-  it('formats, adds, and measures from the ISO fields rather than the source calendar', () => {
+  it('formats and calculates with ISO fields after converting a Persian Temporal.PlainDate', () => {
     const day = date(persian);
     expect(day.format('YYYY-MM-DD')).toBe('2026-11-16');
     expect(day.format('medium', 'en-US')).toBe('Nov 16, 2026');
@@ -1307,7 +1312,7 @@ describe('date() from Temporal values and strings in another calendar', () => {
     expect(date('2026-11-15').until(persian).toString()).toBe('P1D');
   });
 
-  it('reads a PlainDateTime in another calendar and a [u-ca=] annotated string', () => {
+  it('converts a Persian Temporal.PlainDateTime and a [u-ca=persian] string to ISO fields', () => {
     expect(date(persian.toPlainDateTime()).toString()).toBe('2026-11-16');
     expect(date('2026-11-16[u-ca=persian]')).toMatchObject({ year: 2026, month: 11, day: 16 });
   });
@@ -1328,13 +1333,13 @@ describe('CalendarDate.isWeekend() and isWeekday() by locale', () => {
     ['he-IL', [false, true, true, false]],
     ['fa-IR', [false, true, false, false]],
     ['hi-IN', [false, false, false, true]],
-  ])('follows the %s weekend from Thursday through Sunday', (locale, weekend) => {
+  ])('returns the %s weekend days for Thursday through Sunday', (locale, weekend) => {
     const days = [thursday, friday, saturday, sunday].map((day) => day.locale(locale));
     expect(days.map((day) => day.isWeekend())).toEqual(weekend);
     expect(days.map((day) => day.isWeekday())).toEqual(weekend.map((rests) => !rests));
   });
 
-  it('follows configure({ locale }) when the date carries no locale', () => {
+  it('uses configure({ locale }) when the date has no locale', () => {
     configure({ locale: 'ar-EG' });
     expect([friday.isWeekend(), sunday.isWeekend()]).toEqual([true, false]);
   });

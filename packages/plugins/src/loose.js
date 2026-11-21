@@ -1,102 +1,121 @@
 import { setLooseExtension } from 'native-dates/helpers/errors';
+import { cached } from 'native-dates/helpers/intl';
 import { names } from 'native-dates/helpers/tokens';
+import { isInstant, pad } from 'native-dates/helpers/units';
+import { each } from 'native-dates/helpers/utils';
 import { dayFirst as readsDayFirst, locale as pickLocale, zoneId } from 'native-dates/helpers/zones';
 
 /*
-  reads informal dates the way the active locale writes them. Intl supplies the month names, AM/PM words,
-  and day-month order, Temporal checks the calendar, and Date.parse reads the machine formats (RFC 2822, asctime)
+  parses informal dates and times. Text in the active locale's own words is read with the month names,
+  AM/PM words, and day-month order that Intl has for it, and everything else goes to Date.parse
 */
 
-// digits in any script count up from their zero ('٥' sits five above '٠'), and NFKC narrows fullwidth forms
+// Unicode lists each script's digits in order from zero, so a digit's value is its distance from that zero
 const digitValue = (digit) => {
   let value = 0;
   while (/\p{Nd}/u.test(String.fromCodePoint(digit.codePointAt(0) - value - 1))) {
     value++;
   }
-  return value % 10;
+  return value;
 };
-const fold = (text) =>
+
+// write fullwidth forms at normal width and every script's digits in ASCII, without the direction marks
+// that Arabic dates carry between their parts
+const normalize = (text) =>
   text.normalize('NFKC').replace(/[\u200e\u200f\u061c]/g, '').replace(/(?![0-9])\p{Nd}/gu, digitValue);
 
-// a name counts only as a whole word, so 'mar' is not found inside 'martes'
-const either = (spellings) => spellings.map((text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-const word = (spellings) => new RegExp(`(?<![\\p{L}\\p{M}])(?:${either(spellings)})(?![\\p{L}\\p{M}])`, 'u');
+// lowercase words between single spaces, so ' mar ' is found in ' mar 17 ' and not in ' martes '
+const wordsOf = (text, locale) => ` ${(text.toLocaleLowerCase(locale).match(/[\p{L}\p{M}]+/gu) ?? []).join(' ')} `;
 
-// AM and PM count only against the clock, marked here as \0, so German 'am 16. November' stays a preposition
-const half = (letter, name) => {
-  const names = `(?:${letter}\\.? ?m\\.?|${either([name])})`;
-  return new RegExp(`(?<![\\p{L}\\p{M}])${names} ?\\0|\\0 ?${names}(?![\\p{L}\\p{M}])`, 'u');
-};
+// every spelling Intl has for the twelve months, longest first so 'تشرين الثاني' is found before 'تشرين'
+const monthsFrom = (table, locale) =>
+  [table.MMMM, table.besideDay.MMMM, table.MMM, table.besideDay.MMM]
+    .flatMap((list) => list.map((name, index) => ({ name, month: index + 1 })))
+    // '11月' and 'tháng 11' are numbers rather than names
+    .filter(({ name }) => /\p{L}/u.test(name) && !/\p{N}/u.test(name))
+    .map(({ name, month }) => ({ name: wordsOf(name, locale), month }))
+    .sort((first, second) => second.name.length - first.name.length);
 
-// what Intl says about how one locale writes a date
-const written = new Map();
-const writtenIn = (tag) => {
-  const key = String(tag);
-  if (!written.has(key)) {
-    const lowered = (list) => list.map((name) => fold(name).toLocaleLowerCase(tag).replace(/\.$/, ''));
-    const [english, own] = [names('en'), names(tag)];
-    const [am, pm] = lowered(own.dayPeriods);
-    written.set(key, {
-      // '11月' and 'tháng 11' are numbers rather than names, and the longest name wins ('تشرين الثاني' over 'تشرين')
-      months: [english, own].map((table) =>
-        [table.MMMM, table.besideDay.MMMM, table.MMM, table.besideDay.MMM]
-          .flatMap((list) => lowered(list).map((name, index) => ({ name, month: index + 1, whole: word([name]) })))
-          .filter(({ name }) => !/\p{N}/u.test(name))
-          .sort((first, second) => second.name.length - first.name.length)
-      ),
-      weekday: word(lowered([...own.dddd, ...own.ddd, ...english.dddd, ...english.ddd])),
-      halves: [half('a', am), half('p', pm)],
-      order: new Intl.DateTimeFormat(tag, { dateStyle: 'short' }).formatToParts(0)
-        .map((part) => part.type).filter((type) => /year|month|day/.test(type)),
-    });
-  }
-  return written.get(key);
-};
+// how one locale writes a date, as Intl reports it
+const localeData = cached((locale) => {
+  const [english, localized] = [names('en'), names(locale)];
+  return {
+    englishMonths: monthsFrom(english, locale),
+    localizedMonths: monthsFrom(localized, locale),
+    weekdays: [...localized.dddd, ...localized.ddd, ...english.dddd, ...english.ddd].map((name) =>
+      wordsOf(name, locale)
+    ),
+    dayPeriods: localized.dayPeriods.map((name) => normalize(name).toLocaleLowerCase(locale)),
+    order: new Intl.DateTimeFormat(locale, { dateStyle: 'short' }).formatToParts(0)
+      .map((part) => part.type)
+      .filter((type) => type === 'year' || type === 'month' || type === 'day'),
+  };
+});
 
-// a month is written out ('marraskuuta', 'تشرين الثاني') or cut short ('sept', 'нояб'). English is checked first
-// so 'Mar 17' is March even in Finnish, and a weekday that spells a month is set aside ('mar, 16 jun', 'Dydd Mawrth')
-const monthIn = (text, { months, weekday }) => {
-  const cuts = text.match(/[\p{L}\p{M}]{3,}/gu) ?? [];
-  for (const dated of [text.replace(weekday, ''), text]) {
-    for (const [index, table] of months.entries()) {
-      const found = table.find(({ whole }) => whole.test(dated))
-        ?? table.find(({ name }) => cuts.some((cut) => name.startsWith(cut)));
-      if (found) {
-        return { month: found.month, own: index > 0 };
-      }
+// a month is written out ('marraskuuta', 'تشرين الثاني') or cut short ('sept', 'нояб')
+const monthAmong = (words, months) =>
+  months.find(({ name }) => words.includes(name))
+    ?? months.find(({ name }) => words.split(' ').some((word) => word.length > 2 && name.startsWith(` ${word}`)));
+
+const findMonth = (text, locale) => {
+  const { englishMonths, localizedMonths, weekdays } = localeData(locale);
+  const words = wordsOf(text, locale);
+  // a weekday that opens the text can spell a month ('mar, 16 jun' in Spanish, 'Dydd Mawrth' in Welsh),
+  // so look past it first
+  const weekday = weekdays.find((name) => words.startsWith(name));
+  const afterWeekday = weekday ? words.slice(weekday.length - 1) : words;
+  for (const candidate of [afterWeekday, words]) {
+    // English is checked first so 'Mar 17' is March even in Finnish, where 'marraskuu' is November
+    const english = monthAmong(candidate, englishMonths);
+    const localized = english ?? monthAmong(candidate, localizedMonths);
+    if (localized) {
+      return { month: localized.month, isEnglish: !!english };
     }
   }
   return {};
 };
 
-// year, month, and day from a date written with a month name or in the locale's numeric order
-const fieldsIn = (text, tag, dayFirst) => {
-  const facts = writtenIn(tag);
+// year, month, and day from a date written with a month name or as numbers alone. A number of three or
+// more digits is a year, so only a numeric date depends on whether the day or the month comes first
+const dateParts = (text, locale, dayFirst) => {
   const numbers = text.match(/\d+/g) ?? [];
-  const long = (number) => number.length > 2;
-  const { month } = monthIn(text, facts);
+  const isYear = (number) => number.length > 2;
+  const { month } = findMonth(text, locale);
   if (month) {
-    return numbers.length < 3 && { year: numbers.find(long), month, day: numbers.find((number) => !long(number)) };
+    return numbers.length < 3
+      ? { year: numbers.find(isYear), month, day: numbers.find((number) => !isYear(number)) }
+      : undefined;
   }
-  const order = long(numbers[0] ?? '')
-    ? ['year', 'month', 'day']
-    : dayFirst === undefined
-    ? facts.order
-    : dayFirst
-    ? ['day', 'month', 'year']
-    : ['month', 'day', 'year'];
-  // two numbers are a year and month when one is long, and a month and day otherwise
-  const missing = numbers.length > 2 ? '' : numbers.some(long) ? 'day' : 'year';
-  return numbers.length > 1 && numbers.length < 4
-    && Object.fromEntries(order.filter((part) => part !== missing).map((part, index) => [part, numbers[index]]));
+  if (numbers.length < 2 || numbers.length > 3) {
+    return undefined;
+  }
+  let order = localeData(locale).order;
+  if (isYear(numbers[0])) {
+    order = ['year', 'month', 'day'];
+  }
+  else if (dayFirst !== undefined) {
+    order = dayFirst ? ['day', 'month', 'year'] : ['month', 'day', 'year'];
+  }
+  // two numbers are a year and month when one is a year, and a month and day otherwise
+  const absent = numbers.length === 3 ? undefined : numbers.some(isYear) ? 'day' : 'year';
+  const parts = {};
+  each(order.filter((part) => part !== absent), (part, index) => {
+    parts[part] = numbers[index];
+  });
+  return parts;
 };
 
-// engines parse numeric '7/9/26' month-first, so put the fields in that order before Date.parse sees them
+// engines parse numeric '7/9/26' month-first, so write the parts in that order before Date.parse sees them
 const numeric = /^(\d{1,2})[./-] ?(\d{1,2})[./-] ?(\d{1,4})\b\.?(.*)$/s;
-const engineOrder = (text, tag, dayFirst) => {
-  const parts = numeric.exec(text);
-  const { year, month, day } = parts ? fieldsIn(parts.slice(1, 4).join(' '), tag, dayFirst) : {};
-  return year?.length > 1 ? `${month}/${day}/${year}${parts[4]}` : text;
+const engineOrder = (text, locale, dayFirst) => {
+  const match = numeric.exec(text);
+  if (!match) {
+    return text;
+  }
+  const [, first, second, third, rest] = match;
+  const { year, month, day } = dateParts(`${first} ${second} ${third}`, locale, dayFirst);
+  // a one-digit year like '9/6/5' is left for the engine to judge
+  return year.length > 1 ? `${month}/${day}/${year}${rest}` : text;
 };
 
 // match zone abbreviations ('EDT', 'UTC', 'GMT+2'), trailing Z, or offsets after spaces or clock times
@@ -120,86 +139,131 @@ const rolledForward = (text, read, wallClock) => {
 };
 
 // Date.parse interprets zoned strings as instants and unzoned strings in the host timezone (UTC for date-only ISO).
-// Stripping zoneMarker parses the written wall clock in the host timezone so local inputs don't shift when placed into a zone
-const engineRead = (text) => {
+// Stripping zoneMarker parses the written wall clock in the host timezone so local inputs don't shift when placed
+// into a zone. Returns that wall clock, or the instant when the text names its own zone or offset
+const parseWithEngine = (text) => {
   const unzoned = text.replace(zoneMarker, '$1$2');
-  const [epoch, local] = [Date.parse(text), Date.parse(unzoned)];
-  if (Number.isNaN(epoch) || Number.isNaN(local)) {
+  const [epoch, written] = [Date.parse(text), Date.parse(unzoned)];
+  if (Number.isNaN(epoch) || Number.isNaN(written)) {
     return undefined;
   }
   const host = dateOnly.test(text) ? 'UTC' : Temporal.Now.timeZoneId();
   const wallClock = (milliseconds) => Temporal.Instant.fromEpochMilliseconds(milliseconds).toZonedDateTimeISO(host);
-  const read = wallClock(local);
+  const read = wallClock(written);
   if (rolledForward(unzoned, read, wallClock)) {
     return undefined;
   }
   return unzoned === text ? read.toPlainDateTime() : Temporal.Instant.fromEpochMilliseconds(epoch);
 };
 
-// a date in the locale's words or order beside an optional clock ('16 de noviembre de 2026 a las 18:30',
-// '2026년 11월 16일 오후 2:30'), ignoring the words between them
-const clock = /(\d{1,2})(?::| ?h ?)(\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?/;
-const localeRead = (text, tag, dayFirst, clockOnly) => {
-  const lower = text.toLocaleLowerCase(tag).replace(/\([^)]*\)/g, ' ');
-  const hands = clock.exec(lower);
-  const dated = hands ? lower.replace(hands[0], '\0') : lower;
-  const fields = fieldsIn(dated, tag, dayFirst);
+const clockTime = /(\d{1,2})(?::| ?h ?)(\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?/;
+const meridiem = /^ ?([ap])\.? ?m\.?(?![\p{L}\p{M}])/u;
+
+// AM or PM written against the clock, in English or in the locale's own words ('오후 2:30', '٢:٣٠ م').
+// German 'am 16. November' sits against the day, so it stays a preposition
+const isAfternoon = (before, after, locale) => {
+  const english = meridiem.exec(after)?.[1];
+  if (english) {
+    return english === 'p';
+  }
+  const [am, pm] = localeData(locale).dayPeriods;
+  const beside = (period) => after.trimStart().startsWith(period) || before.trimEnd().endsWith(period);
+  return beside(pm) ? true : beside(am) ? false : undefined;
+};
+
+// a date in the locale's own words or order with an optional clock ('16 de noviembre de 2026 a las 18:30',
+// '2026년 11월 16일 오후 2:30'), read as a wall clock. Other words around them are ignored
+const parseWithLocale = (text, { locale, dayFirst, timeOnly }) => {
+  const lower = text.toLocaleLowerCase(locale);
+  const clock = clockTime.exec(lower);
+  const before = clock ? lower.slice(0, clock.index) : lower;
+  const after = clock ? lower.slice(clock.index + clock[0].length) : '';
+  const parts = dateParts(`${before} ${after}`, locale, dayFirst);
   try {
-    const day = clockOnly && hands && !/\d/.test(dated)
-      ? Temporal.Now.plainDateISO()
-      : fields && fields.year?.length > 2 && fields.day
-      ? Temporal.PlainDate.from({ year: +fields.year, month: +fields.month, day: +fields.day }, { overflow: 'reject' })
-      : undefined;
-    if (!hands) {
-      return day?.toPlainDateTime();
+    let date;
+    if (parts?.year?.length > 2 && parts.day) {
+      date = Temporal.PlainDate.from({ year: +parts.year, month: +parts.month, day: +parts.day }, {
+        overflow: 'reject',
+      });
     }
-    const [, hour, minute, second = '00', fraction = '0'] = hands;
-    const afternoon = writtenIn(tag).halves.findIndex((name) => name.test(dated));
-    // '2:30' beside 'pm', '오후', or 'م' is 14:30, and an hour past 12 beside one does not exist
-    const hours = afternoon < 0 ? hour : hour > 0 && hour < 13 ? (hour % 12) + 12 * afternoon : 24;
-    return day?.toPlainDateTime(`${String(hours).padStart(2, '0')}:${minute}:${second}.${fraction}`);
+    else if (timeOnly && clock && !/\d/.test(before + after)) {
+      date = Temporal.Now.plainDateISO();
+    }
+    if (!date || !clock) {
+      return date?.toPlainDateTime();
+    }
+    const [, hourText, minute, second = '00', fraction = '0'] = clock;
+    let hour = +hourText;
+    const afternoon = isAfternoon(before, after, locale);
+    if (afternoon !== undefined) {
+      if (hour < 1 || hour > 12) {
+        return undefined;
+      }
+      hour = (hour % 12) + (afternoon ? 12 : 0);
+    }
+    return date.toPlainDateTime(`${pad(hour)}:${minute}:${second}.${fraction}`);
   }
   catch {
     return undefined;
   }
 };
 
-// an abbreviation written after the clock means what it means as the zone argument ('14:30 CST', '14:30:00 UTC 2026',
-// '14:30 мск'), unless an offset sits beside it ('14:30:00 +0800 CST'). Latin letters count only in capitals, so
-// 'at', 'Uhr', and 'wake' stay words
-const zoneWord =
+// a zone abbreviation written after the clock ('14:30 CST', '14:30:00 UTC 2026', '14:30 мск'). Latin letters
+// count only in capitals so 'at', 'Uhr', and 'wake' stay words, and an offset written before it is captured
+// with the clock so the offset decides the instant ('14:30:00 +0800 CST')
+const zoneAbbreviation =
   /(\d:\d{2}(?::\d{2}(?:\.\d+)?)?(?: ?[AaPp]\.?[Mm]\.?)?(?: [+-]\d{2}:?\d{2})?) (?![AP]M\b)(\p{Lu}{2}|(?:(?![a-z])[\p{L}\p{M}]){3,5})(?![\p{L}\p{M}+]|-\d)/u;
 
-export const looseZoned = (input, { zone, dayFirst, locale } = {}, clockOnly) => {
-  const tag = pickLocale(locale);
-  const order = readsDayFirst(dayFirst);
-  let text = fold(input.trim());
-  let named;
-  let unknown;
-  const zoned = zoneWord.exec(text);
-  if (zoned) {
-    try {
-      named = zoneId(zoned[2], tag);
-      text = text.replace(zoned[0], zoned[1]);
-    }
-    catch {
-      // capitals nobody can place ('14:30 XYZ') may be a zone, so only Date.parse gets to read them
-      unknown = zoned[2] === zoned[2].toUpperCase();
-    }
+const zoneNamed = (name, locale) => {
+  try {
+    return zoneId(name, locale);
   }
-  const read = (monthIn(text.toLocaleLowerCase(tag), writtenIn(tag)).own
-    ? undefined
-    : engineRead(engineOrder(text, tag, order))) ?? (unknown ? undefined : localeRead(text, tag, order, clockOnly));
-  const target = zoneId(zone, tag);
-  return read instanceof Temporal.Instant
-    ? read.toZonedDateTimeISO(target)
-    : read && (named ? read.toZonedDateTime(named).withTimeZone(target) : read.toZonedDateTime(target));
+  catch {
+    return undefined;
+  }
 };
 
-// month and day or year and month for the partial nouns, where Date.parse would add a year or day of its own
-export const looseParts = (input, { dayFirst, locale } = {}) => {
-  const tag = pickLocale(locale);
-  return fieldsIn(fold(input).toLocaleLowerCase(tag), tag, dayFirst) || undefined;
+export const looseZoned = (input, { zone, dayFirst, locale, timeOnly } = {}) => {
+  const activeLocale = pickLocale(locale);
+  const order = readsDayFirst(dayFirst);
+  let text = normalize(input.trim());
+
+  // an abbreviation in the text means what it means as the zone argument, so it is resolved here
+  // rather than left to Date.parse, which reads 'CST' as -06:00 everywhere and cannot read 'KST'
+  let writtenZone;
+  let hasUnknownZone = false;
+  const abbreviation = zoneAbbreviation.exec(text);
+  if (abbreviation) {
+    const [matched, clock, name] = abbreviation;
+    writtenZone = zoneNamed(name, activeLocale);
+    if (writtenZone) {
+      text = text.replace(matched, clock);
+    }
+    else {
+      hasUnknownZone = name === name.toUpperCase();
+    }
+  }
+
+  // a month in the locale's own words is beyond the engine, which reads Finnish 'marraskuuta' as March
+  const { month, isEnglish } = findMonth(text, activeLocale);
+  let read = month && !isEnglish ? undefined : parseWithEngine(engineOrder(text, activeLocale, order));
+  // capitals that name no zone ('14:30 XYZ') may still be one, so the text is not read without them
+  if (!read && !hasUnknownZone) {
+    read = parseWithLocale(text, { locale: activeLocale, dayFirst: order, timeOnly });
+  }
+  if (!read) {
+    return undefined;
+  }
+  const timeZone = zoneId(zone, activeLocale);
+  if (isInstant(read)) {
+    return read.toZonedDateTimeISO(timeZone);
+  }
+  return writtenZone ? read.toZonedDateTime(writtenZone).withTimeZone(timeZone) : read.toZonedDateTime(timeZone);
 };
+
+// month and day or year and month for monthDay() and yearMonth(). Date.parse is avoided here because V8
+// defaults yearless strings like 'Feb 29' to 2001 and rolls them into March
+export const looseParts = (input, { dayFirst, locale } = {}) =>
+  dateParts(normalize(input), pickLocale(locale), dayFirst);
 
 setLooseExtension(looseZoned, looseParts);

@@ -126,7 +126,7 @@ export class Time {
         if (!settings.loose || error.code !== 'invalidTime') {
           throw error;
         }
-        const zoned = parseLoose(input, settings, true);
+        const zoned = parseLoose(input, { ...settings, timeOnly: true });
         if (!zoned) {
           throw error;
         }

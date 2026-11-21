@@ -276,7 +276,7 @@ describe('weekStart fallback without Intl.Locale.prototype.getWeekInfo', () => {
     expect(Object.getOwnPropertyDescriptor(Intl.Locale.prototype, 'getWeekInfo')?.enumerable).toBe(false);
   });
 
-  it('treats Saturday and Sunday as the weekend without getWeekInfo', () => {
+  it('defaults isWeekend() to Saturday and Sunday without getWeekInfo', () => {
     withoutWeekInfo(() => {
       const friday = wednesday.plus(2, 'days').locale('ar-KW');
       expect([friday.isWeekend(), friday.plus(1, 'day').isWeekend()]).toEqual([false, true]);

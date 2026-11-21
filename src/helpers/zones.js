@@ -46,13 +46,13 @@ export const zoneId = (id, tag) => {
         : 0,
     });
   }
-  const asked = locale(tag);
-  const key = `${id}|${asked ?? ''}`;
+  const activeLocale = locale(tag);
+  const key = `${id}|${activeLocale ?? ''}`;
   const known = resolved.get(key);
   if (known) {
     return known;
   }
-  const found = zoneExtension ? zoneExtension(id, settings.zoneAliases, asked) : canonicalZone(id.trim());
+  const found = zoneExtension ? zoneExtension(id, settings.zoneAliases, activeLocale) : canonicalZone(id.trim());
   if (!found) {
     refuse('unknownZone', id, {
       explanation: isDevelopment
@@ -182,21 +182,24 @@ export const locale = (override) =>
 // undefined leaves the order to the locale
 export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);
 
-const weeks = new Map();
-const weekOf = (tag) => {
-  const read = locale(tag);
-  const key = String(read);
-  if (!weeks.has(key)) {
+// the first day and the weekend days of a locale's week, Monday and Saturday-Sunday where the runtime has no week data
+const weekInfos = new Map();
+const weekInfo = (tag) => {
+  const activeLocale = locale(tag);
+  const key = String(activeLocale);
+  if (!weekInfos.has(key)) {
     // pass single tag strings straight to Intl.Locale so region and -u-fw- extensions survive,
     // resolving through DateTimeFormat only for undefined (system locale) or tag arrays
-    const asked = isString(read) ? read : new Intl.DateTimeFormat(read).resolvedOptions().locale;
-    weeks.set(key, new Intl.Locale(asked).getWeekInfo?.() ?? { firstDay: 1, weekend: [6, 7] });
+    const resolvedLocale = isString(activeLocale)
+      ? activeLocale
+      : new Intl.DateTimeFormat(activeLocale).resolvedOptions().locale;
+    weekInfos.set(key, new Intl.Locale(resolvedLocale).getWeekInfo?.() ?? { firstDay: 1, weekend: [6, 7] });
   }
-  return weeks.get(key);
+  return weekInfos.get(key);
 };
 
 export const weekStart = (override, tag) =>
-  override !== undefined ? dayOfWeek(override) : settings.weekStart ?? weekOf(tag).firstDay;
+  override !== undefined ? dayOfWeek(override) : settings.weekStart ?? weekInfo(tag).firstDay;
 
 // Friday and Saturday in ar-SA, Friday alone in fa-IR, Sunday alone in hi-IN
-export const isWeekend = (day, tag) => weekOf(tag).weekend.includes(day);
+export const isWeekend = (day, tag) => weekInfo(tag).weekend.includes(day);

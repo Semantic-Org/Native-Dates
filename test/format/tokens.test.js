@@ -585,7 +585,7 @@ describe('configure({ ordinals })', () => {
   });
 });
 
-describe('format() token patterns holding unbracketed words', () => {
+describe('format() unbracketed words in token patterns', () => {
   const moment = datetime('2026-05-06T14:30:07', 'UTC');
 
   it.each([
@@ -595,18 +595,18 @@ describe('format() token patterns holding unbracketed words', () => {
     ['Catalan ordinal è', 'Dè MMMM'],
     ["French 'h' after the hour", 'HHhmm'],
     ["spaced French 'h' after the hour", 'HH h mm'],
-  ])('throws unknownFormat for %s in %j rather than printing a token inside the word', (_word, pattern) => {
+  ])('throws unknownFormat for unbracketed %s in %j', (_word, pattern) => {
     expect(() => moment.format(pattern)).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: pattern }),
     );
   });
 
-  it('prints the bracketed spellings of the same words', () => {
+  it('formats the same words when they are wrapped in brackets', () => {
     expect(moment.format('DD/MM/YYYY [às] HH:mm', 'pt-BR')).toBe('06/05/2026 às 14:30');
     expect(moment.format('HH[h]mm', 'fr')).toBe('14h30');
   });
 
-  it('keeps a lone accented letter, a non-Latin suffix, and an ordinal mark beside a token as literals', () => {
+  it('copies a lone accented letter, a non-Latin suffix, and an ordinal mark beside a token to the output', () => {
     expect(moment.format('D MMMM YYYY à HH:mm', 'fr')).toBe('6 mai 2026 à 14:30');
     expect(moment.format('D MMMM YYYYг.', 'ru')).toBe('6 мая 2026г.');
     expect(moment.format('Dº [de] MMMM', 'es')).toBe('6º de mayo');
@@ -615,17 +615,17 @@ describe('format() token patterns holding unbracketed words', () => {
   });
 });
 
-describe('format() month case beside a day token', () => {
+describe('format() genitive month names beside a day token', () => {
   const day = date('2026-05-06');
 
-  it('uses the genitive month when only literal text separates it from the day', () => {
+  it('uses genitive/format month names when only literal text separates the month from the day', () => {
     expect(day.format('D-го MMMM', 'ru')).toBe('6-го мая');
     expect(day.format('D[-го] MMMM', 'ru')).toBe('6-го мая');
     expect(day.format('D.MMMM', 'pl')).toBe('6.maja');
     expect(day.format('D, MMMM', 'ru')).toBe('6, мая');
   });
 
-  it('keeps the standalone month when another token sits between it and the day', () => {
+  it('uses standalone month names when another token separates the month from the day', () => {
     expect(datetime('2026-05-06T14:30', 'UTC').format('D HH:mm MMMM', 'ru')).toBe('6 14:30 май');
     expect(day.format('MMMM YYYY', 'ru')).toBe('май 2026');
   });
