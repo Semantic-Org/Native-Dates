@@ -8,10 +8,6 @@ Active package decisions grouped by area, newest first.
 
 ### Zones, Offsets, and Serialization
 
-- **D22:** The zones plugin ships names IANA files under another city and reads `CST` by the caller's locale (2026-11-21, 70% confident) [L137-L143](decisions/package.md#d22-the-zones-plugin-ships-names-iana-files-under-another-city-and-reads-cst-by-the-callers-locale-2026-11-21)
-  - Reopen: requests for more cities turn the table into an open-ended gazetteer, or a locale-picked reading surprises callers whose locale and data come from different countries.
-- **D21:** A time zone abbreviation written inside a loose string means what it means as the zone argument (2026-11-21, 70% confident) [L129-L135](decisions/package.md#d21-a-time-zone-abbreviation-written-inside-a-loose-string-means-what-it-means-as-the-zone-argument-2026-11-21)
-  - Reopen: callers parsing email or HTTP dates rely on the RFC 2822 fixed offsets for `EST` or `PST` while the zones plugin is loaded.
 - **D2:** `DateTime` serializes to ISO 8601 UTC rather than Temporal's bracketed `[Zone]` string (2026-11-05) [L11-L15](decisions/package.md#d2-datetime-serializes-to-iso-8601-utc-rather-than-temporals-bracketed-zone-string-2026-11-05)
   - Reopen: RFC 9557 bracketed zone strings gain broad database and parser support and callers request round-tripping `.zone` through JSON.
 - **D1:** Trailing `Z` and numeric offsets in `datetime()` set the instant, not `.zone` (2026-11-05) [L5-L9](decisions/package.md#d1-trailing-z-and-numeric-offsets-in-datetime-set-the-instant-not-zone-2026-11-05)
@@ -31,8 +27,6 @@ Active package decisions grouped by area, newest first.
 
 ### Arithmetic, Boundaries, and Weekdays
 
-- **D19:** `isWeekend()` and `isWeekday()` follow the locale's weekend like week boundaries do (2026-11-21, 80% confident) [L113-L119](decisions/package.md#d19-isweekend-and-isweekday-follow-the-locales-weekend-like-week-boundaries-do-2026-11-21)
-  - Reopen: server code keys payroll or business-day logic on `isWeekend()` and gets different answers across requests carrying different `.locale()` tags.
 - **D17:** Adjacent unit boundaries use `startOfNext()` and `startOfPrevious()` instead of overloading `next()` and `previous()` (2026-11-19) [L101-L105](decisions/package.md#d17-adjacent-unit-boundaries-use-startofnext-and-startofprevious-instead-of-overloading-next-and-previous-2026-11-19)
   - Reopen: callers consistently try unit names in `next()` and `previous()`, or expect numeric weekdays in `startOfNext()`.
 - **D14:** Numeric day of the week is `dayOfWeek` (`1`-`7`) while token `d` keeps Moment's `0`-`6` (2026-11-17) [L83-L87](decisions/package.md#d14-numeric-day-of-the-week-is-dayofweek-1-7-while-token-d-keeps-moments-0-6-2026-11-17)
@@ -51,8 +45,6 @@ Active package decisions grouped by area, newest first.
 
 ### Parsing, Inputs, and Comparisons
 
-- **D20:** Loose parsing reads non-ISO dates in the locale's own order and words, with `dayFirst` as an override (2026-11-21, 80% confident) [L121-L127](decisions/package.md#d20-loose-parsing-reads-non-iso-dates-in-the-locales-own-order-and-words-with-dayfirst-as-an-override-2026-11-21)
-  - Reopen: a locale's short date order differs from what its users type, or parsing by the runtime's default locale misreads input on servers that never attach a locale.
 - **D12:** Core parses unambiguous non-ISO inputs and refuses inputs with two readings (2026-11-16) [L71-L75](decisions/package.md#d12-core-parses-unambiguous-non-iso-inputs-and-refuses-inputs-with-two-readings-2026-11-16)
   - Reopen: a non-ISO form accepted in core misparses real input, or callers repeatedly hit one of the remaining refusals where an explicit option could disambiguate.
 
@@ -114,11 +106,3 @@ Every package decision (`D1`..`Dn`) in file order.
   - Reopen: callers consistently try unit names in `next()` and `previous()`, or expect numeric weekdays in `startOfNext()`.
 - **D18:** `native-dates/helpers/*` stays open for official plugins without semver guarantees (2026-11-20) [L107-L111](decisions/package.md#d18-native-dateshelpers-stays-open-for-official-plugins-without-semver-guarantees-2026-11-20)
   - Reopen: third-party consumers couple to `native-dates/helpers/*` in production and break on minor releases.
-- **D19:** `isWeekend()` and `isWeekday()` follow the locale's weekend like week boundaries do (2026-11-21, 80% confident) [L113-L119](decisions/package.md#d19-isweekend-and-isweekday-follow-the-locales-weekend-like-week-boundaries-do-2026-11-21)
-  - Reopen: server code keys payroll or business-day logic on `isWeekend()` and gets different answers across requests carrying different `.locale()` tags.
-- **D20:** Loose parsing reads non-ISO dates in the locale's own order and words, with `dayFirst` as an override (2026-11-21, 80% confident) [L121-L127](decisions/package.md#d20-loose-parsing-reads-non-iso-dates-in-the-locales-own-order-and-words-with-dayfirst-as-an-override-2026-11-21)
-  - Reopen: a locale's short date order differs from what its users type, or parsing by the runtime's default locale misreads input on servers that never attach a locale.
-- **D21:** A time zone abbreviation written inside a loose string means what it means as the zone argument (2026-11-21, 70% confident) [L129-L135](decisions/package.md#d21-a-time-zone-abbreviation-written-inside-a-loose-string-means-what-it-means-as-the-zone-argument-2026-11-21)
-  - Reopen: callers parsing email or HTTP dates rely on the RFC 2822 fixed offsets for `EST` or `PST` while the zones plugin is loaded.
-- **D22:** The zones plugin ships names IANA files under another city and reads `CST` by the caller's locale (2026-11-21, 70% confident) [L137-L143](decisions/package.md#d22-the-zones-plugin-ships-names-iana-files-under-another-city-and-reads-cst-by-the-callers-locale-2026-11-21)
-  - Reopen: requests for more cities turn the table into an open-ended gazetteer, or a locale-picked reading surprises callers whose locale and data come from different countries.
