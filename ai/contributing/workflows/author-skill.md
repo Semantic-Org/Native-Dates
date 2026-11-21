@@ -1,16 +1,16 @@
 ---
-title: Authoring and Evaluating Downstream Skills
-description: Workflow for scoping, chunking, writing, cold-evaluating, and verifying downstream user skills in ai/skills/ following Semantic UI house conventions.
+title: Authoring and Evaluating Skills
+description: Workflow for scoping, chunking, writing, cold-evaluating, and verifying skills in ai/skills/ following Semantic UI house conventions.
 keywords: [skills, ai-author-context, fresh-agent evaluation, llms.txt, MCP, chunking, ground truth]
 audience: contributing
-workflow: author-user-skill
+workflow: author-skill
 type: workflow
 ---
 
-# Authoring and Evaluating Downstream Skills
+# Authoring and Evaluating Skills
 
-> **Workflow:** `author-user-skill`
-> **Load when:** creating, rewriting, or evaluating downstream user skills in `ai/skills/`
+> **Workflow:** `author-skill`
+> **Load when:** creating, rewriting, or evaluating skills in `ai/skills/`
 
 Read the [authoring standard](../standards/ai-author-context.md) before writing or editing any file in `ai/skills/`. That standard defines the craft rules for frontmatter, section headers, emotional register, and paired examples. This workflow covers the authoring and review process.
 

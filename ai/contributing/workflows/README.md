@@ -2,12 +2,12 @@
 
 Step-by-step guides for working in `native-dates`. Load only the workflow for your current task.
 
-Consumer skills published with the package belong in [skills](../../skills/). Design rulings are in [decisions](../decisions.md) and shared standards are in [standards](../standards/README.md).
+Skills published with the package belong in [skills](../../skills/). Design rulings are in [decisions](../decisions.md) and shared standards are in [standards](../standards/README.md).
 
 | Workflow | Load when |
 |---|---|
 | [`contribute.md`](contribute.md) | Fixing or reporting a bug, or adding a feature on behalf of a human contributor |
-| [`author-user-skill.md`](author-user-skill.md) | Authoring, rewriting, or evaluating downstream user skills in `ai/skills/` |
+| [`author-skill.md`](author-skill.md) | Authoring, rewriting, or evaluating skills in `ai/skills/` |
 | [`clean-room-dx-review.md`](clean-room-dx-review.md) | Commissioning a quarantined fresh-reader DX review over candidate public API surface |
 | [`read-ci-reports.md`](read-ci-reports.md) | Reviewing or acting on Bundle Size and Bench pull request comments |
 | [`extend-bench-suite.md`](extend-bench-suite.md) | Adding or modifying benchmark operations in `bench/` or tuning `bench/tachometer.json` |

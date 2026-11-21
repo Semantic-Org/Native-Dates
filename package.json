@@ -23,6 +23,8 @@
   "files": [
     "src",
     "types",
+    "ai/skills",
+    "!ai/README.md",
     "README.md",
     "LICENSE"
   ],

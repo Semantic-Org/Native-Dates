@@ -1,6 +1,6 @@
 # Architecture: Core, Plugins, Polyfill, and Skills
 
-> status: active (2026-11-19). Core (`native-dates`), `@native-dates/core`, `@native-dates/plugins`, `@native-dates/polyfill`, and `docs/` are live. Downstream skills in `ai/skills/` and tachometer benchmarks in `bench/` are tracked in [`plan/roadmap.md`](../plan/roadmap.md).
+> status: active (2026-11-21). Core (`native-dates`), `@native-dates/core`, `@native-dates/plugins`, `@native-dates/polyfill`, `ai/skills/`, and `docs/` are live. Automated browser benchmarks in `bench/` and documentation translations are tracked in [`plan/roadmap.md`](../plan/roadmap.md).
 
 ## Workspace Packages and Directories
 
@@ -8,7 +8,7 @@
 |---|---|---|
 | `src/` | `native-dates` | Core date library: `index.js` barrel, one noun class per file (`range.js` holds `Range` and its three subclasses), and category-grouped utilities in `helpers/` |
 | `types/` | | Hand-authored TypeScript declarations mirroring `src/`. Their doc comments power editor hover/autocomplete (`@see` links follow [`types.md`](../standards/types.md)) |
-| `ai/skills/` | | Downstream agent skills (`*.md` in house form), to be published in `package.json` `"files"` and served via `/skills/<skill>.md` and `/llms.txt` ([`ai-author-context.md`](../standards/ai-author-context.md)) |
+| `ai/skills/` | `native-dates` | Agent skills (`native-dates.md`, `native-dates-plugins.md`), published in `package.json` `"files"` and served via `/skills/<skill>.md`, `/llms.txt`, and `/llms-full.txt` ([`ai-author-context.md`](../standards/ai-author-context.md)) |
 | `ai/contributing/` | private | Internal design decisions, bundle budget, project roadmap, upstream standards, and contributor workflows |
 | `packages/core/` | `@native-dates/core` | Thin scoped re-export of `native-dates` |
 | `packages/plugins/` | `@native-dates/plugins` | Opt-in side-effect plugins (`zones`, `loose`, `legacy-date`) in `src/`, with module-augmentation declarations in `types/` |

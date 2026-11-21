@@ -1,18 +1,18 @@
 # Agent Context
 
-`ai/` separates the skills published for downstream users of `native-dates` from the internal records used to develop this repository.
+`ai/` separates the skills published with `native-dates` from the internal records used to develop this repository.
 
 | Path | Audience | In npm package |
 |---|---|---|
-| [`skills/`](skills/) | Agents building an app with `native-dates` | Planned (pre-1.0) |
+| [`skills/`](skills/) | Agents building an app with `native-dates` | Yes |
 | [`contributing/`](contributing/README.md) | Contributors working on `native-dates` | No |
 | `workspace/` | Local scratch files, ignored by git | No |
 
-## Consumer Skills
+## Skills
 
-Files in [skills](skills/) will be included in the npm package for coding agents reading from installed dependencies, served by the docs site at `/skills/<skill>.md`, and listed in `/llms.txt` once authored (`contributing/plan/roadmap.md`).
+Files in [skills](skills/) ([`native-dates.md`](skills/native-dates.md) and [`native-dates-plugins.md`](skills/native-dates-plugins.md)) are included in the npm package for coding agents reading from installed dependencies, served by the docs site at `/skills/<skill>.md`, and listed in `/llms.txt` and `/llms-full.txt`.
 
-Downstream agents receive a skill on its own without the rest of this repository. Read the [authoring standard](contributing/standards/ai-author-context.md) and the [skill workflow](contributing/workflows/author-user-skill.md) before writing or editing one.
+Agents receive a skill on its own without the rest of this repository. Read the [authoring standard](contributing/standards/ai-author-context.md) and the [skill workflow](contributing/workflows/author-skill.md) before writing or editing one.
 
 ## Contributor Records
 

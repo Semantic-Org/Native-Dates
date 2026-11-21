@@ -16,7 +16,7 @@ Internal records and workflows for developing `native-dates`. Application develo
 | Write or update `.d.ts` declarations and `@see` links | [`types.md`](standards/types.md), checked by `npm run types` |
 | Write an error message, warning, or log line | [`errors-and-logs.md`](standards/legibility/errors-and-logs.md), checked by `npm run errors` |
 | Write source comments or title a pull request | [`code-comments.md`](standards/code-comments.md) and [`author-pull-requests.md`](standards/author-pull-requests.md) |
-| Author or evaluate downstream user skills | [`ai-author-context.md`](standards/ai-author-context.md) and [`workflows/author-user-skill.md`](workflows/author-user-skill.md) |
+| Author or evaluate skills in `ai/skills/` | [`ai-author-context.md`](standards/ai-author-context.md) and [`workflows/author-skill.md`](workflows/author-skill.md) |
 | Run a clean-room DX review on public API surface | [`workflows/clean-room-dx-review.md`](workflows/clean-room-dx-review.md) |
 | Write documentation pages or update the docs site | [`workflows/docs-writing.md`](workflows/docs-writing.md) and [`workflows/docs-authoring.md`](workflows/docs-authoring.md) |
 | Read the project's core goals and tradeoffs | [`north-star.md`](north-star.md) (hand-authored by the maintainer) |
