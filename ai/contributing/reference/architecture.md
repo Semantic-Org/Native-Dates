@@ -7,7 +7,7 @@
 | Path | Package | Contents |
 |---|---|---|
 | `src/` | `native-dates` | Core date library: `index.js` barrel, one noun class per file (`range.js` holds `Range` and its three subclasses), and category-grouped utilities in `helpers/` |
-| `bin/` | `native-dates` | The `npx native-dates` setup command: installs the package, links its skills into `.agents/skills` and `.claude/skills`, and adds a note to `AGENTS.md`, asking first. Node built-ins only, never imported by `src/` |
+| `bin/` | `native-dates` | The `npx native-dates` setup command. `native-dates.js` holds this library's words, and `agent-setup/` is the command itself (`Setup`, `Project`, `Terminal`), written to be copied whole by sibling libraries: it installs the package, links its skills into `.agents/skills` and `.claude/skills`, and adds a note to `AGENTS.md`, asking first. Node built-ins only, never imported by `src/`. `npm run setup:demo` runs it against this checkout without publishing |
 | `types/` | | Hand-authored TypeScript declarations mirroring `src/`. Their doc comments power editor hover/autocomplete (`@see` links follow [`types.md`](../standards/types.md)) |
 | `ai/skills/` | `native-dates` | Agent skills (`native-dates.md`, `native-dates-plugins.md`), packed into the npm tarball as `skills/<name>/SKILL.md` by `tools/skills.js` and served via `/skills/<skill>.md`, `/llms.txt`, `/llms-full.txt`, and the discovery index `/.well-known/agent-skills/index.json` ([`author-skill.md`](../workflows/author-skill.md), [`ai-author-context.md`](../standards/ai-author-context.md)) |
 | `ai/contributing/` | private | Internal design decisions, bundle budget, project roadmap, upstream standards, and contributor workflows |

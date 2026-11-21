@@ -30,8 +30,8 @@ const managers = join(scratch, 'managers');
 const calls = join(scratch, 'calls.log');
 
 beforeAll(() => {
-  mkdirSync(join(published, 'bin'), { recursive: true });
-  cpSync(join(root, 'bin/native-dates.js'), join(published, 'bin/native-dates.js'));
+  mkdirSync(published, { recursive: true });
+  cpSync(join(root, 'bin'), join(published, 'bin'), { recursive: true });
   cpSync(join(root, 'package.json'), join(published, 'package.json'));
   packSkills(published);
   mkdirSync(managers);
@@ -187,15 +187,15 @@ describe('npx native-dates', () => {
     });
     const { status, output } = setup(dir, '--yes');
     expect(status).toBe(0);
-    expect(output).toContain('kept    .claude/skills/native-dates');
+    expect(output).toMatch(/kept\s+`\.claude\/skills\/native-dates`/);
     expect(readFileSync(join(dir, '.claude/skills/native-dates/SKILL.md'), 'utf8')).toBe('my own notes\n');
   });
 
   // `script` gives the command a terminal on Linux, and its piped input is what the person types
   it.runIf(process.platform === 'linux').each([
-    ['Enter', '\n', 0, true],
-    ['n', 'n\n', 1, false],
-  ])('in a terminal asks first, and %s leaves status %i', (key, typed, expected, written) => {
+    ['Enter', 0, '\n', true],
+    ['n', 1, 'n\n', false],
+  ])('in a terminal asks first, and %s leaves status %i', (key, expected, typed, written) => {
     const dir = project();
     const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
     const { status, stdout } = spawnSync('script', ['-qec', command, '/dev/null'], {
@@ -205,10 +205,55 @@ describe('npx native-dates', () => {
       timeout: 30_000,
       env: { PATH: `${managers}${delimiter}${dirname(process.execPath)}${delimiter}/usr/bin${delimiter}/bin` },
     });
-    expect(stdout).toContain('Make these changes? (Y/n)');
+    expect(stdout).toContain('Make these changes?');
     expect(stdout).not.toContain('unsettled');
     expect(status).toBe(expected);
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(written);
+  });
+
+  it('leaves out the steps switched off with --no-install and --no-note', () => {
+    const dir = project();
+    const { status, calls: ran } = setup(dir, '--yes', '--no-install', '--no-note');
+    expect(status).toBe(0);
+    expect(ran).toBe('');
+    expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false);
+    expect(existsSync(join(dir, '.agents/skills/native-dates/SKILL.md'))).toBe(true);
+  });
+
+  it('prints no escape codes when captured, and the organisation palette when colour is forced', () => {
+    const plain = setup(project()).output;
+    expect(plain).not.toContain('\x1b[');
+    expect(plain).toContain('[native-dates]');
+    const dir = project();
+    const forced = spawnSync(process.execPath, [join(published, 'bin/native-dates.js')], {
+      cwd: dir,
+      encoding: 'utf8',
+      env: { PATH: dirname(process.execPath), FORCE_COLOR: '3', npm_config_offline: 'true' },
+    }).stdout;
+    expect(forced).toContain('\x1b[1m\x1b[38;2;117;158;185m[native-dates]');
+    const silenced = spawnSync(process.execPath, [join(published, 'bin/native-dates.js')], {
+      cwd: dir,
+      encoding: 'utf8',
+      env: { PATH: dirname(process.execPath), FORCE_COLOR: '3', NO_COLOR: '1', npm_config_offline: 'true' },
+    }).stdout;
+    expect(silenced).not.toContain('\x1b[');
+  });
+
+  // c opens the checklist, space switches the first line off, which is the install
+  it.runIf(process.platform === 'linux')('in a terminal lets the person switch a change off before confirming', () => {
+    const dir = project();
+    const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+    const { status } = spawnSync('script', ['-qec', command, '/dev/null'], {
+      cwd: dir,
+      input: 'c \r',
+      encoding: 'utf8',
+      timeout: 30_000,
+      env: { PATH: `${managers}${delimiter}${dirname(process.execPath)}${delimiter}/usr/bin${delimiter}/bin` },
+    });
+    expect(status).toBe(0);
+    expect(readFileSync(calls, 'utf8')).toBe('');
+    expect(lstatSync(join(dir, '.agents/skills/native-dates')).isDirectory()).toBe(true);
+    expect(existsSync(join(dir, 'AGENTS.md'))).toBe(true);
   });
 
   it('refuses outside a project and on an unknown option without writing', () => {

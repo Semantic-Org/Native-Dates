@@ -5,6 +5,7 @@
   "description": "Natural-language dates, times, durations, and ranges built on the browser's Temporal and Intl APIs",
   "author": "Jack Lukic",
   "repository": "https://github.com/Semantic-Org/Native-Dates",
+  "homepage": "https://nativedates.dev",
   "license": "ISC",
   "type": "module",
   "sideEffects": false,
@@ -51,6 +52,7 @@
     "prepare": "simple-git-hooks",
     "prepack": "node tools/skills.js pack",
     "postpack": "node tools/skills.js clean",
+    "setup:demo": "node tools/setup-demo.js",
     "setup": "npx simple-git-hooks"
   },
   "devDependencies": {
