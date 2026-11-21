@@ -4,6 +4,7 @@
   "title": "Native Dates",
   "description": "Natural-language dates, times, durations, and ranges built on the browser's Temporal and Intl APIs",
   "author": "Jack Lukic",
+  "repository": "https://github.com/Semantic-Org/Native-Dates",
   "license": "ISC",
   "type": "module",
   "sideEffects": false,
@@ -23,8 +24,7 @@
   "files": [
     "src",
     "types",
-    "ai/skills",
-    "!ai/README.md",
+    "skills",
     "README.md",
     "LICENSE"
   ],
@@ -45,6 +45,8 @@
     "check": "npm test && npm run ai && npm run size",
     "format": "npx dprint fmt",
     "prepare": "simple-git-hooks",
+    "prepack": "node tools/skills.js pack",
+    "postpack": "node tools/skills.js clean",
     "setup": "npx simple-git-hooks"
   },
   "devDependencies": {

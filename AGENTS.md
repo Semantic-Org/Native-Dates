@@ -33,7 +33,7 @@ Ask the maintainer rather than inventing conventions for:
 - `npm run types`: Type-check `.d.ts` declarations via `tsc --noEmit` under NodeNext and `bundler` resolution (`test/types.ts`)
 - `npm run errors`: Check error and log prose register (`tools/gates/errors.js`)
 - `npm run comments`: Check comment density, overlap, and banned jargon (`tools/gates/comments.js`)
-- `npm run ai`: Validate markdown links, `#anchors`, GFM tables, `ai/` paths, `decisions.md`, and `AGENTS.md` symlinks (`tools/gates/ai.js`)
+- `npm run ai`: Validate markdown links, `#anchors`, GFM tables, `ai/` paths, skill frontmatter, `decisions.md`, and `AGENTS.md` symlinks (`tools/gates/ai.js`)
 - `npm run ai:index`: Regenerate `ai/contributing/decisions.md` from `ai/contributing/decisions/package.md` (`tools/gates/decisions-index.js`)
 - `npm run size`: Measure minified and Brotli-11 sizes for `native-dates` and every plugin in `@native-dates/plugins`, and check `ai/contributing/budget.md` ([`tools/ci/bundle/README.md`](tools/ci/bundle/README.md))
 - `npm run docs`: Start the Astro docs dev server (`docs/`, see [`docs/README.md`](docs/README.md))

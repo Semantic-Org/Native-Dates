@@ -8,13 +8,13 @@
 |---|---|---|
 | `src/` | `native-dates` | Core date library: `index.js` barrel, one noun class per file (`range.js` holds `Range` and its three subclasses), and category-grouped utilities in `helpers/` |
 | `types/` | | Hand-authored TypeScript declarations mirroring `src/`. Their doc comments power editor hover/autocomplete (`@see` links follow [`types.md`](../standards/types.md)) |
-| `ai/skills/` | `native-dates` | Agent skills (`native-dates.md`, `native-dates-plugins.md`), published in `package.json` `"files"` and served via `/skills/<skill>.md`, `/llms.txt`, and `/llms-full.txt` ([`ai-author-context.md`](../standards/ai-author-context.md)) |
+| `ai/skills/` | `native-dates` | Agent skills (`native-dates.md`, `native-dates-plugins.md`), packed into the npm tarball as `skills/<name>/SKILL.md` by `tools/skills.js` and served via `/skills/<skill>.md`, `/llms.txt`, and `/llms-full.txt` ([`author-skill.md`](../workflows/author-skill.md), [`ai-author-context.md`](../standards/ai-author-context.md)) |
 | `ai/contributing/` | private | Internal design decisions, bundle budget, project roadmap, upstream standards, and contributor workflows |
-| `packages/core/` | `@native-dates/core` | Thin scoped re-export of `native-dates` |
+| `packages/core/` | `@native-dates/core` | Thin scoped re-export of `native-dates`, with a `"skills"` field pointing agent tooling at the skills `native-dates` ships |
 | `packages/plugins/` | `@native-dates/plugins` | Opt-in side-effect plugins (`zones`, `loose`, `legacy-date`) in `src/`, with module-augmentation declarations in `types/` |
 | `packages/polyfill/` | `@native-dates/polyfill` | Conditional `temporal-polyfill` loader that dynamically imports the polyfill only when `globalThis.Temporal` is absent |
 | `docs/` | private | Astro documentation site (`nativedates.dev`, see [`docs/README.md`](../../../docs/README.md)) |
-| `tools/` | private | Static gates (`gates/{ai,budget,prose,errors,comments}.js`), CI bundle size reporter (`ci/bundle/`), git hooks (`hooks/`), and `size.js` |
+| `tools/` | private | Static gates (`gates/{ai,budget,prose,errors,comments}.js`), CI bundle size reporter (`ci/bundle/`), git hooks (`hooks/`), `size.js`, and the skill packer `skills.js` |
 
 How `src/` is laid out and how a class is structured follow [`folders-and-filenames.md`](../standards/legibility/folders-and-filenames.md), [`code-structures.md`](../standards/legibility/code-structures.md), and [`coding-standards.md`](../standards/coding-standards.md).
 
@@ -68,7 +68,7 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, `"sideE
 - `npm run types`: `tsc --noEmit` (under both NodeNext and `bundler` resolution) over `test/types.ts` against hand-authored `.d.ts` declarations.
 - `npm run errors`: `tools/gates/errors.js` checking `. Capital` splits, punctuation, structured error helpers, and error code vocabulary.
 - `npm run comments`: `tools/gates/comments.js` checking comment ratios, run length, word overlap, and banned process jargon.
-- `npm run ai`: `tools/gates/ai.js` checking Markdown links, `#heading` anchors, GFM tables, `ai/` paths, and `AGENTS.md` symlinks.
+- `npm run ai`: `tools/gates/ai.js` checking Markdown links, `#heading` anchors, GFM tables, `ai/` paths, skill frontmatter, and `AGENTS.md` symlinks.
 - `npm run size`: `tools/gates/budget.js` over the rows of `tools/size.js`.
 
 ## Bundle Size Measurement

@@ -16,6 +16,9 @@
   "dependencies": {
     "native-dates": "0.0.6"
   },
+  "skills": [
+    "npm:native-dates"
+  ],
   "files": [
     "index.js",
     "index.d.ts",

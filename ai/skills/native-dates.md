@@ -1,10 +1,11 @@
 ---
-title: Dates, Times, Zones, Durations, and Ranges with native-dates
+name: native-dates
 description: "Core guide for building with native-dates (and @native-dates/core). Use whenever code creates, parses, shifts, rounds, compares, ranges over, or formats dates, clock times, zoned timestamps, durations, billing months, or recurring month-days, handles DST or HTTP Accept-Language locales, or migrates off Date, Moment, Day.js, date-fns, Luxon, or raw Temporal. For city/abbreviation zones, { loose: true } parsing, legacy Date getters, or the Temporal polyfill on Safari and Node <26, also load native-dates-plugins."
-keywords: [native-dates, "@native-dates/core", datetime, date, time, duration, monthDay, yearMonth, dateRange, datetimeRange, timeRange, today, now, dayOfWeek, epochSeconds, epochMilliseconds, configure, Accept-Language, Temporal, Intl, DST]
-audience: usage
-skill: native-dates
-type: skill
+metadata:
+  title: Dates, Times, Zones, Durations, and Ranges with native-dates
+  keywords: "native-dates, @native-dates/core, datetime, date, time, duration, monthDay, yearMonth, dateRange, datetimeRange, timeRange, today, now, dayOfWeek, epochSeconds, epochMilliseconds, configure, Accept-Language, Temporal, Intl, DST"
+  audience: usage
+  type: skill
 ---
 
 # Dates, Times, Zones, Durations, and Ranges with native-dates

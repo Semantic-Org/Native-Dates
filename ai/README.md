@@ -10,7 +10,7 @@
 
 ## Skills
 
-Files in [skills](skills/) ([`native-dates.md`](skills/native-dates.md) and [`native-dates-plugins.md`](skills/native-dates-plugins.md)) are included in the npm package for coding agents reading from installed dependencies, served by the docs site at `/skills/<skill>.md`, and listed in `/llms.txt` and `/llms-full.txt`.
+Files in [skills](skills/) ([`native-dates.md`](skills/native-dates.md) and [`native-dates-plugins.md`](skills/native-dates-plugins.md)) ship in the npm package as `skills/<name>/SKILL.md`, the layout pnpm and skill installers read from an installed dependency (`prepack` writes it with `tools/skills.js`). The docs site serves the same files at `/skills/<skill>.md` and lists them in `/llms.txt` and `/llms-full.txt`.
 
 Agents receive a skill on its own without the rest of this repository. Read the [authoring standard](contributing/standards/ai-author-context.md) and the [skill workflow](contributing/workflows/author-skill.md) before writing or editing one.
 
