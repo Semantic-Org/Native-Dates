@@ -17,16 +17,31 @@ import type {
 } from 'native-dates';
 
 /**
- * Parses an informal date-time string with `Date.parse`, rejecting rolled-forward calendar days.
+ * Reads an informal date-time string in the active locale's month names, AM/PM words, digits, and
+ * day-month order, falling back to `Date.parse` for machine formats and rejecting impossible calendar days.
  * @internal
  */
-export function looseZoned(text: string, zone?: Zone, dayFirst?: boolean): TemporalValue | undefined;
+export function looseZoned(
+  text: string,
+  options?: { zone?: Zone; dayFirst?: boolean; locale?: Locale; },
+  clockOnly?: boolean,
+): TemporalValue | undefined;
+
+/**
+ * Reads the year, month, and day that an informal partial date names (`'16 de enero'`, `'ноябрь 2026 г.'`).
+ * @internal
+ */
+export function looseParts(
+  text: string,
+  options?: { dayFirst?: boolean; locale?: Locale; },
+): { year?: string; month?: number | string; day?: string; } | undefined;
 
 declare module 'native-dates' {
   interface ReadOptions {
     /**
-     * Fall back to engine `Date` parsing (or localized `Intl` month names on partial dates)
-     * and return `null` instead of throwing when input data cannot be read.
+     * Read informal input the way the active locale writes it, taking month names, AM/PM words,
+     * and day-month order from `Intl` and digits from any script, then fall back to engine `Date`
+     * parsing for machine formats. Returns `null` instead of throwing when input data cannot be read.
      *
      * @default false
      * @see {@link https://nativedates.dev/plugins/loose/#factory-options Factory options}
@@ -35,7 +50,8 @@ declare module 'native-dates' {
 
     /**
      * Interpret ambiguous numeric dates such as `'07.09.2026'` day-first in loose mode.
-     * Defaults to `configure().dayFirst`, or `false` (month-first).
+     * Defaults to `configure().dayFirst`, or the order the active locale writes dates in
+     * (day-first in `'fr'` and `'ru'`, month-first in `'en-US'`).
      *
      * @see {@link https://nativedates.dev/plugins/loose/#day-first-numeric-dates Day-first numeric dates}
      */
@@ -44,10 +60,11 @@ declare module 'native-dates' {
 
   interface Settings {
     /**
-     * Default numeric date order for loose calls that do not specify `dayFirst` explicitly.
-     * When `true`, `'07.09.2026'` reads as September 7 rather than July 9.
+     * Numeric date order for loose calls that do not specify `dayFirst` explicitly, overriding the
+     * order of the active locale. When `true`, `'07.09.2026'` reads as September 7 rather than July 9.
+     * Pass `null` to follow the locale again.
      *
-     * @default false
+     * @default undefined
      * @example
      * ```ts
      * import '@native-dates/plugins/loose';
@@ -59,7 +76,7 @@ declare module 'native-dates' {
      *
      * @see {@link https://nativedates.dev/plugins/loose/#configure configure}
      */
-    dayFirst?: boolean;
+    dayFirst?: boolean | null;
   }
 
   /**

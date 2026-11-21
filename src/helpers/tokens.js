@@ -159,8 +159,9 @@ const tokenReaders = {
 };
 
 // match full single-letter runs so overlong tokens like 'SSSSSS' and typos like 'meduim' throw unknownFormat,
-// leaving 'T' unescaped for 'YYYY-MM-DDTHH:mm'
-const tokenPattern = /\[([^\]]*)\]|Do|([A-SU-Za-z])\2*/g;
+// leaving 'T' unescaped for 'YYYY-MM-DDTHH:mm'. A letter touching an accented one ('às') or an 'h' after
+// 'H' ('HHhmm') is a word rather than a token, so it matches whole and throws too
+const tokenPattern = /\[([^\]]*)\]|[A-Za-z]+[\u00c0-\u024f]|[\u00c0-\u024f]+[A-Za-z]|H+\s?h|Do|([A-SU-Za-z])\2*/g;
 
 // reject unrecognized style arguments such as a locale tag passed first in monthNames('de')
 const tokenOf = (widths, style) =>
@@ -186,8 +187,9 @@ export const monthNames = (
 export const formatTokens = (subject, kind, named, locale) => {
   const pattern = namedFormat(named);
   const resolved = pickLocale(locale);
-  // use genitive month only right after a day token, skipping MMMM[ta] where suffixes are bracketed by hand (e.g. Finnish)
-  const besideDay = /D[oD]?\.?(\[[^\]]*\]|\s)+MMMM?(?![M[])/.test(pattern);
+  // use genitive month only when no other token sits between it and the day ('D-го MMMM'), skipping MMMM[ta]
+  // where suffixes are bracketed by hand (e.g. Finnish)
+  const besideDay = /D[oD]?(\[[^\]]*\]|[^A-Za-z[])+MMMM?(?![M[])/.test(pattern);
   return pattern.replace(tokenPattern, (token, literal) => {
     if (literal !== undefined) {
       return literal;

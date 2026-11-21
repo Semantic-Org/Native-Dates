@@ -36,7 +36,8 @@ import { TimeRange } from './range.js';
   Arithmetic wraps modulo 24 hours and rejects calendar units until anchored to a date via .on()
 */
 
-const clock = /^(\d{1,2})(?::(\d{2}))?(?::(\d{2})(?:\.(\d{1,9}))?)?\s*([ap]\.?m\.?)?$/i;
+// minutes follow a colon or an 'h' ('14:30', '14h30', '14 h 30'). A bare '14h' stays a duration
+const clock = /^(\d{1,2})(?:(?::| ?h ?)(\d{2}))?(?::(\d{2})(?:\.(\d{1,9}))?)?\s*([ap]\.?m\.?)?$/i;
 
 export class Time {
   // brand time
@@ -125,7 +126,7 @@ export class Time {
         if (!settings.loose || error.code !== 'invalidTime') {
           throw error;
         }
-        const zoned = parseLoose(input, settings.zone, settings.dayFirst);
+        const zoned = parseLoose(input, settings, true);
         if (!zoned) {
           throw error;
         }

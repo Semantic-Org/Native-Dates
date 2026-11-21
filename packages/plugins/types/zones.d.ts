@@ -4,8 +4,10 @@ import type { Zone } from 'native-dates';
  * Mutable base abbreviation lookup table mapping common time zone abbreviations such as `'PT'`
  * and `'CET'` to daylight-observing IANA zone identifiers.
  *
- * Because abbreviations like `'IST'` are regionally ambiguous, you can customize defaults once at
- * application startup (`timezones.IST = 'Asia/Jerusalem'`). Full IANA names always pass through unchanged.
+ * Abbreviations that differ by country, like `'IST'` and `'CST'`, are not listed here. They follow the
+ * active locale (`'CST'` is `'Asia/Shanghai'` in `'zh-CN'` and `'America/Chicago'` in `'en-US'`), and an
+ * entry added at application startup (`timezones.IST = 'Asia/Jerusalem'`) fixes one reading for every
+ * locale. Full IANA names always pass through unchanged.
  *
  * @example
  * ```ts

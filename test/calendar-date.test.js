@@ -256,9 +256,9 @@ describe('date() validation errors', () => {
     expect(() => date('16.11.2026')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '16.11.2026' }));
   });
 
-  it('throws invalidDate when date separators are mixed', () => {
-    expect(() => date('2026/1-5')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '2026/1-5' }));
-    expect(() => date('2026/1.5')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '2026/1.5' }));
+  it('throws invalidDate when a year-first string holds a clock or only two parts', () => {
+    expect(() => date('2026 10:30')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '2026 10:30' }));
+    expect(() => date('2026年11月')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '2026年11月' }));
   });
 
   it('throws invalidDate for named months or relative English words', () => {
@@ -420,10 +420,10 @@ describe('CalendarDate.isLeapYear(), isWeekday(), and isWeekend()', () => {
     expect(date('2000-06-01').isLeapYear()).toBe(true);
   });
 
-  it('returns true from isWeekday() for Monday through Friday and from isWeekend() for Saturday and Sunday', () => {
-    const friday = date('2026-11-20');
-    const saturday = date('2026-11-21');
-    const sunday = date('2026-11-22');
+  it('returns true from isWeekday() for Monday through Friday and from isWeekend() for Saturday and Sunday in en-US', () => {
+    const [friday, saturday, sunday] = ['2026-11-20', '2026-11-21', '2026-11-22'].map((day) =>
+      date(day, { locale: 'en-US' })
+    );
     expect([friday.isWeekday(), friday.isWeekend()]).toEqual([true, false]);
     expect([saturday.isWeekday(), saturday.isWeekend()]).toEqual([false, true]);
     expect([sunday.isWeekday(), sunday.isWeekend()]).toEqual([false, true]);
@@ -1247,5 +1247,95 @@ describe('CalendarDate.toJSDate(), toTemporal(), and as()', () => {
     expect(() => day.as('time')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownKind', at: 'time' }),
     );
+  });
+});
+
+describe('date() year-first strings with any separator', () => {
+  it.each([
+    ['Han year, month, and day units', '2026年11月16日'],
+    ['unpadded Han units', '2026年1月5日', '2026-01-05'],
+    ['Hangul units with spaces', '2026년 11월 16일'],
+    ['Korean spaced dots with a closing dot', '2026. 11. 16.'],
+    ['spaces', '2026 11 16'],
+    ['mixed slash and hyphen', '2026/11-16'],
+  ])('reads %s (%j)', (_form, text, expected = '2026-11-16') => {
+    expect(date(text).toString()).toBe(expected);
+  });
+
+  it('reads the long and medium presets of ja, zh-CN, and ko back to the same date', () => {
+    const day = date('2026-11-16');
+    for (
+      const [locale, preset] of [['ja', 'long'], ['zh-CN', 'long'], ['zh-CN', 'medium'], ['ko', 'long'], [
+        'ko',
+        'medium',
+      ]]
+    ) {
+      const written = day.format(preset, locale);
+      expect(date(written).toString(), written).toBe('2026-11-16');
+    }
+  });
+
+  it('keeps refusing day-first and month-first strings without a leading year', () => {
+    expect(() => date('16年11月2026日')).toThrowError(expect.objectContaining({ code: 'invalidDate' }));
+    expect(() => date('11/16/2026')).toThrowError(expect.objectContaining({ code: 'invalidDate', at: '11/16/2026' }));
+  });
+
+  // a letter between the numbers marks an ISO week or quarter, never a month
+  it.each(['2026-W05-1', '2026W051', '2026-Q4-1', '2026x11y16'])('throws invalidDate for %j', (text) => {
+    expect(() => date(text)).toThrowError(expect.objectContaining({ code: 'invalidDate', at: text }));
+  });
+});
+
+describe('date() from Temporal values and strings in another calendar', () => {
+  const persian = Temporal.PlainDate.from('2026-11-16').withCalendar('persian');
+
+  it('reads a Persian, Hebrew, or Japanese-era PlainDate as the same ISO day', () => {
+    const reiwa = Temporal.PlainDate.from({ calendar: 'japanese', era: 'reiwa', eraYear: 8, month: 11, day: 16 });
+    for (const plain of [persian, persian.withCalendar('hebrew'), reiwa]) {
+      const day = date(plain);
+      expect(day).toMatchObject({ year: 2026, month: 11, day: 16 });
+      expect(day.toString()).toBe('2026-11-16');
+      expect(JSON.stringify(day)).toBe('"2026-11-16"');
+    }
+  });
+
+  it('formats, adds, and measures from the ISO fields rather than the source calendar', () => {
+    const day = date(persian);
+    expect(day.format('YYYY-MM-DD')).toBe('2026-11-16');
+    expect(day.format('medium', 'en-US')).toBe('Nov 16, 2026');
+    expect(day.plus(1, 'month').toString()).toBe('2026-12-16');
+    expect(date('2026-11-15').until(persian).toString()).toBe('P1D');
+  });
+
+  it('reads a PlainDateTime in another calendar and a [u-ca=] annotated string', () => {
+    expect(date(persian.toPlainDateTime()).toString()).toBe('2026-11-16');
+    expect(date('2026-11-16[u-ca=persian]')).toMatchObject({ year: 2026, month: 11, day: 16 });
+  });
+});
+
+describe('CalendarDate.isWeekend() and isWeekday() by locale', () => {
+  const [thursday, friday, saturday, sunday] = ['2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22'].map((day) =>
+    date(day)
+  );
+
+  afterEach(() => {
+    configure({ locale: null });
+  });
+
+  it.each([
+    ['en-US', [false, false, true, true]],
+    ['ar-SA', [false, true, true, false]],
+    ['he-IL', [false, true, true, false]],
+    ['fa-IR', [false, true, false, false]],
+    ['hi-IN', [false, false, false, true]],
+  ])('follows the %s weekend from Thursday through Sunday', (locale, weekend) => {
+    const days = [thursday, friday, saturday, sunday].map((day) => day.locale(locale));
+    expect(days.map((day) => day.isWeekend())).toEqual(weekend);
+    expect(days.map((day) => day.isWeekday())).toEqual(weekend.map((rests) => !rests));
+  });
+
+  it('follows configure({ locale }) when the date carries no locale', () => {
+    configure({ locale: 'ar-EG' });
+    expect([friday.isWeekend(), sunday.isWeekend()]).toEqual([true, false]);
   });
 });

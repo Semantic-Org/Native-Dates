@@ -2,10 +2,19 @@ import { isObject, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
 import { isDevelopment } from './helpers/environment.js';
-import { guard, loosely, readAs, refuse, refuseType, requireLoose, unreadable } from './helpers/errors.js';
+import {
+  guard,
+  loosely,
+  parseLooseParts,
+  readAs,
+  refuse,
+  refuseType,
+  requireLoose,
+  unreadable,
+} from './helpers/errors.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_MONTH_DAY } from './helpers/identity.js';
-import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
+import { opensOnDate, wholeParts } from './helpers/parts.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
   alias,
@@ -29,9 +38,6 @@ import { zoneId } from './helpers/zones.js';
 const isoParts = /^(\d{2})-(\d{2})$/;
 
 const twoParts = /^(\d{1,2})[-/.](\d{1,2})$/;
-
-const nameAndDay =
-  /^(?:([\p{L}\p{M}]{3,})\.?,?\s+(\d{1,2})(?:st|nd|rd|th|\.)?|(\d{1,2})(?:st|nd|rd|th|\.)?\s+(?:de\s+)?([\p{L}\p{M}]{3,})\.?),?$/iu;
 
 const presets = {
   short: Object.freeze({ month: 'numeric', day: 'numeric' }),
@@ -148,10 +154,9 @@ export class MonthDay {
       return MonthDay.#dayOf(input, settings.zone).toPlainMonthDay();
     }
     // avoid Date.parse() here: V8 defaults yearless strings like 'Feb 29' to 2001 and rolls them into March
-    const named = settings.loose ? nameAndDay.exec(text) : null;
-    const month = named && monthNamed(named[1] ?? named[4], settings.locale);
-    return month
-      ? MonthDay.#fromParts({ month, day: named[2] ?? named[3] }, input)
+    const named = settings.loose && parseLooseParts(text, settings);
+    return named?.day
+      ? MonthDay.#fromParts({ month: named.month, day: named.day }, input)
       : refuse('invalidMonthDay', input, {
         explanation: isDevelopment
           ? "expected a month-day string like '10-17' or '10/17', or an ISO date like '1990-10-17'. Use `dayMonth('17/10')` for day-first strings, or pass `{ loose: true }` with '@native-dates/plugins/loose' for month names like 'Oct 17'"

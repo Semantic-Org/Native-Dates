@@ -58,9 +58,11 @@ export const isUnreadable = (error, codes = point) => codes.has(error?.code);
 
 // registered at module load when @native-dates/plugins/loose is imported
 let looseParser = null;
+let partsParser = null;
 
-export const setLooseExtension = (parser) => {
+export const setLooseExtension = (parser, parts) => {
   looseParser = parser;
+  partsParser = parts;
 };
 
 export const requireLoose = (at = 'loose') => {
@@ -73,10 +75,13 @@ export const requireLoose = (at = 'loose') => {
   }
 };
 
-export const parseLoose = (text, zone, dayFirst) => {
+export const parseLoose = (text, options, clockOnly) => {
   requireLoose();
-  return looseParser(text, zone, dayFirst);
+  return looseParser(text, options, clockOnly);
 };
+
+// month and day or year and month written in words ('16 de enero', 'ноябрь 2026 г.')
+export const parseLooseParts = (text, options) => partsParser(text, options);
 
 export const loosely = (build, codes = point) => {
   requireLoose();

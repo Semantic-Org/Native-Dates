@@ -2,9 +2,7 @@ import { each, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { fail } from './errors.js';
-import { names } from './tokens.js';
 import { isCount, pad } from './units.js';
-import { locale as pickLocale } from './zones.js';
 
 // Temporal.PlainMonthDay/PlainYearMonth.from() truncates floats (11.7 -> 11), coerces booleans, and ignores extra keys
 export const wholeParts = (fields, names) => {
@@ -21,26 +19,13 @@ export const wholeParts = (fields, names) => {
   return parts;
 };
 
-// normalize unambiguous YYYY/M/D or YYYY.M.D strings (and single-digit hours like '9:00') to ISO 8601
+// a year written first has one reading whatever separates the parts ('2026/1/5', '2026. 11. 16.', '2026年11月16日'),
+// so normalize it (and single-digit hours like '9:00') to ISO 8601, dropping a closing dot or East Asian day label.
+// Latin letters never separate, which keeps ISO weeks and quarters ('2026-W05-1', '2026-Q4') out
 export const yearFirst = (text) =>
   text.replace(
-    /^(\s*[+-]?\d{4,6})([/.-])(\d{1,2})\2(\d{1,2})(?!\d)(?:([T ])(\d)(?=:))?/,
-    (_, year, mark, month, day, gap, hour) => `${year}-${pad(month)}-${pad(day)}${gap ? `${gap}0${hour}` : ''}`,
+    /^(\s*[+-]?\d{4,6})[^\dA-Za-z:]{1,2}(\d{1,2})[^\dA-Za-z:]{1,2}(\d{1,2})(?!\d)(?:[^\0-\u2fff]|\.)?(?:([T ])(\d)(?=:))?/,
+    (_, year, month, day, gap, hour) => `${year}-${pad(month)}-${pad(day)}${gap ? `${gap}0${hour}` : ''}`,
   );
 
 export const opensOnDate = (value) => isString(value) && /^\s*[+-]?\d{4,6}-?\d{2}-?\d{2}/.test(yearFirst(value));
-
-// check English before the active locale so 'Mar 17' parses as March even in Finnish ('marraskuu')
-export const monthNamed = (name, locale) => {
-  const tag = pickLocale(locale);
-  const written = name.toLocaleLowerCase(tag);
-  for (const table of [names('en'), names(tag)]) {
-    for (const months of [table.MMMM, table.besideDay.MMMM, table.MMM, table.besideDay.MMM]) {
-      const found = months.findIndex((full) => full.toLocaleLowerCase(tag).startsWith(written));
-      if (found !== -1) {
-        return found + 1;
-      }
-    }
-  }
-  return 0;
-};
