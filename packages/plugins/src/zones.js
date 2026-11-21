@@ -36,7 +36,6 @@ const shared = {
   ast: ['America/Halifax', 'Asia/Riyadh'],
   act: ['Australia/Adelaide', 'America/Rio_Branco'],
   amt: ['America/Manaus', 'Asia/Yerevan'],
-  ect: ['Europe/Paris', 'America/Guayaquil'],
   'san juan': ['America/Argentina/San_Juan', 'America/Puerto_Rico'],
 };
 
