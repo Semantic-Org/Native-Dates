@@ -206,6 +206,13 @@ export function init() {
   wireMarkClock();
   mountSearch();
   wireVersionMenus();
+  // fetch the globe only once a reader reaches for the language menu so no other page view pays for it
+  document.querySelectorAll('[data-language-globe]').forEach((host) => {
+    let loading;
+    const load = () => (loading ??= import('./language-globe.js').then(({ mountLanguageGlobe }) => mountLanguageGlobe(host)));
+    host.addEventListener('pointerenter', load);
+    host.addEventListener('focusin', load);
+  });
   document.querySelectorAll('[data-language-select]').forEach((select) =>
     select.addEventListener('change', () => {
       try { sessionStorage.setItem('nd:language-picked', select.selectedOptions[0].dataset.code); } catch {}
