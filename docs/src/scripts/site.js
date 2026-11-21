@@ -120,7 +120,8 @@ export function highlightShell(root = document) {
   root.querySelectorAll('code[data-shell]:not([data-hl-done])').forEach((code) => {
     const words = code.textContent.split(/(\s+)/);
     let seenCommand = false;
-    let seenSub = false;
+    // npx is followed by a package rather than a subcommand, so that word takes the argument color
+    let seenSub = words[0] === 'npx';
     code.innerHTML = words.map((w) => {
       if (!w.trim()) { return w; }
       const e = esc(w);

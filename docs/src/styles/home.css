@@ -59,22 +59,21 @@
 }
 
 
-.install { margin-top: 0; display: inline-flex; flex-direction: column; gap: 0; }
+/* install card: the npm line, then the line that also sets an agent up */
 
-.install-cmd {
-  display: flex; align-items: center; gap: 12px;
-  height: 50px; padding-block: 0; padding-inline: 16px 8px;
-  border: 1px solid var(--line-2); border-radius: var(--r-3);
-  background: var(--code-bg);
-  font-size: var(--fs-sm); color: var(--text);
-}
-.install-cmd .prompt { color: var(--text-4); font-family: var(--font-mono); }
-.install-cmd .swap { flex: 1; }
-.install-cmd code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.install-cmd .copy { margin-inline-start: auto; }
-
-.hero .install-cmd { height: 54px; padding-inline: 18px 10px; font-size: var(--fs-md); }
-.hero .install-cmd code { font-size: var(--fs-sm); }
+.install { border: 1px solid var(--line-2); border-radius: var(--r-3); background: var(--code-bg); }
+/* a command is typed left to right in every language, while the caption above it follows the page */
+.install-cmd { direction: ltr; display: flex; align-items: center; gap: 12px; height: 52px; padding-inline: 18px 10px; color: var(--text); }
+.install-cmd .prompt { color: var(--text-4); font: 400 var(--fs-md)/1 var(--font-mono); }
+.install-cmd code { flex: 1; min-width: 0; font-size: var(--fs-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.install-agent { border-top: 1px solid var(--line); }
+.install-agent p { padding: 12px 18px 0; color: var(--text-2); font-size: var(--fs-xs); line-height: var(--lh-xs); }
+.install-agent .install-cmd { height: 44px; }
+/* the closer sets the two lines side by side */
+.install.solo { display: flex; max-width: 100%; border-radius: var(--r-2); }
+.install.solo .install-cmd { height: auto; min-height: 34px; padding-inline: 14px 4px; }
+.install.solo .install-agent { border-top: 0; border-inline-start: 1px solid var(--line); }
+.install.solo .install-agent p { padding: 8px 14px 0; }
 
 .hero-actions { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .hero-actions .btn { --h: 48px; padding: 0 20px; border-radius: var(--r-3); font-size: var(--fs-md); }
@@ -100,8 +99,6 @@
 .closer-inner { display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
 .closer h2 { font-size: var(--heading); line-height: var(--heading-lh); letter-spacing: var(--heading-track); font-weight: 620; }
 .closer-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.install-cmd.solo { min-width: 280px; height: 40px; border-radius: var(--r-2); font-size: var(--fs-sm); }
-.install-cmd .copy[data-copied] { color: var(--c-green); }
 
 .footer { border-top: 1px solid var(--line); padding: 48px 0 64px; }
 .footer-inner { display: flex; justify-content: space-between; gap: 48px; flex-wrap: wrap; }
@@ -148,7 +145,7 @@
 .say-label[style*='--row: 2'] { line-height: 52px; }
 .say-label[style*='--row: 3'] { line-height: 44px; }
 .say-cell { grid-column: calc(var(--col) + 2); grid-row: var(--row); min-width: 116px; }
-.say-grid:not([hidden]) .say-cell { animation: say-in 0.5s var(--ease) both; animation-delay: calc(0.25s + var(--col) * 0.3s + var(--row) * 0.08s); }
+.say-grid:not([hidden]) .say-cell { animation: say-in 0.4s var(--ease) both; animation-delay: calc(0.1s + var(--col) * 0.15s + var(--row) * 0.05s); }
 @keyframes say-in {
   from { opacity: 0; translate: 0 8px; }
 }
@@ -458,8 +455,7 @@
   .topbar .search-trigger { width: 34px; padding: 0; justify-content: center; }
   .topbar .search-trigger .keys { display: none; }
   .topbar .search-trigger .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .install-cmd { width: 100%; min-width: 0; font-size: var(--fs-xs); height: 44px; }
-  .hero .install-cmd, .closer .install-cmd { display: none; }
+  .install, .install.solo { display: none; }
   .hero-copy { text-align: center; }
   .hero-copy h1, .hero .lede { margin-inline: auto; text-wrap: balance; }
   .hero-side { align-items: center; max-width: none; margin-top: 20px; }

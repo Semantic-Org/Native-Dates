@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 
 import Bytes from '../components/home/Bytes.astro';
 import Consoles from '../components/home/Consoles.astro';
+import Install from '../components/home/Install.astro';
 import LocaleProof from '../components/home/LocaleProof.astro';
 import Primitives from '../components/home/Primitives.astro';
 import Say from '../components/home/Say.astro';
@@ -45,7 +46,6 @@ if (tryZones) {
   ].join('\n');
 }
 const SECTIONS = [['nav.guides', '/guides/installation/'], ['nav.api', '/api/date-time/'], ['nav.examples', '/examples/'], ['nav.plugins', '/plugins/']];
-const INSTALL = 'npm i native-dates';
 const nowCall = '<button type="button" class="closer-call" data-now-call><code>now()</code></button>';
 ---
 <Base title="native-dates" description={t(locale, 'home.description')} writtenIn={writtenIn} translatedIn={translatedIn}>
@@ -77,11 +77,7 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
           <h1 set:html={t(locale, 'home.hero.title')} />
           <p class="lede" set:html={t(locale, 'home.hero.lede', { size })} />
           <div class="hero-side">
-            <div class="install-cmd">
-              <span class="prompt" aria-hidden="true">$</span>
-              <code id="install-hero" data-shell>{INSTALL}</code>
-              <button class="copy" type="button" data-copy="#install-hero" aria-label={t(locale, 'home.install.copy')}></button>
-            </div>
+            <Install id="hero" />
             <div class="hero-actions">
               <a class="btn primary" href={to('/guides/installation/')}>{t(locale, 'home.hero.start')}</a>
               <a class="btn ghost" href={to('/api/date-time/')}>{t(locale, 'home.hero.api')}</a>
@@ -152,11 +148,7 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
           <p class="closer-clock" data-now></p>
         </div>
         <div class="closer-actions">
-          <div class="install-cmd solo">
-            <span class="prompt" aria-hidden="true">$</span>
-            <code id="install-closer" data-shell>{INSTALL}</code>
-            <button class="copy" type="button" data-copy="#install-closer" aria-label={t(locale, 'home.install.copy')}></button>
-          </div>
+          <Install id="closer" solo />
           <a class="btn primary" href={to('/guides/installation/')}>{t(locale, 'home.hero.start')}</a>
         </div>
       </div>
