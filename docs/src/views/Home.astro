@@ -3,7 +3,6 @@ import { getCollection } from 'astro:content';
 
 import Bytes from '../components/home/Bytes.astro';
 import Consoles from '../components/home/Consoles.astro';
-import Install from '../components/home/Install.astro';
 import LocaleProof from '../components/home/LocaleProof.astro';
 import Primitives from '../components/home/Primitives.astro';
 import Say from '../components/home/Say.astro';
@@ -46,9 +45,17 @@ if (tryZones) {
   ].join('\n');
 }
 const SECTIONS = [['nav.guides', '/guides/installation/'], ['nav.api', '/api/date-time/'], ['nav.examples', '/examples/'], ['nav.plugins', '/plugins/']];
+const INSTALLS = [
+  { id: 'npm', label: 'npm', command: 'npm i native-dates' },
+  { id: 'agent', label: t(locale, 'home.install.withAgent'), command: 'npx native-dates' },
+];
 const nowCall = '<button type="button" class="closer-call" data-now-call><code>now()</code></button>';
 ---
 <Base title="native-dates" description={t(locale, 'home.description')} writtenIn={writtenIn} translatedIn={translatedIn}>
+  <script is:inline slot="head">
+    // restore the reader's install line before first paint so the other one never flashes
+    try { const saved = localStorage.getItem('nd:install'); if (saved) { document.documentElement.dataset.install = saved; } } catch {}
+  </script>
   <header class="topbar">
     <div class="container topbar-inner">
       <button class="icon-btn menu-toggle" type="button" aria-label={t(locale, 'nav.open')} data-close-label={t(locale, 'home.nav.close')} aria-expanded="false" aria-controls="home-menu" data-menu-toggle set:html={ICON.menu} />
@@ -77,7 +84,16 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
           <h1 set:html={t(locale, 'home.hero.title')} />
           <p class="lede" set:html={t(locale, 'home.hero.lede', { size })} />
           <div class="hero-side">
-            <Install id="hero" />
+            <div class="install">
+              <div class="install-picker" role="radiogroup" aria-label={t(locale, 'home.install.label')}>
+                {INSTALLS.map(({ id, label }, i) => <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-install-pick={id}>{label}</button>)}
+              </div>
+              <div class="install-cmd">
+                <span class="prompt" aria-hidden="true">$</span>
+                <span class="swap">{INSTALLS.map(({ id, command }) => <code id={`install-hero-${id}`} data-shell data-install-cmd={id}>{command}</code>)}</span>
+                <button class="copy" type="button" data-copy={`#install-hero-${INSTALLS[0].id}`} aria-label={t(locale, 'home.install.copy')}></button>
+              </div>
+            </div>
             <div class="hero-actions">
               <a class="btn primary" href={to('/guides/installation/')}>{t(locale, 'home.hero.start')}</a>
               <a class="btn ghost" href={to('/api/date-time/')}>{t(locale, 'home.hero.api')}</a>
@@ -148,7 +164,11 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
           <p class="closer-clock" data-now></p>
         </div>
         <div class="closer-actions">
-          <Install id="closer" solo />
+          <div class="install-cmd solo">
+            <span class="prompt" aria-hidden="true">$</span>
+            <span class="swap">{INSTALLS.map(({ id, command }) => <code id={`install-closer-${id}`} data-shell data-install-cmd={id}>{command}</code>)}</span>
+            <button class="copy" type="button" data-copy={`#install-closer-${INSTALLS[0].id}`} aria-label={t(locale, 'home.install.copy')}></button>
+          </div>
           <a class="btn primary" href={to('/guides/installation/')}>{t(locale, 'home.hero.start')}</a>
         </div>
       </div>
@@ -173,6 +193,7 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
     import { init } from '../scripts/site.js';
     import { mountBytes } from '../scripts/home/bytes.js';
     import { mountConsoles, mountQuestions } from '../scripts/home/consoles-live.js';
+    import { mountInstall } from '../scripts/home/install.js';
     import { mountPrimitives } from '../scripts/home/primitives.js';
     import { mountVerdict } from '../scripts/home/verdict.js';
     import { mountSay } from '../scripts/home/say.js';
@@ -186,6 +207,7 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
     document.querySelectorAll('[data-consoles]').forEach(mountQuestions);
     document.querySelectorAll('[data-primitives]').forEach(mountPrimitives);
     document.querySelectorAll('[data-verdict]').forEach(mountVerdict);
+    mountInstall();
 
     // load temporal-polyfill on browsers without native Temporal, then re-evaluate interactive widgets for the visitor's clock and locale
     (async () => {

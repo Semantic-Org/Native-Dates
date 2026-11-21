@@ -13,7 +13,7 @@ npm run build     # run check:i18n + sandbox + astro sync/build into dist/, and 
 npm run preview   # preview dist/ locally with Pagefind search
 ```
 
-Reader preferences (theme, plugin view, locale) persist in `localStorage` under `nd:*` keys. Core and plugin bundle sizes (including subset bitmasks) are measured at build time via `tools/size.js` (`src/lib/sizes.js`). Unmeasurable bundle targets fail the build.
+Reader preferences (theme, plugin view, homepage install line, locale) persist in `localStorage` under `nd:*` keys. Core and plugin bundle sizes (including subset bitmasks) are measured at build time via `tools/size.js` (`src/lib/sizes.js`). Unmeasurable bundle targets fail the build.
 
 Interactive examples (`/examples/`) run inside `@semantic-ui/playground`. `npm run sandbox` (`scripts/sync-sandbox.mjs`) copies playground worker assets into git-ignored `public/sandbox/` and copies `src/`, `packages/plugins/src/`, `packages/polyfill/`, and `temporal-polyfill` into git-ignored `public/libs/` for import-map resolution (`src/lib/import-map.js`).
 

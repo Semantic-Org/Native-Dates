@@ -59,21 +59,37 @@
 }
 
 
-/* install card: the npm line, then the line that also sets an agent up */
+.install { margin-top: 0; display: inline-flex; flex-direction: column; gap: 0; }
+/* which install line shows is data-install on <html>, restored before first paint (scripts/home/install.js) */
+.install-picker {
+  align-self: flex-start; display: flex; gap: 2px; margin-bottom: 12px; padding: 3px;
+  border: 1px solid var(--line-2); border-radius: var(--r-2); background: var(--surface-1);
+}
+.install-picker button {
+  height: 26px; padding: 0 10px; border: 0; border-radius: var(--r-1); background: transparent; cursor: pointer;
+  color: var(--text-3); font: 500 var(--fs-xs)/1 var(--font-sans);
+}
+.install-picker button:hover { color: var(--text); }
+:root:not([data-install='agent']) [data-install-pick='npm'],
+:root[data-install='agent'] [data-install-pick='agent'] { color: var(--text); background: var(--surface-3); }
+:root:not([data-install='agent']) [data-install-cmd='agent'],
+:root[data-install='agent'] [data-install-cmd='npm'] { visibility: hidden; }
 
-.install { border: 1px solid var(--line-2); border-radius: var(--r-3); background: var(--code-bg); }
-/* a command is typed left to right in every language, while the caption above it follows the page */
-.install-cmd { direction: ltr; display: flex; align-items: center; gap: 12px; height: 52px; padding-inline: 18px 10px; color: var(--text); }
-.install-cmd .prompt { color: var(--text-4); font: 400 var(--fs-md)/1 var(--font-mono); }
-.install-cmd code { flex: 1; min-width: 0; font-size: var(--fs-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.install-agent { border-top: 1px solid var(--line); }
-.install-agent p { padding: 12px 18px 0; color: var(--text-2); font-size: var(--fs-xs); line-height: var(--lh-xs); }
-.install-agent .install-cmd { height: 44px; }
-/* the closer sets the two lines side by side */
-.install.solo { display: flex; max-width: 100%; border-radius: var(--r-2); }
-.install.solo .install-cmd { height: auto; min-height: 34px; padding-inline: 14px 4px; }
-.install.solo .install-agent { border-top: 0; border-inline-start: 1px solid var(--line); }
-.install.solo .install-agent p { padding: 8px 14px 0; }
+/* a shell line reads left to right in every language */
+.install-cmd {
+  direction: ltr; display: flex; align-items: center; gap: 12px;
+  height: 50px; padding-block: 0; padding-inline: 16px 8px;
+  border: 1px solid var(--line-2); border-radius: var(--r-3);
+  background: var(--code-bg);
+  font-size: var(--fs-sm); color: var(--text);
+}
+.install-cmd .prompt { color: var(--text-4); font-family: var(--font-mono); }
+.install-cmd .swap { flex: 1; }
+.install-cmd code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.install-cmd .copy { margin-inline-start: auto; }
+
+.hero .install-cmd { height: 54px; padding-inline: 18px 10px; font-size: var(--fs-md); }
+.hero .install-cmd code { font-size: var(--fs-sm); }
 
 .hero-actions { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .hero-actions .btn { --h: 48px; padding: 0 20px; border-radius: var(--r-3); font-size: var(--fs-md); }
@@ -99,6 +115,8 @@
 .closer-inner { display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
 .closer h2 { font-size: var(--heading); line-height: var(--heading-lh); letter-spacing: var(--heading-track); font-weight: 620; }
 .closer-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.install-cmd.solo { min-width: 280px; height: 40px; border-radius: var(--r-2); font-size: var(--fs-sm); }
+.install-cmd .copy[data-copied] { color: var(--c-green); }
 
 .footer { border-top: 1px solid var(--line); padding: 48px 0 64px; }
 .footer-inner { display: flex; justify-content: space-between; gap: 48px; flex-wrap: wrap; }
@@ -455,7 +473,8 @@
   .topbar .search-trigger { width: 34px; padding: 0; justify-content: center; }
   .topbar .search-trigger .keys { display: none; }
   .topbar .search-trigger .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .install, .install.solo { display: none; }
+  .install-cmd { width: 100%; min-width: 0; font-size: var(--fs-xs); height: 44px; }
+  .hero .install, .closer .install-cmd { display: none; }
   .hero-copy { text-align: center; }
   .hero-copy h1, .hero .lede { margin-inline: auto; text-wrap: balance; }
   .hero-side { align-items: center; max-width: none; margin-top: 20px; }
