@@ -1,4 +1,4 @@
-// /llms-full.txt: downstream agent skills first, followed by every docs page in sidebar order
+// /llms-full.txt: agent skills first, followed by every docs page in sidebar order
 import { getCollection } from 'astro:content';
 
 import { SECTIONS } from '../lib/nav.js';

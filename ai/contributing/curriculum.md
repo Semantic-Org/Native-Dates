@@ -36,5 +36,5 @@ Load only the guides relevant to your current task, then read the target source 
 - **Bug fixes, features, and PRs:** [`workflows/contribute.md`](workflows/contribute.md), [`standards/name-public-api.md`](standards/name-public-api.md), [`standards/author-pull-requests.md`](standards/author-pull-requests.md), [`workflows/read-ci-reports.md`](workflows/read-ci-reports.md), and [`workflows/clean-room-dx-review.md`](workflows/clean-room-dx-review.md)
 - **Decisions:** [`decisions/README.md`](decisions/README.md) (what belongs vs. normal features and bug fixes)
 - **Documentation and i18n (`docs/`):** [`workflows/docs-writing.md`](workflows/docs-writing.md), [`workflows/docs-authoring.md`](workflows/docs-authoring.md), and [`workflows/docs-i18n.md`](workflows/docs-i18n.md)
-- **Downstream user skills (`ai/skills/`):** [`workflows/author-user-skill.md`](workflows/author-user-skill.md) and [`standards/ai-author-context.md`](standards/ai-author-context.md)
+- **Skills (`ai/skills/`):** [`workflows/author-skill.md`](workflows/author-skill.md) and [`standards/ai-author-context.md`](standards/ai-author-context.md)
 - **Benchmarks (`bench/`):** [`workflows/extend-bench-suite.md`](workflows/extend-bench-suite.md)

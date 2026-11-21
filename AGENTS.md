@@ -1,6 +1,6 @@
 # Working in `native-dates`
 
-Read [`ai/contributing/curriculum.md`](ai/contributing/curriculum.md) before authoring or editing code (`ai/skills/` is reserved for downstream user skills published with the npm package, while [`ai/contributing/`](ai/contributing/README.md) holds internal agent context and repository records).
+Read [`ai/contributing/curriculum.md`](ai/contributing/curriculum.md) before authoring or editing code (`ai/skills/` holds the skills published with the npm package, while [`ai/contributing/`](ai/contributing/README.md) holds internal agent context and repository records).
 
 **Fixing or reporting a bug, or adding a feature?** Read [`CONTRIBUTING.md`](CONTRIBUTING.md), follow [`ai/contributing/curriculum.md`](ai/contributing/curriculum.md), and load [`ai/contributing/workflows/contribute.md`](ai/contributing/workflows/contribute.md) for the workflow steps and human-author requirements.
 

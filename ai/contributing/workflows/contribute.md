@@ -44,7 +44,7 @@ Complete stages 1–3 of [`ai/contributing/curriculum.md`](../curriculum.md) (an
 3. **Estimate byte cost up front.** Include `Expected bytes: <N>` in the PR description when adding bytes to core, and check plugin deltas in `npm run size`.
 4. **Design the callsite first.** Write sample consumer code, verify it reads naturally aloud, and run new public identifiers through [`ai/contributing/standards/name-public-api.md`](../standards/name-public-api.md).
 5. **Follow existing codebase patterns** without speculative options, external runtime dependencies, or single-caller abstractions. When a utility from `@semantic-ui/utils` fits, check [`utility-functions.md`](../standards/utility-functions.md) and copy only the minimal needed implementation into `src/helpers/`.
-6. **Update documentation and downstream skills** following [`docs-writing.md`](docs-writing.md) and [`author-user-skill.md`](author-user-skill.md), then verify with `npx --workspace docs astro sync --force && npm -w docs run build`.
+6. **Update documentation and skills** following [`docs-writing.md`](docs-writing.md) and [`author-skill.md`](author-skill.md), then verify with `npx --workspace docs astro sync --force && npm -w docs run build`.
 7. **Update the declarations in `types/`** (and `packages/plugins/types/` when touching plugins) for every public signature added or changed, following [`types.md`](../standards/types.md).
 8. **Run checks:** `npm run check`, `npm run types`, `npm run errors`, `npm run comments`, and `npm run format` (`Feat: <Description>`).
 

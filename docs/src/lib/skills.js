@@ -1,4 +1,4 @@
-// reads downstream user skills from ai/skills/**/*.md for /skills/<skill>.md and /llms*.txt
+// reads skills from ai/skills/**/*.md for /skills/<skill>.md and /llms*.txt
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { parse } from 'yaml';
