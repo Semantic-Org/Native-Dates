@@ -39,6 +39,19 @@ export const SECTIONS = [
           { title: 'Writing a plugin', slug: 'guides/writing-a-plugin' },
         ],
       },
+      {
+        ...named('nav.group.languages'),
+        items: [
+          { title: 'Japanese', slug: 'guides/japanese' },
+          { title: 'Chinese', slug: 'guides/chinese' },
+          { title: 'Korean', slug: 'guides/korean' },
+          { title: 'Arabic', slug: 'guides/arabic' },
+          { title: 'Russian', slug: 'guides/russian' },
+          { title: 'Spanish', slug: 'guides/spanish' },
+          { title: 'Portuguese', slug: 'guides/portuguese' },
+          { title: 'French', slug: 'guides/french' },
+        ],
+      },
     ],
   },
   {

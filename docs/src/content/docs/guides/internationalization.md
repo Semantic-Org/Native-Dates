@@ -204,4 +204,4 @@ When formatting any value, range, duration, or relative phrase, Native Dates che
 | 3 | `configure({ locale })` | Client apps with a global language setting or switcher. |
 | 4 | Runtime `Intl` default | Browser apps following the reader's system language. |
 
-Browse the [language examples](/examples/) to test grammar inflections, plural forms, right-to-left ranges, and local calendars live across multiple languages. Next, read [Types of time](/guides/types-of-time/) to pick the right type for each value in your app.
+Browse the [language examples](/examples/) and the per-language guides under **Languages** in the sidebar for regional, script, and calendar edge cases. Next, read [Types of time](/guides/types-of-time/) to pick the right type for each value in your app.

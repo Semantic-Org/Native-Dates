@@ -30,7 +30,11 @@ const sizeLabel = size ? formatSize(await sizeOf(size)) : null;
 const isSymbol = (t) => /^[\w.$-]+\(\)$|^[A-Z][a-z]+[A-Z]\w*$/.test(t) || (kind === 'plugin' && t === title);
 const toc = headings.filter((h) => h.depth === 2 || h.depth === 3)
   .map((h) => ({ depth: h.depth, slug: h.slug, text: h.text.trim(), symbol: isSymbol(h.text.trim()) }));
-const minutes = Math.max(1, Math.round(page.body.split(/\s+/).length / 220));
+// count CJK characters alongside whitespace words so Chinese and Japanese guides show realistic reading times
+const cjkPattern = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu;
+const cjkCount = (page.body.match(cjkPattern) ?? []).length;
+const wordCount = page.body.replace(cjkPattern, ' ').trim().split(/\s+/).filter(Boolean).length;
+const minutes = Math.max(1, Math.round(wordCount / 220 + cjkCount / 500));
 const updatedLabel = formatDate(locale, updated);
 // escape < so embedded markdown cannot close the JSON script tag
 const source = JSON.stringify(markdownFor(page)).replace(/</g, '\\u003c');
@@ -63,7 +67,7 @@ const ICON = {
     <div class="doc-meta" data-pagefind-ignore>
       {importLine && <span class="import-chip"><code id="import-line">{importLine}</code><button class="copy" type="button" data-copy="#import-line" aria-label={t(locale, 'page.copyImport')}></button></span>}
       {sizeLabel && <span class="meta-badge"><bdi>{size === 'core' && 'core '}<b>{sizeLabel}</b> <abbr title={t(locale, 'page.minBr')}>min+br</abbr></bdi></span>}
-      {!kind && <span class="meta-badge">{t(locale, 'page.readTime', { minutes })}</span>}
+      {!kind && <span class="meta-badge"><bdi>{t(locale, 'page.readTime', { minutes })}</bdi></span>}
       <div class="page-actions" data-page-actions>
         <button class="btn ghost page-copy" type="button" data-copy-page><span class="swap"><span data-copy-label>{t(locale, 'page.copy')}</span><span data-copy-done hidden>{t(locale, 'page.copied')}</span></span></button>
         <button class="btn ghost page-more" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="page-menu" aria-label={t(locale, 'page.more')} set:html={ICON.chevron} />
