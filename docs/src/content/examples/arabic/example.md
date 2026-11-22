@@ -7,7 +7,7 @@ try:
   - 'Compare `ar-EG` and `ar-MA` on the same date to see Eastern Arabic digits alongside Western digits and Moroccan month names.'
   - 'Pick different dates to watch `ar-SA-u-ca-islamic-umalqura` convert ISO dates into the Umm al-Qura Hijri calendar.'
 related:
-  - { title: Internationalization, href: /guides/internationalization/ }
+  - { title: Localization, href: /guides/localization/ }
   - { title: Formatting, href: /guides/formatting/ }
   - { title: Duration, href: /api/duration/ }
 ---

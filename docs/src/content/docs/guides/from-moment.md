@@ -67,16 +67,16 @@ kickoff.in('Asia/Tokyo').format('short', 'en-US'); // '11/17/26, 2:30 AM'
 Moment [token patterns](/guides/formatting/#token-patterns), localized presets from `'LT'` through `'llll'`, relative phrases, and [ranges](/api/ranges/) all work in core with zero plugins:
 
 ```js
-import { date, datetime } from 'native-dates';
+import { dateRange, datetime } from 'native-dates';
 
 const kickoff = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 kickoff.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
 kickoff.format('LLL', 'en-US'); // 'November 16, 2026 at 9:30 AM'
 kickoff.from('2026-11-16T07:30-08:00', 'en-US'); // 'in 2 hours'
 
-const quarter = date('2026-10-01').to('2026-12-31');
+const quarter = dateRange('2026-10-01', '2026-12-31');
 quarter.contains('2026-11-16'); // true
-quarter.overlaps(date('2026-12-15').to('2027-01-15')); // true
+quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 ```
 
 ## Side-by-side reference
