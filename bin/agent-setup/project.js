@@ -31,8 +31,8 @@ const realPath = (path) => {
 export class Project {
   // where agents look for skills, and who reads each folder
   static skillFolders = {
-    '.agents/skills': 'Codex, Cursor, Copilot and others',
-    '.claude/skills': 'Claude Code, Cursor, Copilot and others',
+    '.agents/skills': 'Codex, Cursor, Copilot, etc.',
+    '.claude/skills': 'Claude Code, Cursor, Copilot, etc.',
   };
 
   static lockfiles = {

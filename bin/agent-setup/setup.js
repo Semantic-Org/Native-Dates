@@ -31,66 +31,65 @@ export class Setup {
 
   // every word the command prints, each open to a library through the copy option
   static copy = {
-    tagline: 'sets this project up for coding agents',
-    alreadySetUp: 'already set up for coding agents in this project',
+    tagline: 'set up coding agents for this project',
+    alreadySetUp: 'already set up for coding agents',
 
     install: '`{command}`',
-    update: '`{command}` takes `{name}` from {from} to {to}',
-    updateName: 'update {from} to {to}',
-    skills: '`{folder}` for {readers}',
-    note: '`{file}` gains a note telling agents to read the skill first',
-    noteNew: '`{file}` is created, telling agents to read the skill first',
+    update: '`{command}`. {from} -> {to}',
+    updateName: 'update {from} -> {to}',
+    skills: '`{folder}`. {readers}',
+    note: '`{file}`. Add skill note',
+    noteNew: '`{file}`. Create with skill note',
 
-    installAdded: 'added `{name}@{version}` with {manager}',
+    installAdded: 'added `{name}@{version}` ({manager})',
     installRan: 'ran `{command}`',
-    updateDone: 'updated `{name}` from {from} to {to} with {manager}',
-    skillsDone: '{placed} into `{folder}`',
-    skillsWithheld:
-      'nothing placed in `{folder}`. The installed {from} carries no skills, and the ones in {to} describe a different version',
-    noteWithheld: '`{file}` left alone, since there is no skill for it to point to',
+    updateDone: 'updated `{name}` {from} -> {to} ({manager})',
+    skillsDone: '{placed} in `{folder}`',
+    skillsWithheld: '`{folder}` skipped. Installed {from} has no skills (CLI is {to})',
+    noteWithheld: '`{file}` skipped. No skills installed',
     linked: 'linked {count} {noun}',
     copied: 'copied {count} {noun}',
     nouns: ['skill', 'skills'],
     noteCreated: 'created `{file}`',
-    noteUpdated: 'added the note to `{file}`',
+    noteUpdated: 'updated `{file}`',
 
-    question: 'Make these changes?',
+    question: 'Apply changes?',
     yes: 'Yes',
-    choose: 'Let me choose',
+    choose: 'Customize',
     no: 'No',
-    pickOneKeys: ['{arrows} to move', 'enter to confirm'],
-    chooseQuestion: 'Which changes?',
-    pickSeveralKeys: ['{arrows} to move', 'space to select', 'enter to confirm', 'esc to go back'],
-    noneSelected: 'nothing is selected. Press space to select a change, or esc to go back',
+    pickOneKeys: ['{arrows} move', 'enter confirm'],
+    chooseQuestion: 'Select changes',
+    pickSeveralKeys: ['{arrows} move', 'space toggle', 'enter confirm', 'esc back'],
+    noneSelected: 'nothing selected. Space to toggle, esc to go back',
     cancelled: 'cancelled',
-    typedQuestion: 'Make these changes? (Y/n) ',
-    declined: 'nothing was written',
-    needsYes: 'nothing was written. Run `npx {name} --yes` to make these changes',
+    typedQuestion: 'Apply changes? (Y/n) ',
+    declined: 'no changes made',
+    needsYes: 'no changes made. Run `npx {name} --yes` to apply',
 
-    ready: 'ready. Agents working in this project now find {skills}',
-    notReady: 'not set up. Update `{name}` to {version}, then run `npx {name}` again',
-    newer: '`{name}@{installed}` is newer than this command ({version}) and was left as it is',
-    docs: 'docs at {homepage}',
-    again: 'to skip the questions next time, run `npx {name} {flags}`',
-    kept: '`{path}` was already there with different contents. Left as it was',
+    ready: 'ready. Agents can now find {skills}',
+    notReady: 'setup incomplete. Update `{name}` to {version} and re-run `npx {name}`',
+    newer: '`{name}@{installed}` kept. Newer than CLI ({version})',
+    docs: 'docs: {homepage}',
+    again: 'skip prompts next time: `npx {name} {flags}`',
+    kept: '`{path}` kept. Existing file differs',
     failed:
-      '`{command}` failed, so nothing after it was written. Fix what {manager} reports below, or install `{name}` yourself, then run `npx {name}` again',
-    noProject: 'no `package.json` in {folder}. Run `npx {name}` from the root of your project',
-    unknownOption: "unknown option '{option}'. Run `npx {name} --help` for the ones it takes",
-    usage: `usage: npx {name} [options]
+      '`{command}` failed. No further changes made; fix the {manager} error below or install `{name}` manually, then re-run `npx {name}`',
+    noProject: 'no `package.json` in {folder}. Run `npx {name}` from your project root',
+    unknownOption: 'unknown option `{option}`. Run `npx {name} --help` for usage',
+    usage: `Usage: npx {name} [options]
 
-sets the project in this folder up for coding agents
-  install  adds {name} with the project's package manager, or updates a copy older than this command
-  skills   links its skills into .agents/skills and .claude/skills
-  note     adds a short note to AGENTS.md (and CLAUDE.md when there is one) telling agents to read the skill
+Set up coding agents for this project:
+  install  install {name} or update an older version
+  skills   link skills into .agents/skills and .claude/skills
+  note     add a skill pointer to AGENTS.md (and CLAUDE.md if present)
 
-shows what it will change and asks before writing
-  -y, --yes       make the changes without asking, for agents and scripts
-  --no-install    leave the package as it is, neither added nor updated
-  --no-skills     leave the skill folders alone
-  --no-note       leave AGENTS.md and CLAUDE.md alone
-  -v, --version   show the version
-  -h, --help      show this help`,
+Options (previews changes and prompts by default):
+  -y, --yes       apply without prompting (for agents and scripts)
+  --no-install    skip installing or updating {name}
+  --no-skills     skip linking skills
+  --no-note       skip editing AGENTS.md and CLAUDE.md
+  -v, --version   show version
+  -h, --help      show help`,
   };
 
   // packageUrl is the package.json beside the bin, and note is what agents are told, {skill} standing for the

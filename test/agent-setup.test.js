@@ -206,7 +206,7 @@ describe('npx native-dates', () => {
       timeout: 30_000,
       env: { PATH: `${managers}${delimiter}${dirname(process.execPath)}${delimiter}/usr/bin${delimiter}/bin` },
     });
-    expect(stdout).toContain('Make these changes?');
+    expect(stdout).toContain('Apply changes?');
     expect(stdout).not.toContain('unsettled');
     expect(status).toBe(expected);
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(written);
@@ -229,14 +229,14 @@ describe('npx native-dates', () => {
           child.stdin.write(keys);
           setTimeout(done, pause);
         });
-      await expect.poll(() => output, { timeout: 10_000 }).toContain('Make these changes?');
+      await expect.poll(() => output, { timeout: 10_000 }).toContain('Apply changes?');
       await type('\x1b[B\r', 500);
       await type('\x1b', 1000);
       await type('n', 0);
       const status = await new Promise((done) => child.on('close', done));
       const shown = output.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '');
-      expect(shown).toContain('Which changes?');
-      expect(shown).toMatch(/Make these changes\? No/);
+      expect(shown).toContain('Select changes');
+      expect(shown).toMatch(/Apply changes\? No/);
       expect(shown).not.toContain('cancelled');
       expect(status).toBe(0);
       expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false);
@@ -312,11 +312,11 @@ describe('npx native-dates', () => {
   it('offers to update an older install, and the done line names both versions', () => {
     const dir = project(dependsOn);
     installed(dir, '0.0.1');
-    expect(setup(dir).output).toContain(`from 0.0.1 to ${version}`);
+    expect(setup(dir).output).toContain(`0.0.1 -> ${version}`);
     const { status, output, calls: ran } = setup(dir, '--yes');
     expect(status).toBe(0);
     expect(ran).toBe(`npm install native-dates@${version}`);
-    expect(output).toMatch(new RegExp(`updated .native-dates. from 0\\.0\\.1 to ${version.replace(/\./g, '\\.')}`));
+    expect(output).toMatch(new RegExp(`updated .native-dates. 0\\.0\\.1 -> ${version.replace(/\./g, '\\.')}`));
     expect(readlinkSync(join(dir, '.agents/skills/native-dates'))).toBe(
       '../../node_modules/native-dates/skills/native-dates',
     );
@@ -340,8 +340,8 @@ describe('npx native-dates', () => {
     const { status, output, calls: ran } = setup(dir, '--yes', '--no-install');
     expect(status).toBe(1);
     expect(ran).toBe('');
-    expect(output).toContain('carries no skills');
-    expect(output).toContain('not set up');
+    expect(output).toContain('has no skills');
+    expect(output).toContain('setup incomplete');
     expect(existsSync(join(dir, '.agents')) || existsSync(join(dir, '.claude')) || existsSync(join(dir, 'AGENTS.md')))
       .toBe(false);
   });
@@ -352,7 +352,7 @@ describe('npx native-dates', () => {
     const { status, output, calls: ran } = setup(dir, '--yes');
     expect(status).toBe(0);
     expect(ran).toBe('');
-    expect(output).toContain('99.0.0` is newer than this command');
+    expect(output).toContain('99.0.0` kept. Newer than CLI');
     expect(existsSync(join(dir, '.agents/skills/native-dates/SKILL.md'))).toBe(true);
   });
 
