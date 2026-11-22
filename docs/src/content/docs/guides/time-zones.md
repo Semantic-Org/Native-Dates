@@ -1,7 +1,7 @@
 ---
 title: Time zones
 lede: Pair every moment with an IANA time zone, view the same instant anywhere in the world, and step cleanly across daylight saving transitions.
-updated: 2026-11-12
+updated: 2026-11-22
 ---
 
 A [`DateTime`](/api/date-time/) pairs two things: when a moment happens and which time zone you read it in. Changing the zone gives you another view of the same moment, while the platform handles every UTC offset and daylight transition.
@@ -98,16 +98,19 @@ skipped.text; // 'Mar 8, 2026, 3:30 AM EDT'
 
 ## City names and abbreviations
 
-Core accepts canonical IANA names, `'UTC'`, and fixed offsets. Import [`@native-dates/plugins/zones`](/plugins/zones/) when you also want to look up city names, common abbreviations, and custom aliases:
+Core accepts canonical IANA names, `'UTC'`, and fixed offsets. Import [`@native-dates/plugins/zones`](/plugins/zones/) to look up city names, regional abbreviations, and custom aliases.
 
 ```js
 import '@native-dates/plugins/zones';
 import { configure, datetime } from 'native-dates';
 
 datetime('2026-11-16T09:30', 'los angeles').zone; // 'America/Los_Angeles'
+datetime('2026-11-16T09:30', 'Beijing').zone; // 'Asia/Shanghai'
 datetime('2026-11-16T09:30', 'PT').zone; // 'America/Los_Angeles'
-datetime('2026-11-16T09:30', 'Berlin').zone; // 'Europe/Berlin'
+datetime('2026-11-16T09:30', { zone: 'CST', locale: 'zh-CN' }).zone; // 'Asia/Shanghai'
 
 configure({ zoneAliases: { hq: 'Europe/Berlin' } });
 datetime('2026-11-16T09:30', 'hq').zone; // 'Europe/Berlin'
 ```
+
+Shared abbreviations like CST and IST follow the active locale's region, and major cities like Beijing, Mumbai, and Osaka resolve without manual aliases.

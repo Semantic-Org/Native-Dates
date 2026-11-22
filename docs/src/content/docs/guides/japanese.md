@@ -1,7 +1,7 @@
 ---
 title: Japanese
 lede: Format imperial eras and parenthesized weekdays in Japanese while handling slash dates and Sunday week starts.
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 Pass `'ja-JP'` through [Localization](/guides/localization/) to format dates in Japanese. Gregorian years stay the default while `'ja-u-ca-japanese'` switches presets to imperial eras on demand.
@@ -77,18 +77,29 @@ midnight.format('Ah:mm'); // '午前12:30'
 
 ## Slash notation and Japanese input
 
-Year-first slash and dot strings from Japanese CSVs and business forms parse directly in core without plugins:
+Kanji year-first dates, slashes, and dots from Japanese CSVs and forms parse directly in core without plugins:
 
 ```js
 import { date, datetime, yearMonth } from 'native-dates';
 
-date('2026/11/16'); // CalendarDate(2026-11-16)
-date('2026/1/5'); // CalendarDate(2026-01-05)
-datetime('2026/11/16 9:30', 'Asia/Tokyo'); // 2026-11-16T00:30:00.000Z
-yearMonth('2026/11'); // YearMonth(2026-11)
+date('2026年11月16日').toString(); // '2026-11-16'
+date('2026/1/5').toString(); // '2026-01-05'
+datetime('2026年11月16日 9:30', 'Asia/Tokyo').toString(); // '2026-11-16T00:30:00.000Z'
+yearMonth('2026年11月').toString(); // '2026-11'
 ```
 
-When a form collects era and year in separate fields, construct a `Temporal.PlainDate` in the Japanese calendar and convert to ISO:
+With [the loose plugin](/plugins/loose/), fullwidth digits and punctuation, *午前* / *午後* clocks, and kanji month-days read without manual normalization:
+
+```js
+import '@native-dates/plugins/loose';
+import { date, monthDay, time } from 'native-dates';
+
+date('２０２６／１１／１６', { loose: true })?.toString(); // '2026-11-16'
+time('午後2:30', { loose: true, locale: 'ja' })?.toString(); // '14:30:00'
+monthDay('11月16日', { loose: true })?.toString(); // '11-16'
+```
+
+Era strings like `'令和8年11月16日'` still need structured input. When a form collects era and year separately, pass a Japanese `Temporal.PlainDate` straight to `date()` without converting calendars first:
 
 ```js
 const reiwaInput = Temporal.PlainDate.from({
@@ -97,23 +108,22 @@ const reiwaInput = Temporal.PlainDate.from({
   eraYear: 8,
   month: 11,
   day: 16,
-}).withCalendar('iso8601');
+});
 
 date(reiwaInput).toString(); // '2026-11-16'
 ```
 
 ## Time zones and start of the week
 
-Core accepts `'Asia/Tokyo'` and fixed offsets, while [the zones plugin](/plugins/zones/) adds `'JST'`. Because IANA lists only Tokyo for Japan, map domestic cities like Osaka or Fukuoka in zone aliases:
+Core accepts `'Asia/Tokyo'` and fixed offsets. With [the zones plugin](/plugins/zones/), JST and major Japanese cities resolve out of the box:
 
 ```js
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
+import { datetime } from 'native-dates';
 
 datetime('2026-11-16T09:30', 'JST').zone; // 'Asia/Tokyo'
-
-configure({ zoneAliases: { osaka: 'Asia/Tokyo', fukuoka: 'Asia/Tokyo' } });
-datetime('2026-11-16T09:30', 'osaka').zone; // 'Asia/Tokyo'
+datetime('2026-11-16T09:30', 'Osaka').zone; // 'Asia/Tokyo'
+datetime('2026-11-16T09:30', '東京').zone; // 'Asia/Tokyo'
 ```
 
 Japanese locales start weeks on Sunday like wall calendars. Pass `'monday'` or pin `weekStart` when building Monday-first business schedules:

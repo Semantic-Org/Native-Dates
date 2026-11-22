@@ -1,7 +1,7 @@
 ---
 title: Parsing
 lede: Read ISO strings, clock times, partial dates, ranges, duration phrases, and user input without silent guesswork.
-updated: 2026-11-16
+updated: 2026-11-22
 ---
 
 Core parses standard, unambiguous inputs directly into the type you ask for:
@@ -15,15 +15,17 @@ Core parses standard, unambiguous inputs directly into the type you ask for:
 
 ## ISO dates and timestamps
 
-Pass a year-first date string, three year, month, and day numbers, or a fields object to `date()`. Year-first strings accept matching dashes, slashes, or dots with padded or single-digit months and days.
+Pass a year-first date string, three year, month, and day numbers, or a fields object to `date()`. Year-first strings accept padded or single-digit months and days with any separator other than Latin letters or colons. Chinese, Japanese, Korean, and spaced dot dates all read directly in core.
 
-Months run from 1 through 12. Impossible calendar dates like February 30 throw an error instead of rolling forward into March.
+Months run from 1 through 12. Impossible calendar dates like February 30 and ISO week or quarter strings like `'2026-W05-1'` throw an error instead of guessing.
 
 ```js
 import { date } from 'native-dates';
 
 date('2026-11-16');
 date('2026/11/6');
+date('2026年11月16日');
+date('2026. 11. 16.');
 date(2026, 11, 16);
 date({ year: 2026, month: 11, day: 16 });
 ```
@@ -51,12 +53,13 @@ time('2026-11-17T01:30:00Z', 'America/Los_Angeles'); // 17:30:00
 
 ## Clock times and durations
 
-Pass 24-hour ISO times, 12-hour clock strings, numeric arguments, or a fields object to `time()`.
+Pass 24-hour ISO times, hour-minute strings like `'14h30'`, 12-hour clock strings, numeric arguments, or a fields object to `time()`. A bare hour like `'14h'` still throws so durations stay unambiguous.
 
 ```js
 import { time } from 'native-dates';
 
 time('09:30');
+time('14h30');
 time('9:30am');
 time('5:15 PM');
 time(17, 15, 30);
@@ -122,23 +125,26 @@ Passing an empty value to any factory throws instead of returning the current da
 
 ## User input with the loose plugin
 
-When parsing free-form text from user inputs, CSV exports, or RFC 2822 headers, import [`@native-dates/plugins/loose`](/plugins/loose/) and pass `{ loose: true }`.
+When parsing free-form text from user inputs, CSV exports, or RFC 2822 headers, import [`@native-dates/plugins/loose`](/plugins/loose/) and pass `{ loose: true }`. Loose mode reads dates and clock times the way the active locale writes them, including localized month names, AM/PM words, and non-ASCII digits.
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, datetime, monthDay, yearMonth } from 'native-dates';
+import { date, datetime, monthDay, time, yearMonth } from 'native-dates';
 
 date('Nov 16, 2026', { loose: true }); // 2026-11-16
+date('16 de noviembre de 2026', { loose: true, locale: 'es' }); // 2026-11-16
 datetime('Mon, 16 Nov 2026 17:30:00 GMT', { loose: true });
+time('오후 2:30', { loose: true, locale: 'ko' }); // 14:30:00
 yearMonth('Nov 2026', { loose: true }); // 2026-11
 monthDay('17 février', { loose: true, locale: 'fr' }); // 02-17
 ```
 
-Numeric slash and dot dates default to month-first order. Enable `dayFirst` per call or once at startup via [app configuration](/api/configure/) when reading day-first dates.
+Numeric slash and dot dates follow the active locale's order automatically. Pass `dayFirst` per call or set it in [app configuration](/api/configure/) when an input uses a different order than the active locale.
 
 ```js
-date('03/05/2026', { loose: true }); // 2026-03-05
-date('03/05/2026', { loose: true, dayFirst: true }); // 2026-05-03
+date('03/05/2026', { loose: true, locale: 'en-US' }); // 2026-03-05
+date('03/05/2026', { loose: true, locale: 'fr' }); // 2026-05-03
+date('03/05/2026', { loose: true, locale: 'en-US', dayFirst: true }); // 2026-05-03
 ```
 
 Under loose parsing, unreadable inputs return `null` instead of throwing across every factory and range, keeping form validation to a simple check. Invalid option values like an unknown time zone name still throw immediately.

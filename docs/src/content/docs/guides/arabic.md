@@ -1,7 +1,7 @@
 ---
 title: Arabic
 lede: Format Arabic dates across regional calendars and Eastern or Western numeral scripts.
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 Pass a country tag like `'ar-EG'` or `'ar-SA'` through [Localization](/guides/localization/) rather than bare `'ar'`. Numeral scripts, Gregorian month names, and week starts vary across Arabic-speaking countries.
@@ -94,20 +94,15 @@ wed.locale('ar-AE').startOf('week').toString(); // '2026-11-16'
 weekdayNames('narrow', undefined, 'ar-EG')[0]; // 'س'
 ```
 
-:::warning[Friday and Saturday weekends]
-`isWeekend()` always checks ISO Saturday and Sunday regardless of locale. In Friday–Saturday markets such as Saudi Arabia, Egypt, Qatar, and Jordan, check `dayOfWeek` directly because Sunday is a workday.
-:::
+`isWeekend()` and `isWeekday()` follow the active locale too. In Friday–Saturday markets such as Saudi Arabia and Egypt, Friday is a weekend and Sunday is a workday:
 
 ```js
 const fri = date('2026-11-20').locale('ar-SA');
 const sun = date('2026-11-22').locale('ar-SA');
 
-fri.isWeekend(); // false
-sun.isWeekend(); // true
-
-const isLocalWeekend = (d) => d.dayOfWeek === 5 || d.dayOfWeek === 6;
-isLocalWeekend(fri); // true
-isLocalWeekend(sun); // false
+fri.isWeekend(); // true
+sun.isWeekend(); // false
+sun.isWeekday(); // true
 ```
 
 ## Six-form plurals and RTL text
@@ -138,28 +133,28 @@ Browsers can reorder signs in ISO dates or UTC offsets inside right-to-left para
 
 ## Parsing inputs and time zones
 
-Pass `dayFirst: true` with [the loose plugin](/plugins/loose/) for day-month-year slash dates. Partial dates also match single-word Arabic months in loose mode:
+With [the loose plugin](/plugins/loose/), Arabic locales read day-first slash dates, Eastern Arabic digits with direction marks, *ص* / *م* clocks, and both standard and Levantine multi-word months automatically:
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, monthDay, yearMonth } from 'native-dates';
+import { date, time, yearMonth } from 'native-dates';
 
-date('06/11/2026', { loose: true, dayFirst: true })?.toString(); // '2026-11-06'
-monthDay('17 أكتوبر', { loose: true, locale: 'ar-EG' })?.toString(); // '10-17'
-yearMonth('نوفمبر 2026', { loose: true, locale: 'ar-EG' })?.toString(); // '2026-11'
+date('06/11/2026', { loose: true, locale: 'ar-EG' })?.toString(); // '2026-11-06'
+date('١٦‏/١١‏/٢٠٢٦', { loose: true, locale: 'ar-EG' })?.toString(); // '2026-11-16'
+date('16 تشرين الثاني 2026', { loose: true, locale: 'ar-LB' })?.toString(); // '2026-11-16'
+time('٢:٣٠ م', { loose: true, locale: 'ar-EG' })?.toString(); // '14:30:00'
+yearMonth('تشرين الثاني 2026', { loose: true, locale: 'ar-LB' })?.toString(); // '2026-11'
 ```
 
-[The zones plugin](/plugins/zones/) resolves Riyadh, Cairo, Dubai, Qatar, and Casablanca directly, and `zoneAliases` maps unlisted cities like Makkah or Jeddah:
+[The zones plugin](/plugins/zones/) resolves major Gulf and North African cities alongside regional codes like GST directly. Under `'ar-SA'`, AST resolves to Riyadh:
 
 ```js
 import '@native-dates/plugins/zones';
-import { configure, date, datetime } from 'native-dates';
-
-configure({
-  zoneAliases: { makkah: 'Asia/Riyadh', jeddah: 'Asia/Riyadh', doha: 'Asia/Qatar' },
-});
+import { date, datetime } from 'native-dates';
 
 datetime('2026-11-16T09:00', 'Makkah').zone; // 'Asia/Riyadh'
+datetime('2026-11-16T09:00', 'Doha').zone; // 'Asia/Qatar'
+datetime('2026-11-16T09:00', { zone: 'AST', locale: 'ar-SA' }).zone; // 'Asia/Riyadh'
 ```
 
 Schedule with full IANA zones rather than fixed offsets. `'Africa/Casablanca'` shifts back an hour during Ramadan, and Cairo springs forward at midnight to 01:00:

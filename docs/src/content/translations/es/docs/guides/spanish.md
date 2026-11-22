@@ -1,5 +1,5 @@
 ---
-source: '5fd1889df7de'
+source: a4865c5d2e4e
 reviewed: false
 title: Español
 lede: Maneja los formatos regionales de fecha y las convenciones horarias de España y América.
@@ -81,49 +81,54 @@ date('2026-05-01').format('Do [de] MMMM', 'es-AR'); // '1.º de mayo'
 
 ## Lectura de fechas y meses en español
 
-El paquete base rechaza fechas con barras y [el plugin flexible](/plugins/loose/) usa orden mes/día/año por defecto. Pasa `dayFirst: true` para barras, puntos o guiones chilenos, salvo en entradas de Puerto Rico:
+Con [el plugin flexible](/plugins/loose/), las fechas numéricas siguen automáticamente la configuración regional activa. España y Chile leen primero el día por sí solos, mientras que Puerto Rico lee primero el mes:
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, dayMonth, monthDay, yearMonth } from 'native-dates';
+import { date, datetime, dayMonth, monthDay, time, yearMonth } from 'native-dates';
 
-date('06/11/2026', { loose: true }).toString(); // '2026-06-11'
-date('06/11/2026', { loose: true, dayFirst: true }).toString(); // '2026-11-06'
-date('16-09-2026', { loose: true, dayFirst: true }).toString(); // '2026-09-16'
+date('06/11/2026', { loose: true, locale: 'es' })?.toString(); // '2026-11-06'
+date('16-09-2026', { loose: true, locale: 'es-CL' })?.toString(); // '2026-09-16'
+date('06/11/2026', { loose: true, locale: 'es-PR' })?.toString(); // '2026-06-11'
 ```
 
-`dayMonth()` lee pares numéricos sin plugins, y las fechas parciales en modo flexible reconocen los meses en español, incluido *setiembre* en Perú:
+Las fechas completas con texto, conectores, días de la semana al inicio, el *setiembre* peruano y las horas de 12 horas con espacio también se leen en modo flexible, mientras que `dayMonth()` numérico funciona en el paquete base sin plugins:
 
 ```js
+date('16 de noviembre de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-11-16'
+date('mar, 16 jun 2026', { loose: true, locale: 'es' })?.toString(); // '2026-06-16'
+datetime('el 16 de noviembre de 2026 a las 14:30', {
+  loose: true,
+  locale: 'es',
+  zone: 'Europe/Madrid',
+})?.hour; // 14
+time('5:30 p. m.', { loose: true, locale: 'es-MX' })?.toString(); // '17:30:00'
 dayMonth('16/11').toString(); // '11-16'
-monthDay('15 de enero', { loose: true, locale: 'es' }).toString(); // '01-15'
-monthDay('16 set.', { loose: true, locale: 'es-PE' }).toString(); // '09-16'
-yearMonth('enero de 2026', { loose: true, locale: 'es' }).toString(); // '2026-01'
+monthDay('16 set.', { loose: true, locale: 'es-PE' })?.toString(); // '09-16'
+yearMonth('enero de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-01'
 ```
 
 ## Zonas horarias y cambios a medianoche
 
-La mayor parte de México permanece en UTC-6 todo el año salvo la frontera norte y Quintana Roo, mientras `'CST'` apunta a Chicago y observa horario de verano:
+La mayor parte de México permanece en UTC-6 todo el año salvo la frontera norte y Quintana Roo. CST sigue la configuración regional activa: apunta a Chicago por defecto y a La Habana en Cuba:
 
 ```js
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
+import { datetime } from 'native-dates';
 
 datetime('2026-07-15T12:00', 'Mexico City').format('HH:mm Z'); // '12:00 -06:00'
 datetime('2026-07-15T12:00', 'CST').format('HH:mm Z'); // '12:00 -05:00'
+datetime('2026-07-15T12:00', { zone: 'CST', locale: 'es-CU' }).zone; // 'America/Havana'
 datetime('2026-07-15T12:00', 'Tijuana').format('HH:mm Z'); // '12:00 -07:00'
 ```
 
-El [plugin de zonas](/plugins/zones/) resuelve Bogotá, Cancún y Córdoba directamente, mientras `'San Juan'` apunta a Argentina en lugar de Puerto Rico. Registra abreviaturas locales en `zoneAliases`:
+El [plugin de zonas](/plugins/zones/) resuelve las principales ciudades hispanohablantes y códigos latinoamericanos de forma directa. San Juan apunta a Puerto Rico bajo `'es-PR'` y a Argentina en el resto:
 
 ```js
-datetime('2026-07-15T12:00', 'San Juan').zone; // 'America/Argentina/San_Juan'
-
-configure({
-  zoneAliases: { cdmx: 'America/Mexico_City', cot: 'America/Bogota' },
-});
 datetime('2026-07-15T12:00', 'CDMX').zone; // 'America/Mexico_City'
 datetime('2026-07-15T12:00', 'COT').zone; // 'America/Bogota'
+datetime('2026-07-15T12:00', 'San Juan').zone; // 'America/Argentina/San_Juan'
+datetime('2026-07-15T12:00', { zone: 'San Juan', locale: 'es-PR' }).zone; // 'America/Puerto_Rico'
 ```
 
 Chile y Cuba inician el horario de verano a medianoche, saltando de 00:00 a 01:00. Llamar a `at('00:00', zona)` o `startOf('day')` cae en 01:00 de esa misma fecha:

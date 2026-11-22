@@ -32,7 +32,7 @@ import {
   withParts,
   zoneOptions,
 } from './helpers/units.js';
-import { weekStart, zoneId } from './helpers/zones.js';
+import { isWeekend, weekStart, zoneId } from './helpers/zones.js';
 import { MonthDay } from './month-day.js';
 import { DateTimeRange } from './range.js';
 import { Time } from './time.js';
@@ -60,10 +60,11 @@ export class DateTime {
   constructor(input, options) {
     const settings = zoneOptions(options);
     this.#locale = localeOf(settings, input);
-    this.#zoned =
+    this.#zoned = (
       isZonedDateTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
-        : DateTime.#read(input, settings);
+        : DateTime.#read(input, settings)
+    ).withCalendar('iso8601');
     this.text = undefined; // keep text first in console previews
     const zoned = this.#zoned;
     this.month = zoned.month;
@@ -81,9 +82,10 @@ export class DateTime {
     Object.freeze(this);
   }
 
-  static #read(input, { zone, loose, dayFirst } = {}) {
+  static #read(input, settings) {
+    const { zone, loose, dayFirst } = settings;
     // validate zone up front so a bad zone throws even when loose: true returns null on bad input
-    const timeZone = zoneId(zone);
+    const timeZone = zoneId(zone, settings.locale);
     if (loose || dayFirst !== undefined) {
       requireLoose(loose ? 'loose' : 'dayFirst');
     }
@@ -111,7 +113,7 @@ export class DateTime {
       return Temporal.Instant.fromEpochMilliseconds(Math.trunc(epoch)).toZonedDateTimeISO(timeZone);
     }
     if (isString(input)) {
-      return DateTime.#parse(input, zone, loose, dayFirst);
+      return DateTime.#parse(input, settings, timeZone);
     }
     if (isZonedDateTime(input)) {
       return zone === undefined ? input : input.withTimeZone(timeZone);
@@ -139,21 +141,21 @@ export class DateTime {
     });
   }
 
-  static #parse(text, zone, loose, dayFirst) {
+  static #parse(text, settings, timeZone) {
     const trimmed = yearFirst(text.trim());
     try {
       return guard(
         () => {
           if (hasZoneName.test(trimmed)) {
             const zoned = Temporal.ZonedDateTime.from(trimmed);
-            return zone === undefined ? zoned : zoned.withTimeZone(zoneId(zone));
+            return settings.zone === undefined ? zoned : zoned.withTimeZone(timeZone);
           }
           if (hasTime.test(trimmed)) {
             return hasOffset.test(trimmed)
-              ? Temporal.Instant.from(trimmed).toZonedDateTimeISO(zoneId(zone))
-              : Temporal.PlainDateTime.from(trimmed).toZonedDateTime(zoneId(zone));
+              ? Temporal.Instant.from(trimmed).toZonedDateTimeISO(timeZone)
+              : Temporal.PlainDateTime.from(trimmed).toZonedDateTime(timeZone);
           }
-          return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone: zoneId(zone) });
+          return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone });
         },
         'invalidDateTime',
         text,
@@ -167,10 +169,10 @@ export class DateTime {
       );
     }
     catch (error) {
-      if (!loose || error.code !== 'invalidDateTime') {
+      if (!settings.loose || error.code !== 'invalidDateTime') {
         throw error;
       }
-      const zoned = parseLoose(trimmed, zone, dayFirst);
+      const zoned = parseLoose(trimmed, settings);
       if (!zoned) {
         throw error;
       }
@@ -228,10 +230,10 @@ export class DateTime {
     return this.#zoned.inLeapYear;
   }
   isWeekend() {
-    return this.#zoned.dayOfWeek >= 6;
+    return isWeekend(this.#zoned.dayOfWeek, this.#locale);
   }
   isWeekday() {
-    return this.#zoned.dayOfWeek < 6;
+    return !this.isWeekend();
   }
   get date() {
     return new CalendarDate(this.#zoned.toPlainDate(), { locale: this.#locale });
@@ -287,7 +289,7 @@ export class DateTime {
   }
 
   in(zone) {
-    return this.#next(this.#zoned.withTimeZone(zoneId(zone)));
+    return this.#next(this.#zoned.withTimeZone(zoneId(zone, this.#locale)));
   }
 
   // startOfDay() handles zones where midnight itself is skipped by a DST transition (e.g. Havana)

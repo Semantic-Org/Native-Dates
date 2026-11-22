@@ -1,7 +1,7 @@
 ---
 title: Spanish
 lede: Handle regional Spanish date formats and clock conventions across Spain and the Americas.
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 Bare `'es'` uses Spain's Monday week start and 24-hour clock. Apps serving Latin America or the United States should pass a regional tag like `'es-MX'` through [Localization](/guides/localization/).
@@ -80,49 +80,54 @@ date('2026-05-01').format('Do [de] MMMM', 'es-AR'); // '1.º de mayo'
 
 ## Parsing Spanish dates and months
 
-Core rejects slash dates, and [the loose plugin](/plugins/loose/) defaults to month-first order. Pass `dayFirst: true` for slashes, dots, or Chilean hyphens, except on month-first Puerto Rico inputs:
+With [the loose plugin](/plugins/loose/), numeric dates follow the active locale automatically. Spain and Chile read day-first on their own, while Puerto Rico reads month-first:
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, dayMonth, monthDay, yearMonth } from 'native-dates';
+import { date, datetime, dayMonth, monthDay, time, yearMonth } from 'native-dates';
 
-date('06/11/2026', { loose: true }).toString(); // '2026-06-11'
-date('06/11/2026', { loose: true, dayFirst: true }).toString(); // '2026-11-06'
-date('16-09-2026', { loose: true, dayFirst: true }).toString(); // '2026-09-16'
+date('06/11/2026', { loose: true, locale: 'es' })?.toString(); // '2026-11-06'
+date('16-09-2026', { loose: true, locale: 'es-CL' })?.toString(); // '2026-09-16'
+date('06/11/2026', { loose: true, locale: 'es-PR' })?.toString(); // '2026-06-11'
 ```
 
-Numeric `dayMonth()` works in core without plugins, and partial dates in loose mode match Spanish month names including Peruvian *setiembre*:
+Full worded dates, connecting words, leading weekdays, Peruvian *setiembre*, and spaced 12-hour times also parse in loose mode, while numeric `dayMonth()` works in core without plugins:
 
 ```js
+date('16 de noviembre de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-11-16'
+date('mar, 16 jun 2026', { loose: true, locale: 'es' })?.toString(); // '2026-06-16'
+datetime('el 16 de noviembre de 2026 a las 14:30', {
+  loose: true,
+  locale: 'es',
+  zone: 'Europe/Madrid',
+})?.hour; // 14
+time('5:30 p. m.', { loose: true, locale: 'es-MX' })?.toString(); // '17:30:00'
 dayMonth('16/11').toString(); // '11-16'
-monthDay('15 de enero', { loose: true, locale: 'es' }).toString(); // '01-15'
-monthDay('16 set.', { loose: true, locale: 'es-PE' }).toString(); // '09-16'
-yearMonth('enero de 2026', { loose: true, locale: 'es' }).toString(); // '2026-01'
+monthDay('16 set.', { loose: true, locale: 'es-PE' })?.toString(); // '09-16'
+yearMonth('enero de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-01'
 ```
 
 ## Time zones and midnight DST jumps
 
-Most of Mexico stays on UTC-6 year-round outside northern border cities and Quintana Roo. `'CST'` maps to Chicago and observes US daylight saving:
+Most of Mexico stays on UTC-6 year-round outside northern border cities and Quintana Roo. CST follows the active locale, mapping to Chicago by default and Havana in Cuba:
 
 ```js
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
+import { datetime } from 'native-dates';
 
 datetime('2026-07-15T12:00', 'Mexico City').format('HH:mm Z'); // '12:00 -06:00'
 datetime('2026-07-15T12:00', 'CST').format('HH:mm Z'); // '12:00 -05:00'
+datetime('2026-07-15T12:00', { zone: 'CST', locale: 'es-CU' }).zone; // 'America/Havana'
 datetime('2026-07-15T12:00', 'Tijuana').format('HH:mm Z'); // '12:00 -07:00'
 ```
 
-The [zones plugin](/plugins/zones/) matches Bogotá, Cancún, and Córdoba directly, while `'San Juan'` resolves to Argentina rather than Puerto Rico. Register local shorthand in `zoneAliases`:
+The [zones plugin](/plugins/zones/) resolves major Spanish-speaking cities and Latin American codes out of the box. San Juan resolves to Puerto Rico under `'es-PR'` and Argentina elsewhere:
 
 ```js
-datetime('2026-07-15T12:00', 'San Juan').zone; // 'America/Argentina/San_Juan'
-
-configure({
-  zoneAliases: { cdmx: 'America/Mexico_City', cot: 'America/Bogota' },
-});
 datetime('2026-07-15T12:00', 'CDMX').zone; // 'America/Mexico_City'
 datetime('2026-07-15T12:00', 'COT').zone; // 'America/Bogota'
+datetime('2026-07-15T12:00', 'San Juan').zone; // 'America/Argentina/San_Juan'
+datetime('2026-07-15T12:00', { zone: 'San Juan', locale: 'es-PR' }).zone; // 'America/Puerto_Rico'
 ```
 
 Chile and Cuba start daylight saving at midnight, jumping straight from 00:00 to 01:00. Calling `at('00:00', zone)` or `startOf('day')` lands cleanly on 01:00 of that same date:

@@ -93,18 +93,19 @@ export class CalendarDate {
   isLeapYear(): boolean;
 
   /**
-   * Returns true when this date falls on Saturday or Sunday.
+   * Returns true when this date falls on a weekend day of its active locale: Saturday and
+   * Sunday in most, Friday and Saturday in `'ar-SA'`, and Friday alone in `'fa-IR'`.
    *
-   * @returns `true` on Saturday or Sunday
+   * @returns `true` on the locale's weekend days
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#calendar-predicates Calendar predicates}
    */
   isWeekend(): boolean;
 
   /**
-   * Returns true when this date falls on Monday through Friday.
+   * Returns true when this date falls outside the weekend of its active locale.
    *
-   * @returns `true` on Monday through Friday
+   * @returns `true` on the locale's working days
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#calendar-predicates Calendar predicates}
    */
@@ -914,7 +915,7 @@ export class CalendarDate {
  * Impossible dates such as February 30 throw a `RangeError`, and inputs without a day throw instead
  * of inventing the first of the month. Use `yearMonth()` for year-and-month values.
  *
- * @param input - Year-first date string (`'2026-11-16'`), fields object, `DateTime`, `Date`, or `Temporal` value
+ * @param input - Year-first date string (`'2026-11-16'`, `'2026/11/16'`, `'2026年11月16日'`), fields object, `DateTime`, `Date`, or `Temporal` value
  * @param options - Time zone (for timestamps) and locale options
  * @returns An immutable `CalendarDate`
  *

@@ -4,7 +4,7 @@ kind: function
 lede: Create a CalendarDate from a year-first date string, year-month-day numbers, fields, or the current day.
 import: import { date, today } from 'native-dates'
 size: core
-updated: 2026-11-16
+updated: 2026-11-22
 ---
 
 ## Reading calendar dates
@@ -56,7 +56,7 @@ fromMoment.toString(); // '2026-11-16'
       description: "Parse informal date strings and return `null` on unreadable input with `@native-dates/plugins/loose`."
     - name: dayFirst
       type: boolean
-      description: "Read numeric dates such as `'07.09.2026'` as day-first in loose mode."
+      description: "Override the active locale's numeric date order for strings like `'07.09.2026'` in loose mode."
 - name: day
   type: number
   description: Day of the month from 1 to 31 when passing `year`, `month`, and `day`.
@@ -83,14 +83,14 @@ Months always run from 1 for January through 12 for December, unlike JavaScript'
 
 | Input | Example | How it reads |
 |---|---|---|
-| Year-first date string | `'2026-11-16'`, `'2026/11/06'`, `'2026-1-5'` | Reads a 4-digit year, month, and day across matching `-`, `/`, or `.` separators. |
+| Year-first date string | `'2026-11-16'`, `'2026/11/6'`, `'2026年11月16日'` | Reads a 4-digit year, month, and day with any separator other than Latin letters or colons. |
 | Local date-time string | `'2026-11-16T09:30'` | Keeps the calendar date and drops the time of day. |
 | ISO instant string | `'2026-11-17T02:00:00Z'` | Reads the calendar day of that moment in the given zone or configured default. |
 | Year, month, and day | `date(2026, 11, 16)` | Takes three whole numbers with `1` for January through `12` for December. |
 | Fields object | `{ year: 2026, month: 11, day: 16 }` | Reads 1-indexed calendar fields and rejects impossible dates. |
 | DateTime | `date(dt, 'Asia/Tokyo')` | Extracts the calendar date in the given zone, or in `dt.zone` when omitted. |
 | JavaScript Date | `date(jsDate, 'America/Los_Angeles')` | Reads the calendar day of that timestamp in the given zone or configured default. |
-| Temporal value | `Temporal.PlainDate`, `Temporal.Instant` | Reads plain dates directly and shifts instants into the target zone. |
+| Temporal value | `Temporal.PlainDate`, `Temporal.Instant` | Reads plain dates in any calendar as the same ISO day and shifts instants into the target zone. |
 
 :::note[Timestamps depend on the time zone]
 An ISO string with a trailing `Z` or UTC offset names a moment that can fall on two different calendar days around the world. Pass an explicit zone when extracting a user's calendar day on a server.

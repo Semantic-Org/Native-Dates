@@ -33,7 +33,7 @@ const ny = datetime('2026-03-08T04:30:00Z', 'America/New_York').plus(1, 'day'); 
 ny.toJSON(); // '2026-03-09T03:30:00.000Z'
 ```
 
-**2. `month` is `1`–`12`, `dayOfWeek` is ISO `1`–`7` (`7` = Sunday), and tokens use Moment/Day.js casing (`YYYY-MM-DD`, never `yyyy-MM-dd`).** `isWeekday()` is `true` Monday–Friday (`1`–`5`). In `format()`, `'yyyy'` throws `unsupportedToken`, lowercase `'dd'` prints the 2-letter weekday (`'Mo'`, not day-of-month `'DD'`), `'E'` prints `'1'`–`'7'`, and `'d'` prints Moment's `'0'`–`'6'` (`'0'` = Sunday).
+**2. `month` is `1`–`12`, `dayOfWeek` is ISO `1`–`7` (`7` = Sunday), `isWeekend()`/`isWeekday()` follow the active locale, and tokens use Moment/Day.js casing (`YYYY-MM-DD`, never `yyyy-MM-dd`).** `isWeekend()` is Friday–Saturday in `ar-SA`/`ar-EG`/`he-IL`, Friday in `fa-IR`, Sunday in `hi-IN`, and Saturday–Sunday in `en-US` and most others. In `format()`, `'yyyy'` throws `unsupportedToken`, lowercase `'dd'` prints the 2-letter weekday (`'Mo'`, not day-of-month `'DD'`), `'E'` prints `'1'`–`'7'`, `'d'` prints Moment's `'0'`–`'6'` (`'0'` = Sunday), and tokens glued to accented letters (`'às'`) or `h` after `H` (`'HHhmm'`) throw `unknownFormat` unless bracketed.
 
 ```js
 // ❌ WRONG - 0-indexed month/Sunday, or date-fns/Luxon 'yyyy-MM-dd' tokens
@@ -156,7 +156,7 @@ const dt = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 const slot = dt.plus(2, 'days').at('14:17').round(15, 'minutes').in('Europe/Berlin');
 ```
 
-- **Inputs:** ISO strings (`'2026-11-16'`, `'2026-11-16T09:30'`, `'2026-11-16T17:30Z'`, `'2026-11-16T09:30-08:00[America/Los_Angeles]'`), `'2026/11/16 9:30'`, epoch ms (`Number`, truncated if fractional), `Date`, `{ year, month, day, hour, ... }`, `CalendarDate`, `DateTime`, or `Temporal.{ZonedDateTime,Instant,PlainDateTime,PlainDate}`. `null`/`undefined` throws `missingDateTime` (use `now(zone?)`).
+- **Inputs:** ISO strings (`'2026-11-16'`, `'2026-11-16T09:30'`, `'2026-11-16T17:30Z'`, `'2026-11-16T09:30-08:00[America/Los_Angeles]'`), year-first strings with any non-Latin, non-colon separator (`'2026/11/16 9:30'`, `'2026年11月16日 14:30'`), epoch ms (`Number`, truncated if fractional), `Date`, `{ year, month, day, hour, ... }`, `CalendarDate`, `DateTime`, or `Temporal.{ZonedDateTime,Instant,PlainDateTime,PlainDate}` (non-ISO calendars convert to the same ISO day). `null`/`undefined` throws `missingDateTime` (use `now(zone?)`).
 - **Fields & getters:** `text`, `year`, `month` (`1`–`12`), `day` (`1`–`31`), `dayOfWeek` (`1`–`7`), `hour` (`0`–`23`), `minute`, `second`, `millisecond`, `microsecond`, `nanosecond`, `zone` (IANA ID), `offset` (`'-08:00'`), `epochSeconds` (floored `Number`), `epochMilliseconds` (`Number`), `epochNanoseconds` (`BigInt`), `weekStart`, `quarter` (`1`–`4`), `dayOfYear`, `weekOfYear` (ISO), `daysInMonth`, `daysInYear`, `hoursInDay` (`23`/`24`/`25` across DST), `date`, `time`, `monthDay`, `yearMonth`.
 - **Predicates:** `isLeapYear()`, `isWeekday()`, `isWeekend()`, `isPast()`, `isFuture()`, `isToday()`, `isTomorrow()`, `isYesterday()`.
 - **Arithmetic & boundaries:**
@@ -178,7 +178,7 @@ import { CalendarDate, date, today, tomorrow, yesterday } from 'native-dates';
 const due = today('America/New_York').plus(2, 'weeks').next('friday');
 ```
 
-- **Inputs:** `'2026-11-16'`, `'2026/11/16'`, `'2026.11.16'`, `'2026-1-5'`, `(year, month, day)` integers, `{ year, month, day }`, `DateTime`, `Date`, instant strings (resolved in `zone`), or `Temporal.PlainDate`. Single bare numbers throw `invalidDate` (use `datetime(ms).date` or `date(y, m, d)`).
+- **Inputs:** Year-first strings with any non-Latin, non-colon separator (`'2026-11-16'`, `'2026/11/16'`, `'2026. 11. 16.'`, `'2026年11月16日'`, `'2026년 11월 16일'`), `(year, month, day)` integers, `{ year, month, day }`, `DateTime`, `Date`, instant strings (resolved in `zone`), or `Temporal.PlainDate` (any calendar). Single bare numbers throw `invalidDate` (use `datetime(ms).date` or `date(y, m, d)`).
 - **Clock guard & methods:** Refuses clock units (`hours`, `minutes`, ...) with `unsupportedUnit`. Shares `DateTime`'s calendar getters, `plus`/`minus`, `set`, `startOf`/`endOf`, `startOfNext`/`startOfPrevious`, `next`/`previous`, `isSame`, `until`/`since` (`Duration` in days, or float `Number` when `unit` is passed), `from(other?, locale?)` / `fromNow(locale?)` (on servers, pass explicit `d.from(today(user.zone), locale)` since `fromNow` reads default `today()`), `.through(end)` (alias for `.to(end)`), `.at(time = '00:00', zone?)` -> `DateTime`, and `.points(step, unit?, zone?)` / `.split(step, unit?, zone?)` / `.splitBy` across that date's zoned day.
 
 ---
@@ -191,7 +191,7 @@ import { Time, time } from 'native-dates';
 const scheduled = time('9:30am').plus(45, 'minutes').round(15, 'minutes').on('2026-11-16', 'America/Chicago');
 ```
 
-- **Inputs:** `'09:30'`, `'9am'`, `'5:30:15 pm'`, `time(9, 30, 0)`, `time(9)` (`09:00`), `{ hour, minute }`, `DateTime`, `Date`, instant strings (resolved in `zone`), or `Temporal.PlainTime`.
+- **Inputs:** `'09:30'`, `'14h30'`, `'14 h 30'`, `'9am'`, `'5:30:15 pm'`, `time(9, 30, 0)`, `time(9)` (`09:00`), `{ hour, minute }`, `DateTime`, `Date`, instant strings (resolved in `zone`), or `Temporal.PlainTime`. Bare `'14h'` throws (stays a duration).
 - **Methods:** `plus`/`minus` and `set` (wrap modulo 24h), `startOf`/`endOf`, `startOfNext(unit)` / `startOfPrevious(unit)` (clock units only), `round(unit)` / `round(inc, unit)` (and `floor`/`ceil`), `equals`/`isBefore`/`isAfter`/`isSame`, `until(other, unit?)` / `since(other, unit?)` (within one `00:00`–`23:59` day, `largestUnit: 'hour'`), `to(end, unit?)` / `for`, `on(day, zone?)` -> `DateTime`.
 
 ---

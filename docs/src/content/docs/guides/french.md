@@ -1,7 +1,7 @@
 ---
 title: French
 lede: Format and parse French dates across regional clocks and week starts.
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 Bare `'fr'` uses metropolitan French conventions. Pass a regional tag like `'fr-CA'` through [Localization](/guides/localization/) when your readers expect local date order, clock separators, and week starts.
@@ -46,16 +46,15 @@ mercredi.locale('fr-CA').startOf('week', 'monday').toString(); // '2026-11-16'
 
 ## French typography and format tokens
 
-Wrap literal letters in brackets inside patterns like `'HH[h]mm'`. Bare `h` prints the 12-hour clock without throwing, and unaccented `a` inserts AM or PM:
+Wrap literal letters in brackets inside patterns like `'HH[h]mm'`. Writing `'HHhmm'` without brackets throws `unknownFormat`, while a standalone accented *à* passes through unescaped:
 
 ```js
 import { datetime } from 'native-dates';
 
 const depart = datetime('2026-11-01T14:30:00', 'Europe/Paris').locale('fr-FR');
 
-depart.format('HHhmm'); // '14230'
 depart.format('HH[h]mm'); // '14h30'
-depart.format('[le] dddd D MMMM [à] HH[h]mm'); // 'le dimanche 1 novembre à 14h30'
+depart.format('[le] dddd D MMMM à HH[h]mm'); // 'le dimanche 1 novembre à 14h30'
 ```
 
 French writes *1er* on the first of the month and plain numbers on every other day. Register an `ordinals` rule on `'fr'`, and regional tags inherit it automatically:
@@ -86,16 +85,22 @@ monthNames('short', 'fr-CA').slice(4, 8); // ['mai', 'juin', 'juill.', 'août']
 
 ## Parsing French date and time input
 
-Core reads Canadian ISO strings and rejects slashes or dots. Enable `dayFirst` with [the loose plugin](/plugins/loose/), or `'06/11/2026'` reads month-first as June 11:
+Core reads Canadian ISO strings and French hour-minute times like `'14h30'` directly. With [the loose plugin](/plugins/loose/), French locales read day-first slash dates, dot dates, ordinals, and full worded dates automatically:
 
 ```js
 import '@native-dates/plugins/loose';
-import { date } from 'native-dates';
+import { date, datetime, time } from 'native-dates';
 
-date('06/11/2026', { loose: true }); // CalendarDate(2026-06-11)
-date('06/11/2026', { loose: true, dayFirst: true }); // CalendarDate(2026-11-06)
-date('14.07.2026', { loose: true, dayFirst: true }); // CalendarDate(2026-07-14)
-date('2026-07-14', { loose: true, dayFirst: true }); // CalendarDate(2026-07-14)
+time('14h30').toString(); // '14:30:00'
+time('14 h 30').toString(); // '14:30:00'
+date('06/11/2026', { loose: true, locale: 'fr' })?.toString(); // '2026-11-06'
+date('14.07.2026', { loose: true, locale: 'fr' })?.toString(); // '2026-07-14'
+date('1er mai 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-05-01'
+datetime('lundi 16 novembre 2026 à 14h30', {
+  loose: true,
+  locale: 'fr',
+  zone: 'Europe/Paris',
+})?.hour; // 14
 ```
 
 Partial dates match French month names and accented abbreviations in loose mode. `dayMonth()` and `duration()` work in core without plugins:
@@ -104,7 +109,7 @@ Partial dates match French month names and accented abbreviations in loose mode.
 import { dayMonth, duration, monthDay, yearMonth } from 'native-dates';
 
 dayMonth('14/07').toString(); // '07-14'
-monthDay('15 août', { loose: true, locale: 'fr' })?.toString(); // '08-15'
+monthDay('1er mai', { loose: true, locale: 'fr' })?.toString(); // '05-01'
 yearMonth('févr. 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-02'
 duration('2h 30m').toString(); // 'PT2H30M'
 ```
@@ -125,22 +130,16 @@ hiver.in('America/Montreal').format('short', 'fr-CA'); // '2026-01-15 09 h 00'
 mars.in('America/Montreal').format('short', 'fr-CA'); // '2026-03-16 10 h 00'
 ```
 
-With [the zones plugin](/plugins/zones/), accented IANA cities like Montréal and Nouméa resolve directly. Map French city names like Bruxelles and Genève or Canadian `'HNE'` in `zoneAliases`:
+With [the zones plugin](/plugins/zones/), major French-speaking cities and Canadian abbreviations resolve directly with no aliases:
 
 ```js
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
+import { datetime } from 'native-dates';
 
-configure({
-  zoneAliases: {
-    bruxelles: 'Europe/Brussels',
-    geneve: 'Europe/Zurich',
-    hne: 'America/Montreal',
-  },
-});
 datetime('2026-11-16T09:30', 'Montréal').zone; // 'America/Montreal'
+datetime('2026-11-16T09:30', 'Bruxelles').zone; // 'Europe/Brussels'
 datetime('2026-11-16T09:30', 'Genève').zone; // 'Europe/Zurich'
-datetime('2026-11-16T09:30', 'HNE').zone; // 'America/Montreal'
+datetime('2026-11-16T09:30', 'HNE').zone; // 'America/Toronto'
 ```
 
 ## Relative dates and non-breaking spaces

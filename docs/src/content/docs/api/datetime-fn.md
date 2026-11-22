@@ -4,7 +4,7 @@ kind: function
 lede: Create a DateTime from a timestamp, string, Date, or fields object, or read the current time.
 import: import { datetime, now } from 'native-dates'
 size: core
-updated: 2026-11-16
+updated: 2026-11-22
 ---
 
 ## Reading moments
@@ -52,7 +52,7 @@ const fromDate = datetime(date('2026-11-16'), 'America/New_York');
       description: "Parse informal date strings and return `null` on unreadable input with `@native-dates/plugins/loose`."
     - name: dayFirst
       type: boolean
-      description: "Read ambiguous numeric dates such as `'07/09/2026'` as day-first in loose mode."
+      description: "Override the active locale's numeric date order for strings like `'07/09/2026'` in loose mode."
 ```
 
 **Returns**
@@ -62,7 +62,7 @@ type: DateTime
 description: "A `DateTime` in the resolved time zone, or `null` when loose mode cannot read `input`."
 ```
 
-When [`@native-dates/plugins/loose`](/plugins/loose/) is imported, loose mode parses informal strings that JavaScript's built-in parser accepts and returns `null` instead of throwing on unreadable input:
+When [`@native-dates/plugins/loose`](/plugins/loose/) is imported, loose mode reads informal dates and times in the active locale, falls back to engine parsing for machine formats, and returns `null` on unreadable input:
 
 ```js
 import { datetime } from 'native-dates';
@@ -81,7 +81,7 @@ Every input produces an immutable instance viewed in the target time zone:
 |---|---|---|
 | ISO string with offset | `'2026-11-16T17:30:00Z'`, `'2026-11-16 12:30-05:00'` | Fixes the exact moment and views it in the target time zone. |
 | Bracketed zone string | `'2026-11-16T09:30[America/New_York]'` | Keeps the bracketed zone unless a second zone argument overrides it. |
-| Local date and time | `'2026-11-16T09:30'`, `'2026/11/06 9:00'` | Reads a year-first date and time of day directly in the target zone. |
+| Local date and time | `'2026-11-16T09:30'`, `'2026年11月16日 14:30'` | Reads a year-first date and time of day directly in the target zone. |
 | Date string or CalendarDate | `'2026-11-16'`, `date(2026, 11, 16)` | Starts at the beginning of that calendar day in the target zone. |
 | Milliseconds or Date | `1794850200000`, `new Date()` | Converts the Unix timestamp to the target zone, truncating fractional milliseconds like `Date`. |
 | Fields object | `{ year: 2026, month: 11, day: 16, hour: 9 }` | Reads 1-indexed calendar and clock fields in the target zone and rejects impossible dates. |

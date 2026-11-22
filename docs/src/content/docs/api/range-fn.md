@@ -59,7 +59,7 @@ fromInterval.equals(fromEnds); // true
       description: "Parse informal date strings and return `null` on unreadable input with `@native-dates/plugins/loose`."
     - name: dayFirst
       type: boolean
-      description: "Interpret ambiguous numeric dates day-first in loose mode."
+      description: "Override the active locale's numeric date order in loose mode."
 ```
 
 **Returns**

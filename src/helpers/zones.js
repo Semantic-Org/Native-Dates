@@ -10,13 +10,13 @@ export const settings = {
   zone: undefined,
   locale: undefined,
   weekStart: undefined,
-  dayFirst: false,
+  dayFirst: undefined,
   zoneAliases: {},
   weekdayNames: undefined,
   ordinals: undefined,
   formats: undefined,
 };
-const resolved = new Map([['UTC', 'UTC']]);
+const resolved = new Map();
 
 export const canonicalZone = (id) => {
   try {
@@ -32,10 +32,10 @@ let zoneExtension = null;
 export const setZoneExtension = (resolver) => {
   zoneExtension = resolver;
   resolved.clear();
-  resolved.set('UTC', 'UTC');
 };
 
-export const zoneId = (id) => {
+// plugins may read a name by the caller's locale ('CST' is Shanghai in zh-CN), so results cache per locale
+export const zoneId = (id, tag) => {
   if (id === undefined || id === null) {
     return settings.zone ?? Temporal.Now.timeZoneId();
   }
@@ -46,11 +46,13 @@ export const zoneId = (id) => {
         : 0,
     });
   }
-  const known = resolved.get(id);
+  const activeLocale = locale(tag);
+  const key = `${id}|${activeLocale ?? ''}`;
+  const known = resolved.get(key);
   if (known) {
     return known;
   }
-  const found = zoneExtension ? zoneExtension(id, settings.zoneAliases) : canonicalZone(id.trim());
+  const found = zoneExtension ? zoneExtension(id, settings.zoneAliases, activeLocale) : canonicalZone(id.trim());
   if (!found) {
     refuse('unknownZone', id, {
       explanation: isDevelopment
@@ -60,7 +62,7 @@ export const zoneId = (id) => {
         : 0,
     });
   }
-  resolved.set(id, found);
+  resolved.set(key, found);
   return found;
 };
 
@@ -73,6 +75,10 @@ export const configure = (options) => {
       });
     }
   });
+  // set first because a plugin may read zone names by the locale ('CST' under 'zh-CN')
+  if (locale !== undefined) {
+    settings.locale = locale ? checkedLocale(locale) : undefined;
+  }
   if (zoneAliases !== undefined) {
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
@@ -100,13 +106,9 @@ export const configure = (options) => {
       }
     });
     resolved.clear();
-    resolved.set('UTC', 'UTC');
   }
   if (zone !== undefined) {
     settings.zone = zone === null ? undefined : zoneId(zone);
-  }
-  if (locale !== undefined) {
-    settings.locale = locale ? checkedLocale(locale) : undefined;
   }
   if (weekStart !== undefined) {
     settings.weekStart = weekStart === null ? undefined : dayOfWeek(weekStart);
@@ -139,7 +141,7 @@ export const configure = (options) => {
   }
   if (dayFirst !== undefined) {
     requireLoose('dayFirst');
-    settings.dayFirst = !!dayFirst;
+    settings.dayFirst = dayFirst === null ? undefined : !!dayFirst;
   }
   return { ...settings, zoneAliases: { ...settings.zoneAliases } };
 };
@@ -180,21 +182,24 @@ export const locale = (override) =>
   override === undefined ? settings.locale : checkedLocale(override) ?? settings.locale;
 export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);
 
-const firstDays = new Map();
-export const weekStart = (override, tag) => {
-  if (override !== undefined) {
-    return dayOfWeek(override);
+// take the first tag Intl supports as it was written, so region and -u-fw- extensions survive where
+// DateTimeFormat would resolve 'en-CN' to 'en', and use the system locale when none is supported
+export const intlLocale = (activeLocale) =>
+  new Intl.Locale(
+    Intl.DateTimeFormat.supportedLocalesOf(activeLocale)[0] ?? new Intl.DateTimeFormat().resolvedOptions().locale,
+  );
+
+const weekInfos = new Map();
+const weekInfo = (tag) => {
+  const activeLocale = locale(tag);
+  const key = String(activeLocale);
+  if (!weekInfos.has(key)) {
+    weekInfos.set(key, intlLocale(activeLocale).getWeekInfo?.() ?? { firstDay: 1, weekend: [6, 7] });
   }
-  if (settings.weekStart !== undefined) {
-    return settings.weekStart;
-  }
-  const read = locale(tag);
-  const key = String(read);
-  if (!firstDays.has(key)) {
-    // pass single tag strings straight to Intl.Locale so region and -u-fw- extensions survive,
-    // resolving through DateTimeFormat only for undefined (system locale) or tag arrays
-    const asked = isString(read) ? read : new Intl.DateTimeFormat(read).resolvedOptions().locale;
-    firstDays.set(key, new Intl.Locale(asked).getWeekInfo?.().firstDay ?? 1);
-  }
-  return firstDays.get(key);
+  return weekInfos.get(key);
 };
+
+export const weekStart = (override, tag) =>
+  override !== undefined ? dayOfWeek(override) : settings.weekStart ?? weekInfo(tag).firstDay;
+
+export const isWeekend = (day, tag) => weekInfo(tag).weekend.includes(day);

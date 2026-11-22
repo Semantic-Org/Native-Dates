@@ -602,7 +602,7 @@ export class Time {
  * Creates a `Time` from a 12-hour or 24-hour clock string, whole-number clock parts, a fields object,
  * or a timestamp. Missing inputs throw a `TypeError` instead of reading the live clock.
  *
- * @param input - Clock string (`'9am'`, `'17:30'`), fields object, `Time`, `DateTime`, `Date`, or `Temporal` value
+ * @param input - Clock string (`'9am'`, `'17:30'`, `'14h30'`), fields object, `Time`, `DateTime`, `Date`, or `Temporal` value
  * @param options - Time zone (for timestamps) and locale options
  * @returns An immutable `Time`
  *

@@ -572,8 +572,8 @@ describe('{ loose: true, dayFirst }', () => {
 });
 
 describe('configure({ dayFirst })', () => {
-  it('defaults to false and reflects updates from configure()', () => {
-    expect(configure().dayFirst).toBe(false);
+  it('defaults to undefined and reflects updates from configure()', () => {
+    expect(configure().dayFirst).toBe(undefined);
     expect(configure({ dayFirst: true }).dayFirst).toBe(true);
     expect(configure().dayFirst).toBe(true);
   });
@@ -603,13 +603,15 @@ describe('configure({ dayFirst })', () => {
     expect(date('Jul 9, 2026', { loose: true })?.toString()).toBe('2026-07-09');
   });
 
-  it('resets to month-first when set to false or null', () => {
+  it('parses month-first when set to false and by the locale order when reset to null', () => {
     configure({ dayFirst: true });
     configure({ dayFirst: false });
     expect(date('7/9/2026', { loose: true })?.toString()).toBe('2026-07-09');
+    expect(date('7/9/2026', { loose: true, locale: 'fr' })?.toString()).toBe('2026-07-09');
     configure({ dayFirst: true });
-    expect(configure({ dayFirst: null }).dayFirst).toBe(false);
-    expect(date('7/9/2026', { loose: true })?.toString()).toBe('2026-07-09');
+    expect(configure({ dayFirst: null }).dayFirst).toBe(undefined);
+    expect(date('7/9/2026', { loose: true, locale: 'en-US' })?.toString()).toBe('2026-07-09');
+    expect(date('7/9/2026', { loose: true, locale: 'fr' })?.toString()).toBe('2026-09-07');
   });
 
   it('persists across unrelated configure() calls', () => {
@@ -874,4 +876,284 @@ describe('{ loose: true } across host TZ offsets', () => {
     },
     30_000,
   );
+});
+
+describe('date() localized month names with { loose: true, locale }', () => {
+  it.each([
+    ['es', '16 de noviembre de 2026'],
+    ['es', 'lunes, 16 de noviembre de 2026'],
+    ['es', '16 nov 2026'],
+    ['pt-BR', '16 de novembro de 2026'],
+    ['pt-BR', '16 de nov. de 2026'],
+    ['fr', '16 novembre 2026'],
+    ['fr', 'lundi 16 novembre 2026'],
+    ['ru', '16 ноября 2026 г.'],
+    ['ru', '16 нояб. 2026 г.'],
+    ['de', 'Montag, 16. November 2026'],
+    ['it', '16 novembre 2026'],
+    ['tr', '16 Kasım 2026 Pazartesi'],
+    ['ar-AE', '16 نوفمبر 2026'],
+    ['ar-LB', '16 تشرين الثاني 2026'],
+    ['hi', '16 नवंबर 2026'],
+  ])('parses %s %j as 2026-11-16', (locale, text) => {
+    expect(date(text, { loose: true, locale })?.toString()).toBe('2026-11-16');
+  });
+
+  it.each([
+    ['fr', '1er mai 2026', '2026-05-01'],
+    ['fr', '10 déc. 2026', '2026-12-10'],
+    ['es', '15 ene 2026', '2026-01-15'],
+    ['pt-BR', '16 fev 2026', '2026-02-16'],
+    ['de', '16. März 2026', '2026-03-16'],
+    ['en-US', 'the 6th of September, 2026', '2026-09-06'],
+  ])('parses %s %j with an ordinal, abbreviation, or connecting word as %s', (locale, text, expected) => {
+    expect(date(text, { loose: true, locale })?.toString()).toBe(expected);
+  });
+
+  it.each([
+    ['fi', '16. marraskuuta 2026', '2026-11-16'],
+    ['fil', 'Martes, Hunyo 16, 2026', '2026-06-16'],
+    ['cy', 'Dydd Mawrth, 6 Hydref 2026', '2026-10-06'],
+    ['es', 'mar, 16 jun 2026', '2026-06-16'],
+    ['es', '16 mar 2026', '2026-03-16'],
+  ])('parses %s %j, which Date.parse reads as March or cannot read, as %s', (locale, text, expected) => {
+    expect(date(text, { loose: true, locale })?.toString()).toBe(expected);
+  });
+
+  it('parses English month names under locale "fi" and "ja"', () => {
+    expect(date('Mar 17, 2026', { loose: true, locale: 'fi' })?.toString()).toBe('2026-03-17');
+    expect(date('16 November 2026', { loose: true, locale: 'ja' })?.toString()).toBe('2026-11-16');
+  });
+
+  it('uses configure({ locale }) when no locale option is passed', () => {
+    configure({ locale: 'es' });
+    expect(date('16 de enero de 2026', { loose: true })?.toString()).toBe('2026-01-16');
+  });
+
+  it('returns null for a nonexistent day, a two-digit year beside a month name, or an extra number', () => {
+    expect(date('30 de febrero de 2026', { loose: true, locale: 'es' })).toBeNull();
+    expect(date('16 de enero de 26', { loose: true, locale: 'es' })).toBeNull();
+    expect(date('16 de enero de 2026, sala 4', { loose: true, locale: 'es' })).toBeNull();
+  });
+
+  it('parses format() output of all four presets back to the same date in 24 locales', () => {
+    const locales = [
+      'en-US',
+      'en-GB',
+      'es',
+      'es-MX',
+      'pt-BR',
+      'pt-PT',
+      'fr',
+      'fr-CA',
+      'de',
+      'it',
+      'nl',
+      'pl',
+      'ru',
+      'uk',
+      'tr',
+      'fi',
+      'sv',
+      'ja',
+      'zh-CN',
+      'zh-HK',
+      'ko',
+      'ar-EG',
+      'ar-AE',
+      'hi',
+    ];
+    for (const locale of locales) {
+      for (const month of [1, 5, 8, 11]) {
+        const day = date(2026, month, 6).locale(locale);
+        for (const preset of ['short', 'medium', 'long', 'full']) {
+          const text = day.format(preset);
+          expect(date(text, { loose: true, locale })?.toString(), `${locale} ${preset} ${text}`).toBe(day.toString());
+        }
+      }
+    }
+  });
+});
+
+describe('date() numeric day and month order with { loose: true, locale }', () => {
+  it.each([
+    ['fr', '06/11/2026'],
+    ['es', '06/11/2026'],
+    ['pt-BR', '06/11/2026'],
+    ['ru', '06.11.2026'],
+    ['de', '06.11.2026'],
+    ['es-CL', '06-11-2026'],
+    ['zh-HK', '6/11/2026'],
+    ['ar-AE', '06/11/2026'],
+  ])('parses %s %j day-first as 2026-11-06', (locale, text) => {
+    expect(date(text, { loose: true, locale })?.toString()).toBe('2026-11-06');
+  });
+
+  it('parses "06/11/2026" month-first in en-US and es-PR', () => {
+    expect(date('06/11/2026', { loose: true, locale: 'en-US' })?.toString()).toBe('2026-06-11');
+    expect(date('06/11/2026', { loose: true, locale: 'es-PR' })?.toString()).toBe('2026-06-11');
+  });
+
+  it('parses two-digit years year-first in ko', () => {
+    expect(date('26. 5. 5.', { loose: true, locale: 'ko' })?.toString()).toBe('2026-05-05');
+    expect(date('12.11.26', { loose: true, locale: 'ko' })?.toString()).toBe('2012-11-26');
+  });
+
+  it('uses the dayFirst option or configure({ dayFirst }) over the locale order', () => {
+    expect(date('06/11/2026', { loose: true, locale: 'fr', dayFirst: false })?.toString()).toBe('2026-06-11');
+    expect(date('06/11/2026', { loose: true, locale: 'en-US', dayFirst: true })?.toString()).toBe('2026-11-06');
+    configure({ dayFirst: false });
+    expect(date('06/11/2026', { loose: true, locale: 'fr' })?.toString()).toBe('2026-06-11');
+  });
+
+  it('returns null when the locale order puts a number above 12 in the month', () => {
+    expect(date('16/11/2026', { loose: true, locale: 'en-US' })).toBeNull();
+    expect(date('11/16/2026', { loose: true, locale: 'fr' })).toBeNull();
+  });
+
+  it('applies the locale order in datetime(), time(), and dateRange()', () => {
+    const options = { loose: true, locale: 'ru', zone: 'UTC' };
+    expect(datetime('16.11.2026, 14:30', options)?.toString()).toBe('2026-11-16T14:30:00.000Z');
+    expect(time('16.11.2026 14:30', options)?.toString()).toBe('14:30:00');
+    expect(dateRange('01.11.2026', '07.11.2026', options)?.toString()).toBe('2026-11-01/2026-11-07');
+  });
+});
+
+describe('date() and datetime() non-ASCII digits with { loose: true }', () => {
+  it.each([
+    ['Arabic-Indic digits', 'ar-EG', '٢٠٢٦-١١-١٦'],
+    ['Arabic-Indic digits with direction marks', 'ar-EG', '١٦\u200f/١١\u200f/٢٠٢٦'],
+    ['Arabic-Indic digits under a locale that prints Western ones', 'ar-AE', '١٦/١١/٢٠٢٦'],
+    ['Persian digits', 'en-GB', '۱۶/۱۱/۲۰۲۶'],
+    ['Devanagari digits', 'hi', '१६/११/२०२६'],
+    ['fullwidth digits and slashes', 'ja', '２０２６／１１／１６'],
+    ['fullwidth digits with Han units', 'ja', '２０２６年１１月１６日'],
+  ])('parses %s (%s %j) as 2026-11-16', (_form, locale, text) => {
+    expect(date(text, { loose: true, locale })?.toString()).toBe('2026-11-16');
+  });
+
+  it('parses fullwidth digits and a fullwidth colon in a clock time', () => {
+    expect(datetime('2026/11/16 １４：３０', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-11-16T14:30:00.000Z');
+  });
+});
+
+describe('time() and datetime() localized AM/PM with { loose: true, locale }', () => {
+  it.each([
+    ['ko', '오후 2:30', '14:30:00'],
+    ['ko', '오전 9:05', '09:05:00'],
+    ['zh-TW', '下午5:05', '17:05:00'],
+    ['ja', '午後2:30', '14:30:00'],
+    ['ar-EG', '٢:٣٠ م', '14:30:00'],
+    ['es-MX', '5:30 p. m.', '17:30:00'],
+  ])('time() parses %s %j as %s', (locale, text, expected) => {
+    expect(time(text, { loose: true, locale })?.toString()).toBe(expected);
+  });
+
+  it.each([
+    ['ko', '2026. 11. 16. 오후 2:30'],
+    ['zh-TW', '2026年11月16日 下午2:30'],
+    ['ar-EG', '١٦ نوفمبر ٢٠٢٦ في ٢:٣٠ م'],
+    ['pt-BR', '16 de novembro de 2026 às 14:30'],
+    ['fr', 'lundi 16 novembre 2026 à 14h30'],
+    ['es', '16 de noviembre de 2026 a las 14:30'],
+  ])('datetime() parses %s %j as 14:30 on 2026-11-16 in the target zone', (locale, text) => {
+    expect(datetime(text, { loose: true, locale, zone: 'Asia/Tokyo' })).toMatchObject({
+      zone: 'Asia/Tokyo',
+      year: 2026,
+      month: 11,
+      day: 16,
+      hour: 14,
+      minute: 30,
+    });
+  });
+
+  it.each([
+    ['hi', '16 नवंबर 2026 14:30 बजे'],
+    ['ja', '2026年11月16日 14:30 会議室'],
+    ['ar-EG', '١٦ نوفمبر ٢٠٢٦ ١٤:٣٠ اليوم'],
+  ])('datetime() parses %s %j with a word in a caseless script after the clock', (locale, text) => {
+    expect(datetime(text, { loose: true, locale, zone: 'UTC' })?.toString()).toBe('2026-11-16T14:30:00.000Z');
+  });
+
+  it.each([
+    ['en-US', '16 November 2026 14:30 ambient', '2026-11-16T14:30:00.000Z'],
+    ['en-US', '16 November 2026 program 14:30', '2026-11-16T14:30:00.000Z'],
+    ['en-US', '16 November 2026 rpm 2:30', '2026-11-16T02:30:00.000Z'],
+    ['ar-EG', '١٦ نوفمبر ٢٠٢٦ اليوم ٢:٣٠', '2026-11-16T02:30:00.000Z'],
+  ])('datetime() parses %s %j without reading AM or PM from part of a word', (locale, text, expected) => {
+    expect(datetime(text, { loose: true, locale, zone: 'UTC' })?.toString()).toBe(expected);
+  });
+
+  it("parses German 'am' before the day without treating it as AM", () => {
+    const options = { loose: true, locale: 'de', zone: 'UTC' };
+    expect(datetime('am 16. November 2026 um 14:30 Uhr', options)?.toString()).toBe('2026-11-16T14:30:00.000Z');
+    expect(datetime('am 16. November 2026 um 12:30', options)?.toString()).toBe('2026-11-16T12:30:00.000Z');
+    expect(datetime('am 16.11.2026 14:30', options)?.toString()).toBe('2026-11-16T14:30:00.000Z');
+    expect(datetime('am 16.11.2026 12:30', options)?.toString()).toBe('2026-11-16T12:30:00.000Z');
+  });
+
+  it('returns null from datetime() for a clock with no date and from time() for an hour past 12 beside PM', () => {
+    expect(datetime('오후 2:30', { loose: true, locale: 'ko' })).toBeNull();
+    expect(time('오후 14:30', { loose: true, locale: 'ko' })).toBeNull();
+  });
+
+  it("returns null from time() for '14h' and parses '8h' as a duration in timeRange()", () => {
+    expect(time('14h', { loose: true, locale: 'fr' })).toBeNull();
+    expect(timeRange('22:00', '8h', { loose: true })?.toString()).toBe('22:00:00/06:00:00');
+  });
+});
+
+describe('monthDay() and yearMonth() connecting words and unit labels with { loose: true, locale }', () => {
+  it.each([
+    ['es', '16 del agosto', '08-16'],
+    ['es-PE', '16 set.', '09-16'],
+    ['fr', '1er mai', '05-01'],
+    ['pt-BR', '16 de fev.', '02-16'],
+    ['ru', '16 ноября', '11-16'],
+    ['ar-LB', '16 تشرين الثاني', '11-16'],
+    ['ja', '11月16日', '11-16'],
+    ['ko', '11월 16일', '11-16'],
+    ['en-US', 'Nov 16, 2026', '11-16'],
+  ])('monthDay() parses %s %j as %s', (locale, text, expected) => {
+    expect(monthDay(text, { loose: true, locale })?.toString()).toBe(expected);
+  });
+
+  it.each([
+    ['es', 'agosto del 2026', '2026-08'],
+    ['ru', 'ноябрь 2026 г.', '2026-11'],
+    ['fr', 'févr. 2026', '2026-02'],
+    ['ar-LB', 'تشرين الثاني 2026', '2026-11'],
+    ['ar-EG', 'نوفمبر ٢٠٢٦', '2026-11'],
+  ])('yearMonth() parses %s %j as %s', (locale, text, expected) => {
+    expect(yearMonth(text, { loose: true, locale })?.toString()).toBe(expected);
+  });
+
+  it('parses a spaced numeric pair in the order of the function name rather than the locale', () => {
+    const options = { loose: true, locale: 'fr' };
+    expect(monthDay('7/9', options)?.toString()).toBe('07-09');
+    expect(monthDay('7 / 9', options)?.toString()).toBe('07-09');
+    expect(dayMonth('7 / 9', options)?.toString()).toBe('09-07');
+  });
+
+  it('returns null from monthDay() for a month and year and from yearMonth() for a month and day', () => {
+    expect(monthDay('noviembre de 2026', { loose: true, locale: 'es' })).toBeNull();
+    expect(yearMonth('16 de noviembre', { loose: true, locale: 'es' })).toBeNull();
+  });
+});
+
+describe('datetime() zone abbreviations in the input string with { loose: true }', () => {
+  it('parses EST as the fixed -05:00 IANA zone and EDT through Date.parse', () => {
+    expect(datetime('2026-01-15 09:30 EST', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-01-15T14:30:00.000Z');
+    expect(datetime('2026-07-15 09:30 EDT', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-07-15T13:30:00.000Z');
+  });
+
+  it('returns null for an unknown uppercase abbreviation after the clock', () => {
+    expect(datetime('2026-11-16 14:30 KST', { loose: true, zone: 'UTC' })).toBeNull();
+    expect(datetime('16 de noviembre de 2026 14:30 XYZ', { loose: true, zone: 'UTC', locale: 'es' })).toBeNull();
+  });
+
+  it('ignores lowercase words after the clock', () => {
+    expect(datetime('16 de noviembre de 2026 18:30 horas', { loose: true, zone: 'UTC', locale: 'es' })?.toString())
+      .toBe('2026-11-16T18:30:00.000Z');
+  });
 });

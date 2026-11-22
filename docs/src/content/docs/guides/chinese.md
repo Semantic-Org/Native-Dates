@@ -1,7 +1,7 @@
 ---
 title: Chinese
 lede: Handle regional date formats and lunar calendars across Chinese-speaking markets.
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 Pass a regional tag like `'zh-CN'` or `'zh-TW'` through [Localization](/guides/localization/). Each region sets its own script, date order, clock cycle, and week start.
@@ -19,18 +19,17 @@ release.format('YYYY-MM-DD HH:mm zzzz'); // '2026-11-16 17:30 中国标准时间
 datetime('1988-07-15T00:00:00Z', 'Asia/Shanghai').offset; // '+09:00'
 ```
 
-By North American convention, [the zones plugin](/plugins/zones/) maps `'CST'` to Chicago time and Urumqi to UTC+6 Xinjiang Time. Override it or add Mainland cities in `zoneAliases`:
+With [the zones plugin](/plugins/zones/), CST follows the active locale, resolving to Shanghai in Mainland China and Taipei in Taiwan. Major Mainland cities resolve out of the box, while Urumqi stays on UTC+6 Xinjiang Time:
 
 ```js
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
+import { datetime } from 'native-dates';
 
-datetime('2026-11-16T09:30:00Z', 'CST').zone; // 'America/Chicago'
-datetime('2026-11-16T09:30:00Z', 'Urumqi').offset; // '+06:00'
-
-configure({ zoneAliases: { CST: 'Asia/Shanghai', shenzhen: 'Asia/Shanghai' } });
-datetime('2026-11-16T09:30:00Z', 'CST').zone; // 'Asia/Shanghai'
+datetime('2026-11-16T09:30:00Z', { zone: 'CST', locale: 'zh-CN' }).zone; // 'Asia/Shanghai'
+datetime('2026-11-16T09:30:00Z', { zone: 'CST', locale: 'zh-TW' }).zone; // 'Asia/Taipei'
+datetime('2026-11-16T09:30:00Z', 'Beijing').zone; // 'Asia/Shanghai'
 datetime('2026-11-16T09:30:00Z', 'Shenzhen').format('HH:mm', 'zh-CN'); // '17:30'
+datetime('2026-11-16T09:30:00Z', 'Urumqi').offset; // '+06:00'
 ```
 
 ## Regional differences
@@ -101,16 +100,24 @@ slot.format('dd / ddd / dddd'); // '五 / 周五 / 星期五'
 slot.format('ddd', 'zh-TW'); // '週五'
 ```
 
-Core factories parse slash, dot, and unpadded year-first strings directly. For Hong Kong and Singapore day-first slash dates, pass `dayFirst: true` with [the loose plugin](/plugins/loose/):
+Core factories parse Han year-first dates, slashes, and dots directly, round-tripping the long preset with no plugins. For Hong Kong day-first slash dates, fullwidth digits, AM/PM clocks, or inline CST, load [the loose plugin](/plugins/loose/):
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, datetime } from 'native-dates';
+import '@native-dates/plugins/zones';
+import { date, datetime, monthDay, time, yearMonth } from 'native-dates';
 
-date('2026/1/5').toString(); // '2026-01-05'
-datetime('2026.11.6 9:30', 'Asia/Shanghai').format('YYYY-MM-DD HH:mm');
-// '2026-11-06 09:30'
-date('16/11/2026', { loose: true, dayFirst: true }).toString(); // '2026-11-16'
+date('2026年11月16日').toString(); // '2026-11-16'
+yearMonth('2026年11月').toString(); // '2026-11'
+date('16/11/2026', { loose: true, locale: 'zh-HK' })?.toString(); // '2026-11-16'
+date('２０２６年１１月１６日', { loose: true })?.toString(); // '2026-11-16'
+time('下午5:05', { loose: true, locale: 'zh-TW' })?.toString(); // '17:05:00'
+monthDay('11月16日', { loose: true })?.toString(); // '11-16'
+datetime('2026年11月16日 14:30 CST', {
+  loose: true,
+  locale: 'zh-CN',
+  zone: 'UTC',
+})?.toString(); // '2026-11-16T06:30:00.000Z'
 ```
 
 ## Chinese lunar and Minguo calendars

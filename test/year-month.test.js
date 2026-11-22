@@ -919,3 +919,22 @@ describe('YearMonth toString(), toJSON(), and toTemporal()', () => {
     expect(yearMonth(plain).toString()).toBe('2026-11');
   });
 });
+
+describe('yearMonth() year-first string parsing with any separator', () => {
+  it.each(['2026年11月', '2026년 11월', '2026. 11.', '2026 11'])('parses %j as 2026-11', (text) => {
+    expect(yearMonth(text).toString()).toBe('2026-11');
+  });
+
+  it.each(['2026-W05', '2026-Q4', '2026Q4'])('throws invalidYearMonth for the ISO week or quarter %j', (text) => {
+    expect(() => yearMonth(text)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidYearMonth', at: text }),
+    );
+  });
+
+  it('parses long format() output of ja, zh-CN, and ko back to the same month', () => {
+    for (const locale of ['ja', 'zh-CN', 'ko']) {
+      const written = yearMonth('2026-11').format('long', locale);
+      expect(yearMonth(written).toString(), written).toBe('2026-11');
+    }
+  });
+});

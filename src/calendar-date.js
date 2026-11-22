@@ -34,7 +34,7 @@ import {
   wholeNumbers,
   withParts,
 } from './helpers/units.js';
-import { weekStart, zoneId } from './helpers/zones.js';
+import { isWeekend, weekStart, zoneId } from './helpers/zones.js';
 import { MonthDay } from './month-day.js';
 import { DateRange } from './range.js';
 import { Time } from './time.js';
@@ -69,10 +69,12 @@ export class CalendarDate {
       ? { zone: monthOrOptions }
       : {};
     this.#locale = localeOf(settings, input);
-    this.#plain =
+    // a Temporal value or '[u-ca=persian]' string in another calendar names the same day, read here as ISO
+    this.#plain = (
       isPlainDate(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
-        : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings);
+        : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings)
+    ).withCalendar('iso8601');
     this.text = undefined; // keep text first in console previews
     const plain = this.#plain;
     this.month = plain.month;
@@ -142,7 +144,7 @@ export class CalendarDate {
         if (!settings.loose || error.code !== 'invalidDate') {
           throw error;
         }
-        const zoned = parseLoose(input, settings.zone, settings.dayFirst);
+        const zoned = parseLoose(input, settings);
         if (!zoned) {
           throw error;
         }
@@ -215,10 +217,10 @@ export class CalendarDate {
     return this.#plain.inLeapYear;
   }
   isWeekend() {
-    return this.#plain.dayOfWeek >= 6;
+    return isWeekend(this.#plain.dayOfWeek, this.#locale);
   }
   isWeekday() {
-    return this.#plain.dayOfWeek < 6;
+    return !this.isWeekend();
   }
 
   /*******************************
@@ -395,7 +397,9 @@ export class CalendarDate {
   at(when, zone) {
     // Date, Temporal.Instant, and instant strings carry no zone of their own, while DateTime and ZonedDateTime keep their wall-clock time
     const plainTime = new Time(when ?? '00:00', isUnzoned(when) ? { zone } : undefined).toTemporal();
-    return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone), plainTime }), { locale: this.#locale });
+    return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone, this.#locale), plainTime }), {
+      locale: this.#locale,
+    });
   }
 
   get monthDay() {

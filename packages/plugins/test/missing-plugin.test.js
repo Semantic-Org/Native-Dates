@@ -71,7 +71,7 @@ describe('dayFirst without @native-dates/plugins/loose', () => {
 
   it('leaves configure().dayFirst unchanged after configure({ dayFirst: true }) throws', () => {
     expect(() => configure({ dayFirst: true })).toThrowError(missingPlugin('dayFirst'));
-    expect(configure().dayFirst).toBe(false);
+    expect(configure().dayFirst).toBe(undefined);
   });
 
   it('throws missingPlugin at dayFirst from date(), datetime(), time(), and range factories', () => {

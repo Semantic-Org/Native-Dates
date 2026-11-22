@@ -1,7 +1,7 @@
 ---
 title: Working with Temporal
 lede: How Native Dates maps onto JavaScript's Temporal API, accepts raw Temporal objects, and runs on older engines.
-updated: 2026-11-12
+updated: 2026-11-22
 ---
 
 Native Dates is a thin, ergonomic layer over JavaScript's built-in `Temporal` and Intl APIs.
@@ -44,6 +44,8 @@ ym.daysInMonth; // 30
 ```
 
 Passing a `Temporal.ZonedDateTime` to [`datetime()`](/api/datetime-fn/) preserves its time zone unless you pass a new one. Passing an instant or plain date-time places that value into the zone you specify or your configured default.
+
+Temporal values and strings using non-ISO calendars like Japanese or Persian convert to the same ISO day automatically without calling `withCalendar()` first.
 
 Comparisons and span measurements accept Temporal inputs directly too:
 
