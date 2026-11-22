@@ -135,7 +135,7 @@ configure({ dayFirst: false });
 :::
 
 :::warning[Configure once at startup on servers]
-Global configuration updates shared state across the entire JavaScript process. Set defaults once when your server boots, and attach each user's zone and [`locale()`](/api/date-time/#locale) to the value inside request handlers. See [Internationalization](/guides/internationalization/).
+Global configuration updates shared state across the entire JavaScript process. Set defaults once when your server boots, and attach each user's zone and [`locale()`](/api/date-time/#locale) to the value inside request handlers. See [Localization](/guides/localization/).
 :::
 
 ## Day of week helper

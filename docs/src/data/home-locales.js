@@ -6,6 +6,8 @@
 export const HOME_LOCALES = {
   ja: {
     exampleSlug: 'examples/japanese',
+    guideSlug: 'guides/japanese',
+    guideLabel: '日本語の日付・時刻ガイドを読む',
     configuredLocale: 'ja',
     setupNote: 'アプリ起動時に一度設定（未指定ならブラウザの言語）、サーバーのリクエスト単位は <code>.locale(tag)</code>',
     title: '日本語の暦と表記の落とし穴まで、追加ロケールなしで対応',
@@ -13,10 +15,10 @@ export const HOME_LOCALES = {
     linkLabel: '日本語のインタラクティブ例を開く',
     proofs: [
       {
-        label: 'ゼロ埋めしない年月日と曜日',
-        note: '毎回ロケールを渡さなくても、自然な日本語の日付と曜日を出力します。',
-        code: "date('2026-05-01').format('full')",
-        run: ({ date }) => date('2026-05-01').format('full'),
+        label: 'ゼロ埋めしない年月日と括弧付きの曜日',
+        note: '毎回ロケールを渡さなくても、日本の画面で定番の「(金)」形式と年月日を出力します。',
+        code: "date('2026-05-01').format('llll')",
+        run: ({ date }) => date('2026-05-01').format('llll'),
       },
       {
         label: '深夜をまたぐ時間帯の波ダッシュ',
@@ -25,10 +27,10 @@ export const HOME_LOCALES = {
         run: ({ timeRange }) => timeRange('22:00', '06:00').text,
       },
       {
-        label: '見出し用の年月と日付の分離',
-        note: 'カレンダー見出しには日を持たない YearMonth を使い、安全に「年・月」だけを表記します。',
-        code: "yearMonth('2026-05').text",
-        run: ({ yearMonth }) => yearMonth('2026-05').text,
+        label: '「一昨日・明後日」までの自然な相対日',
+        note: '英語の昨日・明日よりも広い 2 日前後の日本語語彙を、辞書なしでそのまま返します。',
+        code: "date('2026-04-29').from('2026-05-01') + ' · ' + date('2026-05-03').from('2026-05-01')",
+        run: ({ date }) => `${date('2026-04-29').from('2026-05-01')} · ${date('2026-05-03').from('2026-05-01')}`,
       },
       {
         label: '和暦が必要な箇所だけタグを指定',
@@ -81,6 +83,8 @@ export const HOME_LOCALES = {
 
   'zh-CN': {
     exampleSlug: 'examples/chinese',
+    guideSlug: 'guides/chinese',
+    guideLabel: '阅读中文日期与时间指南',
     configuredLocale: 'zh-CN',
     setupNote: '客户端启动时配置一次（省略则跟随浏览器语言），服务端按请求调用 <code>.locale(tag)</code>',
     title: '原生支持中文公历、农历干支、周表头与时段格式',
@@ -95,9 +99,9 @@ export const HOME_LOCALES = {
       },
       {
         label: '时段词自动前置',
-        note: '12 小时制下自动将“上午/下午”置于时刻之前，无需手写英文 AM/PM 模板。',
-        code: "time('09:30').format({ hour: 'numeric', minute: '2-digit', hour12: true })",
-        run: ({ time }) => time('09:30').format({ hour: 'numeric', minute: '2-digit', hour12: true }),
+        note: '12 小时制下自动输出中文“上午/下午”并置于时刻之前，无需手写英文 AM/PM 映射。',
+        code: "time('09:30').format('Ah:mm')",
+        run: ({ time }) => time('09:30').format('Ah:mm'),
       },
       {
         label: '传统农历与干支纪年',
@@ -156,10 +160,12 @@ export const HOME_LOCALES = {
 
   ko: {
     exampleSlug: 'examples/korean',
+    guideSlug: 'guides/korean',
+    guideLabel: '한국어 날짜와 시간 가이드 읽기',
     configuredLocale: 'ko',
     setupNote: '앱 시작 시 한 번 설정(생략 시 브라우저 언어), 서버 요청별로는 <code>.locale(tag)</code>',
-    title: '한국어 띄어쓰기와 날짜 범위 축약까지 기본 내장',
-    lede: '한 번의 로케일 설정(또는 브라우저 기본 언어)만으로 년·월·일 뒤의 띄어쓰기, 양쪽 ‘일’을 유지하는 범위 표기, ‘오전/오후’ 위치까지 별도 로케일 파일 없이 0 kB로 처리합니다.',
+    title: '한국어 띄어쓰기, 괄호 요일, 음력 표기까지 기본 내장',
+    lede: '한 번의 로케일 설정(또는 브라우저 기본 언어)만으로 년·월·일 뒤의 띄어쓰기, 양쪽 ‘일’을 유지하는 범위 표기, ‘오전/오후’ 위치와 음력 명절 표기까지 별도 로케일 파일 없이 0 kB로 처리합니다.',
     linkLabel: '한국어 대화형 예제 보기',
     proofs: [
       {
@@ -169,22 +175,22 @@ export const HOME_LOCALES = {
         run: ({ dateRange }) => dateRange('2026-05-01', '2026-05-05').format('long'),
       },
       {
-        label: '년·월·일 띄어쓰기와 요일',
-        note: '중국어·일본어와 달리 한국어 어법에 맞춰 단위 뒤에 공백을 두고 요일을 이어 씁니다.',
-        code: "date('2026-05-01').format('full')",
-        run: ({ date }) => date('2026-05-01').format('full'),
+        label: '년·월·일 띄어쓰기와 괄호 요일',
+        note: '중국어·일본어와 달리 단위 뒤에 공백을 두고 한국어 UI에서 익숙한 ‘(금)’ 형태를 바로 만듭니다.',
+        code: "date('2026-05-01').format('llll')",
+        run: ({ date }) => date('2026-05-01').format('llll'),
       },
       {
         label: '오전·오후 선행 표기',
         note: '시각 앞에 ‘오전’과 ‘오후’를 자연스럽게 배치합니다.',
-        code: "time('14:30').format({ hour: 'numeric', minute: '2-digit', hour12: true })",
-        run: ({ time }) => time('14:30').format({ hour: 'numeric', minute: '2-digit', hour12: true }),
+        code: "time('14:30').format('A h:mm')",
+        run: ({ time }) => time('14:30').format('A h:mm'),
       },
       {
-        label: '자정을 넘기는 근무 시간',
-        note: '.text 하나만으로 야간 시간대가 불필요한 날짜 없이 물결표로 연결됩니다.',
-        code: "timeRange('22:00', '06:00').text",
-        run: ({ timeRange }) => timeRange('22:00', '06:00').text,
+        label: '추석·설날을 위한 음력 변환',
+        note: '음력 변환 테이블을 번들에 싣지 않고도 간지 연도와 음력 날짜를 표시합니다.',
+        code: "date('2026-09-25').format('long', 'ko-KR-u-ca-dangi')",
+        run: ({ date }) => date('2026-09-25').format('long', 'ko-KR-u-ca-dangi'),
       },
     ],
     consoles: {
@@ -231,6 +237,8 @@ export const HOME_LOCALES = {
 
   ar: {
     exampleSlug: 'examples/arabic',
+    guideSlug: 'guides/arabic',
+    guideLabel: 'اقرأ دليل التواريخ والأوقات بالعربية',
     configuredLocale: 'ar-EG',
     setupNote: 'اضبطه مرّة عند بدء التطبيق (أو اتركه للغة المتصفح)، أو مرّر <code>.locale(tag)</code> لكل طلب على الخادم',
     title: 'دعم أصيل للمثنى والجموع الستة والأرقام العربية والتقويم الهجري',
@@ -238,10 +246,10 @@ export const HOME_LOCALES = {
     linkLabel: 'جرّب مثال اللغة العربية المباشر',
     proofs: [
       {
-        label: 'المثنى والجموع الستة في المدد',
-        note: 'تُطبع القيمة ٢ بصيغة المثنى «يومان» دون رقم، مع تمييز جمع القلة (٣–١٠) والتمييز المنصوب (١١–٩٩).',
-        code: "days(2).text + ' · ' + days(11).text",
-        run: ({ days }) => `${days(2).text} · ${days(11).text}`,
+        label: 'المفرد والمثنى والجموع الستة في المدد',
+        note: 'يظهر المفرد والمثنى «يومان» دون رقم، مع تمييز جمع القلة من ٣ إلى ١٠ والتمييز المنصوب من ١١ إلى ٩٩.',
+        code: "[1, 2, 5, 11].map((n) => days(n).text).join(' · ')",
+        run: ({ days }) => [1, 2, 5, 11].map((n) => days(n).text).join(' · '),
       },
       {
         label: 'دمج النطاقات الزمنية من اليمين إلى اليسار',
@@ -306,6 +314,8 @@ export const HOME_LOCALES = {
 
   ru: {
     exampleSlug: 'examples/russian',
+    guideSlug: 'guides/russian',
+    guideLabel: 'Читать руководство для русского языка',
     configuredLocale: 'ru',
     setupNote: 'Один вызов при запуске (или язык браузера), а на сервере по запросу — <code>.locale(tag)</code>',
     title: 'Падежи месяцев и русское склонение числительных без локаль-пакетов',
@@ -331,10 +341,10 @@ export const HOME_LOCALES = {
         run: ({ dateRange }) => dateRange('2026-05-01', '2026-05-05').text,
       },
       {
-        label: 'Ночная смена через полночь',
-        note: 'Диапазон времени через 00:00 форматируется без подстановки лишних дат.',
-        code: "timeRange('22:00', '06:00').text",
-        run: ({ timeRange }) => timeRange('22:00', '06:00').text,
+        label: 'Живые русские наречия для близких дат',
+        note: 'Календарные даты выдают «позавчера» и «послезавтра» напрямую из встроенных таблиц языка.',
+        code: "date('2026-05-01').from('2026-05-03') + ' · ' + date('2026-05-05').from('2026-05-03')",
+        run: ({ date }) => `${date('2026-05-01').from('2026-05-03')} · ${date('2026-05-05').from('2026-05-03')}`,
       },
     ],
     consoles: {
@@ -381,10 +391,12 @@ export const HOME_LOCALES = {
 
   es: {
     exampleSlug: 'examples/spanish',
+    guideSlug: 'guides/spanish',
+    guideLabel: 'Leer la guía de fechas y horas en español',
     configuredLocale: 'es',
     setupNote: 'Una vez al iniciar la app (o el idioma del navegador), o <code>.locale(tag)</code> por petición en el servidor',
-    title: 'Meses en minúscula, conectores «de» y rangos naturales con una sola línea',
-    lede: 'Las plantillas pensadas para inglés suelen escribir «Mayo 1, 2026» con mayúscula indebida o repetir el mes completo en los rangos. Configura el idioma una sola vez (o usa el del navegador) y toda la gramática española funciona en 0 kB extra.',
+    title: 'Meses en minúscula, conectores «de» y variantes de España y América en 0 kB',
+    lede: 'Las plantillas pensadas para inglés suelen escribir «Mayo 1, 2026» con mayúscula indebida o chocar entre martes y miércoles en los calendarios. Configura el idioma una sola vez (o usa el del navegador) y toda la gramática española funciona en 0 kB extra.',
     linkLabel: 'Ver el ejemplo interactivo en español',
     proofs: [
       {
@@ -400,16 +412,16 @@ export const HOME_LOCALES = {
         run: ({ date }) => date('2026-05-01').format('full'),
       },
       {
-        label: 'Encabezado mensual frente a fecha completa',
-        note: 'YearMonth produce «mayo de 2026» para cabeceras sin inventar un día.',
-        code: "yearMonth('2026-05').format('long')",
-        run: ({ yearMonth }) => yearMonth('2026-05').format('long'),
+        label: 'Cabeceras de semana sin colisión entre martes y miércoles',
+        note: 'Evita la ambigüedad «M / M» de las iniciales de una letra devolviendo sílabas únicas de lunes a domingo.',
+        code: "weekdayNames('narrow').join(' · ')",
+        run: ({ weekdayNames }) => weekdayNames('narrow').join(' · '),
       },
       {
-        label: 'Rangos que cruzan de mes',
-        note: 'Cuando el rango cambia de mes, conserva «de» en ambos extremos y el año una sola vez.',
-        code: "dateRange('2026-05-29', '2026-06-02').format('long')",
-        run: ({ dateRange }) => dateRange('2026-05-29', '2026-06-02').format('long'),
+        label: 'Reloj de 24 horas en España y de 12 horas en América',
+        note: 'Adapta una hora puntual a otra variante hispanohablante sin cargar tablas de idioma.',
+        code: "time('17:30').text + ' · ' + time('17:30').locale('es-MX').text",
+        run: ({ time }) => `${time('17:30').text} · ${time('17:30').locale('es-MX').text}`,
       },
     ],
     consoles: {
@@ -456,9 +468,11 @@ export const HOME_LOCALES = {
 
   'pt-BR': {
     exampleSlug: 'examples/portuguese',
+    guideSlug: 'guides/portuguese',
+    guideLabel: 'Ler o guia de datas e horários em português',
     configuredLocale: 'pt-BR',
     setupNote: 'Uma vez ao iniciar o app (ou o idioma do navegador), ou <code>.locale(tag)</code> por requisição no servidor',
-    title: 'Crase em «às 09:30», meses em minúscula e intervalos naturais em português',
+    title: 'Crase em «às 09:30», meses em minúscula e fusos do Brasil sem pacotes extras',
     lede: 'Bibliotecas centradas no inglês costumam capitalizar «Maio» ou esquecer a crase antes do horário. Defina o idioma uma única vez (ou use o do navegador) e todas as chamadas entregam a grafia correta do português com 0 kB de pacotes extras.',
     linkLabel: 'Abrir o exemplo interativo em português',
     proofs: [
@@ -475,10 +489,10 @@ export const HOME_LOCALES = {
         run: ({ dateRange }) => dateRange('2026-05-15', '2026-05-19').format('long'),
       },
       {
-        label: 'Cabeçalho de mês sem dia artificial',
-        note: 'YearMonth formata «maio de 2026» diretamente para faturas, filtros e calendários.',
-        code: "yearMonth('2026-05').format('long')",
-        run: ({ yearMonth }) => yearMonth('2026-05').format('long'),
+        label: 'Conversão entre fusos brasileiros com máscara segura',
+        note: 'Converte de Brasília para Manaus mantendo «[às]» protegido contra o token de segundos.',
+        code: "datetime('2026-05-15T09:30', 'America/Sao_Paulo').in('America/Manaus').format('DD/MM [às] HH:mm')",
+        run: ({ datetime }) => datetime('2026-05-15T09:30', 'America/Sao_Paulo').in('America/Manaus').format('DD/MM [às] HH:mm'),
       },
       {
         label: 'Durações flexionadas no plural',
@@ -531,9 +545,11 @@ export const HOME_LOCALES = {
 
   fr: {
     exampleSlug: 'examples/french',
+    guideSlug: 'guides/french',
+    guideLabel: 'Lire le guide des dates et heures en français',
     configuredLocale: 'fr',
     setupNote: 'Une fois au démarrage (ou la langue du navigateur), ou <code>.locale(tag)</code> par requête côté serveur',
-    title: 'Mois en minuscules, plages abrégées et variantes francophones sans fichiers de langue',
+    title: 'Mois en minuscules, horloge « 14h30 » et variantes francophones sans fichiers de langue',
     lede: 'Une seule configuration au démarrage (ou la langue du navigateur) suffit pour écrire les jours et les mois en minuscules sans virgule et fusionner les plages, tout en permettant de passer « fr-CA » ponctuellement pour 0 ko supplémentaire.',
     linkLabel: 'Ouvrir l’exemple interactif en français',
     proofs: [
@@ -550,10 +566,10 @@ export const HOME_LOCALES = {
         run: ({ dateRange }) => dateRange('2026-05-15', '2026-05-19').text,
       },
       {
-        label: 'En-tête de mois dédié',
-        note: 'YearMonth affiche « mai 2026 » directement via .text sans bricoler le premier jour du mois.',
-        code: "yearMonth('2026-05').text",
-        run: ({ yearMonth }) => yearMonth('2026-05').text,
+        label: 'Horloge française en « 14h30 » et prépositions',
+        note: 'Combine les noms français du moteur avec « [le] », « [à] » et « HH[h]mm » sans collision avec le jeton 12 h.',
+        code: "datetime('2026-05-15T14:30', 'Europe/Paris').format('[le] dddd D MMMM [à] HH[h]mm')",
+        run: ({ datetime }) => datetime('2026-05-15T14:30', 'Europe/Paris').format('[le] dddd D MMMM [à] HH[h]mm'),
       },
       {
         label: 'Variante ponctuelle pour le Québec',
