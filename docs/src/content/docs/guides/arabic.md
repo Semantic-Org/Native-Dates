@@ -1,97 +1,97 @@
 ---
-title: Dates and times in Arabic
-lede: Handle Eastern and Western numerals, regional month names, Umm al-Qura Hijri dates, six-form plurals, and Ramadan clock shifts across Arabic locales.
+title: Arabic
+lede: Handle Eastern and Western numerals, regional month names, Hijri dates, plural forms, and Ramadan clock shifts.
 updated: 2026-11-21
 ---
 
-Once a locale is set via [Internationalization](/guides/internationalization/), Arabic apps span two numeral scripts, four regional month vocabularies, Hijri dates, and six-form plurals.
+Pass a country tag like `'ar-EG'` or `'ar-SA'` through [Internationalization](/guides/internationalization/) rather than bare `'ar'`. Numeral scripts, Gregorian month names, and week starts vary across Arabic-speaking countries.
 
 ## Eastern and Western numerals
 
-The UAE, Maghreb countries, and bare `'ar'` output Western digits, whereas Egypt, Saudi Arabia, the Levant, and Iraq output Eastern Arabic digits.
+The UAE, Maghreb countries, and bare `'ar'` output Western digits, while Egypt, Saudi Arabia, the Levant, and Iraq output Eastern Arabic digits.
 
-Append `-u-nu-latn` or `-u-nu-arab` to keep one numeral script across every user:
+Append `-u-nu-latn` or `-u-nu-arab` when you want one numeral script across every user:
 
 ```js
 import { date } from 'native-dates';
 
 const invoice = date('2026-11-16');
-invoice.format('long', 'ar-EG'); // '١٦ نوفمبر ٢٠٢٦' — 16 Nov 2026
+
+invoice.format('long', 'ar-EG'); // '١٦ نوفمبر ٢٠٢٦'
 invoice.format('long', 'ar-AE'); // '16 نوفمبر 2026'
 invoice.format('long', 'ar-EG-u-nu-latn'); // '16 نوفمبر 2026'
-invoice.format('long', 'ar-MA-u-nu-arab'); // '١٦ نونبر ٢٠٢٦' — Moroccan Nov
+invoice.format('long', 'ar-MA-u-nu-arab'); // '١٦ نونبر ٢٠٢٦'
 ```
 
-Token patterns always emit ASCII digits while localizing words, whereas numeric presets insert right-to-left marks `\u200F` before slashes. Prefer `'YYYY-MM-DD'` in assertions, CSVs, and URLs:
+Token patterns always emit ASCII digits while localizing month and weekday words, whereas numeric presets insert right-to-left marks `\u200F` before slashes. Prefer `'YYYY-MM-DD'` in assertions, CSVs, and URLs:
 
 ```js
 invoice.format('YYYY-MM-DD', 'ar-EG'); // '2026-11-16'
-invoice.format('dddd، D MMMM YYYY', 'ar-SA');
-// 'الاثنين، 16 نوفمبر 2026' — Mon, 16 Nov 2026
-invoice.format('short', 'ar-EG'); // '١٦\u200F/١١\u200F/٢٠٢٦' — RLM before slashes
+invoice.format('dddd، D MMMM YYYY', 'ar-SA'); // 'الاثنين، 16 نوفمبر 2026'
+invoice.format('short', 'ar-EG'); // '١٦\u200F/١١\u200F/٢٠٢٦'
 ```
 
 ## Hijri dates and regional months
 
-Modern engines default `'ar-SA'` to Gregorian. Pass `-u-ca-islamic-umalqura` with a preset to format official Umm al-Qura Hijri dates:
+Modern engines default `'ar-SA'` to Gregorian. Pass `'-u-ca-islamic-umalqura'` with a preset to format official Umm al-Qura Hijri dates, such as 1 Shawwal 1447 AH:
 
 ```js
 import { date } from 'native-dates';
 
 const eid = date('2026-03-20');
-eid.format('long', 'ar-SA'); // '٢٠ مارس ٢٠٢٦' — 20 Mar 2026
-eid.format('long', 'ar-SA-u-ca-islamic-umalqura');
-// '١ شوال ١٤٤٧ هـ' — 1 Shawwal 1447 AH
-eid.format('D MMMM YYYY', 'ar-SA-u-ca-islamic-umalqura');
-// '20 مارس 2026' — tokens stay Gregorian
+
+eid.format('long', 'ar-SA'); // '٢٠ مارس ٢٠٢٦'
+eid.format('long', 'ar-SA-u-ca-islamic-umalqura'); // '١ شوال ١٤٤٧ هـ'
+eid.format('D MMMM YYYY', 'ar-SA-u-ca-islamic-umalqura'); // '20 مارس 2026'
 ```
 
-Token patterns and partial dates stay Gregorian because one solar month spans two Hijri months, so anchor a specific day with `on()` first:
+Token patterns and partial dates stay Gregorian because one solar month spans two Hijri months. Anchor a specific day with `on()` first:
 
 ```js
 import { yearMonth } from 'native-dates';
 
 const march = yearMonth('2026-03');
-march.format('long', 'ar-SA-u-ca-islamic-umalqura'); // 'مارس ٢٠٢٦' — Mar 2026
-march.on(1).format('long', 'ar-SA-u-ca-islamic-umalqura');
-// '١٢ رمضان ١٤٤٧ هـ' — 12 Ramadan 1447 AH
-march.on(20).format('long', 'ar-SA-u-ca-islamic-umalqura');
-// '١ شوال ١٤٤٧ هـ' — 1 Shawwal 1447 AH
+
+march.format('long', 'ar-SA-u-ca-islamic-umalqura'); // 'مارس ٢٠٢٦'
+march.on(1).format('long', 'ar-SA-u-ca-islamic-umalqura'); // '١٢ رمضان ١٤٤٧ هـ'
+march.on(20).format('long', 'ar-SA-u-ca-islamic-umalqura'); // '١ شوال ١٤٤٧ هـ'
 ```
 
-Gregorian month names and clock cycles divide into four regional families, so pass a country subtag rather than bare `'ar'`:
+Gregorian month names and 12- vs. 24-hour clocks divide into four regional families:
 
 | Region | Sample tags | Output behavior |
 |---|---|---|
-| Egypt, Gulf, Sudan | `'ar-EG'`, `'ar-SA'`, `'ar-AE'` | Egyptian/Gulf months like يناير, يوليو, نوفمبر (Jan, Jul, Nov) with 12-hour ص / م (AM / PM). |
-| Levant and Iraq | `'ar-LB'`, `'ar-JO'`, `'ar-IQ'`, `'ar-SY'` | Syriac months like كانون الثاني, تموز, تشرين الثاني (Jan, Jul, Nov) with a 12-hour clock. |
-| Morocco | `'ar-MA'` | Moroccan months like ماي, يوليوز, غشت, شتنبر, نونبر, دجنبر (May, Jul–Sep, Nov–Dec) with a 24-hour clock. |
-| Algeria and Tunisia | `'ar-DZ'`, `'ar-TN'` | Maghreb months like جانفي, فيفري, جوان, جويلية, أوت (Jan, Feb, Jun–Aug) with a 12-hour clock. |
+| Egypt, Gulf, Sudan | `ar-EG`, `ar-SA` | Egyptian and Gulf months like يناير, يوليو, نوفمبر with 12-hour ص / م for AM and PM. |
+| Levant and Iraq | `ar-LB`, `ar-IQ` | Levantine months like كانون الثاني, تموز, تشرين الثاني with a 12-hour clock. |
+| Morocco | `ar-MA` | Moroccan months like ماي, يوليوز, غشت, شتنبر, نونبر, دجنبر with a 24-hour clock. |
+| Algeria and Tunisia | `ar-DZ`, `ar-TN` | Maghreb months like جانفي, فيفري, جوان, جويلية, أوت with a 12-hour clock. |
 
 ```js
 import { datetime } from 'native-dates';
 
 const july = datetime('2026-07-16T14:30', 'UTC');
-july.format('long', 'ar-EG'); // '١٦ يوليو ٢٠٢٦ في ٢:٣٠ م' — Jul 16, 2:30 PM
-july.format('long', 'ar-LB'); // '١٦ تموز ٢٠٢٦ في ٢:٣٠ م' — Syriac July
-july.format('long', 'ar-MA'); // '16 يوليوز 2026 في 14:30' — Moroccan July, 24h
-july.format('long', 'ar-DZ'); // '16 جويلية 2026 في 2:30 م' — Maghreb July
+
+july.format('long', 'ar-EG'); // '١٦ يوليو ٢٠٢٦ في ٢:٣٠ م'
+july.format('long', 'ar-LB'); // '١٦ تموز ٢٠٢٦ في ٢:٣٠ م'
+july.format('long', 'ar-MA'); // '16 يوليوز 2026 في 14:30'
+july.format('long', 'ar-DZ'); // '16 جويلية 2026 في 2:30 م'
 ```
 
 ## Week starts and weekends
 
 Weeks start on Saturday in Egypt, Jordan, Qatar, and Algeria, Sunday in Saudi Arabia and Yemen, and Monday in the UAE, Morocco, Tunisia, and Lebanon.
 
-Local `weekStart`, week boundaries, and weekday names follow each tag automatically, while cross-country server rollups should pass `startOf('week', 'monday')` explicitly:
+Local `weekStart`, week boundaries, and weekday headers follow each tag automatically, while cross-country rollups can pass `'monday'` explicitly:
 
 ```js
 import { date, weekdayNames } from 'native-dates';
 
 const wed = date('2026-11-18');
-wed.locale('ar-EG').startOf('week').toString(); // '2026-11-14' — Saturday
-wed.locale('ar-SA').startOf('week').toString(); // '2026-11-15' — Sunday
-wed.locale('ar-AE').startOf('week').toString(); // '2026-11-16' — Monday
-weekdayNames('narrow', undefined, 'ar-EG')[0]; // 'س' — Saturday
+
+wed.locale('ar-EG').startOf('week').toString(); // '2026-11-14'
+wed.locale('ar-SA').startOf('week').toString(); // '2026-11-15'
+wed.locale('ar-AE').startOf('week').toString(); // '2026-11-16'
+weekdayNames('narrow', undefined, 'ar-EG')[0]; // 'س'
 ```
 
 :::warning[Friday and Saturday weekends]
@@ -101,6 +101,7 @@ weekdayNames('narrow', undefined, 'ar-EG')[0]; // 'س' — Saturday
 ```js
 const fri = date('2026-11-20').locale('ar-SA');
 const sun = date('2026-11-22').locale('ar-SA');
+
 fri.isWeekend(); // false
 sun.isWeekend(); // true
 
@@ -111,27 +112,25 @@ isLocalWeekend(sun); // false
 
 ## Six-form plurals and RTL text
 
-Arabic inflects six plural categories from zero and singular through the dual `'يومان'` for two days, paucal 3–10, 11–99, and hundreds across durations and `from()`:
+Arabic uses six plural forms across zero, one, two like *يومان*, 3–10, 11–99, and hundreds. `Duration` and `from()` select each form automatically, alongside *بعد الغد* for two days ahead on calendar dates:
 
 ```js
 import { datetime, days } from 'native-dates';
 
-days(1).format('long', 'ar-EG'); // 'يوم' — 1 day
-days(2).format('long', 'ar-EG'); // 'يومان' — 2 days (dual)
-days(5).format('long', 'ar-EG'); // '٥ أيام' — 5 days (3–10)
-days(15).format('long', 'ar-EG'); // '١٥ يومًا' — 15 days (11–99)
-days(100).format('long', 'ar-EG'); // '١٠٠ يوم' — 100 days
+days(1).format('long', 'ar-EG'); // 'يوم'
+days(2).format('long', 'ar-EG'); // 'يومان'
+days(5).format('long', 'ar-EG'); // '٥ أيام'
+days(15).format('long', 'ar-EG'); // '١٥ يومًا'
+days(100).format('long', 'ar-EG'); // '١٠٠ يوم'
+
 const anchor = datetime('2026-11-16T09:00', 'Asia/Riyadh');
-anchor.plus(2, 'days').from(anchor, 'ar-SA');
-// 'خلال يومين' — in 2 days (oblique dual)
-anchor.date.plus(2, 'days').from(anchor.date, 'ar-SA');
-// 'بعد الغد' — day after tomorrow
+anchor.plus(2, 'days').from(anchor, 'ar-SA'); // 'خلال يومين'
+anchor.date.plus(2, 'days').from(anchor.date, 'ar-SA'); // 'بعد الغد'
 ```
 
-Browsers can visually reorder signs in ISO dates or UTC offsets inside right-to-left paragraphs, so isolate technical strings inside `<bdi>`:
+Browsers can reorder signs in ISO dates or UTC offsets inside right-to-left paragraphs, so wrap technical timestamps inside `<bdi>`:
 
 ```html
-<!-- Maintenance window: 10–16 Nov 2026 at 09:00 +03:00 -->
 <p dir="rtl">
   موعد الصيانة: ١٠–١٦ نوفمبر ٢٠٢٦ عند الساعة <bdi>09:00 +03:00</bdi>
 </p>
@@ -139,45 +138,35 @@ Browsers can visually reorder signs in ISO dates or UTC offsets inside right-to-
 
 ## Parsing inputs and time zones
 
-Both parsers reject Eastern digits, so normalize them to ASCII first and pass `dayFirst: true` for slashes. Loose full dates require English months, while `yearMonth()` matches single-word Arabic months:
+Pass `dayFirst: true` with [the loose plugin](/plugins/loose/) for day-month-year slash dates across Arabic locales, and match single-word Arabic months in partial dates:
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, yearMonth } from 'native-dates';
+import { date, monthDay, yearMonth } from 'native-dates';
 
-const toAscii = (s) =>
-  s.replace(/[٠-٩۰-۹]/g, (d) => d.codePointAt(0) - (d <= '٩' ? 0x0660 : 0x06f0));
-date('٢٠٢٦-١١-١٦', { loose: true }); // null
-date(toAscii('٢٠٢٦-١١-١٦')).toString(); // '2026-11-16'
-date('06/11/2026', { loose: true, dayFirst: true }).toString(); // '2026-11-06'
-yearMonth('نوفمبر 2026', { loose: true, locale: 'ar-EG' }).toString();
-// '2026-11' — Nov 2026
-yearMonth('تشرين الثاني 2026', { loose: true, locale: 'ar-LB' });
-// null — two-word Syriac Nov
+date('06/11/2026', { loose: true, dayFirst: true })?.toString(); // '2026-11-06'
+monthDay('17 أكتوبر', { loose: true, locale: 'ar-EG' })?.toString(); // '10-17'
+yearMonth('نوفمبر 2026', { loose: true, locale: 'ar-EG' })?.toString(); // '2026-11'
 ```
 
-[The zones plugin](/plugins/zones/) resolves Riyadh, Cairo, Dubai, Qatar, and Casablanca directly, while Makkah, Jeddah, Abu Dhabi, Doha, Manama, and Rabat register via `zoneAliases`:
+[The zones plugin](/plugins/zones/) resolves Riyadh, Cairo, Dubai, Qatar, and Casablanca directly, and `zoneAliases` maps unlisted cities like Makkah or Jeddah:
 
 ```js
 import '@native-dates/plugins/zones';
 import { configure, date, datetime } from 'native-dates';
 
 configure({
-  zoneAliases: {
-    makkah: 'Asia/Riyadh',
-    doha: 'Asia/Qatar',
-    'abu dhabi': 'Asia/Dubai',
-    rabat: 'Africa/Casablanca',
-  },
+  zoneAliases: { makkah: 'Asia/Riyadh', jeddah: 'Asia/Riyadh', doha: 'Asia/Qatar' },
 });
-datetime('2026-11-16T09:00', 'Doha').zone; // 'Asia/Qatar'
+
+datetime('2026-11-16T09:00', 'Makkah').zone; // 'Asia/Riyadh'
 ```
 
-Schedule with IANA zones rather than fixed offsets: `'Africa/Casablanca'` shifts back one hour during Ramadan, and Cairo springs forward at midnight to 01:00:
+Schedule with full IANA zones rather than fixed offsets: `'Africa/Casablanca'` shifts back an hour during Ramadan, and Cairo springs forward at midnight to 01:00:
 
 ```js
 datetime('2026-02-14T12:00', 'Africa/Casablanca').offset; // '+01:00'
-datetime('2026-03-01T12:00', 'Africa/Casablanca').offset; // '+00:00' — Ramadan
+datetime('2026-03-01T12:00', 'Africa/Casablanca').offset; // '+00:00'
 datetime('2026-03-25T12:00', 'Africa/Casablanca').offset; // '+01:00'
 
 const cairoSpring = date('2026-04-24').at('00:00', 'Africa/Cairo');

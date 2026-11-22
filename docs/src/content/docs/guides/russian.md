@@ -1,162 +1,144 @@
 ---
-title: Dates and times in Russian
-lede: Inflect Russian months and time units without locale dictionaries, and parse dotted dates and regional time zones without silent shifts.
+title: Russian
+lede: Format inflected months and plural units in Russian, and parse dotted dates and regional time zones.
 updated: 2026-11-21
 ---
 
-Beyond general [Internationalization](/guides/internationalization/), Russian dates center on grammatical month cases, three-way plural counts, dotted day-first inputs, and eleven regional time zones.
+Pass `'ru'` through [Internationalization](/guides/internationalization/) to format dates in Russian. Built-in `Intl` data handles grammatical month cases and three-way duration plurals with zero locale files.
 
 ## Month cases and the "г." year suffix
 
-Built-in presets put the month in the genitive case beside a day, keep nominative without one, and append the "г." year suffix:
+Presets put the month in the genitive case beside a day number, keep the nominative case for standalone month-years, and append the *г.* year suffix:
 
 ```js
 import { date, yearMonth } from 'native-dates';
 
 const release = date('2026-11-16').locale('ru');
-release.format('long'); // '16 ноября 2026 г.', genitive "Nov 16, 2026"
+
+release.format('long'); // '16 ноября 2026 г.'
 release.format('medium'); // '16 нояб. 2026 г.'
-yearMonth('2026-11').format('long', 'ru');
-// 'ноябрь 2026 г.', nominative "November 2026"
+yearMonth('2026-11').format('long', 'ru'); // 'ноябрь 2026 г.'
 ```
 
-Token patterns omit "г." for compact labels, switching `MMMM` and `MMM` from nominative "май" to genitive "6 мая" for May right after a day token:
+Custom token patterns omit *г.* for compact UI labels, switching `MMMM` and `MMM` from nominative *май* to genitive *мая* for May right after a day token:
 
 ```js
 const may = date('2026-05-06').locale('ru');
-may.format('MMMM YYYY'); // 'май 2026', nominative "May 2026"
-may.format('D MMMM YYYY'); // '6 мая 2026', genitive "May 6, 2026"
+
+may.format('MMMM YYYY'); // 'май 2026'
+may.format('D MMMM YYYY'); // '6 мая 2026'
 may.format('D MMM'); // '6 мая'
-date('2026-03-08').format('D MMM', 'ru'); // '8 мар.', "Mar 8"
+date('2026-03-08').format('D MMM', 'ru'); // '8 мар.'
 ```
 
-Genitive inflection stops when the month precedes the day or unescaped text separates them, so wrap literal suffixes between day and month in square brackets:
+Wrap literal case endings like `[-го]` in brackets between the day and month so genitive inflection still applies to `MMMM`:
 
 ```js
-may.format('D-го MMMM'); // '6-го май', unescaped suffix stays nominative
-may.format('D[-го] MMMM'); // '6-го мая', bracketed "6th of May"
+may.format('D[-го] MMMM'); // '6-го мая'
 ```
 
 ## Weekdays, lowercase names, and day numbers
 
-Russian writes month and weekday names in lowercase, and weeks always begin on Monday with `weekStart` set to `1`.
+Russian writes month and weekday names in lowercase, and weeks start on Monday with `weekStart` equal to `1`.
 
-Platform single-letter weekdays collide across Monday and Friday, Tuesday and Sunday, and Wednesday and Saturday, so narrow and short styles both return "пн" through "вс":
+Single-letter weekday initials collide across several days in Russian, so both narrow and short styles return two-letter *пн* through *вс* from Monday to Sunday:
 
 ```js
 import { date, weekdayNames } from 'native-dates';
 
 weekdayNames('narrow', undefined, 'ru');
-// ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'], Mon to Sun
-date('2026-11-16').format('dddd, D MMMM', 'ru');
-// 'понедельник, 16 ноября', Monday, Nov 16
+// ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
+date('2026-11-16').format('dddd, D MMMM', 'ru'); // 'понедельник, 16 ноября'
 ```
 
-Russian dates place no period after the day number, so `Do` outputs a bare number unless overridden alongside uppercase weekdays via [`configure()`](/api/configure/):
+Russian dates place no period after the day number, so `Do` outputs a plain number unless customized alongside capitalized weekdays in [`configure()`](/api/configure/):
 
 ```js
-import { configure, date, weekdayNames } from 'native-dates';
+import { configure, date } from 'native-dates';
 
 configure({
-  weekdayNames: {
-    ru: {
-      short: {
-        mon: 'Пн',
-        tue: 'Вт',
-        wed: 'Ср',
-        thu: 'Чт',
-        fri: 'Пт',
-        sat: 'Сб',
-        sun: 'Вс',
-      },
-    },
-  },
+  weekdayNames: { ru: { short: { mon: 'Пн', fri: 'Пт' } } },
   ordinals: { ru: (day) => `${day}-е` },
 });
-weekdayNames('short', undefined, 'ru');
-// ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-date('2026-11-16').format('Do', 'ru'); // '16-е', ordinal "16th"
+
+date('2026-11-16').format('ddd, Do MMMM', 'ru'); // 'Пн, 16-е ноября'
 ```
 
 ## Duration plurals and relative dates
 
-Russian integers take three plural forms and shift case after prepositions. Formatting `Duration` values selects each form automatically and joins compound units with spaces:
+Russian counts units with three forms across 1 and 21, 2 to 4, and 5 to 20. Formatting a `Duration` selects each form automatically:
 
 ```js
 import { days, duration } from 'native-dates';
 
-days(1).format('long', 'ru'); // '1 день', singular "1 day"
-days(2).format('long', 'ru'); // '2 дня', paucal "2 days"
-days(5).format('long', 'ru'); // '5 дней', plural "5 days"
-days(21).format('long', 'ru'); // '21 день', singular after 21
+days(1).format('long', 'ru'); // '1 день'
+days(2).format('long', 'ru'); // '2 дня'
+days(5).format('long', 'ru'); // '5 дней'
+days(21).format('long', 'ru'); // '21 день'
 duration({ days: 2, hours: 5, minutes: 21 }).format('long', 'ru');
-// '2 дня 5 часов 21 минута', 2d 5h 21m
+// '2 дня 5 часов 21 минута'
 ```
 
-On `DateTime`, `from()` measures elapsed time numerically because 22 hours before midnight still falls on the same day.
+On `DateTime`, `from()` counts elapsed hours and minutes so 22 hours before midnight still stays numeric.
 
-On `CalendarDate`, it compares calendar days and returns all five Russian day words, including "позавчера" and "послезавтра" for two days back or ahead:
+On `CalendarDate`, it compares calendar days and returns natural Russian words out to *позавчера* for two days ago and *послезавтра* for two days ahead:
 
 ```js
 import { date, datetime } from 'native-dates';
 
-const baseDay = date('2026-11-16').locale('ru');
-baseDay.minus(2, 'days').from(baseDay); // 'позавчера', day before yesterday
-baseDay.minus(1, 'day').from(baseDay); // 'вчера', yesterday
-baseDay.plus(1, 'day').from(baseDay); // 'завтра', tomorrow
-baseDay.plus(2, 'days').from(baseDay); // 'послезавтра', day after tomorrow
+const day = date('2026-11-16').locale('ru');
+day.minus(2, 'days').from(day); // 'позавчера'
+day.minus(1, 'day').from(day); // 'вчера'
+day.plus(2, 'days').from(day); // 'послезавтра'
 
-const baseMoment = datetime('2026-11-16T12:00:00Z', 'Europe/Moscow').locale('ru');
-baseMoment.minus(1, 'minute').from(baseMoment); // '1 минуту назад', 1 minute ago
-baseMoment.plus(2, 'days').from(baseMoment); // 'через 2 дня', in 2 days
+const moment = datetime('2026-11-16T12:00:00Z', 'Europe/Moscow').locale('ru');
+moment.minus(1, 'minute').from(moment); // '1 минуту назад'
+moment.plus(2, 'days').from(moment); // 'через 2 дня'
 ```
 
 ## Parsing dotted dates and Russian month names
 
-Core accepts year-first "2026.11.16" strings, while everyday "16.11.2026" throws `invalidDate`. Load [`@native-dates/plugins/loose`](/plugins/loose/) and enable `dayFirst` to read dotted day-first dates in loose mode:
+Core accepts year-first `'2026.11.16'` strings and rejects day-first dots. Load [the loose plugin](/plugins/loose/) and enable `dayFirst` to read dotted day-first dates:
 
 ```js
 import '@native-dates/plugins/loose';
 import { configure, date, datetime } from 'native-dates';
 
 configure({ dayFirst: true });
-date('16.11.2026', { loose: true }); // CalendarDate for 2026-11-16
-date('06.11.2026', { loose: true }); // CalendarDate for 2026-11-06
+
+date('16.11.2026', { loose: true }); // CalendarDate(2026-11-16)
+date('06.11.2026', { loose: true }); // CalendarDate(2026-11-06)
 datetime('16.11.2026, 14:30', { zone: 'Europe/Moscow', loose: true });
-// 14:30 in Moscow
 ```
 
 :::warning[Swapped day and month values]
-Without `dayFirst`, loose mode defaults to US month-first order. Input "16.11.2026" returns `null`, while "06.11.2026" silently becomes June 11 instead of November 6.
+Without `dayFirst`, loose mode defaults to month-first order. Input `'16.11.2026'` returns `null`, while `'06.11.2026'` becomes June 11 instead of November 6.
 :::
 
-Core reads dotted day-month and month-year pairs directly. Loose mode parses nominative and genitive Russian months on partial dates, while full Cyrillic dates return `null`:
+Core reads dotted day-month and month-year pairs directly, and loose mode matches both nominative and genitive Russian month names on partial dates:
 
 ```js
 import { dayMonth, monthDay, monthYear, yearMonth } from 'native-dates';
 
 dayMonth('06.11').toString(); // '11-06'
 monthYear('11.2026').toString(); // '2026-11'
-monthDay('16 ноября', { loose: true, locale: 'ru' }).toString();
-// '11-16', genitive "Nov 16"
-yearMonth('ноябрь 2026', { loose: true, locale: 'ru' }).toString();
-// '2026-11', nominative "Nov 2026"
-date('16 ноября 2026', { loose: true, locale: 'ru' }); // null
+monthDay('16 ноября', { loose: true, locale: 'ru' })?.toString(); // '11-16'
+yearMonth('ноябрь 2026', { loose: true, locale: 'ru' })?.toString(); // '2026-11'
 ```
 
-## Time zones across Russia and the CIS
+## Time zones across Russia and neighboring countries
 
-Russia and Belarus dropped seasonal shifts and Kazakhstan unified on UTC+5 in 2024, yet across all eleven Russian zones IANA names still preserve historical transitions.
+Russia spans eleven time zones without seasonal clock changes, and Kazakhstan unified on UTC+5 in 2024. Full IANA identifiers preserve historical offset transitions across every zone.
 
-Loading [`@native-dates/plugins/zones`](/plugins/zones/) matches IANA leaf cities in any case, while CIS abbreviations, alternate spellings, and Cyrillic names require `zoneAliases`:
+With [the zones plugin](/plugins/zones/), IANA city names match in any letter case, and `zoneAliases` maps abbreviations, alternate spellings, and Cyrillic names:
 
 | Input | Default status | Resolution |
 |---|---|---|
 | `'Europe/Moscow'`, `'Asia/Almaty'` | Works in core | Full IANA identifiers work out of the box and keep historical offset rules. |
-| `'Moscow'`, `'Yekaterinburg'`, `'Minsk'` | Works with plugin | Cities present in IANA identifiers match case-insensitively with the zones plugin. |
-| `'MSK'`, `'SPB'`, `'Kazan'`, `'Astana'`, `'мск'` | Throws `unknownZone` | Map CIS abbreviations, non-IANA cities, and Cyrillic names in `zoneAliases`. |
+| `'Moscow'`, `'Yekaterinburg'`, `'Minsk'` | Works with plugin | Cities present in IANA identifiers match in any letter case with the zones plugin. |
+| `'MSK'`, `'SPB'`, `'Kazan'`, `'Astana'`, `'мск'` | Needs alias | Map local abbreviations, unlisted cities, and Cyrillic names in `zoneAliases`. |
 
-Register project aliases once in [`configure()`](/api/configure/) to match any letter case:
+Register project aliases once in [`configure()`](/api/configure/):
 
 ```js
 import '@native-dates/plugins/zones';
@@ -166,13 +148,10 @@ configure({
   zoneAliases: {
     MSK: 'Europe/Moscow',
     мск: 'Europe/Moscow',
-    SPB: 'Europe/Moscow',
-    'Saint Petersburg': 'Europe/Moscow',
-    Ekaterinburg: 'Asia/Yekaterinburg',
     Astana: 'Asia/Almaty',
   },
 });
 datetime('2026-11-16T12:00:00Z', 'MSK').format('HH:mm', 'ru'); // '15:00'
-datetime('2026-11-16T12:00:00Z', 'мск').zone; // 'Europe/Moscow', Cyrillic "MSK"
+datetime('2026-11-16T12:00:00Z', 'мск').zone; // 'Europe/Moscow'
 datetime('2026-11-16T12:00:00Z', 'Astana').offset; // '+05:00'
 ```

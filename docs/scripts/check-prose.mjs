@@ -27,6 +27,8 @@ const visualCols = (line) => [...line].reduce((n, ch) => n + (WIDE_RE.test(ch) ?
 
 function analyzeGuide(file) {
   const raw = readFileSync(file, 'utf8');
+  const titleMatch = /^---[\s\S]*?^title:\s*['"]?(.+?)['"]?\s*$/m.exec(raw);
+  const title = titleMatch ? titleMatch[1].trim() : '';
   const body = raw.replace(/^---[\s\S]*?---\n+/, '');
   const lines = body.split('\n');
 
@@ -34,6 +36,8 @@ function analyzeGuide(file) {
   let inCallout = false;
   let fences = 0;
   let fenceLines = 0;
+  let curFenceLines = 0;
+  let maxFenceLines = 0;
   let callouts = 0;
   const headingBackticks = [];
   const thBackticks = [];
@@ -53,11 +57,18 @@ function analyzeGuide(file) {
     if (line.startsWith('```')) {
       flush();
       inFence = !inFence;
-      if (inFence) { fences++; }
+      if (inFence) {
+        fences++;
+        curFenceLines = 0;
+      }
+      else if (curFenceLines > maxFenceLines) {
+        maxFenceLines = curFenceLines;
+      }
       continue;
     }
     if (inFence) {
       fenceLines++;
+      curFenceLines++;
       const cols = visualCols(line);
       if (cols > 84) { wideFenceLines.push(`L${i + 1} (${cols} cols)`); }
       continue;
@@ -125,9 +136,11 @@ function analyzeGuide(file) {
   const proseWords = proseClean.replace(CJK_RE, ' ').trim().split(/\s+/).filter(Boolean).length;
 
   return {
+    title,
     p: paras.length,
     fences,
     avgFenceLines: fences ? fenceLines / fences : 0,
+    maxFenceLines,
     callouts,
     proseWords,
     cjk,
@@ -175,6 +188,12 @@ const checkCommon = (rel, stats, { strictSpans = false } = {}) => {
     }
     if (stats.wideFenceLines.length) {
       errors.push(`${rel}: code fence line > 84 visual cols at ${stats.wideFenceLines.join(', ')}`);
+    }
+    if (stats.maxFenceLines > 13) {
+      errors.push(`${rel}: code fence has ${stats.maxFenceLines} lines (max 13)`);
+    }
+    if (visualCols(stats.title) > 16) {
+      errors.push(`${rel}: title "${stats.title}" is ${visualCols(stats.title)} visual cols (max 16 so sidebar fits)`);
     }
   }
 };
