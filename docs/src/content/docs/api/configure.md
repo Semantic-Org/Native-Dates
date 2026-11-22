@@ -4,7 +4,7 @@ kind: function
 lede: Read or update process-wide defaults for time zone, locale, week start, formats, token names, and plugins.
 import: import { configure, dayOfWeek } from 'native-dates'
 size: core
-updated: 2026-11-17
+updated: 2026-11-22
 ---
 
 ## Global defaults
@@ -52,7 +52,7 @@ configure({ zone: null, locale: null, weekStart: null });
       description: Default time zone for factories and `now()`. Pass `null` to reset to the runtime's local zone.
     - name: locale
       type: Locale | null
-      description: Default locale tag, tag list, or `Accept-Language` header for formatting and week boundaries. Pass `null` or `''` to reset to the runtime's locale.
+      description: Default locale tag, tag list, or `Accept-Language` header for formatting, week boundaries, weekends, and plugins. Pass `null` or `''` to reset to the runtime's locale.
     - name: weekStart
       type: DayOfWeek | null
       description: First day of the week for week boundaries and `weekdayNames()`, from 1 for Monday through 7 for Sunday. Unset or `null` follows the active locale.
@@ -66,9 +66,8 @@ configure({ zone: null, locale: null, weekStart: null });
       type: "Record<string, string | Intl.DateTimeFormatOptions> | null"
       description: "Reusable custom formats passed to `format(name)`, where each value is a token pattern or `Intl` options object. Custom names take precedence over built-in presets, and `null` clears them."
     - name: dayFirst
-      type: boolean
-      default: 'false'
-      description: "Read ambiguous numeric dates such as `'07.09.2026'` day-first with `@native-dates/plugins/loose`."
+      type: boolean | null
+      description: "Override the active locale's numeric date order in `@native-dates/plugins/loose`. Unset or `null` follows the active locale."
     - name: zoneAliases
       type: Record<string, Zone | null> | null
       description: "Custom names mapped to zones with `@native-dates/plugins/zones`. Pass `null` for a key or the whole map to clear aliases."
@@ -130,7 +129,7 @@ configure({
 date('07.09.2026', { loose: true })?.toString(); // '2026-09-07'
 now('hq').zone; // 'Europe/Berlin'
 
-configure({ dayFirst: false });
+configure({ dayFirst: null });
 ```
 :::
 

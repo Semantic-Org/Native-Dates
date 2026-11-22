@@ -1,7 +1,7 @@
 ---
 title: Internationalization
 lede: Choose between the browser's default locale, a one-time app setting, a locale carried on a value, or a single-call override.
-updated: 2026-11-16
+updated: 2026-11-22
 ---
 
 Native Dates formats through the JavaScript engine's built-in `Intl` data. Every language, script, plural rule, and calendar system works out of the box with zero locale files to download.
@@ -95,7 +95,7 @@ datetime('2026-05-15T14:30:00Z').locale('fr-CH;q=0.8, de;q=0.9, es;q=0').locale(
 Global configuration updates shared state across the entire JavaScript process. On a multi-user server, another request can overwrite a `configure()` call across an async boundary. Attach `locale()` to the value instead.
 :::
 
-An instance locale controls localized text and where a week begins. Exact comparisons, sorting, `equals()`, and ISO serialization with `toString()` ignore it:
+An instance locale controls localized text, week boundaries, and weekend days. Exact comparisons, sorting, `equals()`, and ISO serialization with `toString()` ignore it:
 
 ```js
 import { date } from 'native-dates';
@@ -145,6 +145,15 @@ function weekKey(day) {
 ```
 
 ISO week numbers from `weekOfYear` and `'W'` always count weeks from Monday. ISO weekday numbers from `dayOfWeek` and `'E'` follow the same Monday-first numbering.
+
+Weekend checks follow the active locale too. `isWeekend()` and `isWeekday()` treat Friday and Saturday as the weekend in Saudi Arabia and Egypt, and Friday alone in Iran. India uses Sunday alone, while most other locales use Saturday and Sunday:
+
+```js
+const friday = date('2026-11-20');
+
+friday.locale('en-US').isWeekend(); // false
+friday.locale('ar-SA').isWeekend(); // true
+```
 
 ## One-off calendar and dialect overrides
 

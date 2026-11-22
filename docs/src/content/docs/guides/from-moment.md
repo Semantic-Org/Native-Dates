@@ -1,7 +1,7 @@
 ---
 title: Coming from Moment
 lede: Move off Moment and moment-timezone to immutable values, built-in tokens and ranges, zero bundled timezone data, and incremental Date interop.
-updated: 2026-11-20
+updated: 2026-11-22
 ---
 
 Moment and `moment-timezone` carried JavaScript date handling for years, at the cost of mutable objects, zero-indexed months, and heavy timezone bundles.
@@ -96,7 +96,7 @@ quarter.overlaps(date('2026-12-15').to('2027-01-15')); // true
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) built directly into core |
 | `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) built into core with `to()`, `for()`, and `overlaps()` |
 | `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [Relative phrases](/guides/formatting/#relative-phrases) built into core |
-| Non-ISO string parsing | `{ loose: true }` | Load [`@native-dates/plugins/loose`](/plugins/loose/) for `Date.parse` fallback |
+| Non-ISO string parsing | `{ loose: true }` | Load [`@native-dates/plugins/loose`](/plugins/loose/) for locale-aware and informal string parsing |
 
 ## Migrating incrementally
 

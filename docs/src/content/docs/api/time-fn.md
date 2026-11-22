@@ -4,7 +4,7 @@ kind: function
 lede: Create a Time from a 12-hour or 24-hour clock string, numbers, fields, or a timestamp.
 import: import { time } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-22
 ---
 
 ## Reading clock times
@@ -60,7 +60,7 @@ fromMoment.toString(); // '18:30:00'
       description: "Read informal date-time strings and return `null` on unreadable input with `@native-dates/plugins/loose`."
     - name: dayFirst
       type: boolean
-      description: "Interpret ambiguous numeric dates day-first when loose mode parses a date-and-time string."
+      description: "Override the active locale's numeric date order when loose mode parses a date-and-time string."
 - name: second
   type: number
   description: Whole `second` from 0 to 59 when passing numbers. Write sub-second digits in a string or fields object.
@@ -73,12 +73,13 @@ type: Time
 description: "A `Time` representing a time of day, or `null` when loose mode cannot read `input`."
 ```
 
-When the [loose plugin](/plugins/loose/) is loaded, loose mode parses informal timestamp strings and returns `null` instead of throwing on unreadable input:
+When the [loose plugin](/plugins/loose/) is loaded, loose mode parses localized AM/PM clock times and informal timestamp strings, returning `null` on unreadable input:
 
 ```js
 import { time } from 'native-dates';
 import '@native-dates/plugins/loose';
 
+time('오후 2:30', { loose: true, locale: 'ko' })?.toString(); // '14:30:00'
 time('Mon, 16 Nov 2026 17:30:00 GMT', {
   zone: 'America/New_York',
   loose: true,
@@ -94,7 +95,7 @@ Twelve-hour strings accept hours from 1 through 12 followed by AM or PM. Midnigh
 | Input | Example | How it reads |
 |---|---|---|
 | 12-hour clock string | `'9am'`, `'5:30pm'`, `'12:15 a.m.'` | Reads hours 1 through 12 with `am` or `pm` and optional minutes, seconds, and fractions. |
-| 24-hour clock string | `'09:00'`, `'17:30:00'`, `'17:30:15.250'` | Reads 24-hour clock strings down to nanosecond precision. |
+| 24-hour clock string | `'09:00'`, `'14h30'`, `'17:30:15.250'` | Reads 24-hour clock strings with colons or `h` between hour and minute, down to nanoseconds. |
 | ISO instant string | `'2026-11-16T17:30:00Z'` | Reads the local clock of that moment in the given zone or configured default. |
 | Clock numbers | `time(9)`, `time(9, 30)`, `time(17, 30, 15)` | Takes whole numbers for hour, optional minute, and optional second. |
 | Fields object | `{ hour: 9, minute: 30, millisecond: 250 }` | Reads singular or plural clock fields and rejects out-of-range numbers. |
