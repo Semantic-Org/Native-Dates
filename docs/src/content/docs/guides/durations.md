@@ -56,9 +56,10 @@ resolved.since(opened, 'minutes'); // 150
 Every [range](/api/ranges/) also exposes `.duration` directly:
 
 ```js
-import { date } from 'native-dates';
+import { dateRange, timeRange } from 'native-dates';
 
-date('2026-11-01').to('2026-11-07').duration.days; // 7
+dateRange('2026-11-01', '2026-11-07').duration.days; // 7
+timeRange('9:00am', '5:30pm').duration.hours; // 8
 ```
 
 ## Balancing and totaling units

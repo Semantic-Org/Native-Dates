@@ -164,7 +164,7 @@ weekdayNames('narrow', 'monday', 'en-US'); // ['Mo', 'Tu', 'We', ...]
 Register reusable format names in [`configure()`](/api/configure/) when your app uses the same date or time layout in multiple places. Each named format can be a token pattern or an `Intl` options object:
 
 ```js
-import { configure, date } from 'native-dates';
+import { configure, date, dateRange } from 'native-dates';
 
 configure({
   formats: {
@@ -175,7 +175,7 @@ configure({
 
 date('2026-11-06').format('invoice'); // '2026-11-06'
 date('2026-11-06').format('receipt'); // 'November 6, 2026'
-date('2026-11-06').to('2026-11-20').format('invoice'); // '2026-11-06 – 2026-11-20'
+dateRange('2026-11-06', '2026-11-20').format('invoice'); // '2026-11-06 – 2026-11-20'
 
 configure({ formats: null });
 ```
@@ -187,12 +187,14 @@ Named formats take precedence over built-in presets, so registering `'short'` ov
 Every [range](/api/ranges/) formats presets and options through `Intl`, collapsing shared month or year parts automatically. Passing a token pattern formats both endpoints separated by `' – '`:
 
 ```js
-import { date } from 'native-dates';
+import { dateRange, timeRange } from 'native-dates';
 
-const week = date('2026-09-01').to('2026-09-07');
+const week = dateRange('2026-09-01', '2026-09-07');
+const shift = timeRange('9:00am', '5:00pm');
 
 week.format('medium', 'en-US'); // 'Sep 1 – 7, 2026'
 week.format('YYYY-MM-DD'); // '2026-09-01 – 2026-09-07'
+shift.format('short', 'en-US'); // '9:00 AM – 5:00 PM'
 ```
 
 ## Relative phrases

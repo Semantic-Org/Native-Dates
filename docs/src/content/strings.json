@@ -159,6 +159,7 @@
   "home.prims.yearMonth": "A year and month",
   "home.prims.monthDay": "A month and day",
   "home.prims.range": "A date range",
+  "home.prims.timeRange": "A time range",
   "home.prims.plugin": "{name} plugin",
   "home.consoles.title": "Date gets them <em class=\"is-wrong\">wrong</em>. Temporal gets them <em class=\"is-right\">right</em>.",
   "home.consoles.lede": "Don’t spend time learning all of <code>Date</code>’s bugs and edge cases like it’s still 1995.",

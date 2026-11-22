@@ -151,10 +151,12 @@ standup.startOfNext('wednesday').text; // 'Nov 18, 2026, 12:00 AM EST'
 
 ## Building and stepping ranges
 
-Call `for()` with a length or `to()` with an end on any date, time, or moment to build a [range](/api/ranges/). Walk across its steps or divide it into smaller sub-ranges:
+Create a [range](/api/ranges/) with `dateRange()`, `timeRange()`, or `datetimeRange()`, or chain `for()` and `to()` off an existing point. Walk across its steps or divide it into smaller sub-ranges:
 
 ```js
-const sprint = date('2026-11-02').for(2, 'weeks');
+import { dateRange } from 'native-dates';
+
+const sprint = dateRange('2026-11-02', '2 weeks');
 
 sprint.end.toString(); // '2026-11-15'
 sprint.points('week').map(String); // ['2026-11-02', '2026-11-09']

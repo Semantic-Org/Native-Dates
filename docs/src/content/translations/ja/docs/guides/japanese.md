@@ -1,5 +1,5 @@
 ---
-source: 'ea2690ed7f8c'
+source: '35dcdba4a497'
 reviewed: false
 title: 日本語
 lede: 和暦や括弧付き曜日のフォーマットからスラッシュ日付の読み取り、週の始まりの統一までを扱います。
@@ -138,13 +138,13 @@ weekdayNames('short', 'monday', 'ja-JP');
 期間のプリセットはスラッシュ日付や漢字時刻を全角チルダで結びます。両端に漢字の日付と曜日を出したい場合は `format()` にトークン文字列を渡します。
 
 ```js
-import { date, time } from 'native-dates';
+import { dateRange, timeRange } from 'native-dates';
 
-const span = date('2026-11-16').to('2026-11-20').locale('ja-JP');
+const span = dateRange('2026-11-16', '2026-11-20').locale('ja-JP');
 
 span.format('long'); // '2026/11/16～2026/11/20'
 span.format('M月D日(ddd)'); // '11月16日(月) – 11月20日(金)'
-time('09:00').to('17:30').format('short', 'ja-JP'); // '9時00分～17時30分'
+timeRange('09:00', '17:30').format('short', 'ja-JP'); // '9時00分～17時30分'
 ```
 
 相対表現は `CalendarDate` なら前後2日までを一昨日から明後日までの語で表し、`DateTime` は時刻差による日付の誤認を防ぐため常に数値と単位で返します。

@@ -86,6 +86,8 @@ export const SECTIONS = [
           { title: 'yearMonth()', slug: 'api/year-month-fn', symbol: true },
           { title: 'monthDay()', slug: 'api/month-day-fn', symbol: true },
           { title: 'dateRange()', slug: 'api/range-fn', symbol: true },
+          { title: 'datetimeRange()', slug: 'api/range-fn#datetimerange', symbol: true },
+          { title: 'timeRange()', slug: 'api/range-fn#timerange', symbol: true },
           { title: 'monthNames()', slug: 'api/month-names', symbol: true },
           { title: 'weekdayNames()', slug: 'api/month-names#weekdaynames', symbol: true },
           { title: 'dayOfWeek()', slug: 'api/configure#dayofweek', symbol: true },

@@ -137,13 +137,13 @@ weekdayNames('short', 'monday', 'ja-JP');
 Range presets join slash dates or kanji times with a fullwidth tilde. Pass a token template to `format()` when both ends need kanji dates and weekdays:
 
 ```js
-import { date, time } from 'native-dates';
+import { dateRange, timeRange } from 'native-dates';
 
-const span = date('2026-11-16').to('2026-11-20').locale('ja-JP');
+const span = dateRange('2026-11-16', '2026-11-20').locale('ja-JP');
 
 span.format('long'); // '2026/11/16～2026/11/20'
 span.format('M月D日(ddd)'); // '11月16日(月) – 11月20日(金)'
-time('09:00').to('17:30').format('short', 'ja-JP'); // '9時00分～17時30分'
+timeRange('09:00', '17:30').format('short', 'ja-JP'); // '9時00分～17時30分'
 ```
 
 `CalendarDate` returns natural words out to *一昨日* for two days ago and *明後日* for two days ahead. `DateTime` always outputs counted units so hour differences never misread as calendar days:

@@ -1,5 +1,5 @@
 ---
-source: 'd52d589d14ff'
+source: 'a7805d3a492b'
 reviewed: false
 title: 한국어
 lede: 한국어 마침표 날짜를 파싱하고 요일과 음력 명절을 포맷합니다.
@@ -42,7 +42,7 @@ datetime('2026. 11. 16. 14:30', { zone: 'Asia/Seoul', loose: true })?.toString()
 `'full'` 프리셋은 전체 요일명을 적지만 `'llll'` 프리셋과 짧은 요일 옵션은 한 글자 괄호 요일을 붙이고 기간을 물결표로 잇습니다.
 
 ```js
-import { date } from 'native-dates';
+import { date, dateRange } from 'native-dates';
 
 const holiday = date('2026-05-05').locale('ko-KR');
 
@@ -50,7 +50,7 @@ holiday.format('llll'); // '2026년 5월 5일 (화)'
 holiday.format({ month: 'long', day: 'numeric', weekday: 'short' });
 // '5월 5일 (화)'
 
-const week = date('2026-11-16').to('2026-11-20');
+const week = dateRange('2026-11-16', '2026-11-20');
 week.format({ month: 'long', day: 'numeric', weekday: 'short' }, 'ko-KR');
 // '11월 16일 (월)~20일 (금)'
 ```

@@ -66,10 +66,18 @@ export function primitivesFor(locale = 'en') {
     {
       id: 'range',
       built: '2 × Temporal.PlainDate',
-      ours: "date('2026-09-01').for(2, 'weeks')",
+      ours: "dateRange('2026-09-01', '2026-09-14')",
       temporal: "Temporal.PlainDate.from('2026-09-01')\nTemporal.PlainDate.from('2026-09-14')",
       legacy: '[new Date(2026, 8, 1), new Date(2026, 8, 14)] // 8 is September',
       stored: '2 × Date',
+    },
+    {
+      id: 'timeRange',
+      built: '2 × Temporal.PlainTime',
+      ours: "timeRange('9:00am', '5:00pm')",
+      temporal: "Temporal.PlainTime.from('09:00')\nTemporal.PlainTime.from('17:00')",
+      legacy: '[540, 1020] // minutes since midnight',
+      stored: '2 × number',
     },
   ];
 }
