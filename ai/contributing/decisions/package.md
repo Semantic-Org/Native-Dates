@@ -109,3 +109,27 @@ Reopen: callers consistently try unit names in `next()` and `previous()`, or exp
 Narrowing `"./helpers/*"` to the four files `@native-dates/plugins` currently imports would make internal helpers look like curated public API and force a core version bump whenever a future official plugin needs another helper. Omitting `"types"` on `"./helpers/*"` keeps those modules out of editor autocomplete while lockstep `@native-dates/plugins` releases coordinate internal changes.
 
 Reopen: third-party consumers couple to `native-dates/helpers/*` in production and break on minor releases.
+
+## D19: `isWeekend()` and `isWeekday()` follow the locale like week boundaries do (2026-11-22)
+
+Hardcoding Saturday and Sunday (`dayOfWeek >= 6`, as in Moment, Day.js, and date-fns) misclassifies Friday-Saturday (`ar-SA`, `he-IL`), Friday-only (`fa-IR`), and Sunday-only (`hi-IN`) weekends even when `startOf('week')` already localizes via `Intl.Locale.prototype.getWeekInfo` (`D7`). The tradeoff is that a single `CalendarDate` or `DateTime` can return different `isWeekend()` answers across server requests carrying different `.locale()` tags.
+
+Reopen: server code keys payroll or business-day schedules on `isWeekend()` and hits unexpected variance across request locales, or callers need an explicit `configure()` weekend override.
+
+## D20: Loose parsing reads non-ISO dates in the active locale while `monthDay()` and `dayMonth()` keep function-name order (2026-11-22)
+
+Defaulting `dayFirst` to `false` parsed `'06/11/2026'` as June 11 even under `.locale('fr')`, so `{ loose: true }` now takes numeric day-month order, month names, and AM/PM words from `Intl` for the active locale (or the runtime locale when unset) with `dayFirst` left `undefined` unless overridden. `monthDay()` and `dayMonth()` keep numeric order from their function name because applying locale order to `monthDay()` made `'7/9'` and `'7 / 9'` return different dates under `'fr'`.
+
+Reopen: a locale's `Intl` short date order diverges from what its users type, or falling back to the host runtime locale misparses inputs on servers that omit both `locale` and `dayFirst`.
+
+## D21: Time zone abbreviations inside `{ loose: true }` strings resolve like the `zone` option rather than `Date.parse()` (2026-11-22)
+
+Leaving inline abbreviations to `Date.parse()` read `'CST'` as fixed `-06:00` everywhere, rejected `'KST'` and `'MSK'`, and interpreted `'EST'` in July as standard `-05:00` while `{ zone: 'EST' }` observed `America/New_York` daylight time with `@native-dates/plugins/zones` loaded. Resolving post-clock abbreviations through `zoneId(name, locale)` aligns inline text with `{ zone }` and `zoneAliases`, fixes the instant without setting `.zone` (`D1`), and yields whenever a numeric offset is written beside it (`'+0800 CST'`).
+
+Reopen: callers parsing RFC 2822 email or HTTP headers rely on fixed standard-time offsets for `'EST'` or `'PST'` while the zones plugin is loaded.
+
+## D22: `@native-dates/plugins/zones` maps non-IANA city names and resolves shared abbreviations by locale (2026-11-22)
+
+Requiring callers to map major cities that IANA files under another name (`'Beijing'` -> `Asia/Shanghai`, `'Mumbai'` -> `Asia/Kolkata`) or shared abbreviations (`'CST'`, `'IST'`, `'PST'`, `'BST'`, `'AST'`, `'ACT'`, `'AMT'`, `'San Juan'`) in `zoneAliases` pushed ~0.9 kB Brotli of boilerplate onto every localized app. Resolving shared names against `Intl.Locale.prototype.getTimeZones()` for the active locale's country (falling back to the first listed zone) also required dropping `IST` and `ACT` from the exported `timezones` override map so defaults do not shadow locale lookup unless reassigned explicitly.
+
+Reopen: city additions turn the table into an open-ended gazetteer, or locale-driven abbreviation lookup surprises callers parsing foreign-country timestamps under a viewer's UI locale.

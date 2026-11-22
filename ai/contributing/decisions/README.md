@@ -34,13 +34,11 @@ Append new entries to the bottom of [`package.md`](package.md) (next `D<n>`) or 
 ```markdown
 ## D18: A uses B instead of C (2026-11-20)
 
-*85% confident*
-
 2-3 sentences on the tradeoff, failure mode, or measurement that ruled out C. Skip signatures or mechanics already readable in source or API docs, and omit PR numbers and session history.
 
 Reopen: observable condition that justifies revisiting this call.
 ```
 
-- **Confidence line (`*0-100% confident*`):** Optional probability decided by the contributor at decision time (omit the line when unscored). Calibrated scores reflect actual reversal odds rather than finality: a `70%` call expects roughly 3 in 10 such calls to flip with new evidence, and a `90%` call still expects 1 in 10 to prove wrong (`~60-75%` working tradeoff, `<50%` provisional default).
+- **Confidence line (`*0-100% confident*`):** Optional leading line recording the human maintainer or contributor's confidence in the ruling, calibrated on open-source and design experience rather than vibes: `90%` means a 10% chance the ruling will be overruled over this project's lifetime (`70%` expects roughly 3 in 10 such calls to flip). Agents must never determine or estimate confidence scores, and must omit the line unless the maintainer or contributor provides an exact number.
 - **Superseding an earlier entry:** Append the new `D<k>` entry at the bottom and replace the earlier entry's `Reopen:` line with `Superseded by D<k> (<YYYY-MM-DD>).` so history stays intact while the topic index shows only active calls.
 - **Reopening:** Surface an entry to reopen whenever concrete evidence shows its `Reopen:` condition has been met, exposes a tradeoff not weighed in the entry, or reveals a clear usability hazard.
