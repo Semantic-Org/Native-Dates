@@ -19,7 +19,7 @@ release.format('YYYY-MM-DD HH:mm zzzz'); // '2026-11-16 17:30 中国标准时间
 datetime('1988-07-15T00:00:00Z', 'Asia/Shanghai').offset; // '+09:00'
 ```
 
-With [the zones plugin](/plugins/zones/), `'CST'` follows the active locale and resolves to `'Asia/Shanghai'` under `'zh-CN'` and `'Asia/Taipei'` under `'zh-TW'`. Major cities like Beijing, Shenzhen, Guangzhou, and `'北京'` resolve out of the box without aliases, while Urumqi stays on UTC+6 Xinjiang Time:
+With [the zones plugin](/plugins/zones/), CST follows the active locale, resolving to Shanghai in Mainland China and Taipei in Taiwan. Major Mainland cities resolve out of the box, while Urumqi stays on UTC+6 Xinjiang Time:
 
 ```js
 import '@native-dates/plugins/zones';
@@ -100,7 +100,7 @@ slot.format('dd / ddd / dddd'); // '五 / 周五 / 星期五'
 slot.format('ddd', 'zh-TW'); // '週五'
 ```
 
-Core factories parse Han year-first dates, slashes, and dots directly, round-tripping `format('long')` with no plugins. For Hong Kong day-first slash dates, fullwidth digits, AM/PM clocks, or inline `'CST'`, load [the loose plugin](/plugins/loose/):
+Core factories parse Han year-first dates, slashes, and dots directly, round-tripping the long preset with no plugins. For Hong Kong day-first slash dates, fullwidth digits, AM/PM clocks, or inline CST, load [the loose plugin](/plugins/loose/):
 
 ```js
 import '@native-dates/plugins/loose';

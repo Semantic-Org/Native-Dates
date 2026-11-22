@@ -1,5 +1,5 @@
 ---
-source: 94334cb6d96d
+source: d739697da0a0
 reviewed: false
 title: Français
 lede: Formatez et analysez les dates en français selon les horloges et débuts de semaine régionaux.
@@ -86,7 +86,7 @@ monthNames('short', 'fr-CA').slice(4, 8); // ['mai', 'juin', 'juill.', 'août']
 
 ## Analyser les dates et heures saisies
 
-Le noyau lit directement les chaînes ISO canadiennes et les heures françaises séparées par `h` comme `'14h30'` ou `'14 h 30'`. Avec [le plugin souple](/plugins/loose/), `'fr'` lit les dates avec barres obliques jour en premier, les dates avec points, les ordinaux et les dates rédigées en toutes lettres sans activer `dayFirst` :
+Le noyau lit directement les chaînes ISO canadiennes et les heures françaises au format heure-minute comme `'14h30'`. Avec [le plugin souple](/plugins/loose/), les locales françaises lisent automatiquement les dates avec barres obliques jour en premier, les dates avec points, les ordinaux et les dates rédigées en toutes lettres :
 
 ```js
 import '@native-dates/plugins/loose';
@@ -131,7 +131,7 @@ hiver.in('America/Montreal').format('short', 'fr-CA'); // '2026-01-15 09 h 00'
 mars.in('America/Montreal').format('short', 'fr-CA'); // '2026-03-16 10 h 00'
 ```
 
-Avec [le plugin zones](/plugins/zones/), les villes IANA accentuées comme Montréal et Nouméa sont résolues directement, tout comme Bruxelles, Genève, Lyon, Marseille, Ottawa et les sigles canadiens `'HNE'` / `'HAE'`, sans aucun alias :
+Avec [le plugin zones](/plugins/zones/), les principales villes francophones et les abréviations canadiennes sont résolues directement sans alias :
 
 ```js
 import '@native-dates/plugins/zones';

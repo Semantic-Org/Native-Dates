@@ -1,5 +1,5 @@
 ---
-source: a6821d46a0ad
+source: 3e03a3d736d8
 reviewed: false
 title: 日本語
 lede: 和暦や括弧付き曜日のフォーマットからスラッシュ日付の読み取り、週の始まりの統一までを扱います。
@@ -116,7 +116,7 @@ date(reiwaInput).toString(); // '2026-11-16'
 
 ## タイムゾーンと週の始まり
 
-コアは `'Asia/Tokyo'` と固定オフセットを受け付け、[zones プラグイン](/plugins/zones/)を使えば `'JST'` や `'東京'`、大阪・京都・福岡といった主要都市もそのまま解決できます。
+コアは `'Asia/Tokyo'` と固定オフセットを受け付け、[zones プラグイン](/plugins/zones/)を使えば JST や日本の主要都市もそのまま解決できます。
 
 ```js
 import '@native-dates/plugins/zones';

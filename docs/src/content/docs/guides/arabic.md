@@ -146,7 +146,7 @@ time('٢:٣٠ م', { loose: true, locale: 'ar-EG' })?.toString(); // '14:30:00'
 yearMonth('تشرين الثاني 2026', { loose: true, locale: 'ar-LB' })?.toString(); // '2026-11'
 ```
 
-[The zones plugin](/plugins/zones/) resolves Riyadh, Cairo, Dubai, Makkah, Jeddah, Doha, Abu Dhabi, Manama, Rabat, and `'GST'` directly. Under `'ar-SA'`, `'AST'` also resolves to `'Asia/Riyadh'`:
+[The zones plugin](/plugins/zones/) resolves major Gulf and North African cities alongside regional codes like GST directly. Under `'ar-SA'`, AST resolves to Riyadh:
 
 ```js
 import '@native-dates/plugins/zones';

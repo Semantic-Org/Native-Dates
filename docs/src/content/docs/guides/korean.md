@@ -19,7 +19,7 @@ datetime('2026. 11. 16. 14:30', 'Asia/Seoul').toString(); // '2026-11-16T05:30:0
 yearMonth('2026년 11월').toString(); // '2026-11'
 ```
 
-Import [the loose plugin](/plugins/loose/) with `locale: 'ko'` to read two-digit year-first Korean short dates, *오전* / *오후* clocks, and Hangul month-days:
+Import [the loose plugin](/plugins/loose/) with a Korean locale to read two-digit year-first short dates, *오전* / *오후* clocks, and Hangul month-days:
 
 ```js
 import '@native-dates/plugins/loose';
@@ -31,7 +31,7 @@ time('오후 2:30', { loose: true, locale: 'ko' })?.toString(); // '14:30:00'
 monthDay('11월 16일', { loose: true })?.toString(); // '11-16'
 ```
 
-Pass `locale: 'ko'` whenever reading two-digit years, since `'12.11.26'` reads as December 11, 2026 under an `en-US` runtime:
+Pass `locale: 'ko'` whenever reading two-digit years, since `'12.11.26'` reads as December 11, 2026 under a US English runtime:
 
 | Input | Result | Handling |
 |---|---|---|
@@ -77,7 +77,7 @@ slot.format('medium', 'ko-KR-u-hc-h23'); // '2026. 5. 5. 14:05'
 
 ## Korea Standard Time and zone aliases
 
-Core accepts `'Asia/Seoul'` and fixed offsets. Import [the zones plugin](/plugins/zones/) to resolve `'KST'`, `'서울'`, and Busan out of the box, including inline `'KST'` inside loose strings:
+Core accepts `'Asia/Seoul'` and fixed offsets. Import [the zones plugin](/plugins/zones/) to resolve KST, Korean cities like Busan, and Hangul names out of the box, including inline abbreviations inside loose strings:
 
 ```js
 import '@native-dates/plugins/loose';

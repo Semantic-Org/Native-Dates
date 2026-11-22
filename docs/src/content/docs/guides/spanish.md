@@ -80,7 +80,7 @@ date('2026-05-01').format('Do [de] MMMM', 'es-AR'); // '1.º de mayo'
 
 ## Parsing Spanish dates and months
 
-With [the loose plugin](/plugins/loose/), numeric dates follow the active locale automatically. Spain and Chile read day-first without `dayFirst`, while Puerto Rico reads month-first on its own:
+With [the loose plugin](/plugins/loose/), numeric dates follow the active locale automatically. Spain and Chile read day-first on their own, while Puerto Rico reads month-first:
 
 ```js
 import '@native-dates/plugins/loose';
@@ -109,7 +109,7 @@ yearMonth('enero de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-
 
 ## Time zones and midnight DST jumps
 
-Most of Mexico stays on UTC-6 year-round outside northern border cities and Quintana Roo. `'CST'` follows the active locale, mapping to Chicago by default and Havana under `'es-CU'`:
+Most of Mexico stays on UTC-6 year-round outside northern border cities and Quintana Roo. CST follows the active locale, mapping to Chicago by default and Havana in Cuba:
 
 ```js
 import '@native-dates/plugins/zones';
@@ -121,7 +121,7 @@ datetime('2026-07-15T12:00', { zone: 'CST', locale: 'es-CU' }).zone; // 'America
 datetime('2026-07-15T12:00', 'Tijuana').format('HH:mm Z'); // '12:00 -07:00'
 ```
 
-The [zones plugin](/plugins/zones/) resolves Bogotá, Cancún, Córdoba, CDMX, La Habana, Quito, Barcelona, `'ART'`, `'COT'`, and `'CLT'` directly. `'San Juan'` resolves to Puerto Rico under `'es-PR'` and Argentina elsewhere:
+The [zones plugin](/plugins/zones/) resolves major Spanish-speaking cities and Latin American codes out of the box. San Juan resolves to Puerto Rico under `'es-PR'` and Argentina elsewhere:
 
 ```js
 datetime('2026-07-15T12:00', 'CDMX').zone; // 'America/Mexico_City'

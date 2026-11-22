@@ -85,7 +85,7 @@ monthNames('short', 'fr-CA').slice(4, 8); // ['mai', 'juin', 'juill.', 'août']
 
 ## Parsing French date and time input
 
-Core reads Canadian ISO strings and French `h`-separated clock times like `'14h30'` or `'14 h 30'` directly. With [the loose plugin](/plugins/loose/), `'fr'` reads day-first slash dates, dot dates, ordinals, and full worded dates without setting `dayFirst`:
+Core reads Canadian ISO strings and French hour-minute times like `'14h30'` directly. With [the loose plugin](/plugins/loose/), French locales read day-first slash dates, dot dates, ordinals, and full worded dates automatically:
 
 ```js
 import '@native-dates/plugins/loose';
@@ -130,7 +130,7 @@ hiver.in('America/Montreal').format('short', 'fr-CA'); // '2026-01-15 09 h 00'
 mars.in('America/Montreal').format('short', 'fr-CA'); // '2026-03-16 10 h 00'
 ```
 
-With [the zones plugin](/plugins/zones/), accented IANA cities like Montréal and Nouméa resolve alongside Bruxelles, Genève, Lyon, Marseille, Ottawa, and Canadian `'HNE'` / `'HAE'` with no aliases:
+With [the zones plugin](/plugins/zones/), major French-speaking cities and Canadian abbreviations resolve directly with no aliases:
 
 ```js
 import '@native-dates/plugins/zones';

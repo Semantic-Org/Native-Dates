@@ -22,7 +22,7 @@ time('September 6, 2026 5:30 PM', { loose: true })?.toString(); // '17:30:00'
 duration('2h', { loose: true })?.toString(); // 'PT2H'
 ```
 
-Strict parsing stays the default wherever you omit `{ loose: true }`. Importing the plugin never alters existing calls across your codebase.
+Strict parsing stays the default wherever you omit loose mode. Importing the plugin never alters existing calls across your codebase.
 
 ## Reading in the active locale
 
@@ -70,7 +70,7 @@ monthDay('1er mai', { loose: true, locale: 'fr' })?.toString(); // '05-01'
 dateRange('TBD', '2026-09-07', { loose: true }); // null
 ```
 
-A few inputs still return `null` in loose mode. Two-digit years beside a month name, hours past 12 beside PM, and bare clocks passed to `datetime()` are rejected. Unknown uppercase zone codes and bare hours like `'14h'` return `null` as well.
+A few inputs still return `null` in loose mode. Two-digit years beside a month name, hours past 12 beside PM, and bare clocks passed to `datetime()` are rejected. Unknown uppercase zone codes and bare hours like `'14h'` return null as well.
 
 :::note[Bad data returns null, bad options still throw]
 Loose mode only handles unreadable input data. Passing an unknown time zone like `'Mars/Olympus'` is a mistake in application code rather than user input, so it still throws immediately.

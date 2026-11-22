@@ -1,5 +1,5 @@
 ---
-source: f429abeeaad0
+source: d3ebf4e94a22
 reviewed: false
 title: العربية
 lede: نسّق التواريخ العربية عبر التقويمات الإقليمية والأرقام المشرقية أو الغربية.
@@ -147,7 +147,7 @@ time('٢:٣٠ م', { loose: true, locale: 'ar-EG' })?.toString(); // '14:30:00'
 yearMonth('تشرين الثاني 2026', { loose: true, locale: 'ar-LB' })?.toString(); // '2026-11'
 ```
 
-تحل [إضافة المناطق الزمنية](/plugins/zones/) الرياض والقاهرة ودبي ومكة وجدة والدوحة وأبوظبي والمنامة والرباط و`'GST'` مباشرة. ومع `'ar-SA'`، يُحلّ `'AST'` أيضًا إلى `'Asia/Riyadh'`:
+تحل [إضافة المناطق الزمنية](/plugins/zones/) المدن الرئيسية في الخليج وشمال أفريقيا إلى جانب الرموز الإقليمية مثل GST مباشرة. ومع `'ar-SA'`، يُحلّ AST إلى الرياض:
 
 ```js
 import '@native-dates/plugins/zones';

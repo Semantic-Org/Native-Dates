@@ -98,7 +98,7 @@ moment.plus(2, 'days').from(moment); // 'через 2 дня'
 
 ## Parsing dotted dates and Russian month names
 
-Core accepts year-first `'2026.11.16'` strings. With [the loose plugin](/plugins/loose/), `locale: 'ru'` reads day-first dotted dates, inflected month names, and the *г.* year suffix automatically without setting `dayFirst`:
+Core accepts year-first `'2026.11.16'` strings. With [the loose plugin](/plugins/loose/), Russian locales read day-first dotted dates, inflected month names, and the *г.* year suffix automatically:
 
 ```js
 import '@native-dates/plugins/loose';
@@ -129,7 +129,7 @@ yearMonth('ноябрь 2026 г.', { loose: true, locale: 'ru' })?.toString(); /
 
 Russia spans eleven time zones without seasonal clock changes, and Kazakhstan unified on UTC+5 in 2024. Full IANA identifiers preserve historical offset transitions across every zone.
 
-With [the zones plugin](/plugins/zones/), IANA cities, `'MSK'`, `'мск'`, `'Москва'`, Saint Petersburg, `'SPB'`, Kazan, Ekaterinburg, and Astana resolve directly with no aliases:
+With [the zones plugin](/plugins/zones/), IANA cities, major Russian and Kazakh hubs, and Moscow abbreviations resolve directly with no aliases:
 
 | Input | Default status | Resolution |
 |---|---|---|

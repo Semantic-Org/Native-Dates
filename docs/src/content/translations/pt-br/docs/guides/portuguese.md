@@ -1,5 +1,5 @@
 ---
-source: 0bb440c74fbf
+source: 04d6d8f89e36
 reviewed: false
 title: Português
 lede: Formate e leia datas em português nos padrões do Brasil, da Europa e da África.
@@ -9,7 +9,7 @@ Passe `'pt-BR'` ou `'pt-PT'` em [Localização](/guides/localization/) para form
 
 ## Lendo datas no padrão dia/mês/ano
 
-Strings ISO com ano na frente nunca invertem mês e dia. Com [o plugin flexível](/plugins/loose/), os locales em português leem datas com barras, com pontos e por extenso no padrão dia/mês/ano automaticamente, sem precisar definir `dayFirst`:
+Strings ISO com ano na frente nunca invertem mês e dia. Com [o plugin flexível](/plugins/loose/), os locales em português leem datas com barras, com pontos e por extenso no padrão dia/mês/ano automaticamente:
 
 ```js
 import '@native-dates/plugins/loose';
@@ -53,7 +53,7 @@ consulta.format('long'); // '16 de novembro de 2026 às 14:30'
 date('2026-11-16').format('medium', 'pt-PT'); // '16/11/2026'
 ```
 
-Envolva palavras literais entre colchetes nos padrões de tokens, incluindo `'[de]'` e `'[às]'` antes do horário. Deixar `'às'` sem colchetes lança `unknownFormat` em vez de expandir `s` como segundos:
+Envolva palavras literais como `'[de]'` e `'[às]'` entre colchetes nos padrões de tokens. Deixá-las sem colchetes lança um erro em vez de expandir letras soltas:
 
 ```js
 consulta.format('DD/MM/YYYY [às] HH:mm'); // '16/11/2026 às 14:30'
@@ -112,7 +112,7 @@ O Brasil abrange quatro fusos horários e encerrou o horário de verão em 2019,
 | Amazonas e Mato Grosso | `America/Manaus` | UTC-4, junto com Cuiabá, Campo Grande e Porto Velho; resolve `'AMT'`. |
 | Acre | `America/Rio_Branco` | UTC-5, junto com Eirunepé; resolve `'ACT'` automaticamente em `'pt-BR'`. |
 
-Com [o plugin de fusos](/plugins/zones/), cidades e siglas brasileiras são resolvidas nativamente, incluindo `'BRT'` inline em strings flexíveis:
+Com [o plugin de fusos](/plugins/zones/), as principais cidades brasileiras e siglas regionais são resolvidas nativamente, incluindo BRT inline em strings flexíveis:
 
 ```js
 import '@native-dates/plugins/loose';

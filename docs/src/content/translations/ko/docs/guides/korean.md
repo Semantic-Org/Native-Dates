@@ -1,5 +1,5 @@
 ---
-source: c90ffef7bf88
+source: c035ad557cf5
 reviewed: false
 title: 한국어
 lede: 한국어 마침표 날짜를 파싱하고 요일과 음력 명절을 포맷합니다.
@@ -20,7 +20,7 @@ datetime('2026. 11. 16. 14:30', 'Asia/Seoul').toString(); // '2026-11-16T05:30:0
 yearMonth('2026년 11월').toString(); // '2026-11'
 ```
 
-두 자리 연도 우선 한국어 단축 날짜, *오전*·*오후* 시각, 한글 월·일 표기를 읽으려면 [느슨한 파싱 플러그인](/plugins/loose/)을 불러와 `locale: 'ko'` 옵션을 넘기세요.
+두 자리 연도 우선 단축 날짜, *오전*·*오후* 시각, 한글 월·일 표기를 읽으려면 한국어 로케일과 함께 [느슨한 파싱 플러그인](/plugins/loose/)을 불러오세요.
 
 ```js
 import '@native-dates/plugins/loose';
@@ -32,7 +32,7 @@ time('오후 2:30', { loose: true, locale: 'ko' })?.toString(); // '14:30:00'
 monthDay('11월 16일', { loose: true })?.toString(); // '11-16'
 ```
 
-두 자리 연도를 읽을 때는 항상 `locale: 'ko'`를 넘기세요. `en-US` 런타임에서는 `'12.11.26'`이 2026년 12월 11일로 해석됩니다.
+두 자리 연도를 읽을 때는 항상 `locale: 'ko'`를 넘기세요. 미국 영어 런타임에서는 `'12.11.26'`이 2026년 12월 11일로 해석됩니다.
 
 | 입력 문자열 | 파싱 결과 | 권장 처리 방식 |
 |---|---|---|
@@ -78,7 +78,7 @@ slot.format('medium', 'ko-KR-u-hc-h23'); // '2026. 5. 5. 14:05'
 
 ## 한국 표준시와 시간대 별칭
 
-코어는 `'Asia/Seoul'`과 고정 오프셋을 받으며, [시간대 플러그인](/plugins/zones/)을 불러오면 느슨한 문자열 안의 인라인 `'KST'`를 포함해 `'KST'`, `'서울'`, Busan을 별도 설정 없이 바로 해석합니다.
+코어는 `'Asia/Seoul'`과 고정 오프셋을 받으며, [시간대 플러그인](/plugins/zones/)을 불러오면 느슨한 문자열 안의 인라인 약어를 포함해 KST, Busan 같은 국내 도시와 한글 명칭을 별도 설정 없이 바로 해석합니다.
 
 ```js
 import '@native-dates/plugins/loose';

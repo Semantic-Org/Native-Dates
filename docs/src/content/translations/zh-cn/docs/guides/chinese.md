@@ -1,5 +1,5 @@
 ---
-source: de72f94c712b
+source: c5bf0eb5728a
 reviewed: false
 title: 中文
 lede: 处理各中文地区的日期格式与农历显示。
@@ -20,7 +20,7 @@ release.format('YYYY-MM-DD HH:mm zzzz'); // '2026-11-16 17:30 中国标准时间
 datetime('1988-07-15T00:00:00Z', 'Asia/Shanghai').offset; // '+09:00'
 ```
 
-加载[时区插件](/plugins/zones/)后，`'CST'` 会跟随当前区域设置，在 `'zh-CN'` 下解析为 `'Asia/Shanghai'`，在 `'zh-TW'` 下解析为 `'Asia/Taipei'`。北京、深圳、广州等主要城市以及 `'北京'` 无需配置别名即可开箱解析，而乌鲁木齐仍保持东六区新疆时间：
+加载[时区插件](/plugins/zones/)后，CST 会随当前区域解析，在中国大陆对应上海，在台湾对应台北。中国大陆主要城市均开箱即用，乌鲁木齐则保持东六区新疆时间：
 
 ```js
 import '@native-dates/plugins/zones';
@@ -101,7 +101,7 @@ slot.format('dd / ddd / dddd'); // '五 / 周五 / 星期五'
 slot.format('ddd', 'zh-TW'); // '週五'
 ```
 
-核心函数可直接解析年先头的汉字日期、斜杠与句点格式，无需插件即可往返还原 `format('long')` 的输出。若需解析香港的日月年斜杠日期、全角数字、上下午时间或行内 `'CST'`，请加载[宽松解析插件](/plugins/loose/)：
+核心函数可直接解析年先头的汉字日期、斜杠与句点格式，无需插件即可往返还原 long 预设的输出。若需解析香港的日月年斜杠日期、全角数字、上下午时间或行内 CST，请加载[宽松解析插件](/plugins/loose/)：
 
 ```js
 import '@native-dates/plugins/loose';

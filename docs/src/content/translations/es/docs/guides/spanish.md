@@ -1,5 +1,5 @@
 ---
-source: 5327976f06c3
+source: a4865c5d2e4e
 reviewed: false
 title: Español
 lede: Maneja los formatos regionales de fecha y las convenciones horarias de España y América.
@@ -81,7 +81,7 @@ date('2026-05-01').format('Do [de] MMMM', 'es-AR'); // '1.º de mayo'
 
 ## Lectura de fechas y meses en español
 
-Con [el plugin flexible](/plugins/loose/), las fechas numéricas siguen automáticamente la configuración regional activa. España y Chile leen primero el día sin `dayFirst`, mientras que Puerto Rico lee primero el mes por sí solo:
+Con [el plugin flexible](/plugins/loose/), las fechas numéricas siguen automáticamente la configuración regional activa. España y Chile leen primero el día por sí solos, mientras que Puerto Rico lee primero el mes:
 
 ```js
 import '@native-dates/plugins/loose';
@@ -110,7 +110,7 @@ yearMonth('enero de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-
 
 ## Zonas horarias y cambios a medianoche
 
-La mayor parte de México permanece en UTC-6 todo el año salvo la frontera norte y Quintana Roo. `'CST'` sigue la configuración regional activa: apunta a Chicago por defecto y a La Habana bajo `'es-CU'`:
+La mayor parte de México permanece en UTC-6 todo el año salvo la frontera norte y Quintana Roo. CST sigue la configuración regional activa: apunta a Chicago por defecto y a La Habana en Cuba:
 
 ```js
 import '@native-dates/plugins/zones';
@@ -122,7 +122,7 @@ datetime('2026-07-15T12:00', { zone: 'CST', locale: 'es-CU' }).zone; // 'America
 datetime('2026-07-15T12:00', 'Tijuana').format('HH:mm Z'); // '12:00 -07:00'
 ```
 
-El [plugin de zonas](/plugins/zones/) resuelve Bogotá, Cancún, Córdoba, CDMX, La Habana, Quito, Barcelona, `'ART'`, `'COT'` y `'CLT'` directamente. `'San Juan'` apunta a Puerto Rico bajo `'es-PR'` y a Argentina en el resto:
+El [plugin de zonas](/plugins/zones/) resuelve las principales ciudades hispanohablantes y códigos latinoamericanos de forma directa. San Juan apunta a Puerto Rico bajo `'es-PR'` y a Argentina en el resto:
 
 ```js
 datetime('2026-07-15T12:00', 'CDMX').zone; // 'America/Mexico_City'

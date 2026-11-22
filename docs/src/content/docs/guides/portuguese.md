@@ -8,7 +8,7 @@ Pass `'pt-BR'` or `'pt-PT'` through [Localization](/guides/localization/) to for
 
 ## Parsing day/month/year dates
 
-Year-first ISO strings never swap month and day. With [the loose plugin](/plugins/loose/), Portuguese locales read slash dates, dot dates, and worded dates day-first automatically without setting `dayFirst`:
+Year-first ISO strings never swap month and day. With [the loose plugin](/plugins/loose/), Portuguese locales read slash dates, dot dates, and worded dates day-first automatically:
 
 ```js
 import '@native-dates/plugins/loose';
@@ -52,7 +52,7 @@ consulta.format('long'); // '16 de novembro de 2026 às 14:30'
 date('2026-11-16').format('medium', 'pt-PT'); // '16/11/2026'
 ```
 
-Wrap literal words in square brackets inside custom token patterns, including `'[de]'` and `'[às]'` before the hour. Leaving `'às'` unbracketed throws `unknownFormat` instead of expanding `s` as seconds:
+Wrap literal words like `'[de]'` and `'[às]'` in square brackets inside custom token patterns. Leaving them unbracketed throws an error instead of expanding stray letters:
 
 ```js
 consulta.format('DD/MM/YYYY [às] HH:mm'); // '16/11/2026 às 14:30'
@@ -111,7 +111,7 @@ Brazil spans four time zones and ended daylight saving time in 2019. `'America/S
 | Amazonas and Mato Grosso | `America/Manaus` | UTC-4, shared with Cuiabá, Campo Grande, and Porto Velho; resolves `'AMT'`. |
 | Acre | `America/Rio_Branco` | UTC-5, shared with Eirunepé; resolves `'ACT'` automatically under `'pt-BR'`. |
 
-With [the zones plugin](/plugins/zones/), Brazilian cities and abbreviations resolve out of the box, including inline `'BRT'` in loose strings:
+With [the zones plugin](/plugins/zones/), major Brazilian cities and regional abbreviations resolve out of the box, including inline BRT in loose strings:
 
 ```js
 import '@native-dates/plugins/loose';

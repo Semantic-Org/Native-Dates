@@ -115,7 +115,7 @@ date(reiwaInput).toString(); // '2026-11-16'
 
 ## Time zones and start of the week
 
-Core accepts `'Asia/Tokyo'` and fixed offsets. With [the zones plugin](/plugins/zones/), `'JST'`, `'東京'`, and major Japanese cities like Osaka, Kyoto, and Fukuoka resolve out of the box:
+Core accepts `'Asia/Tokyo'` and fixed offsets. With [the zones plugin](/plugins/zones/), JST and major Japanese cities resolve out of the box:
 
 ```js
 import '@native-dates/plugins/zones';
