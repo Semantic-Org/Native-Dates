@@ -2,7 +2,7 @@
 source: '5fd1889df7de'
 reviewed: false
 title: Español
-lede: Maneja formatos regionales, inicios de semana y cambios horarios en España y América.
+lede: Maneja los formatos regionales de fecha y las convenciones horarias de España y América.
 ---
 
 La etiqueta `'es'` usa el inicio de semana en lunes y el reloj de 24 horas de España. En aplicaciones para Latinoamérica o Estados Unidos, pasa una etiqueta regional como `'es-MX'` en [Localización](/guides/localization/).

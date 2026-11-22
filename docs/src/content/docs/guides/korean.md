@@ -1,6 +1,6 @@
 ---
 title: Korean
-lede: Parse dotted Korean dates and format weekdays and lunar holidays in Korean.
+lede: Parse dotted Korean dates and format weekdays and lunar holidays.
 updated: 2026-11-21
 ---
 

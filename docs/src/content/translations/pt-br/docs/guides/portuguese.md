@@ -2,7 +2,7 @@
 source: '109fbc324713'
 reviewed: false
 title: Português
-lede: Formate e leia datas no Brasil, em Portugal e nos países africanos de língua portuguesa.
+lede: Formate e leia datas em português nos padrões do Brasil, da Europa e da África.
 ---
 
 Passe `'pt-BR'` ou `'pt-PT'` em [Localização](/guides/localization/) para formatar datas em português. Brasil e Portugal compartilham datas numéricas em dia/mês/ano e meses em minúsculas, mas diferem no preset médio e no ordinal do dia 1º.

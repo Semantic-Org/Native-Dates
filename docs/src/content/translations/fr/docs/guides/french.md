@@ -2,7 +2,7 @@
 source: 'eb02cc8a081c'
 reviewed: false
 title: Français
-lede: Formatez et analysez les dates en France, au Québec, en Suisse, en Belgique et en Afrique francophone.
+lede: Formatez et analysez les dates en français selon les horloges et débuts de semaine régionaux.
 ---
 
 Le code `'fr'` applique les usages de France métropolitaine. Passez une étiquette régionale comme `'fr-CA'` via [Localisation](/guides/localization/) pour respecter l’ordre des dates, le séparateur d’heure et le début de semaine de chaque pays.
