@@ -12,7 +12,7 @@ type: skill
 > **Skill:** `native-dates`
 > **Purpose:** Core mental model, pitfalls, and API reference for `native-dates` (`@native-dates/core`)
 
-`native-dates` (`@native-dates/core` is the identical scoped package) wraps `Temporal` and `Intl` with 9 immutable, `Object.freeze`d classes and zero runtime dependencies. Chrome, Firefox, Edge, and Node `>=26` run it natively; load `native-dates-plugins` when targeting Safari or Node `<26` (`@native-dates/polyfill`), parsing `'11/16/2026'` or informal strings (`{ loose: true }`), resolving `'PST'`/`'Berlin'` zones, or shimming `Date` getters.
+`native-dates` (`@native-dates/core` is the identical scoped package) wraps `Temporal` and `Intl` with 9 immutable, `Object.freeze`d classes and zero runtime dependencies. Chrome, Firefox, Edge, and Node `>=26` run it natively; load `native-dates-plugins` when targeting Safari or Node `<26` (`@native-dates/polyfill`), parsing `'11/16/2026'` or localized/informal strings (`{ loose: true }`), resolving `'PST'`/`'Beijing'`/`'Berlin'` zones, or shimming `Date` getters.
 
 **Golden rule: Match the class to the data (`datetime` for zoned instants, `date` for calendar days, `time` for clocks), chain immutable methods, and pass explicit IANA zones and per-value `.locale()` in server code.**
 
@@ -33,12 +33,12 @@ const ny = datetime('2026-03-08T04:30:00Z', 'America/New_York').plus(1, 'day'); 
 ny.toJSON(); // '2026-03-09T03:30:00.000Z'
 ```
 
-**2. `month` is `1`–`12`, `dayOfWeek` is ISO `1`–`7` (`7` = Sunday), `isWeekend()`/`isWeekday()` follow the active locale, and tokens use Moment/Day.js casing (`YYYY-MM-DD`, never `yyyy-MM-dd`).** `isWeekend()` is Friday–Saturday in `ar-SA`/`ar-EG`/`he-IL`, Friday in `fa-IR`, Sunday in `hi-IN`, and Saturday–Sunday in `en-US` and most others. In `format()`, `'yyyy'` throws `unsupportedToken`, lowercase `'dd'` prints the 2-letter weekday (`'Mo'`, not day-of-month `'DD'`), `'E'` prints `'1'`–`'7'`, `'d'` prints Moment's `'0'`–`'6'` (`'0'` = Sunday), and tokens glued to accented letters (`'às'`) or `h` after `H` (`'HHhmm'`) throw `unknownFormat` unless bracketed.
+**2. `month` is `1`–`12`, `dayOfWeek` is ISO `1`–`7` (`7` = Sunday), `isWeekend()`/`isWeekday()` follow the active locale, and tokens use Moment/Day.js casing (`YYYY-MM-DD`, never `yyyy-MM-dd`).** `isWeekend()` is Friday–Saturday in `ar-SA`/`ar-EG`/`he-IL`, Friday in `fa-IR`, Sunday in `hi-IN`, and Saturday–Sunday in `en-US` and most others. In `format()`, `'yyyy'` throws `unknownFormat` (whereas a valid token missing on the noun, like `'HH'` on a `CalendarDate`, throws `unsupportedToken`), lowercase `'dd'` prints the 2-letter weekday (`'Mo'`, not day-of-month `'DD'`), `'E'` prints `'1'`–`'7'`, `'d'` prints Moment's `'0'`–`'6'` (`'0'` = Sunday), and tokens glued to accented letters (`'às'`) or `h` after `H` (`'HHhmm'`) throw `unknownFormat` unless bracketed.
 
 ```js
 // ❌ WRONG - 0-indexed month/Sunday, or date-fns/Luxon 'yyyy-MM-dd' tokens
 date(2026, 0, 15); // RangeError [invalidDate]
-date('2026-11-16').format('yyyy-MM-dd'); // RangeError [unsupportedToken] ('dd' is narrow weekday 'Mo'!)
+date('2026-11-16').format('yyyy-MM-dd'); // RangeError [unknownFormat] ('YYYY' is year; 'dd' is narrow weekday 'Mo'!)
 
 // ✅ RIGHT - 1..12 months, 1..7 ISO weekdays, 'YYYY-MM-DD' tokens
 const sun = date(2026, 11, 15);
@@ -225,7 +225,7 @@ cardExpiry.format('MM/YY'); // '11/26' ('short' preset prints '11/2026')
 ```
 
 - **`MonthDay`:** `month` (`1`–`12`), `day` (`1`–`31`), `in(year)` -> `CalendarDate` (Feb 29 -> Feb 28 in non-leap years), `next(fromDay?)` / `after(day)`, `previous(fromDay?)` / `last(fromDay?)` / `before(day)`, `fallsOn(day)` / `isOn(day)` vs exact `equals()` (which rejects slash/dot strings as order-ambiguous), `isToday(zone?)`, `isTomorrow(zone?)`, `isYesterday(zone?)`. Two-digit `'MM-DD'` with a hyphen always parses month-first even in `dayMonth('10-17')`.
-- **`YearMonth`:** `year`, `month`, `quarter`, `daysInMonth`, `daysInYear`, `isLeapYear()`, `start`, `end`, `on(day)` -> `CalendarDate`, `plus`/`minus` (`years`, `quarters`, `months` only), `set`, `contains(day)` / `includes(day)`, `equals`/`isBefore`/`isAfter`/`compare`, `isPast(zone?)`/`isFuture(zone?)`, `until(other, unit?)`/`since(other, unit?)` (`largestUnit: 'year'`).
+- **`YearMonth`:** Accepts year-first strings with any non-Latin, non-colon separator (`'2026-11'`, `'2026/11'`, `'2026年11月'`, `'2026. 11.'`), `(year, month)` numbers, `{ year, month }`, or date/timestamp inputs (`monthYear('11/26')` reads month-first). Exposes `year`, `month`, `quarter`, `daysInMonth`, `daysInYear`, `isLeapYear()`, `start`, `end`, `on(day)` -> `CalendarDate`, `plus`/`minus` (`years`, `quarters`, `months` only), `set`, `contains(day)` / `includes(day)`, `equals`/`isBefore`/`isAfter`/`compare`, `isPast(zone?)`/`isFuture(zone?)`, `until(other, unit?)`/`since(other, unit?)` (`largestUnit: 'year'`).
 
 ---
 
@@ -293,15 +293,15 @@ configure({
 
 ## Errors
 
-Nullish factory inputs (`missingDateTime`, `missingDate`, `missingTime`, `missingMonthDay`, `missingYearMonth`) and wrong JS argument types throw `TypeError`; all malformed strings, out-of-range fields, `cannot*`, `unknown*`, `unsupported*`, and `conflicting*` refusals throw `RangeError` (`dates refused [code] <at>` with `.code` and `.at`):
+Nullish factory inputs (`missingDateTime`, `missingDate`, `missingTime`, `missingMonthDay`, `missingYearMonth`), wrong JS argument types (`invalidPoint`, bare numbers on `date()`, or non-string/object inputs), `unsupportedCalendar`, `conflictingKinds`, and `conflictingRanges` throw `TypeError`; malformed strings, out-of-range fields, `cannot*`, `unknown*`, `conflictingSigns`, and other `unsupported*` refusals throw `RangeError` (`dates refused [code] <at>` with `.code` and `.at`):
 
 | Error code | Thrown when |
 |---|---|
 | `missingDateTime`, `missingDate`, `missingTime`, `missingMonthDay`, `missingYearMonth`, `missingDay`, `missingPoints`, `missingAnchor`, `missingPlugin` | Nullish input, two-arg `date(2026, 11)`, unanchored `months(2).total('days')`, or `{ loose: true }` / `dayFirst` / `zoneAliases` without its plugin |
 | `invalidDateTime`, `invalidDate`, `invalidTime`, `invalidDuration`, `invalidMonthDay`, `invalidYearMonth`, `invalidRange`, `invalidStep`, `invalidNumber`, `invalidFraction`, `invalidYear`, `invalidDay`, `invalidPoint` | Malformed string, nonexistent field (`Feb 30`), non-positive `points()` step, or `end < start` on `DateRange`/`DateTimeRange` |
-| `cannotAdd`, `cannotSubtract`, `cannotSet`, `cannotRound` | Arithmetic overflow, non-integer `set()` value, or invalid `roundingIncrement` (such as `dt.round(7, 'minutes')`, since `60 % 7 !== 0`) |
-| `unknownZone`, `unknownLocale`, `unknownUnit`, `unknownDayOfWeek`, `unknownFormat`, `unknownKind`, `unknownSetting`, `unknownWidth` | Unrecognized IANA zone, malformed BCP 47 tag, unit, weekday, token/preset, `as(kind)` target, or `configure()` key |
-| `unsupportedUnit`, `unsupportedToken`, `unsupportedComparison`, `unsupportedZone`, `unsupportedCalendar`, `unsupportedIntersection` | Unit/token absent on noun (`hours` on `CalendarDate`, `'yyyy'`), `<`/`-` on non-`DateTime`, `timeRange.in(zone)`, or double overnight intersection |
+| `cannotAdd`, `cannotSubtract`, `cannotSet`, `cannotRound`, `cannotBalance`, `cannotTotal` | Arithmetic/balance/total overflow, non-integer `set()` value, or invalid `roundingIncrement` (such as `dt.round(7, 'minutes')`, since `60 % 7 !== 0`) |
+| `unknownZone`, `unknownLocale`, `unknownUnit`, `unknownDayOfWeek`, `unknownFormat`, `unknownKind`, `unknownSetting`, `unknownWidth` | Unrecognized IANA zone, malformed BCP 47 tag, unit, weekday, token/preset (`'yyyy'`), `as(kind)` target, or `configure()` key |
+| `unsupportedUnit`, `unsupportedToken`, `unsupportedComparison`, `unsupportedZone`, `unsupportedCalendar`, `unsupportedIntersection` | Unit/token absent on noun (`hours` or `'HH'` on `CalendarDate`), `<`/`-` on non-`DateTime`, `timeRange.in(zone)`, non-ISO `PlainMonthDay`/`PlainYearMonth`, or double overnight intersection |
 | `conflictingSigns`, `conflictingKinds`, `conflictingRanges` | `days(1).minus(hours(1))`, `compare(date, datetime)`, or passing a `TimeRange` to `dateRange()` |
 
 ---
@@ -337,4 +337,4 @@ const ordered = [deadline, start].sort(compare);
 
 | Skill | Use when... |
 |---|---|
-| `native-dates-plugins` | Resolving IANA city names (`'Berlin'`) or zone abbreviations (`'PST'`), parsing slash/informal strings with `{ loose: true, dayFirst }`, shimming `Date` getters, polyfilling `Temporal` on Safari or Node `<26`, or writing a custom plugin |
+| `native-dates-plugins` | Resolving city names (`'Berlin'`, `'Beijing'`) or locale-aware zone abbreviations (`'PST'`, `'CST'`), parsing localized/slash/informal strings with `{ loose: true, dayFirst }`, shimming `Date` getters, polyfilling `Temporal` on Safari or Node `<26`, or writing a custom plugin |
