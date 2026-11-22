@@ -154,14 +154,17 @@ const parseWithEngine = (text) => {
 const clockTime = /(\d{1,2})(?::| ?h ?)(\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?/;
 const meridiem = /^ ?([ap])\.? ?m\.?(?![\p{L}\p{M}])/u;
 
-// only the whole word against the clock counts, so Arabic 'اليوم' (today) is not read as its last letter 'م' (PM)
+// only a whole word next to the clock counts, with no number between them. German 'am 16.11.2026 14:30' keeps
+// its preposition, and Arabic 'اليوم' (today) is not read as its last letter 'م' (PM)
 const isAfternoon = (before, after, locale) => {
   const english = meridiem.exec(after)?.[1];
   if (english) {
     return english === 'p';
   }
   const [am, pm] = localeData(locale).dayPeriods;
-  const beside = (period) => wordsOf(after, locale).startsWith(period) || wordsOf(before, locale).endsWith(period);
+  const wordsBefore = wordsOf(before.split(/\d/).pop(), locale);
+  const wordsAfter = wordsOf(after.split(/\d/)[0], locale);
+  const beside = (period) => wordsAfter.startsWith(period) || wordsBefore.endsWith(period);
   return beside(pm) ? true : beside(am) ? false : undefined;
 };
 

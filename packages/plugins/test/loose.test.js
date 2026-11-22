@@ -1088,6 +1088,8 @@ describe('time() and datetime() localized AM/PM with { loose: true, locale }', (
     const options = { loose: true, locale: 'de', zone: 'UTC' };
     expect(datetime('am 16. November 2026 um 14:30 Uhr', options)?.toString()).toBe('2026-11-16T14:30:00.000Z');
     expect(datetime('am 16. November 2026 um 12:30', options)?.toString()).toBe('2026-11-16T12:30:00.000Z');
+    expect(datetime('am 16.11.2026 14:30', options)?.toString()).toBe('2026-11-16T14:30:00.000Z');
+    expect(datetime('am 16.11.2026 12:30', options)?.toString()).toBe('2026-11-16T12:30:00.000Z');
   });
 
   it('returns null from datetime() for a clock with no date and from time() for an hour past 12 beside PM', () => {
