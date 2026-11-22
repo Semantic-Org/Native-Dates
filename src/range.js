@@ -8,7 +8,17 @@ import { isUnreadable, loosely, readAs, refuse, refuseType, unreadable } from '.
 import { isDurationFields } from './helpers/fields.js';
 import { epochOf, formatter, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_RANGE, IS_DATE_TIME_RANGE, IS_DURATION, IS_RANGE, IS_TIME_RANGE } from './helpers/identity.js';
-import { alias, inspect, isDigits, isTemporalDuration, stepOf, unit, zoneOptions } from './helpers/units.js';
+import {
+  alias,
+  inspect,
+  isDigits,
+  isTemporalDuration,
+  stepOf,
+  unit,
+  weekdayNamed,
+  zoneOptions,
+} from './helpers/units.js';
+import { weekendDays } from './helpers/zones.js';
 import { Time } from './time.js';
 
 /*
@@ -265,8 +275,10 @@ class Range {
     return new Time(new Temporal.PlainTime().add({ nanoseconds: ((nanoseconds % day) + day) % day }));
   }
 
-  points(step, name) {
+  every(step, name) {
     const size = Range.#step(step, name);
+    // validate step unit against start's kind upfront so empty ranges and TimeRange reject mismatched units immediately
+    this.start.plus(size);
     const points = [];
     if (this.kind === 'time') {
       const length = this.duration.total('nanosecond');
@@ -294,14 +306,14 @@ class Range {
       : duration(step);
     if (size.isZero() || size.isNegative()) {
       refuse('invalidStep', String(size), {
-        explanation: isDevelopment ? 'step duration for `points()` and `split()` must be greater than zero' : 0,
+        explanation: isDevelopment ? 'step duration for `every()` and `split()` must be greater than zero' : 0,
       });
     }
     return size;
   }
 
   split(step, name) {
-    const points = this.points(step, name);
+    const points = this.every(step, name);
     return points.map((start, i) => {
       const following = points[i + 1];
       if (following === undefined) {
@@ -384,6 +396,30 @@ export class DateRange extends Range {
     return !!value?.[IS_DATE_RANGE];
   }
   static kind = 'date';
+
+  count(kind = 'days') {
+    const key = String(kind).trim().toLowerCase().replace(/s$/, '');
+    const total = this.duration.days;
+    if (key === 'day') {
+      return total;
+    }
+    const weeks = Math.floor(total / 7);
+    const extra = total % 7;
+    const start = this.start.dayOfWeek;
+    const hits = (day) => weeks + ((day - start + 7) % 7 < extra ? 1 : 0);
+    if (key === 'weekday' || key === 'weekend') {
+      const off = weekendDays(this.locale()).reduce((sum, day) => sum + hits(day), 0);
+      return key === 'weekend' ? off : total - off;
+    }
+    const target = weekdayNamed(key);
+    return target
+      ? hits(target)
+      : refuse('unknownKind', String(kind), {
+        explanation: isDevelopment
+          ? "expected 'days', 'weekdays', 'weekends', or a weekday name such as 'mondays'. For other units, use `.duration.total(unit)`"
+          : 0,
+      });
+  }
 }
 
 export class DateTimeRange extends Range {

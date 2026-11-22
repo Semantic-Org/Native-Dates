@@ -520,11 +520,11 @@ describe('Range isEmpty()', () => {
     expect(dateRange('2026-09-01', '2026-09-01').isEmpty()).toBe(false);
   });
 
-  it('excludes the start point and yields empty points() and split() arrays when empty', () => {
+  it('excludes the start point and yields empty every() and split() arrays when empty', () => {
     const nothing = timeRange('09:00', '09:00');
     expect(nothing.contains('09:00')).toBe(false);
     expect(nothing.duration.total('seconds')).toBe(0);
-    expect(nothing.points('hour')).toEqual([]);
+    expect(nothing.every('hour')).toEqual([]);
     expect(nothing.split('hour')).toEqual([]);
   });
 });
@@ -857,56 +857,56 @@ describe('compare() on ranges', () => {
   });
 });
 
-describe('Range points()', () => {
+describe('Range every()', () => {
   it('returns each CalendarDate in a DateRange inclusively', () => {
-    expect(dateRange('2026-09-01', '2026-09-04').points('day').map(String))
+    expect(dateRange('2026-09-01', '2026-09-04').every('day').map(String))
       .toEqual(['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04']);
   });
 
   it('accepts a unit string, (count, unit), duration phrase, Duration, or fields object step', () => {
     const stay = dateRange('2026-09-01', '2026-09-07');
     const everyOtherDay = ['2026-09-01', '2026-09-03', '2026-09-05', '2026-09-07'];
-    expect(stay.points('days')).toHaveLength(7);
-    expect(stay.points(2, 'days').map(String)).toEqual(everyOtherDay);
-    expect(stay.points('2 days').map(String)).toEqual(everyOtherDay);
-    expect(stay.points(days(2)).map(String)).toEqual(everyOtherDay);
-    expect(stay.points({ days: 2 }).map(String)).toEqual(everyOtherDay);
+    expect(stay.every('days')).toHaveLength(7);
+    expect(stay.every(2, 'days').map(String)).toEqual(everyOtherDay);
+    expect(stay.every('2 days').map(String)).toEqual(everyOtherDay);
+    expect(stay.every(days(2)).map(String)).toEqual(everyOtherDay);
+    expect(stay.every({ days: 2 }).map(String)).toEqual(everyOtherDay);
   });
 
   it('omits steps that would exceed the range end', () => {
-    expect(date('2026-11-02').for(2, 'weeks').points('week').map(String)).toEqual(['2026-11-02', '2026-11-09']);
-    expect(dateRange('2026-09-01', '2026-09-07').points(4, 'days').map(String)).toEqual(['2026-09-01', '2026-09-05']);
+    expect(date('2026-11-02').for(2, 'weeks').every('week').map(String)).toEqual(['2026-11-02', '2026-11-09']);
+    expect(dateRange('2026-09-01', '2026-09-07').every(4, 'days').map(String)).toEqual(['2026-09-01', '2026-09-05']);
   });
 
   it('returns only the start point when the step exceeds the range duration', () => {
-    expect(dateRange('2026-09-01', '2026-09-07').points('month').map(String)).toEqual(['2026-09-01']);
+    expect(dateRange('2026-09-01', '2026-09-07').every('month').map(String)).toEqual(['2026-09-01']);
   });
 
   it('anchors monthly steps to the start date and clamps to shorter month ends', () => {
-    expect(dateRange('2026-01-31', '2026-04-30').points('month').map(String))
+    expect(dateRange('2026-01-31', '2026-04-30').every('month').map(String))
       .toEqual(['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30']);
   });
 
   it('iterates DateTimeRange points in the range timezone and excludes end', () => {
     const block = datetimeRange('2026-09-01T09:00', '2026-09-01T10:30', 'Asia/Tokyo');
-    const points = block.points(30, 'minutes');
+    const points = block.every(30, 'minutes');
     expect(points.map((point) => point.format('HH:mm'))).toEqual(['09:00', '09:30', '10:00']);
     expect(points.map((point) => point.zone)).toEqual(['Asia/Tokyo', 'Asia/Tokyo', 'Asia/Tokyo']);
   });
 
   it('skips nonexistent local hours across a spring-forward DST transition', () => {
     const earlyMorning = datetimeRange('2026-03-08T00:00', '2026-03-08T05:00', 'America/New_York');
-    expect(earlyMorning.points('hour').map((point) => point.hour)).toEqual([0, 1, 3, 4]);
+    expect(earlyMorning.every('hour').map((point) => point.hour)).toEqual([0, 1, 3, 4]);
   });
 
   it('emits both occurrences of a repeated hour across a fall-back DST transition', () => {
     const earlyMorning = datetimeRange('2026-11-01T00:00', '2026-11-01T03:00', 'America/New_York');
-    expect(earlyMorning.points('hour').map((point) => point.hour)).toEqual([0, 1, 1, 2]);
+    expect(earlyMorning.every('hour').map((point) => point.hour)).toEqual([0, 1, 1, 2]);
   });
 
   it('preserves local midnight when stepping by calendar days across DST', () => {
     const weekend = datetimeRange('2026-03-07T00:00', '2026-03-10T00:00', 'America/New_York');
-    expect(weekend.points('day').map((point) => point.format('DD HH:mm'))).toEqual([
+    expect(weekend.every('day').map((point) => point.format('DD HH:mm'))).toEqual([
       '07 00:00',
       '08 00:00',
       '09 00:00',
@@ -914,24 +914,100 @@ describe('Range points()', () => {
   });
 
   it('iterates TimeRange points across midnight and excludes end', () => {
-    expect(timeRange('22:00', '02:00').points(1, 'hour').map(String))
+    expect(timeRange('22:00', '02:00').every(1, 'hour').map(String))
       .toEqual(['22:00:00', '23:00:00', '00:00:00', '01:00:00']);
   });
 
   it('throws invalidStep for zero or negative steps', () => {
     const stay = dateRange('2026-09-01', '2026-09-07');
-    expect(() => stay.points(0, 'days')).toThrowError(
+    expect(() => stay.every(0, 'days')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'invalidStep' }),
     );
-    expect(() => stay.points(-1, 'days')).toThrowError(
+    expect(() => stay.every(-1, 'days')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'invalidStep', at: '-P1D' }),
     );
   });
 
-  it('throws unsupportedUnit when stepping a DateRange by clock units', () => {
-    expect(() => dateRange('2026-09-01', '2026-09-07').points('hour')).toThrowError(
+  it('throws unsupportedUnit when stepping a DateRange by clock units or a TimeRange by calendar units', () => {
+    expect(() => dateRange('2026-09-01', '2026-09-07').every('hour')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnit', at: 'hours' }),
     );
+    expect(() => timeRange('09:00', '17:00').every('day')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnit', at: 'days' }),
+    );
+    expect(() => timeRange('09:00', '09:00').every('day')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnit', at: 'days' }),
+    );
+  });
+});
+
+describe('DateRange count()', () => {
+  it('counts total inclusive days by default or with day/days', () => {
+    const sprint = dateRange('2026-05-01', '2 weeks');
+    expect(sprint.count()).toBe(14);
+    expect(sprint.count('days')).toBe(14);
+    expect(sprint.count('day')).toBe(14);
+    expect(dateRange('2026-05-01', '2026-05-01').count()).toBe(1);
+  });
+
+  it('counts weekdays, weekends, and named weekdays in O(1) matching every(day) filters', () => {
+    // test every start weekday and remainder length 1..14
+    for (let startDay = 1; startDay <= 7; startDay++) {
+      for (let len = 1; len <= 14; len++) {
+        const span = dateRange(`2026-06-0${startDay}`, `${len} days`);
+        const all = span.every('day');
+        expect(span.count('weekdays')).toBe(all.filter((d) => d.isWeekday()).length);
+        expect(span.count('weekends')).toBe(all.filter((d) => d.isWeekend()).length);
+        expect(span.count('mondays')).toBe(all.filter((d) => d.dayOfWeek === 1).length);
+        expect(span.count('sundays')).toBe(all.filter((d) => d.dayOfWeek === 7).length);
+      }
+    }
+  });
+
+  it('normalizes whitespace, letter case, singular forms, and three-letter weekday prefixes', () => {
+    const sprint = dateRange('2026-05-01', '2 weeks');
+    expect(sprint.count(' Weekdays ')).toBe(10);
+    expect(sprint.count('weekend')).toBe(4);
+    expect(sprint.count('MON')).toBe(2);
+    expect(sprint.count(' Fridays ')).toBe(2);
+  });
+
+  it('follows the active locale weekend days for weekdays and weekends', () => {
+    // 2026-05-01 is Friday through 2026-05-07 Thursday (one full 7-day week)
+    // plus partial spans starting Friday: 2026-05-01..2026-05-03 (Fri, Sat, Sun)
+    for (const tag of ['en-US', 'ar-SA', 'fa-IR', 'en-IN']) {
+      for (let len = 1; len <= 10; len++) {
+        const span = dateRange('2026-05-01', `${len} days`, { locale: tag });
+        const all = span.every('day');
+        expect(span.count('weekdays')).toBe(all.filter((d) => d.isWeekday()).length);
+        expect(span.count('weekends')).toBe(all.filter((d) => d.isWeekend()).length);
+      }
+    }
+    expect(dateRange('2026-05-01', '2026-05-03', { locale: 'ar-SA' }).count('weekends')).toBe(2);
+    expect(dateRange('2026-05-01', '2026-05-03', { locale: 'ar-SA' }).count('weekdays')).toBe(1);
+    expect(dateRange('2026-05-01', '2026-05-03', { locale: 'fa-IR' }).count('weekends')).toBe(1);
+    expect(dateRange('2026-05-01', '2026-05-03', { locale: 'en-IN' }).count('weekends')).toBe(1);
+  });
+
+  it('throws unknownKind for unrecognized or non-string count kinds', () => {
+    const sprint = dateRange('2026-05-01', '2 weeks');
+    expect(() => sprint.count('weeks')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownKind', at: 'weeks' }),
+    );
+    expect(() => sprint.count('monay')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownKind', at: 'monay' }),
+    );
+    expect(() => sprint.count(1)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownKind', at: '1' }),
+    );
+    expect(() => sprint.count(null)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownKind', at: 'null' }),
+    );
+  });
+
+  it('is defined only on DateRange, not DateTimeRange or TimeRange', () => {
+    expect(datetimeRange('2026-05-01T09:00', '2h', 'UTC').count).toBeUndefined();
+    expect(timeRange('09:00', '17:00').count).toBeUndefined();
   });
 });
 
@@ -1014,7 +1090,7 @@ describe('Range split() and splitBy()', () => {
   });
 });
 
-describe('CalendarDate split(), splitBy(), and points()', () => {
+describe('CalendarDate split(), splitBy(), and every()', () => {
   afterEach(() => {
     configure({ zone: null });
   });
@@ -1033,7 +1109,7 @@ describe('CalendarDate split(), splitBy(), and points()', () => {
     expect(day.split('hour', 'Asia/Tokyo')).toHaveLength(24);
     expect(day.split('6h', 'Asia/Tokyo').map((slice) => slice.start.format('HH:mm')))
       .toEqual(['00:00', '06:00', '12:00', '18:00']);
-    expect(day.points('6h', 'Asia/Tokyo')[0].toString()).toBe('2026-11-15T15:00:00.000Z');
+    expect(day.every('6h', 'Asia/Tokyo')[0].toString()).toBe('2026-11-15T15:00:00.000Z');
   });
 
   it('accepts a numeric string count before unit and timezone arguments', () => {
@@ -1042,7 +1118,7 @@ describe('CalendarDate split(), splitBy(), and points()', () => {
       '2026-11-16T00:00:00.000Z/2026-11-16T12:00:00.000Z',
       '2026-11-16T12:00:00.000Z/2026-11-17T00:00:00.000Z',
     ]);
-    expect(day.points('6', 'hours', 'UTC')).toHaveLength(4);
+    expect(day.every('6', 'hours', 'UTC')).toHaveLength(4);
   });
 
   it('aliases splitBy() to split()', () => {
@@ -1056,8 +1132,8 @@ describe('CalendarDate split(), splitBy(), and points()', () => {
     expect(date('2026-11-01').split('hour', 'America/New_York')).toHaveLength(25);
   });
 
-  it('returns DateTime instants from midnight up to the next midnight in points()', () => {
-    expect(date('2026-11-16').points(6, 'hours', 'UTC').map(String)).toEqual([
+  it('returns DateTime instants from midnight up to the next midnight in every()', () => {
+    expect(date('2026-11-16').every(6, 'hours', 'UTC').map(String)).toEqual([
       '2026-11-16T00:00:00.000Z',
       '2026-11-16T06:00:00.000Z',
       '2026-11-16T12:00:00.000Z',
@@ -1072,7 +1148,7 @@ describe('CalendarDate split(), splitBy(), and points()', () => {
       '2026-11-15T15:00:00.000Z/2026-11-16T03:00:00.000Z',
       '2026-11-16T03:00:00.000Z/2026-11-16T15:00:00.000Z',
     ]);
-    expect(day.points('12h')[0].zone).toBe('Asia/Tokyo');
+    expect(day.every('12h')[0].zone).toBe('Asia/Tokyo');
   });
 
   it('throws invalidStep for zero or negative steps', () => {
@@ -1081,10 +1157,10 @@ describe('CalendarDate split(), splitBy(), and points()', () => {
     );
   });
 
-  it('keeps all split() slices and points() within the calendar day when midnight is skipped by DST', () => {
+  it('keeps all split() slices and every() within the calendar day when midnight is skipped by DST', () => {
     const day = date('2026-03-08');
     expect(day.split('hour', 'America/Havana')).toHaveLength(23);
-    expect(day.points('hour', 'America/Havana').at(-1).format('YYYY-MM-DD HH:mm')).toBe('2026-03-08 23:00');
+    expect(day.every('hour', 'America/Havana').at(-1).format('YYYY-MM-DD HH:mm')).toBe('2026-03-08 23:00');
   });
 });
 

@@ -124,10 +124,11 @@
 }
 :root[data-theme='light'] .say { box-shadow: 0 1px 2px oklch(0.3 0.03 265 / 0.06), 0 30px 80px -40px oklch(0.52 0.19 295 / 0.25); }
 .say-head { display: flex; align-items: center; gap: 16px; height: 52px; padding-inline: 20px 24px; border-bottom: 1px solid var(--line); }
-.say-tabs { display: flex; gap: 2px; }
+.say-tabs { display: flex; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.say-tabs::-webkit-scrollbar { display: none; }
 .say-tab {
-  height: 30px; padding: 0 12px; border: 0; border-radius: var(--r-2); background: none; cursor: pointer;
-  color: var(--text-3); font: 500 var(--fs-sm)/1 var(--font-sans);
+  flex-shrink: 0; height: 30px; padding: 0 12px; border: 0; border-radius: var(--r-2); background: none; cursor: pointer;
+  color: var(--text-3); font: 500 var(--fs-sm)/1 var(--font-sans); white-space: nowrap;
 }
 .say-tab:hover { color: var(--text); }
 .say-tab[aria-selected='true'] { color: var(--text); background: var(--surface-3); }

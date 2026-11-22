@@ -3,7 +3,7 @@ title: Ranges
 lede: Spans between two dates, moments, or times of day, with containment, overlap, and stepping.
 import: import { DateRange, DateTimeRange, TimeRange } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-22
 ---
 
 ## Range classes
@@ -313,11 +313,11 @@ dateRange('2026-09-01', '2026-09-01').isEmpty(); // false
 ## Stepping, splitting, and zones
 
 :::entry
-### `points()` :kind[method]
+### `every()` :kind[method]
 
 ```js signature
-range.points(step): Point[]
-range.points(count, unit): Point[]
+range.every(step): Point[]
+range.every(count, unit): Point[]
 ```
 
 Walks forward from `start` by a positive unit or duration and returns every point inside the range. Steps count out from the starting point rather than chaining additions, so stepping monthly from January 31 lands on each month's final day.
@@ -342,11 +342,46 @@ description: Ordered array of points inside the range.
 ```
 
 ```js
-dateRange('2026-01-31', '2026-04-30').points('month').map(String);
+dateRange('2026-01-31', '2026-04-30').every('month').map(String);
 // ['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30']
 
-timeRange('22:00', '02:00').points(1, 'hour').map(String);
+timeRange('22:00', '02:00').every(1, 'hour').map(String);
 // ['22:00:00', '23:00:00', '00:00:00', '01:00:00']
+```
+:::
+
+:::entry
+### `count()` :kind[method]
+
+```js signature
+dateRange.count(kind?): number
+```
+
+Counts calendar days inside a `DateRange` without allocating intermediate date instances. Pass `'days'` (the default), `'weekdays'`, `'weekends'`, or a weekday name such as `'mondays'`. `'weekdays'` and `'weekends'` follow the active locale's weekend days.
+
+**Parameters**
+
+```params
+- name: kind
+  type: string
+  default: "'days'"
+  description: "'days', 'weekdays', 'weekends', or a weekday name such as 'mondays'."
+```
+
+**Returns**
+
+```returns
+type: number
+description: Number of matching calendar days in the range.
+```
+
+```js
+const sprint = dateRange('2026-05-01', '2 weeks');
+
+sprint.count(); // 14
+sprint.count('weekdays'); // 10
+sprint.count('weekends'); // 4
+sprint.count('mondays'); // 2
 ```
 :::
 
@@ -360,7 +395,7 @@ range.splitBy(step): Range[]
 range.splitBy(count, unit): Range[]
 ```
 
-Divides the range into contiguous sub-ranges of the given step size, clamping the final chunk to the range's end. Accepts the same step arguments as [`points()`](#points), and is also aliased as `splitBy()`.
+Divides the range into contiguous sub-ranges of the given step size, clamping the final chunk to the range's end. Accepts the same step arguments as [`every()`](#every), and is also aliased as `splitBy()`.
 
 ```js
 dateRange('2026-09-01', '2026-09-10').split(4, 'days').map(String);
