@@ -16,14 +16,17 @@ const supersededPattern = /^Superseded by\s+(.+?)\.?\s*$/i;
 // ordered from specific domain nouns to broader categories, first match wins
 const topicGroups = [
   ['Zones, Offsets, and Serialization', /\.zone\b|\boffsets?\b|serializes?\b|\bUTC\b|time ?zone|IANA/i],
-  ['Ranges', /DateRange|DateTimeRange|TimeRange|\bRanges?\b|\.for\(\)|\.through\(\)|\.points\(\)/i],
+  ['Ranges', /DateRange|DateTimeRange|TimeRange|\bRanges?\b|\.for\(\)|\.through\(\)|\.every\(\)|\.count\(\)/i],
   ['Durations', /\bDuration\b|\bbalance\(\)|\btotal\(|\bnormalize\(\)/i],
-  ['Arithmetic, Boundaries, and Weekdays', /startOf|endOf|unit boundaries|week boundaries|dayOfWeek|weekOfYear/i],
+  [
+    'Arithmetic, Boundaries, and Weekdays',
+    /startOf|endOf|unit boundaries|week boundaries|dayOfWeek|weekOfYear|isWeekend|isWeekday/i,
+  ],
   [
     'Formatting, Tokens, and Locales',
     /\.locale\(\)|Format tokens|\btokens?\b|ordinal|weekdayNames|\bformats\b|Gregorian/i,
   ],
-  ['Parsing, Inputs, and Comparisons', /non-ISO|two readings|\bcompare\(|earliest|latest/i],
+  ['Parsing, Inputs, and Comparisons', /non-ISO|two readings|Loose parsing|dayFirst|\bcompare\(|earliest|latest/i],
   ['Nouns, Instances, and Epoch', /\bepoch|\bfreeze\b|own property|Unix timestamp|\bMonthDay\b|\bYearMonth\b/i],
   [
     'Plugins, Errors, and Dependencies',
