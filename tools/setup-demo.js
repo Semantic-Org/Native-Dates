@@ -6,13 +6,29 @@
 //   DEMO_INSTALLED=older npm run setup:demo                  # a project that has an older copy, skills included
 //   DEMO_INSTALLED=older-without-skills npm run setup:demo   # an older copy from before skills were packaged
 //   DEMO_INSTALLED=newer npm run setup:demo                  # a copy newer than this checkout
+//   DEMO_AGENTS=claude npm run setup:demo                    # which coding agents the command finds (default claude,codex,agy)
+//   DEMO_AGENTS=none npm run setup:demo                      # none found, so it never asks where the skills go
+//
+// the agents are stand-ins that record what they are asked to run and install nothing. the command also runs with
+// a throwaway home and a path that holds only the stand-ins, node and the system folders, so choosing
+// "everywhere" here cannot reach a real agent or its configuration
 
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { delimiter, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -92,13 +108,54 @@ server.listen(0, '127.0.0.1', () => {
       `\n  installed     native-dates ${version}${state === 'older-without-skills' ? ', with no skills' : ''}`,
     );
   }
-  console.log(`\n  demo project  ${project}\n  running       npx ${command} ${process.argv.slice(2).join(' ')}\n`);
+  // stand-in agents first on a path that leaves out wherever the real ones live
+  const agents = (process.env.DEMO_AGENTS ?? 'claude,codex,agy').split(',').filter((agent) =>
+    agent && agent !== 'none'
+  );
+  const standIns = join(scratch, 'agents');
+  const agentCalls = join(scratch, 'agent-calls.log');
+  mkdirSync(standIns);
+  writeFileSync(agentCalls, '');
+  for (const agent of agents) {
+    const line = `require('node:fs').appendFileSync(${
+      JSON.stringify(agentCalls)
+    }, '${agent} ' + process.argv.slice(2).join(' ') + '\\n');`;
+    writeFileSync(join(standIns, agent), `#!/usr/bin/env node\n${line}\n`);
+    chmodSync(join(standIns, agent), 0o755);
+  }
+  // node and the package managers by links of their own, since the folders they live in can hold agents too
+  const tools = join(scratch, 'tools');
+  mkdirSync(tools);
+  for (const tool of ['node', 'npm', 'npx', 'pnpm', 'yarn', 'bun', 'corepack']) {
+    const found = (process.env.PATH ?? '').split(delimiter).map((folder) => join(folder, tool)).find((path) =>
+      existsSync(path)
+    );
+    if (found) { symlinkSync(found, join(tools, tool)); }
+  }
+  const home = join(scratch, 'home');
+  mkdirSync(home);
+  console.log(
+    `\n  agents        ${
+      agents.length ? `stand-ins for ${agents.join(', ')}, which record their arguments and install nothing` : 'none'
+    }`,
+  );
+  console.log('  home          a throwaway folder, so no real agent or its configuration can be reached');
+  console.log(`  demo project  ${project}\n  running       npx ${command} ${process.argv.slice(2).join(' ')}\n`);
   const child = spawn(['npx', command, ...process.argv.slice(2)].join(' '), {
     cwd: project,
     stdio: 'inherit',
     shell: true,
     env: {
       ...process.env,
+      PATH: [standIns, tools, '/usr/bin', '/bin'].join(delimiter),
+      HOME: home,
+      USERPROFILE: home,
+      CLAUDE_CONFIG_DIR: join(home, '.claude'),
+      CODEX_HOME: join(home, '.codex'),
+      XDG_CONFIG_HOME: join(home, '.config'),
+      XDG_DATA_HOME: join(home, '.local/share'),
+      XDG_STATE_HOME: join(home, '.local/state'),
+      XDG_CACHE_HOME: join(home, '.cache'),
       npm_config_registry: registry,
       PNPM_CONFIG_REGISTRY: registry,
       npm_config_cache: join(scratch, 'npm-cache'),
@@ -109,7 +166,13 @@ server.listen(0, '127.0.0.1', () => {
   });
   child.on('exit', (status) => {
     server.close();
-    // the tarballs and the npm cache go, and the demo project stays to be looked at
+    const ran = readFileSync(agentCalls, 'utf8').trim();
+    if (ran) {
+      console.log(
+        `  agents were asked to run (stand-ins, nothing was installed)\n    ${ran.replace(/\n/g, '\n    ')}\n`,
+      );
+    }
+    // the tarballs, the npm cache and the throwaway home go, and the demo project stays to be looked at
     rmSync(scratch, { recursive: true, force: true });
     console.log(`  demo project  ${project}\n`);
     process.exitCode = status ?? 1;

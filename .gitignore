@@ -9,6 +9,8 @@ ai/workspace/
 
 # ai/skills laid out for the npm tarball, written by prepack and removed by postpack
 /skills/
+/plugin.json
+/.claude-plugin/plugin.json
 
 # worktrees and local state an agent keeps beside the repo, never committed
 .claude/

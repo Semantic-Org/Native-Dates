@@ -6,6 +6,7 @@ import {
   lstatSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   readlinkSync,
   rmSync,
@@ -17,7 +18,7 @@ import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { fill } from '../bin/agent-setup/helpers.js';
+import { fill, joinWords } from '../bin/agent-setup/helpers.js';
 import { Setup } from '../bin/agent-setup/setup.js';
 import { packSkills } from '../tools/skills.js';
 
@@ -30,6 +31,23 @@ const published = join(scratch, 'published');
 // package managers that record their arguments and put the package in node_modules, since tests have no registry
 const managers = join(scratch, 'managers');
 const calls = join(scratch, 'calls.log');
+// coding agents that record their arguments and change nothing, one folder each so a test picks which exist
+const agentBins = join(scratch, 'agents');
+// node by a link of its own, so a run finds the stand-ins and never a real package manager or coding agent
+const nodeOnly = join(scratch, 'node');
+// a home for anything that looks for one, so nothing can reach a real agent's configuration
+const home = join(scratch, 'home');
+const scriptBin = ['/usr/bin/script', '/bin/script'].find((path) => existsSync(path));
+
+const environment = (agents = [], extra = {}) => ({
+  PATH: [managers, ...agents.map((agent) => join(agentBins, agent)), nodeOnly].join(delimiter),
+  HOME: home,
+  CLAUDE_CONFIG_DIR: join(home, '.claude'),
+  CODEX_HOME: join(home, '.codex'),
+  // offline as well, so a manager missing from the fakes could never reach a registry
+  npm_config_offline: 'true',
+  ...extra,
+});
 
 beforeAll(() => {
   mkdirSync(published, { recursive: true });
@@ -49,6 +67,21 @@ beforeAll(() => {
     writeFileSync(join(managers, manager), `${script.join('\n')}\n`);
     chmodSync(join(managers, manager), 0o755);
   }
+  for (const agent of ['claude', 'codex', 'agy']) {
+    const script = [
+      '#!/usr/bin/env node',
+      `require('node:fs').appendFileSync(${
+        JSON.stringify(calls)
+      }, '${agent} ' + process.argv.slice(2).join(' ') + '\\n');`,
+      `if (process.env.FAILS === '${agent}') { console.error('${agent} stand-in refused'); process.exit(1); }`,
+    ];
+    mkdirSync(join(agentBins, agent), { recursive: true });
+    writeFileSync(join(agentBins, agent, agent), `${script.join('\n')}\n`);
+    chmodSync(join(agentBins, agent, agent), 0o755);
+  }
+  mkdirSync(nodeOnly);
+  symlinkSync(process.execPath, join(nodeOnly, 'node'));
+  mkdirSync(home);
 });
 
 afterAll(() => rmSync(scratch, { recursive: true, force: true }));
@@ -63,16 +96,18 @@ function project(files = { 'package.json': '{ "name": "app" }' }) {
 }
 
 // stdin is a pipe here, which is how the command sees a coding agent or a script
-function setup(dir, ...args) {
+// agents are the stand-in binaries the run can find, and env adds to what it sees
+function setupWith({ agents = [], env = {} }, dir, ...args) {
   writeFileSync(calls, '');
   const { status, stdout, stderr } = spawnSync(process.execPath, [join(published, 'bin/native-dates.js'), ...args], {
     cwd: dir,
     encoding: 'utf8',
-    // offline as well, so a manager missing from the fakes could never reach a registry
-    env: { PATH: `${managers}${delimiter}${dirname(process.execPath)}`, npm_config_offline: 'true' },
+    env: environment(agents, env),
   });
   return { status, output: stdout + stderr, calls: readFileSync(calls, 'utf8').trim() };
 }
+
+const setup = (dir, ...args) => setupWith({}, dir, ...args);
 
 // what the command prints is read from its copy table, so rewording a line never breaks a test
 const { copy } = Setup;
@@ -198,18 +233,18 @@ describe('npx native-dates', () => {
   });
 
   // `script` gives the command a terminal on Linux, and its piped input is what the person types
-  it.runIf(process.platform === 'linux').each([
+  it.runIf(scriptBin).each([
     ['Enter', 0, '\n', true],
     ['n', 0, 'n\n', false],
   ])('in a terminal asks first, and %s leaves status %i', (key, expected, typed, written) => {
     const dir = project();
     const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
-    const { status, stdout } = spawnSync('script', ['-qec', command, '/dev/null'], {
+    const { status, stdout } = spawnSync(scriptBin, ['-qec', command, '/dev/null'], {
       cwd: dir,
       input: typed,
       encoding: 'utf8',
       timeout: 30_000,
-      env: { PATH: `${managers}${delimiter}${dirname(process.execPath)}${delimiter}/usr/bin${delimiter}/bin` },
+      env: environment(),
     });
     expect(stdout).toContain(copy.question);
     expect(stdout).not.toContain('unsettled');
@@ -218,14 +253,14 @@ describe('npx native-dates', () => {
   });
 
   // a lone esc is told from an arrow key by the pause after it, so the keys are typed with gaps
-  it.runIf(process.platform === 'linux')(
+  it.runIf(scriptBin)(
     'esc in the second question steps back to the first, which still answers',
     async () => {
       const dir = project();
       const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
-      const child = spawn('script', ['-qec', command, '/dev/null'], {
+      const child = spawn(scriptBin, ['-qec', command, '/dev/null'], {
         cwd: dir,
-        env: { PATH: `${managers}${delimiter}${dirname(process.execPath)}${delimiter}/usr/bin${delimiter}/bin` },
+        env: environment(),
       });
       let output = '';
       child.stdout.on('data', (chunk) => (output += chunk));
@@ -276,27 +311,27 @@ describe('npx native-dates', () => {
     const forced = spawnSync(process.execPath, [join(published, 'bin/native-dates.js')], {
       cwd: dir,
       encoding: 'utf8',
-      env: { PATH: dirname(process.execPath), FORCE_COLOR: '3', npm_config_offline: 'true' },
+      env: environment([], { FORCE_COLOR: '3' }),
     }).stdout;
     expect(forced).toContain('\x1b[1m\x1b[38;2;117;158;185m[native-dates]');
     const silenced = spawnSync(process.execPath, [join(published, 'bin/native-dates.js')], {
       cwd: dir,
       encoding: 'utf8',
-      env: { PATH: dirname(process.execPath), FORCE_COLOR: '3', NO_COLOR: '1', npm_config_offline: 'true' },
+      env: environment([], { FORCE_COLOR: '3', NO_COLOR: '1' }),
     }).stdout;
     expect(silenced).not.toContain('\x1b[');
   });
 
   // down and enter pick 'Let me choose', then space deselects the first row, which is the install
-  it.runIf(process.platform === 'linux')('in a terminal lets the person switch a change off before confirming', () => {
+  it.runIf(scriptBin)('in a terminal lets the person switch a change off before confirming', () => {
     const dir = project();
     const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
-    const { status } = spawnSync('script', ['-qec', command, '/dev/null'], {
+    const { status } = spawnSync(scriptBin, ['-qec', command, '/dev/null'], {
       cwd: dir,
       input: 'j\r \r',
       encoding: 'utf8',
       timeout: 30_000,
-      env: { PATH: `${managers}${delimiter}${dirname(process.execPath)}${delimiter}/usr/bin${delimiter}/bin` },
+      env: environment(),
     });
     expect(status).toBe(0);
     expect(readFileSync(calls, 'utf8')).toBe('');
@@ -360,6 +395,141 @@ describe('npx native-dates', () => {
     expect(output).toContain(fill(copy.newer, { name: 'native-dates', installed: '99.0.0', version }));
     expect(existsSync(join(dir, '.agents/skills/native-dates/SKILL.md'))).toBe(true);
   });
+
+  const install = `npm install native-dates@${version}`;
+  const pluginCalls = [
+    'claude plugin install native-dates --marketplace Semantic-Org/Native-Dates',
+    'codex plugin marketplace add Semantic-Org/Native-Dates',
+    'codex plugin add native-dates@native-dates',
+    'agy plugin install node_modules/native-dates',
+  ];
+
+  it('names the agents it finds, and starts with only the folders they read', () => {
+    const dir = project();
+    const { status, output, calls: ran } = setupWith({ agents: ['claude'] }, dir, '--yes');
+    expect(status).toBe(0);
+    expect(output).toContain(fill(copy.detected, { agents: 'Claude Code' }));
+    expect(ran).toBe(install);
+    expect(existsSync(join(dir, '.claude/skills/native-dates/SKILL.md'))).toBe(true);
+    expect(existsSync(join(dir, '.agents'))).toBe(false);
+  });
+
+  it('runs no agent and writes only in the project unless --global is given', () => {
+    const dir = project();
+    const { calls: ran } = setupWith({ agents: ['claude', 'codex', 'agy'] }, dir, '--yes');
+    expect(ran).toBe(install);
+    expect(existsSync(home) && readdirSync(home)).toEqual([]);
+  });
+
+  it("with --global installs each found agent's plugin with its own command and links no project skills", () => {
+    const dir = project();
+    const { status, calls: ran } = setupWith({ agents: ['claude', 'codex', 'agy'] }, dir, '--yes', '--global');
+    expect(status).toBe(0);
+    expect(ran.split('\n')).toEqual([install, ...pluginCalls]);
+    expect(existsSync(join(dir, '.agents')) || existsSync(join(dir, '.claude'))).toBe(false);
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf8')).toContain(
+      'node_modules/native-dates/skills/native-dates/SKILL.md',
+    );
+  });
+
+  it('with --global lists the plugin commands and runs none of them until --yes', () => {
+    const dir = project();
+    const { status, output, calls: ran } = setupWith({ agents: ['claude', 'codex'] }, dir, '--global');
+    expect(status).toBe(1);
+    expect(ran).toBe('');
+    expect(output).toContain(pluginCalls[0]);
+    expect(output).toContain(`${pluginCalls[1]} && ${pluginCalls[2]}`);
+  });
+
+  it('refuses --global and writes nothing when no found agent installs plugins from a command', () => {
+    const dir = project({ 'package.json': '{ "name": "app" }', '.cursor/rules.md': '' });
+    const { status, output, calls: ran } = setupWith({}, dir, '--yes', '--global');
+    const agents = joinWords(['Claude Code', 'Codex', 'Antigravity']);
+    expect(status).toBe(1);
+    expect(ran).toBe('');
+    expect(output).toContain(fill(copy.globalUnavailable, { agents, name: 'native-dates' }));
+    expect(existsSync(join(dir, 'AGENTS.md')) || existsSync(join(dir, '.agents'))).toBe(false);
+  });
+
+  it('with --global still fills a folder for a found agent that has no plugin, one the plugin agent does not read', () => {
+    const dir = project({ 'package.json': '{ "name": "app" }', '.cursor/rules.md': '' });
+    const { status, calls: ran } = setupWith({ agents: ['claude'] }, dir, '--yes', '--global');
+    expect(status).toBe(0);
+    expect(ran.split('\n')).toEqual([install, pluginCalls[0]]);
+    expect(existsSync(join(dir, '.agents/skills/native-dates/SKILL.md'))).toBe(true);
+    expect(existsSync(join(dir, '.claude'))).toBe(false);
+  });
+
+  it('with --global says a skill already linked in the project will load twice, and deletes nothing', () => {
+    const dir = project();
+    setupWith({ agents: ['codex'] }, dir, '--yes');
+    const { status, output } = setupWith({ agents: ['codex'] }, dir, '--yes', '--global');
+    expect(status).toBe(0);
+    expect(output).toContain(fill(copy.doubled, { path: '.agents/skills/native-dates', agent: 'Codex' }));
+    expect(existsSync(join(dir, '.agents/skills/native-dates/SKILL.md'))).toBe(true);
+  });
+
+  it("stops at an agent command that fails, with that agent's output", () => {
+    const dir = project();
+    const { status, output, calls: ran } = setupWith(
+      { agents: ['claude', 'codex'], env: { FAILS: 'claude' } },
+      dir,
+      '--yes',
+      '--global',
+    );
+    expect(status).toBe(1);
+    expect(ran.split('\n')).toEqual([install, pluginCalls[0]]);
+    expect(output).toContain('claude stand-in refused');
+    expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false);
+  });
+
+  it('refreshes its own copy of a skill from another version, told by the version pack stamps into it', () => {
+    const dir = project({
+      'package.json': '{ "name": "app", "dependencies": { "native-dates": "*" } }',
+      '.pnp.cjs': '',
+    });
+    setup(dir, '--yes');
+    const copied = join(dir, '.agents/skills/native-dates/SKILL.md');
+    const current = readFileSync(copied, 'utf8');
+    expect(current).toContain(`version: "${version}"`);
+    writeFileSync(copied, current.replace(`version: "${version}"`, 'version: "0.0.1"'));
+    expect(setup(dir, '--yes').status).toBe(0);
+    expect(readFileSync(copied, 'utf8')).toBe(current);
+  });
+
+  // a lone esc is told from an arrow key by the pause after it, so the keys are typed with gaps
+  it.runIf(scriptBin)(
+    'in a terminal asks where the skills go first, and esc at the approval steps back to it',
+    async () => {
+      const dir = project();
+      const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+      writeFileSync(calls, '');
+      const child = spawn(scriptBin, ['-qec', command, '/dev/null'], { cwd: dir, env: environment(['claude']) });
+      let output = '';
+      child.stdout.on('data', (chunk) => (output += chunk));
+      const type = (keys, pause) =>
+        new Promise((done) => {
+          child.stdin.write(keys);
+          setTimeout(done, pause);
+        });
+      await expect.poll(() => output, { timeout: 10_000 }).toContain(copy.scopeQuestion);
+      expect(output).not.toContain(copy.question);
+      // down and enter pick everywhere, whose preview names the repository the plugin comes from
+      await type('\x1b[B\r', 500);
+      expect(output.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '')).toContain('Semantic-Org/Native-Dates');
+      // esc steps back, up and enter pick this project, enter approves
+      await type('\x1b', 1000);
+      await type('\x1b[A\r', 500);
+      await type('\r', 0);
+      const status = await new Promise((done) => child.on('close', done));
+      const shown = output.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '');
+      expect(shown).toContain(`${copy.scopeQuestion} ${copy.scopeProject}`);
+      expect(status).toBe(0);
+      expect(readFileSync(calls, 'utf8').trim()).toBe(install);
+      expect(existsSync(join(dir, '.claude/skills/native-dates/SKILL.md'))).toBe(true);
+    },
+    30_000,
+  );
 
   it('refuses outside a project and on an unknown option without writing', () => {
     const empty = mkdtempSync(join(scratch, 'empty-'));

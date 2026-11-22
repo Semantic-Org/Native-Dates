@@ -30,6 +30,8 @@
     "types",
     "bin",
     "skills",
+    "plugin.json",
+    ".claude-plugin/plugin.json",
     "README.md",
     "LICENSE"
   ],

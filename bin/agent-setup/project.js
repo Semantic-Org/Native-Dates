@@ -7,11 +7,12 @@ import {
   readdirSync,
   readFileSync,
   realpathSync,
+  rmSync,
   symlinkSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { delimiter, dirname, join, relative } from 'node:path';
 
 const realPath = (path) => {
   try {
@@ -35,6 +36,32 @@ export class Project {
     '.claude/skills': 'Claude Code, Cursor, Copilot, etc.',
   };
 
+  // the coding agents this command knows, each a setting a library can add to or change
+  // * bin - the binary on the path that shows the agent is installed
+  // * uses - a project folder that shows an agent with no binary is in use
+  // * folders - the skill folders it reads, the one it prefers first
+  // * plugin - the commands of its own install for every project, where it has one a command can drive
+  //   {repo} is the package's GitHub repository and {package} its installed copy in this project
+  // * updates - the copy key that says how its plugin is kept current, where the agent leaves that to the person
+  static agents = {
+    'Claude Code': {
+      bin: 'claude',
+      folders: ['.claude/skills'],
+      plugin: ['claude plugin install {name} --marketplace {repo}'],
+      updates: 'claudeUpdates',
+    },
+    Codex: {
+      bin: 'codex',
+      folders: ['.agents/skills'],
+      plugin: ['codex plugin marketplace add {repo}', 'codex plugin add {name}@{name}'],
+    },
+    Antigravity: { bin: 'agy', folders: ['.agents/skills'], plugin: ['agy plugin install {package}'] },
+    Copilot: { bin: 'copilot', folders: ['.agents/skills', '.claude/skills'] },
+    OpenCode: { bin: 'opencode', folders: ['.agents/skills', '.claude/skills'] },
+    Cursor: { bin: 'cursor-agent', uses: '.cursor', folders: ['.agents/skills', '.claude/skills'] },
+    Zed: { uses: '.zed', folders: ['.agents/skills'] },
+  };
+
   static lockfiles = {
     'pnpm-lock.yaml': 'pnpm',
     'yarn.lock': 'yarn',
@@ -47,8 +74,9 @@ export class Project {
   static addCommands = { npm: 'install', pnpm: 'add', yarn: 'add', bun: 'add' };
 
   // root is the person's project, and packageDir the package this command shipped in
-  constructor({ root, packageDir, name, version, aliases = [], note }) {
+  constructor({ root, packageDir, name, version, aliases = [], note, repo }) {
     this.root = root;
+    this.repo = repo;
     this.packageDir = packageDir;
     this.name = name;
     this.version = version;
@@ -69,19 +97,67 @@ export class Project {
                Plan
   *******************************/
 
+  // true when a binary of that name is on the path, read from the folders and never by running anything
+  static onPath(bin) {
+    const extensions = process.platform === 'win32' ? ['.cmd', '.exe', ''] : [''];
+    return (process.env.PATH ?? '').split(delimiter).some((folder) =>
+      extensions.some((extension) => existsSync(join(folder, `${bin}${extension}`)))
+    );
+  }
+
+  // the agents found on this machine or in use in this project, by name
+  get agents() {
+    return Object.keys(Project.agents).filter((agent) => {
+      const { bin, uses } = Project.agents[agent];
+      return Boolean(bin && Project.onPath(bin)) || Boolean(uses && existsSync(join(this.root, uses)));
+    });
+  }
+
+  // the found agents this command can install a plugin for: the binary is there and the package names a repository
+  get pluginAgents() {
+    return this.agents.filter((agent) => {
+      const { bin, plugin } = Project.agents[agent];
+      return Boolean(plugin && this.repo && Project.onPath(bin));
+    });
+  }
+
+  // the skill folders to fill for a scope
+  // 'project' is every folder, and 'machine' only what the found agents without a plugin need,
+  // each in the first folder it reads that no plugin agent reads too, so a skill loads twice only when it must
+  foldersFor(scope) {
+    if (scope !== 'machine') { return Object.keys(Project.skillFolders); }
+    const taken = this.pluginAgents.flatMap((agent) => Project.agents[agent].folders);
+    const others = this.agents.filter((agent) => !this.pluginAgents.includes(agent));
+    return [
+      ...new Set(others.map((agent) => {
+        const { folders } = Project.agents[agent];
+        return folders.find((folder) => !taken.includes(folder)) ?? folders[0];
+      })),
+    ];
+  }
+
   // every change still to make, in the order they are made, each one the person can switch off
-  plan() {
+  // scope 'machine' installs each plugin agent's own plugin for every project and links no project skills for it
+  // selected is false for a folder no found agent reads, so finding agents only decides what starts selected
+  plan(scope = 'project') {
     const command = this.installCommand?.join(' ');
     const pending = this.pendingSkills;
-    const folders = Object.keys(Project.skillFolders).filter((folder) =>
-      pending.some((skill) => skill.folder === folder)
-    );
+    const reads = (folder) => this.agents.some((agent) => Project.agents[agent].folders.includes(folder));
+    const folders = this.foldersFor(scope).filter((folder) => pending.some((skill) => skill.folder === folder));
     return [
       ...(command
         ? [{ step: this.isOlder ? 'update' : 'install', plan: this.installPlan, apply: () => this.install() }]
         : []),
+      ...(scope === 'machine' ? this.pluginAgents : []).map((agent) => ({
+        step: 'plugin',
+        agent,
+        plan: ['plugin', { agent, command: this.pluginCommands(agent).join(' && ') }],
+        apply: () => this.installPlugin(agent),
+      })),
       ...folders.map((folder) => ({
         step: 'skills',
+        folder,
+        selected: !this.agents.length || reads(folder),
         plan: ['skills', { folder, readers: Project.skillFolders[folder] }],
         apply: () => this.placeSkills(folder),
       })),
@@ -91,6 +167,14 @@ export class Project {
         apply: () => this.writeNote(file),
       })),
     ];
+  }
+
+  // where an agent that gets a plugin would also find the skill in this project, so it loads twice:
+  // a folder it reads that already holds this package's skill, or one of the folders about to be filled
+  doubled(agent, folders = []) {
+    return Project.agents[agent].folders
+      .filter((folder) => folders.includes(folder) || ['ready', 'stale'].includes(this.skillState(folder, this.name)))
+      .map((folder) => `${folder}/${this.name}`);
   }
 
   /*******************************
@@ -164,22 +248,39 @@ export class Project {
   }
 
   // one shell string, since Windows only finds npm and its peers through a shell
-  // output is held back and travels with the failure, so a good install stays one line
-  install() {
-    const manager = this.packageManager;
-    const command = this.installCommand.join(' ');
-    const updated = ['updateDone', { manager, from: this.installedVersion, to: this.version }];
-    const installed = this.isDependency ? ['installRan', { command }] : ['installAdded', { manager }];
-    const done = this.isOlder ? updated : installed;
+  // output is held back and travels with the failure, so a good run stays one line. tool is who to read it as
+  run(command, tool) {
     return new Promise((resolve, reject) => {
       const child = spawn(command, { cwd: this.root, shell: true, stdio: ['ignore', 'pipe', 'pipe'] });
       let output = '';
       child.stdout.on('data', (chunk) => (output += chunk));
       child.stderr.on('data', (chunk) => (output += chunk));
-      const fail = (error) => reject(Object.assign(error, { command, manager, output }));
+      const fail = (error) => reject(Object.assign(error, { command, manager: tool, output }));
       child.on('error', fail);
-      child.on('close', (status) => (status === 0 ? resolve(done) : fail(new Error(`${command} failed`))));
+      child.on('close', (status) => (status === 0 ? resolve() : fail(new Error(`${command} failed`))));
     });
+  }
+
+  async install() {
+    const manager = this.packageManager;
+    const command = this.installCommand.join(' ');
+    const updated = ['updateDone', { manager, from: this.installedVersion, to: this.version }];
+    const installed = this.isDependency ? ['installRan', { command }] : ['installAdded', { manager }];
+    const done = this.isOlder ? updated : installed;
+    await this.run(command, manager);
+    return done;
+  }
+
+  // an agent's own install commands, filled with this package's name, repository and installed copy
+  pluginCommands(agent) {
+    const values = { name: this.name, repo: this.repo, package: this.installPath ?? `node_modules/${this.name}` };
+    return Project.agents[agent].plugin.map((command) => command.replace(/\{(\w+)\}/g, (_, key) => values[key]));
+  }
+
+  // runs them in order at user scope, which is each agent's default, and never writes any agent's settings itself
+  async installPlugin(agent) {
+    for (const command of this.pluginCommands(agent)) { await this.run(command, agent); }
+    return ['pluginDone', { agent }];
   }
 
   /*******************************
@@ -192,7 +293,7 @@ export class Project {
     return this.installPath && existsSync(`${this.root}/${installed}/SKILL.md`) ? installed : null;
   }
 
-  // 'missing' | 'broken' (a link to nowhere) | 'ready' (this package's skill) | 'other' (something else, left alone)
+  // 'missing' | 'broken' (a link to nowhere) | 'stale' (this command's copy of another version) | 'ready' (this package's skill) | 'other' (something else, left alone)
   skillState(folder, skill) {
     const path = join(this.root, folder, skill);
     if (!lstatSync(path, { throwIfNoEntry: false })) { return 'missing'; }
@@ -201,7 +302,13 @@ export class Project {
     const source = this.skillSource(skill);
     const from = source ? `${this.root}/${source}` : join(this.packageDir, 'skills', skill);
     const read = (dir) => existsSync(join(dir, 'SKILL.md')) && readFileSync(join(dir, 'SKILL.md'), 'utf8');
-    return real === realPath(from) || read(real) === read(from) ? 'ready' : 'other';
+    if (real === realPath(from) || read(real) === read(from)) { return 'ready'; }
+    // a copy this command made from another version carries the version pack stamps into every skill,
+    // which tells it from a folder someone else wrote, so it is refreshed and theirs is left alone
+    const copy = read(real) || '';
+    const isCopy = !lstatSync(path).isSymbolicLink() && copy.includes(`\nname: ${skill}\n`)
+      && /\n  version: /.test(copy);
+    return isCopy ? 'stale' : 'other';
   }
 
   skillsIn(...states) {
@@ -211,7 +318,7 @@ export class Project {
   }
 
   get pendingSkills() {
-    return this.skillsIn('missing', 'broken');
+    return this.skillsIn('missing', 'broken', 'stale');
   }
 
   get otherSkills() {
@@ -222,7 +329,9 @@ export class Project {
   placeSkill({ folder, skill }) {
     const path = join(this.root, folder, skill);
     const source = this.skillSource(skill);
-    if (this.skillState(folder, skill) === 'broken') { unlinkSync(path); }
+    const state = this.skillState(folder, skill);
+    if (state === 'broken') { unlinkSync(path); }
+    if (state === 'stale') { rmSync(path, { recursive: true }); }
     mkdirSync(dirname(path), { recursive: true });
     if (source) {
       try {

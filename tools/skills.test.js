@@ -5,9 +5,10 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { checkSkill, checkSkills, cleanSkills, packSkills, skillFrom, skillsFrom } from './skills.js';
+import { checkSkill, checkSkills, cleanSkills, marketplaceFrom, packSkills, skillFrom, skillsFrom } from './skills.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
+const { version } = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
 
 const findingsFor = (frontmatter, file = 'ai/skills/sample.md') =>
   checkSkill(skillFrom(`---\n${frontmatter.join('\n')}\n---\n\n# Sample\n`, file));
@@ -62,12 +63,14 @@ describe('skills in ai/skills', () => {
     expect(checkSkills()).toEqual([]);
   });
 
-  it('pack to skills/<name>/SKILL.md byte for byte, and clean removes the folder', () => {
+  it('pack to skills/<name>/SKILL.md with only the package version stamped in, and clean removes the folder', () => {
     const packageDir = mkdtempSync(resolve(tmpdir(), 'skills-'));
     try {
       packSkills(packageDir);
       for (const { name, source } of skillsFrom()) {
-        expect(readFileSync(resolve(packageDir, 'skills', name, 'SKILL.md'), 'utf8')).toBe(source);
+        const packed = readFileSync(resolve(packageDir, 'skills', name, 'SKILL.md'), 'utf8');
+        expect(packed).toContain(`\n  version: "${version}"\n`);
+        expect(packed.replace(`  version: "${version}"\n`, '')).toBe(source);
       }
       cleanSkills(packageDir);
       expect(existsSync(resolve(packageDir, 'skills'))).toBe(false);
@@ -88,5 +91,17 @@ describe('skills in ai/skills', () => {
     const shipped = files.map(({ path }) => path).filter((path) => /skills\//.test(path));
     expect(shipped.sort()).toEqual(skillsFrom().map(({ name }) => `skills/${name}/SKILL.md`).sort());
     expect(existsSync(resolve(root, 'skills'))).toBe(false);
+    // what each agent's own plugin install reads, written at pack with the version and gone from the repo after
+    for (const path of ['plugin.json', '.claude-plugin/plugin.json']) {
+      expect(files.map((file) => file.path)).toContain(path);
+      expect(existsSync(resolve(root, path))).toBe(false);
+    }
   }, 60_000);
+
+  it('are published through a marketplace file that names the npm release of the version in package.json', () => {
+    const manifest = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
+    const published = JSON.parse(readFileSync(resolve(root, '.claude-plugin/marketplace.json'), 'utf8'));
+    expect(published).toEqual(marketplaceFrom(manifest));
+    expect(published.plugins[0].source).toEqual({ source: 'npm', package: 'native-dates', version });
+  });
 });

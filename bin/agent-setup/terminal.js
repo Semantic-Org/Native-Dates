@@ -171,6 +171,24 @@ export class Terminal {
     return `  ${this.mark(state, mark)} ${name} ${sentence}${tail && ` ${this.say(tail, { faded: true })}`}`;
   }
 
+  // the same row over as many lines as its sentence needs, later lines under the first one's text
+  // a block redrawn in place cannot hold a line the terminal wraps by itself, so the row is wrapped here,
+  // between words and never inside backticks unless a command alone is wider than the terminal
+  rows(state, label, text) {
+    if (!this.redraws) { return [this.row(state, label, text)]; }
+    const { columns, labelWidth } = Terminal.tunings;
+    const width = (this.output.columns || columns) - this.marks[state].length - labelWidth - 6;
+    const units = text.match(/(?:`[^`]*`|\S)+/g) ?? [];
+    const words = units.flatMap((unit) => (unit.length > width ? unit.split(' ') : [unit]));
+    const lines = [''];
+    for (const word of words) {
+      const line = lines[lines.length - 1];
+      if (line && line.length + word.length + 1 > width) { lines.push(word); }
+      else { lines[lines.length - 1] = line ? `${line} ${word}` : word; }
+    }
+    return lines.map((line, index) => this.row(state, index ? '' : label, line));
+  }
+
   mark(state, mark = this.marks[state]) {
     const [level, role] = Terminal.markInks[state];
     return this.colors ? `${this.ink(level, role)}${mark}\x1b[0m` : mark;
@@ -279,11 +297,13 @@ export class Terminal {
   // one live question with one answer: enter takes the highlighted option, which starts on the first
   // answers with the option's index, or -1 when the person backs out. shortcuts maps a key to an option
   // the record stays the live block, so a question that follows can step back to this one
-  async pickOne(question, options, { keys, cancelled, shortcuts = {}, highlighted = 0 }) {
+  // above stays drawn over the question, and back lets esc answer null so the caller can return to an earlier one
+  async pickOne(question, options, { keys, cancelled, shortcuts = {}, highlighted = 0, above = [], back = false }) {
     let at = highlighted;
     let answer;
     while (answer === undefined) {
       this.draw([
+        ...above,
         `  ${this.mark('ask')} ${this.strong(question)}`,
         ...options.map((option, index) => {
           const isAt = index === at;
@@ -296,9 +316,13 @@ export class Terminal {
       else if (['down', 'j'].includes(key)) { at = (at + 1) % options.length; }
       else if (['return', 'enter'].includes(key)) { answer = at; }
       else if (key in shortcuts) { answer = shortcuts[key]; }
+      else if (key === 'escape' && back) { return null; }
       else if (['escape', 'interrupt'].includes(key)) { answer = -1; }
     }
-    this.draw([this.record(question, answer === -1 ? cancelled : options[answer], { cancelled: answer === -1 })]);
+    this.draw([
+      ...above,
+      this.record(question, answer === -1 ? cancelled : options[answer], { cancelled: answer === -1 }),
+    ]);
     return answer;
   }
 

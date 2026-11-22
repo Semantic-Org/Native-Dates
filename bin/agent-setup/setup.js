@@ -15,10 +15,12 @@ import { Terminal } from './terminal.js';
 
 export class Setup {
   // the flag that switches each step off: an update is the install step for a project that has an older copy
-  static stepFlags = { install: 'install', update: 'install', skills: 'skills', note: 'note' };
+  static stepFlags = { install: 'install', update: 'install', plugin: 'skills', skills: 'skills', note: 'note' };
 
   static flags = {
     '--yes': 'yes',
+    '--global': 'global',
+    '-g': 'global',
     '-y': 'yes',
     '--no-install': 'no-install',
     '--no-skills': 'no-skills',
@@ -34,7 +36,21 @@ export class Setup {
     tagline: 'set up coding agents for this project',
     alreadySetUp: 'already set up for coding agents',
 
+    detected: 'found {agents}',
+    detectedNone: 'no coding agents found',
+    scopeQuestion: 'Install skills where?',
+    scopeProject: 'This project',
+    scopeMachine: 'Everywhere on this machine',
+    globalUnavailable:
+      'no agent found that `--global` can install for. It supports {agents}. Run `npx {name}` to set up this project',
+
     install: '`{command}`',
+    plugin: '`{command}`',
+    pluginDone: 'installed the {agent} plugin',
+    doubled: '`{path}` is in this project too. {agent} will load the skill twice',
+    doubledLabel: 'twice',
+    claudeUpdates:
+      'Claude Code updates the plugin with `claude plugin update {name}@{name}`. Turn on auto-update in `/plugin`',
     update: '`{command}`. {from} -> {to}',
     updateName: 'update {from} -> {to}',
     skills: '`{folder}`. {readers}',
@@ -64,7 +80,7 @@ export class Setup {
     cancelled: 'cancelled',
     typedQuestion: 'Apply changes? (Y/n) ',
     declined: 'no changes made',
-    needsYes: 'no changes made. Run `npx {name} --yes` to apply',
+    needsYes: 'no changes made. Run `npx {name} {flags}` to apply',
 
     ready: 'ready. Agents can now find {skills}',
     notReady: 'setup incomplete. Update `{name}` to {version} and re-run `npx {name}`',
@@ -72,6 +88,8 @@ export class Setup {
     docs: 'docs: {homepage}',
     again: 'skip prompts next time: `npx {name} {flags}`',
     kept: '`{path}`. Already exists with different contents',
+    pluginFailed:
+      '`{command}` failed. No further changes made. Fix the {manager} error below, then re-run `npx {name}`',
     failed:
       '`{command}` failed. No further changes made. Fix the {manager} error below or install `{name}` manually, then re-run `npx {name}`',
     noProject: 'no `package.json` in {folder}. Run `npx {name}` from your project root',
@@ -80,10 +98,11 @@ export class Setup {
 
 Set up coding agents for this project:
   install  install {name} or update an older version
-  skills   link skills into .agents/skills and .claude/skills
+  skills   link skills into .agents/skills and .claude/skills, or with --global install each agent's plugin
   note     add a skill pointer to AGENTS.md (and CLAUDE.md if present)
 
 Options (previews changes and prompts by default):
+  -g, --global    install skills for every project on this machine
   -y, --yes       apply without prompting (for agents and scripts)
   --no-install    skip installing or updating {name}
   --no-skills     skip linking skills
@@ -97,8 +116,13 @@ Options (previews changes and prompts by default):
   // end on, such as a runtime the package needs, and copy replaces any of Setup.copy
   constructor({ packageUrl, note, aliases = [], notices = [], copy = {}, root = process.cwd(), terminal } = {}) {
     const packageDir = dirname(fileURLToPath(packageUrl));
-    const { name, version, homepage } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
-    Object.assign(this, { name, version, homepage, packageDir, note, aliases, notices, root });
+    const { name, version, homepage, repository } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
+    // owner/repo, which is how each agent's plugin command names a GitHub repository
+    const repo = (repository?.url ?? repository)?.replace(/^(git\+)?https?:\/\/github\.com\//, '').replace(
+      /\.git$/,
+      '',
+    );
+    Object.assign(this, { name, version, homepage, repo, packageDir, note, aliases, notices, root });
     this.copy = { ...Setup.copy, ...copy };
     this.terminal = terminal ?? new Terminal({ namespace: name });
   }
@@ -119,46 +143,93 @@ Options (previews changes and prompts by default):
     if (!existsSync(join(root, 'package.json'))) { return this.refuse('noProject', { folder: root }); }
 
     this.project = new Project({ ...this, root });
-    const { installedVersion: installed, isNewer } = this.project;
-    this.items = this.project.plan().filter(({ step }) => !this.given.has(`no-${Setup.stepFlags[step]}`)).map((
-      item,
-    ) => ({
-      ...item,
-      label: item.step,
-      // what the change is called once chosen: its folder or file, or the step itself
-      name: item.plan[1].folder ?? item.plan[1].file
-        ?? (item.step === 'update' ? this.words('updateName', item.plan[1]) : item.step),
-      text: this.words(...item.plan),
-      on: true,
-    }));
-    this.kept = this.project.otherSkills.map((path) => terminal.row('warn', 'kept', this.words('kept', { path })));
-    if (isNewer) { this.kept.push(terminal.row('warn', 'kept', this.words('newer', { installed }))); }
-
-    const setUp = !this.items.length;
-    terminal.line(`\n  ${terminal.badge()} ${terminal.say(version)}`);
-    terminal.line(`  ${terminal.say(this.words(setUp ? 'alreadySetUp' : 'tagline'), { faded: true })}\n`);
-    if (setUp) {
-      for (const line of this.kept) { terminal.line(line); }
-      return 0;
-    }
+    const found = this.project.agents;
     const asking = !this.given.has('yes');
-    if (asking) {
-      // what will change, beside a rule and without marks, so it reads as a preview and never as choices
-      for (const { label, text } of this.items) { terminal.line(terminal.row('rail', label, text)); }
-      terminal.line();
-      if (!terminal.interactive) { return this.print(this.words('needsYes'), 1); }
+    const live = asking && terminal.redraws;
+    // everywhere needs an agent that installs plugins from a command, so without one the flag is refused
+    // and the question is never asked, since writing project folders is not what the flag asks for
+    this.offersMachine = this.project.pluginAgents.length > 0;
+    if (this.given.has('global') && !this.offersMachine) {
+      const agents = Object.keys(Project.agents).filter((agent) => Project.agents[agent].plugin);
+      return this.refuse('globalUnavailable', { agents: joinWords(agents) });
+    }
+    const agents = this.words(found.length ? 'detected' : 'detectedNone', { agents: joinWords(found) });
+    terminal.line(`\n  ${terminal.badge()} ${terminal.say(version)}`);
+    terminal.line(`  ${terminal.say(this.words('tagline'), { faded: true })}`);
+    terminal.line(`  ${terminal.say(agents, { faded: true })}\n`);
+
+    // with nobody to pick, where the skills go comes from the flag, and what will change is printed once
+    if (!live) {
+      this.plan(this.given.has('global') ? 'machine' : 'project');
+      if (!this.items.length) { return this.settled(); }
+      if (asking) {
+        for (const line of this.preview()) { terminal.line(line); }
+        terminal.line();
+        // the same run with yes added, so a flag already given is not lost when it is typed again
+        const flags = ['--yes', ...args.filter((arg) => Setup.flags[arg] !== 'yes')].join(' ');
+        if (!terminal.interactive) { return this.print(this.words('needsYes', { flags }), 1); }
+      }
     }
     if (terminal.redraws) { terminal.hideCursor(); }
     try {
       if (asking && !await this.ask()) {
         return this.print(`  ${terminal.say(this.words('declined'), { faded: true })}\n`);
       }
+      if (!this.items.length) { return this.settled(); }
       if (asking) { terminal.line(); }
       return this.finish(await this.apply(), asking);
     }
     finally {
       if (terminal.redraws) { terminal.restoreCursor(); }
     }
+  }
+
+  // the changes for one answer to where the skills go, and what is left alone
+  plan(scope) {
+    const { terminal, project } = this;
+    const { installedVersion: installed, isNewer } = project;
+    this.scope = scope;
+    this.items = project.plan(scope).filter(({ step }) => !this.given.has(`no-${Setup.stepFlags[step]}`)).map((
+      item,
+    ) => ({
+      ...item,
+      label: item.step,
+      // what the change is called once chosen: its agent, folder or file, or the step itself
+      name: item.agent ?? item.plan[1].folder ?? item.plan[1].file
+        ?? (item.step === 'update' ? this.words('updateName', item.plan[1]) : item.step),
+      text: this.words(...item.plan),
+      on: item.selected ?? true,
+    }));
+    this.kept = project.otherSkills.map((path) => terminal.row('warn', 'kept', this.words('kept', { path })));
+    if (isNewer) { this.kept.push(terminal.row('warn', 'kept', this.words('newer', { installed }))); }
+  }
+
+  // a line for each place an agent that gets a plugin will also find the skill in this project
+  // nothing is deleted for it, since the folder may serve another agent or another person's choice
+  doubled() {
+    const { terminal, project, copy } = this;
+    const folders = this.items.filter(({ on, folder }) => on && folder).map(({ folder }) => folder);
+    return this.items.filter(({ on, step }) => on && step === 'plugin').flatMap(({ agent }) =>
+      project.doubled(agent, folders).flatMap((path) =>
+        terminal.rows('warn', copy.doubledLabel, this.words('doubled', { agent, path }))
+      )
+    );
+  }
+
+  // what will change, beside a rule and without marks, so it reads as a preview and never as choices
+  preview() {
+    const rows = this.items.filter(({ on }) => on).flatMap(({ label, text }) =>
+      this.terminal.rows('rail', label, text)
+    );
+    return [...rows, ...this.doubled()];
+  }
+
+  // nothing left to change for the answer given
+  settled() {
+    const { terminal } = this;
+    terminal.line(`  ${terminal.say(this.words('alreadySetUp'), { faded: true })}\n`);
+    for (const line of this.kept) { terminal.line(line); }
+    return 0;
   }
 
   print(text, status = 0) {
@@ -179,47 +250,76 @@ Options (previews changes and prompts by default):
   // one question is live at a time, enter takes its highlighted default, and each answer stays as a record
   // esc in the second question steps back to the first, with the highlight on the option that led there
   async ask() {
-    const { terminal, copy, items } = this;
+    const { terminal, copy } = this;
     if (!terminal.redraws) { return ['', 'y', 'yes'].includes(await terminal.readLine(`  ${copy.typedQuestion}`)); }
     const keys = (hints) => hints.map((hint) => fill(hint, { arrows: terminal.marks.arrows }));
     const { cancelled } = copy;
+    const scopes = [copy.scopeProject, copy.scopeMachine];
     const options = [copy.yes, copy.choose, copy.no];
+    // where the skills go is asked first, since it decides what there is to approve
+    // it is not asked when a flag already answered it, or when this project is the only place they can go
+    const asksScope = this.offersMachine && !this.given.has('global');
     let agreed = null;
-    for (let highlighted = 0; agreed === null; highlighted = 1) {
-      const answer = await terminal.pickOne(copy.question, options, {
-        keys: keys(copy.pickOneKeys),
-        shortcuts: { y: 0, n: 2 },
-        cancelled,
-        highlighted,
-      });
-      if (answer === 1) {
-        agreed = await terminal.pickSeveral(copy.chooseQuestion, items, {
-          keys: keys(copy.pickSeveralKeys),
-          empty: copy.noneSelected,
+    for (let scope = this.given.has('global') ? 1 : 0; agreed === null;) {
+      if (asksScope) {
+        scope = await terminal.pickOne(copy.scopeQuestion, scopes, {
+          keys: keys(copy.pickOneKeys),
           cancelled,
-          above: [terminal.record(copy.question, copy.choose)],
+          highlighted: scope,
         });
       }
-      else {
-        agreed = answer === 0;
-        // yes means every change, whatever was switched off before stepping back
-        if (agreed) { for (const item of items) { item.on = true; } }
+      if (scope === -1) { return this.answered(false); }
+      this.plan(scope === 1 ? 'machine' : 'project');
+      if (!this.items.length) { return this.answered(true); }
+      const record = asksScope ? [terminal.record(copy.scopeQuestion, scopes[scope]), ''] : [];
+      const above = [...record, ...this.preview(), ''];
+      for (let highlighted = 0; agreed === null; highlighted = 1) {
+        const answer = await terminal.pickOne(copy.question, options, {
+          keys: keys(copy.pickOneKeys),
+          shortcuts: { y: 0, n: 2 },
+          cancelled,
+          highlighted,
+          above,
+          back: asksScope,
+        });
+        // esc steps back to where the skills go
+        if (answer === null) { break; }
+        if (answer === 1) {
+          agreed = await terminal.pickSeveral(copy.chooseQuestion, this.items, {
+            keys: keys(copy.pickSeveralKeys),
+            empty: copy.noneSelected,
+            cancelled,
+            above: [...above, terminal.record(copy.question, copy.choose)],
+          });
+        }
+        else {
+          agreed = answer === 0;
+          // yes means the changes as previewed, whatever was switched before stepping back
+          if (agreed) { for (const item of this.items) { item.on = item.selected ?? true; } }
+        }
       }
     }
-    terminal.release();
-    terminal.stopKeys();
+    return this.answered(agreed);
+  }
+
+  // leaves the records where they are and hands the keyboard back
+  answered(agreed) {
+    this.terminal.release();
+    this.terminal.stopKeys();
     return agreed;
   }
 
   // the flags that repeat this run without questions, or nothing when a choice has no flag to stand for it
   get repeatFlags() {
     const steps = ['install', 'skills', 'note'];
-    const flags = ['--yes', ...steps.filter((step) => this.given.has(`no-${step}`)).map((step) => `--no-${step}`)];
+    const given = steps.filter((step) => this.given.has(`no-${step}`)).map((step) => `--no-${step}`);
+    const flags = ['--yes', ...(this.scope === 'machine' ? ['--global'] : []), ...given];
     for (const step of steps) {
       const items = this.items.filter(({ label }) => Setup.stepFlags[label] === step);
-      const off = items.filter(({ on }) => !on).length;
-      if (off && off < items.length) { return null; }
-      if (off) { flags.push(`--no-${step}`); }
+      const isChanged = items.some(({ on, selected = true }) => on !== selected);
+      const isAllOff = items.every(({ on }) => !on);
+      if (isChanged && !isAllOff) { return null; }
+      if (isChanged) { flags.push(`--no-${step}`); }
     }
     return flags.join(' ');
   }
@@ -265,14 +365,15 @@ Options (previews changes and prompts by default):
   finish(failure, asked) {
     const { terminal, homepage, notices } = this;
     if (failure) {
-      terminal.line(`\n  ${terminal.say(this.words('failed', failure), { level: 'error' })}`);
+      const key = Project.agents[failure.manager] ? 'pluginFailed' : 'failed';
+      terminal.line(`\n  ${terminal.say(this.words(key, failure), { level: 'error' })}`);
       if (failure.output?.trim()) {
         terminal.line(`\n${terminal.say(failure.output.trim().replace(/^/gm, '    '), { faded: true })}`);
       }
       terminal.line();
       return 1;
     }
-    for (const line of this.kept) { terminal.line(line); }
+    for (const line of [...this.kept, ...this.doubled()]) { terminal.line(line); }
     const skills = joinWords(this.project.skills.map((skill) => `\`${skill}\``));
     const flags = asked && this.repeatFlags;
     // ready only when an agent has a skill to read, which a withheld step can leave it without
@@ -283,6 +384,11 @@ Options (previews changes and prompts by default):
     );
     if (homepage) { terminal.line(`    ${terminal.say(this.words('docs'), { faded: true })}`); }
     if (flags && isReady) { terminal.line(`    ${terminal.say(this.words('again', { flags }), { faded: true })}`); }
+    // how each agent that got a plugin keeps it current, where the agent leaves that to the person
+    for (const { agent, state } of this.items) {
+      const updates = state === 'done' && agent && Project.agents[agent].updates;
+      if (updates) { terminal.line(`    ${terminal.say(this.words(updates), { faded: true })}`); }
+    }
     if (notices.length) { terminal.line(); }
     for (const { label, text } of notices) { terminal.line(terminal.row('warn', label, text)); }
     terminal.line();
