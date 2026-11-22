@@ -159,6 +159,6 @@ import { dateRange } from 'native-dates';
 const sprint = dateRange('2026-11-02', '2 weeks');
 
 sprint.end.toString(); // '2026-11-15'
-sprint.points('week').map(String); // ['2026-11-02', '2026-11-09']
+sprint.every('week').map(String); // ['2026-11-02', '2026-11-09']
 sprint.split(1, 'week').length; // 2
 ```

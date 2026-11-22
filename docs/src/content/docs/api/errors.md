@@ -118,7 +118,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `unknownLocale` | `locale()`, factories, `format()`, `monthNames()`, `weekdayNames()`, `configure()` | Locale tag, tag list, or `Accept-Language` header contains an invalid language tag. |
 | `unknownFormat` | `format()`, `monthNames()`, `weekdayNames()` | Invalid format spec or `Intl` options, unsupported duration or label style, or unrecognized or glued tokens outside `[brackets]`. |
 | `unsupportedToken` | `format()` | Token pattern asks for a field the value lacks, such as `HH` on a `CalendarDate` or `YYYY` on a `Time`. |
-| `unknownKind` | `as()` | Target kind is not supported by the receiver. |
+| `unknownKind` | `as()`, `DateRange.count()` | Target kind is not supported by the receiver. |
 
 ### Arithmetic and measurement
 
@@ -140,7 +140,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | Code | Thrown by | Cause |
 |---|---|---|
 | `invalidRange` | `DateRange`, `DateTimeRange`, `to()` | Range `end` is earlier than `start`. |
-| `invalidStep` | `points()`, `split()` | Step duration passed to `points()` or `split()` is zero or negative. |
+| `invalidStep` | `every()`, `split()` | Step duration passed to `every()` or `split()` is zero or negative. |
 | `unsupportedIntersection` | `TimeRange.intersection()` | Two overnight time ranges overlap in two separate windows across midnight. |
 | `unsupportedZone` | `TimeRange.in()` | Calling `in()` on a `TimeRange`, which has no calendar date to place in a zone. |
 

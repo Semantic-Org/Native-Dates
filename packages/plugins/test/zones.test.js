@@ -177,7 +177,7 @@ describe('@native-dates/plugins/zones across zone parameters', () => {
     ['datetime.in(zone)', () => datetime(noonInJuly, 'UTC').in('Berlin').zone],
     ['date.at(time, zone)', () => date('2026-11-16').at('9:00am', 'Berlin').zone],
     ["date.as('datetime', zone)", () => date('2026-11-16').as('datetime', 'Berlin').zone],
-    ['date.points(step, zone)', () => date('2026-11-16').points('hour', 'Berlin')[0].zone],
+    ['date.every(step, zone)', () => date('2026-11-16').every('hour', 'Berlin')[0].zone],
     ['date.split(count, unit, zone)', () => date('2026-11-16').split(6, 'hours', 'Berlin')[0].start.zone],
     ['time.on(day, zone)', () => time('9am').on('2026-11-16', 'Berlin').zone],
     [

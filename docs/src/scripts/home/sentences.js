@@ -95,16 +95,10 @@ export function sentencesFor(locale = 'en') {
           { say: 'range.nov', code: "dateRange('2026-11-01', '2026-11-30')", run: (_, { dateRange }, tag) => localize(dateRange('2026-11-01', '2026-11-30'), tag) },
         ],
         [
-          { say: 'points.day', code: ".points('day')", run: (value) => value.points('day') },
-          { say: 'points.2days', code: ".points(2, 'days')", run: (value) => value.points(2, 'days') },
-        ],
-        [
-          { say: 'filter.weekday', code: '.filter((d) => d.isWeekday())', run: (value) => value.filter((d) => d.isWeekday()) },
-          { say: 'filter.weekend', code: '.filter((d) => d.isWeekend())', run: (value) => value.filter((d) => d.isWeekend()) },
-        ],
-        [
-          { say: 'pick.count', code: '.length', run: (value) => value.length },
-          { say: 'pick.last', code: '.at(-1)', run: (value) => value.at(-1) },
+          { say: 'count.weekdays', code: ".count('weekdays')", run: (value) => value.count('weekdays') },
+          { say: 'count.weekends', code: ".count('weekends')", run: (value) => value.count('weekends') },
+          { say: 'count.mondays', code: ".count('mondays')", run: (value) => value.count('mondays') },
+          { say: 'count.days', code: '.count()', run: (value) => value.count() },
         ],
       ],
     },

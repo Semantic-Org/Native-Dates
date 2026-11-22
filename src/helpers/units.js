@@ -188,6 +188,6 @@ export const localeOf = (options, input) => {
 
 export const zoneOptions = (value) => (isPlainObject(value) ? value : { zone: value });
 
-// disambiguate points('hour', zone) from points(30, 'minutes', zone)
+// disambiguate every('hour', zone) from every(30, 'minutes', zone)
 export const stepArguments = (step, [second, third]) =>
   isNumber(step) || isDigits(step) ? [second, third] : [undefined, second];
