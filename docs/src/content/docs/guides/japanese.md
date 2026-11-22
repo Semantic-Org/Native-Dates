@@ -4,7 +4,7 @@ lede: Format imperial eras and parenthesized weekdays in Japanese while handling
 updated: 2026-11-21
 ---
 
-Pass `'ja-JP'` through [Internationalization](/guides/internationalization/) to format dates in Japanese. Gregorian years stay the default while `'ja-u-ca-japanese'` switches presets to imperial eras on demand.
+Pass `'ja-JP'` through [Localization](/guides/localization/) to format dates in Japanese. Gregorian years stay the default while `'ja-u-ca-japanese'` switches presets to imperial eras on demand.
 
 ## Imperial eras and first years
 

@@ -1,5 +1,5 @@
 ---
-title: Internationalization
+title: Localization
 lede: Choose between the browser's default locale, a one-time app setting, a locale carried on a value, or a single-call override.
 updated: 2026-11-16
 ---

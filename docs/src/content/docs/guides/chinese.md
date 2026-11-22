@@ -4,7 +4,7 @@ lede: Handle regional formats and lunar calendar display across Mainland China, 
 updated: 2026-11-21
 ---
 
-Pass a regional tag like `'zh-CN'` or `'zh-TW'` through [Internationalization](/guides/internationalization/) to match each region's script, date order, clock cycle, and week start.
+Pass a regional tag like `'zh-CN'` or `'zh-TW'` through [Localization](/guides/localization/) to match each region's script, date order, clock cycle, and week start.
 
 ## China Standard Time and CST
 

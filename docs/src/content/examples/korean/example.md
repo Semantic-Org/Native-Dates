@@ -7,7 +7,7 @@ try:
   - 'Click **+4 days** to see `format()` collapse the shared year and month into `2026년 5월 1일~5일`.'
   - 'Switch the clock to **09:30** so the Korean day period flips from `오후` to `오전` ahead of the hour.'
 related:
-  - { title: Internationalization, href: /guides/internationalization/ }
+  - { title: Localization, href: /guides/localization/ }
   - { title: Formatting, href: /guides/formatting/ }
   - { title: Ranges, href: /api/ranges/ }
 ---

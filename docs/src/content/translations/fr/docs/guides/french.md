@@ -1,11 +1,11 @@
 ---
-source: '262d4e034d76'
+source: '6d8f7b342530'
 reviewed: false
 title: Français
 lede: Formatez et analysez les dates en France, au Québec, en Suisse, en Belgique et en Afrique francophone.
 ---
 
-Le code `'fr'` applique les usages de France métropolitaine. Passez une étiquette régionale comme `'fr-CA'` via [Internationalisation](/guides/internationalization/) pour respecter l’ordre des dates, le séparateur d’heure et le début de semaine de chaque pays.
+Le code `'fr'` applique les usages de France métropolitaine. Passez une étiquette régionale comme `'fr-CA'` via [Localisation](/guides/localization/) pour respecter l’ordre des dates, le séparateur d’heure et le début de semaine de chaque pays.
 
 ## Variantes régionales
 

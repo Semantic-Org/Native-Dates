@@ -15,7 +15,7 @@ export type Zone = string;
  * BCP 47 locale tag such as `'en-US'` or `'de-DE'`, underscore tag, `Accept-Language` header,
  * or list of tags in order of preference such as `navigator.languages`.
  *
- * @see {@link https://nativedates.dev/guides/internationalization/ Internationalization}
+ * @see {@link https://nativedates.dev/guides/localization/ Localization}
  */
 export type Locale = string | readonly string[];
 

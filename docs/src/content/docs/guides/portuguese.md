@@ -4,7 +4,7 @@ lede: Format and parse dates across Brazil, Portugal, and Portuguese-speaking Af
 updated: 2026-11-21
 ---
 
-Pass `'pt-BR'` or `'pt-PT'` through [Internationalization](/guides/internationalization/) to format dates in Portuguese. Brazil and Portugal share day-first numeric dates and lowercase months, while differing on medium presets and first-day ordinals.
+Pass `'pt-BR'` or `'pt-PT'` through [Localization](/guides/localization/) to format dates in Portuguese. Brazil and Portugal share day-first numeric dates and lowercase months, while differing on medium presets and first-day ordinals.
 
 ## Parsing day/month/year dates
 

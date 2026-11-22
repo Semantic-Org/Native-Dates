@@ -4,7 +4,7 @@ lede: Format inflected months and plural units in Russian, and parse dotted date
 updated: 2026-11-21
 ---
 
-Pass `'ru'` through [Internationalization](/guides/internationalization/) to format dates in Russian. Built-in `Intl` data handles grammatical month cases and three-way duration plurals with zero locale files.
+Pass `'ru'` through [Localization](/guides/localization/) to format dates in Russian. Built-in `Intl` data handles grammatical month cases and three-way duration plurals with zero locale files.
 
 ## Month cases and the "г." year suffix
 

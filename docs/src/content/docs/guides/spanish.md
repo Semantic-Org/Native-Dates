@@ -4,7 +4,7 @@ lede: Handle regional formats, week starts, and clock changes across Spain and t
 updated: 2026-11-21
 ---
 
-Bare `'es'` uses Spain's Monday week start and 24-hour clock. Apps serving Latin America or the United States should pass a regional tag like `'es-MX'` through [Internationalization](/guides/internationalization/).
+Bare `'es'` uses Spain's Monday week start and 24-hour clock. Apps serving Latin America or the United States should pass a regional tag like `'es-MX'` through [Localization](/guides/localization/).
 
 ## Spain, Latin America, and the US
 

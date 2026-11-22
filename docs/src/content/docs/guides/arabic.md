@@ -4,7 +4,7 @@ lede: Handle Eastern and Western numerals, regional month names, Hijri dates, pl
 updated: 2026-11-21
 ---
 
-Pass a country tag like `'ar-EG'` or `'ar-SA'` through [Internationalization](/guides/internationalization/) rather than bare `'ar'`. Numeral scripts, Gregorian month names, and week starts vary across Arabic-speaking countries.
+Pass a country tag like `'ar-EG'` or `'ar-SA'` through [Localization](/guides/localization/) rather than bare `'ar'`. Numeral scripts, Gregorian month names, and week starts vary across Arabic-speaking countries.
 
 ## Eastern and Western numerals
 

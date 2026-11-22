@@ -26,7 +26,7 @@ export const SECTIONS = [
         items: [
           { title: 'Overview', slug: 'guides/overview' },
           { title: 'Installation', slug: 'guides/installation' },
-          { title: 'Internationalization', slug: 'guides/internationalization' },
+          { title: 'Localization', slug: 'guides/localization' },
         ],
       },
       {
@@ -171,7 +171,7 @@ export const hrefFor = (slug, code) => {
   return `${localePath(`/${path}/`, code)}${hash ? `#${hash}` : ''}`;
 };
 
-// promote the active locale's own language guide into Start right after Internationalization,
+// promote the active locale's own language guide into Start right after Localization,
 // removing it from the bottom Languages directory so it only appears once in the sidebar
 function groupsFor(section, code) {
   const ownGuide = section.key === 'guides' && LANGUAGE_GUIDES.find((it) => it.locale === code);

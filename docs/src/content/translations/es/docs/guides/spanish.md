@@ -1,11 +1,11 @@
 ---
-source: 'd357493a8f81'
+source: '9b1908d39298'
 reviewed: false
 title: Español
 lede: Maneja formatos regionales, inicios de semana y cambios horarios en España y América.
 ---
 
-La etiqueta `'es'` usa el inicio de semana en lunes y el reloj de 24 horas de España. En aplicaciones para Latinoamérica o Estados Unidos, pasa una etiqueta regional como `'es-MX'` en [Internacionalización](/guides/internationalization/).
+La etiqueta `'es'` usa el inicio de semana en lunes y el reloj de 24 horas de España. En aplicaciones para Latinoamérica o Estados Unidos, pasa una etiqueta regional como `'es-MX'` en [Localización](/guides/localization/).
 
 ## España, Latinoamérica y EE. UU.
 

@@ -61,7 +61,7 @@ span.format('digital', 'en-US'); // '2:15:00'
 
 ## Locales and Intl options
 
-Set a default once with [`configure()`](/api/configure/), attach a language to a value with [`locale()`](/api/date-time/#locale), or pass a tag to a single format call. Read [Internationalization](/guides/internationalization/) for guidance on client apps versus multi-user servers:
+Set a default once with [`configure()`](/api/configure/), attach a language to a value with [`locale()`](/api/date-time/#locale), or pass a tag to a single format call. Read [Localization](/guides/localization/) for guidance on client apps versus multi-user servers:
 
 ```js
 import { configure, datetime } from 'native-dates';

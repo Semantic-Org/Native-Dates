@@ -4,7 +4,7 @@ lede: Format and parse dates across France, Quebec, Switzerland, Belgium, and Fr
 updated: 2026-11-21
 ---
 
-Bare `'fr'` uses metropolitan French conventions. Pass a regional tag like `'fr-CA'` through [Internationalization](/guides/internationalization/) when your readers expect local date order, clock separators, and week starts.
+Bare `'fr'` uses metropolitan French conventions. Pass a regional tag like `'fr-CA'` through [Localization](/guides/localization/) when your readers expect local date order, clock separators, and week starts.
 
 ## Regional variants
 

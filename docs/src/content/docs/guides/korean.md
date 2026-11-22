@@ -4,7 +4,7 @@ lede: Parse dotted Korean dates and format parenthesized weekdays, Monday workwe
 updated: 2026-11-21
 ---
 
-Pass `'ko-KR'` through [Internationalization](/guides/internationalization/) to format dates in Korean. Korean presets print spaced dots with a trailing period like `'2026. 11. 16.'` and place *오전* or *오후* before the hour.
+Pass `'ko-KR'` through [Localization](/guides/localization/) to format dates in Korean. Korean presets print spaced dots with a trailing period like `'2026. 11. 16.'` and place *오전* or *오후* before the hour.
 
 ## Dotted dates and Korean strings
 

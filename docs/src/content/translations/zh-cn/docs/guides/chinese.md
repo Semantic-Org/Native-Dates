@@ -1,11 +1,11 @@
 ---
-source: '9f8040e5f803'
+source: '3d31a1c30a49'
 reviewed: false
 title: 中文
 lede: 处理中国大陆、台湾、香港与新加坡的格式差异、时区缩写和农历展示。
 ---
 
-通过[国际化](/guides/internationalization/)传入 `'zh-CN'` 或 `'zh-TW'` 等区域标签，即可匹配各地区的字形、短日期顺序、小时制与每周起始日。
+通过[本地化](/guides/localization/)传入 `'zh-CN'` 或 `'zh-TW'` 等区域标签，即可匹配各地区的字形、短日期顺序、小时制与每周起始日。
 
 ## 中国标准时间与 CST 缩写
 
