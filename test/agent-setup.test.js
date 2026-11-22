@@ -17,6 +17,7 @@ import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { fill } from '../bin/agent-setup/helpers.js';
 import { Setup } from '../bin/agent-setup/setup.js';
 import { packSkills } from '../tools/skills.js';
 
@@ -192,7 +193,7 @@ describe('npx native-dates', () => {
     });
     const { status, output } = setup(dir, '--yes');
     expect(status).toBe(0);
-    expect(output).toContain('.claude/skills/native-dates');
+    expect(output).toContain(fill(copy.kept, { path: '.claude/skills/native-dates' }));
     expect(readFileSync(join(dir, '.claude/skills/native-dates/SKILL.md'), 'utf8')).toBe('my own notes\n');
   });
 
@@ -316,9 +317,8 @@ describe('npx native-dates', () => {
   it('offers to update an older install, naming the version it has and the one it would install', () => {
     const dir = project(dependsOn);
     installed(dir, '0.0.1');
-    const offered = setup(dir).output;
-    expect(offered).toContain('0.0.1');
-    expect(offered).toContain(`npm install native-dates@${version}`);
+    const command = `npm install native-dates@${version}`;
+    expect(setup(dir).output).toContain(fill(copy.update, { command, from: '0.0.1', to: version }));
     const { status, calls: ran } = setup(dir, '--yes');
     expect(status).toBe(0);
     expect(ran).toBe(`npm install native-dates@${version}`);
@@ -342,9 +342,11 @@ describe('npx native-dates', () => {
   it('places no skills and writes no note beside an older install that carries none and is not updated', () => {
     const dir = project(dependsOn);
     installed(dir, '0.0.1', { skills: false });
-    const { status, calls: ran } = setup(dir, '--yes', '--no-install');
+    const { status, output, calls: ran } = setup(dir, '--yes', '--no-install');
     expect(status).toBe(1);
     expect(ran).toBe('');
+    expect(output).toContain(fill(copy.skillsWithheld, { folder: '.agents/skills', from: '0.0.1', to: version }));
+    expect(output).toContain(fill(copy.notReady, { name: 'native-dates', version }));
     expect(existsSync(join(dir, '.agents')) || existsSync(join(dir, '.claude')) || existsSync(join(dir, 'AGENTS.md')))
       .toBe(false);
   });
@@ -355,7 +357,7 @@ describe('npx native-dates', () => {
     const { status, output, calls: ran } = setup(dir, '--yes');
     expect(status).toBe(0);
     expect(ran).toBe('');
-    expect(output).toContain('99.0.0');
+    expect(output).toContain(fill(copy.newer, { name: 'native-dates', installed: '99.0.0', version }));
     expect(existsSync(join(dir, '.agents/skills/native-dates/SKILL.md'))).toBe(true);
   });
 
