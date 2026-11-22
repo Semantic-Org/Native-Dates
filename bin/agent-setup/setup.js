@@ -51,8 +51,8 @@ export class Setup {
     no: 'No',
     pickOneKeys: ['{arrows} to move', 'enter to confirm'],
     chooseQuestion: 'Which changes?',
-    pickSeveralKeys: ['{arrows} to move', 'space to select', 'enter to confirm'],
-    noneSelected: 'nothing is selected. Press space to select a change, or esc to cancel',
+    pickSeveralKeys: ['{arrows} to move', 'space to select', 'enter to confirm', 'esc to go back'],
+    noneSelected: 'nothing is selected. Press space to select a change, or esc to go back',
     cancelled: 'cancelled',
     typedQuestion: 'Make these changes? (Y/n) ',
     declined: 'nothing was written',
@@ -97,7 +97,8 @@ shows what it will change and asks before writing
                 Run
   *******************************/
 
-  // answers with the exit code: 0 when the project is set up, 1 when nothing or not everything was written
+  // answers with the exit code: 0 when the project is set up or the person declined, 1 when a step failed
+  // or nobody could be asked
   async run(args = process.argv.slice(2)) {
     const { terminal, name, version, root } = this;
     const option = args.find((arg) => !(arg in Setup.flags));
@@ -135,7 +136,7 @@ shows what it will change and asks before writing
     if (terminal.redraws) { terminal.hideCursor(); }
     try {
       if (asking && !await this.ask()) {
-        return this.print(`  ${terminal.say(this.words('declined'), { faded: true })}\n`, 1);
+        return this.print(`  ${terminal.say(this.words('declined'), { faded: true })}\n`);
       }
       if (asking) { terminal.line(); }
       return this.finish(await this.apply(), asking);
@@ -161,21 +162,36 @@ shows what it will change and asks before writing
 
   // true when the person agrees to at least one change
   // one question is live at a time, enter takes its highlighted default, and each answer stays as a record
+  // esc in the second question steps back to the first, with the highlight on the option that led there
   async ask() {
-    const { terminal, copy } = this;
+    const { terminal, copy, items } = this;
     if (!terminal.redraws) { return ['', 'y', 'yes'].includes(await terminal.readLine(`  ${copy.typedQuestion}`)); }
     const keys = (hints) => hints.map((hint) => fill(hint, { arrows: terminal.marks.arrows }));
     const { cancelled } = copy;
-    const answer = await terminal.pickOne(copy.question, [copy.yes, copy.choose, copy.no], {
-      keys: keys(copy.pickOneKeys),
-      shortcuts: { y: 0, n: 2 },
-      cancelled,
-    });
-    const agreed = answer === 0 || (answer === 1 && await terminal.pickSeveral(copy.chooseQuestion, this.items, {
-      keys: keys(copy.pickSeveralKeys),
-      empty: copy.noneSelected,
-      cancelled,
-    }));
+    const options = [copy.yes, copy.choose, copy.no];
+    let agreed = null;
+    for (let highlighted = 0; agreed === null; highlighted = 1) {
+      const answer = await terminal.pickOne(copy.question, options, {
+        keys: keys(copy.pickOneKeys),
+        shortcuts: { y: 0, n: 2 },
+        cancelled,
+        highlighted,
+      });
+      if (answer === 1) {
+        agreed = await terminal.pickSeveral(copy.chooseQuestion, items, {
+          keys: keys(copy.pickSeveralKeys),
+          empty: copy.noneSelected,
+          cancelled,
+          above: [terminal.record(copy.question, copy.choose)],
+        });
+      }
+      else {
+        agreed = answer === 0;
+        // yes means every change, whatever was switched off before stepping back
+        if (agreed) { for (const item of items) { item.on = true; } }
+      }
+    }
+    terminal.release();
     terminal.stopKeys();
     return agreed;
   }

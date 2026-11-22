@@ -235,16 +235,16 @@ export class Terminal {
                Input
   *******************************/
 
-  // the next key pressed, with Ctrl+C and the end of input read as escape
+  // the next key pressed, with Ctrl+C and the end of input read as interrupt, apart from esc
   // keys queue from the first call until stopKeys, since several can arrive in one read
   readKey() {
     if (!this.onKey) {
       this.keys = [];
       this.onKey = (text, key = {}) => {
-        this.keys.push(key.ctrl && ['c', 'd'].includes(key.name) ? 'escape' : key.name ?? text);
+        this.keys.push(key.ctrl && ['c', 'd'].includes(key.name) ? 'interrupt' : key.name ?? text);
         this.waiting?.();
       };
-      this.onEnd = () => this.onKey('', { name: 'escape' });
+      this.onEnd = () => this.onKey('', { name: 'interrupt' });
       emitKeypressEvents(this.input);
       this.input.setRawMode(true);
       this.input.resume();
@@ -276,10 +276,11 @@ export class Terminal {
     return `  ${this.mark(cancelled ? 'fail' : 'done')} ${this.say(question, { faded: true })} ${this.say(answer)}`;
   }
 
-  // one live question with one answer: the first option is the default and enter takes it
+  // one live question with one answer: enter takes the highlighted option, which starts on the first
   // answers with the option's index, or -1 when the person backs out. shortcuts maps a key to an option
-  async pickOne(question, options, { keys, cancelled, shortcuts = {} }) {
-    let at = 0;
+  // the record stays the live block, so a question that follows can step back to this one
+  async pickOne(question, options, { keys, cancelled, shortcuts = {}, highlighted = 0 }) {
+    let at = highlighted;
     let answer;
     while (answer === undefined) {
       this.draw([
@@ -295,20 +296,22 @@ export class Terminal {
       else if (['down', 'j'].includes(key)) { at = (at + 1) % options.length; }
       else if (['return', 'enter'].includes(key)) { answer = at; }
       else if (key in shortcuts) { answer = shortcuts[key]; }
-      else if (key === 'escape') { answer = -1; }
+      else if (['escape', 'interrupt'].includes(key)) { answer = -1; }
     }
     this.draw([this.record(question, answer === -1 ? cancelled : options[answer], { cancelled: answer === -1 })]);
-    this.release();
     return answer;
   }
 
   // one live question with several answers: rows are { label, text, name, on }, switched with space
-  // answers false when the person backs out, and stays on the question while nothing is selected
-  async pickSeveral(question, rows, { keys, empty, cancelled }) {
+  // answers true once something is selected and confirmed, false when the person stops with Ctrl+C,
+  // and null when esc steps back, leaving the block for the question before it to redraw
+  // above is the record of that question, kept at the top of the block
+  async pickSeveral(question, rows, { keys, empty, cancelled, above = [] }) {
     let at = 0;
     let warning = '';
     for (;;) {
       this.draw([
+        ...above,
         `  ${this.mark('ask')} ${this.strong(question)}`,
         ...rows.map(({ label, text, on }, index) => {
           const pointer = index === at ? this.mark('cursor') : ' '.repeat(this.marks.cursor.length);
@@ -323,11 +326,11 @@ export class Terminal {
       else if (['down', 'j'].includes(key)) { at = (at + 1) % rows.length; }
       else if (key === 'space') { rows[at].on = !rows[at].on; }
       else if (['return', 'enter'].includes(key) && !chosen.length) { warning = empty; }
-      else if (['return', 'enter', 'escape'].includes(key)) {
-        const backedOut = key === 'escape';
-        this.draw([this.record(question, backedOut ? cancelled : chosen.join(', '), { cancelled: backedOut })]);
-        this.release();
-        return !backedOut;
+      else if (key === 'escape') { return null; }
+      else if (['return', 'enter', 'interrupt'].includes(key)) {
+        const stopped = key === 'interrupt';
+        this.draw([...above, this.record(question, stopped ? cancelled : chosen.join(', '), { cancelled: stopped })]);
+        return !stopped;
       }
     }
   }

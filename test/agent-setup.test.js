@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import {
   chmodSync,
   cpSync,
@@ -194,7 +194,7 @@ describe('npx native-dates', () => {
   // `script` gives the command a terminal on Linux, and its piped input is what the person types
   it.runIf(process.platform === 'linux').each([
     ['Enter', 0, '\n', true],
-    ['n', 1, 'n\n', false],
+    ['n', 0, 'n\n', false],
   ])('in a terminal asks first, and %s leaves status %i', (key, expected, typed, written) => {
     const dir = project();
     const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
@@ -210,6 +210,38 @@ describe('npx native-dates', () => {
     expect(status).toBe(expected);
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(written);
   });
+
+  // a lone esc is told from an arrow key by the pause after it, so the keys are typed with gaps
+  it.runIf(process.platform === 'linux')(
+    'esc in the second question steps back to the first, which still answers',
+    async () => {
+      const dir = project();
+      const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+      const child = spawn('script', ['-qec', command, '/dev/null'], {
+        cwd: dir,
+        env: { PATH: `${managers}${delimiter}${dirname(process.execPath)}${delimiter}/usr/bin${delimiter}/bin` },
+      });
+      let output = '';
+      child.stdout.on('data', (chunk) => (output += chunk));
+      const type = (keys, pause) =>
+        new Promise((done) => {
+          child.stdin.write(keys);
+          setTimeout(done, pause);
+        });
+      await expect.poll(() => output, { timeout: 10_000 }).toContain('Make these changes?');
+      await type('\x1b[B\r', 500);
+      await type('\x1b', 1000);
+      await type('n', 0);
+      const status = await new Promise((done) => child.on('close', done));
+      const shown = output.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '');
+      expect(shown).toContain('Which changes?');
+      expect(shown).toMatch(/Make these changes\? No/);
+      expect(shown).not.toContain('cancelled');
+      expect(status).toBe(0);
+      expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false);
+    },
+    30_000,
+  );
 
   it('points the note at the installed copy of the skill when --no-skills leaves the agent folders empty', () => {
     const dir = project();
