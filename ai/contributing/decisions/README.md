@@ -29,7 +29,7 @@ Record a decision only when reading `src/`, `types/`, and `docs/` alone would le
 
 ## Entry Format
 
-Append new entries to the bottom of [`package.md`](package.md) (next `D<n>`) or [`project.md`](project.md) (next `P<n>`), then run `npm run ai:index`:
+Append new entries to the bottom of [`package.md`](package.md) (next sequential `D<n>`) or [`project.md`](project.md) (next sequential `P<n>`) with a `YYYY-MM-DD` date on or after the preceding entry, then run `npm run ai:index` and `npm run ai` to regenerate [`../decisions.md`](../decisions.md) and verify headings, anchors, and topic grouping:
 
 ```markdown
 ## D18: A uses B instead of C (2026-11-20)
@@ -39,6 +39,7 @@ Append new entries to the bottom of [`package.md`](package.md) (next `D<n>`) or 
 Reopen: observable condition that justifies revisiting this call.
 ```
 
-- **Confidence line (`*0-100% confident*`):** Optional leading line recording the human maintainer or contributor's confidence in the ruling, calibrated on open-source and design experience rather than vibes: `90%` means a 10% chance the ruling will be overruled over this project's lifetime (`70%` expects roughly 3 in 10 such calls to flip). Agents must never determine or estimate confidence scores, and must omit the line unless the maintainer or contributor provides an exact number.
+- **Heading and topic routing:** State the plain ruling in the `## D<n>:` title using the affected API or domain noun (`time zone`, `IANA`, `week boundaries`, `dayOfWeek`, `.locale()`, `non-ISO`, `Duration`, `DateRange`, `Plugins`, etc.) so `npm run ai:index` places `package.md` entries into a topic section in [`../decisions.md`](../decisions.md) rather than failing as unsorted.
+- **Confidence line (`*0-100% confident*`):** Optional standalone line placed immediately below the `##` heading (for example, `*90% confident*`) when a human maintainer or contributor scores the call, or omitted when unscored. Scores represent the maintainer or contributor's calibrated probability that the ruling will hold over this project's lifetime, grounded in open-source and design experience rather than vibes: `90%` means a 10% chance the ruling will be overruled in this project's lifetime (`70%` expects roughly 3 in 10 such calls to flip, `<50%` marks a provisional default). Agents must never determine or estimate confidence intervals, and must omit this line unless given an exact score by the maintainer or contributor.
 - **Superseding an earlier entry:** Append the new `D<k>` entry at the bottom and replace the earlier entry's `Reopen:` line with `Superseded by D<k> (<YYYY-MM-DD>).` so history stays intact while the topic index shows only active calls.
 - **Reopening:** Surface an entry to reopen whenever concrete evidence shows its `Reopen:` condition has been met, exposes a tradeoff not weighed in the entry, or reveals a clear usability hazard.
