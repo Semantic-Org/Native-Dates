@@ -8,8 +8,8 @@ import { highlight } from '../../scripts/site.js';
 
 const locale = Astro.currentLocale;
 const rows = primitivesFor(locale);
-const { date, dateRange, datetime, duration, IS_RANGE, monthDay, now, time, timeRange, yearMonth } = library;
-const made = (row) => new Function('date', 'dateRange', 'datetime', 'duration', 'monthDay', 'now', 'time', 'timeRange', 'yearMonth', `return (${row.ours});`)(date, dateRange, datetime, duration, monthDay, now, time, timeRange, yearMonth);
+const { date, dateRange, datetime, dayMonth, duration, IS_RANGE, monthDay, now, time, timeRange, yearMonth } = library;
+const made = (row) => new Function('date', 'dateRange', 'datetime', 'dayMonth', 'duration', 'monthDay', 'now', 'time', 'timeRange', 'yearMonth', `return (${row.ours});`)(date, dateRange, datetime, dayMonth, duration, monthDay, now, time, timeRange, yearMonth);
 const printed = (value) => {
   const temporal = (v) => (v.toTemporal ? v.toTemporal() : v);
   if (Array.isArray(value)) { return value.map(String).join(' to '); }

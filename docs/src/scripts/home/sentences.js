@@ -3,7 +3,6 @@ const at = (say, clock, zone) => ({ say: `at.${say}`, code: `.at('${clock}', '${
 const into = (say, zone) => ({ say: `in.${say}`, code: `.in('${zone}')`, run: (value) => value.in(zone) });
 const next = (weekday) => ({ say: `next.${weekday}`, code: `.next('${weekday}')`, run: (value) => value.next(weekday) });
 const plus = (count, unit) => ({ say: `plus.${count}.${unit}`, code: `.plus(${count}, '${unit}')`, run: (value) => value.plus(count, unit) });
-const endOf = (unit) => ({ say: `endOf.${unit}`, code: `.endOf('${unit}')`, run: (value) => value.endOf(unit) });
 const format = (preset) => ({ say: `format.${preset}`, code: `.format('${preset}')`, run: (value) => value.format(preset) });
 
 const AT = {
@@ -47,10 +46,17 @@ const MEETINGS = {
 };
 
 const TAGS = { ar: 'ar-EG' };
+const DAY_FIRST = new Set(['ar', 'ru', 'es', 'pt-BR', 'fr']);
 const localize = (value, locale) => (locale && locale !== 'en' ? value.locale(TAGS[locale] ?? locale) : value);
 
 export function sentencesFor(locale = 'en') {
   const [atChoices, inChoices] = MEETINGS[locale] ?? MEETINGS.en;
+  const dayFirst = DAY_FIRST.has(locale);
+  const annual = (say, md, dm) => ({
+    say,
+    code: dayFirst ? `dayMonth('${dm}')` : `monthDay('${md}')`,
+    run: (_, { dayMonth, monthDay }, tag) => localize(dayFirst ? dayMonth(dm) : monthDay(md), tag),
+  });
   return [
     {
       id: 'meeting',
@@ -62,12 +68,22 @@ export function sentencesFor(locale = 'en') {
       ],
     },
     {
-      id: 'due',
+      id: 'time',
       steps: [
-        [{ say: 'today', code: 'today()', run: (_, { today }, tag) => localize(today(), tag) }],
-        [plus(1, 'month'), plus(2, 'weeks'), plus(90, 'days'), plus(1, 'year')],
-        [endOf('month'), endOf('week'), endOf('quarter'), endOf('year')],
-        [format('full'), format('long'), format('short')],
+        [
+          { say: 'time.920am', code: "time('9:20am')", run: (_, { time }, tag) => localize(time('9:20am'), tag) },
+          { say: 'time.10pm', code: "time('10:00pm')", run: (_, { time }, tag) => localize(time('10:00pm'), tag) },
+          { say: 'time.640am', code: "time('6:40am')", run: (_, { time }, tag) => localize(time('6:40am'), tag) },
+        ],
+        [plus(8, 'hours'), plus(45, 'minutes'), plus(3, 'hours')],
+        [
+          { say: 'round.15m', code: ".round(15, 'minutes')", run: (value) => value.round(15, 'minutes') },
+          { say: 'round.hour', code: ".round('hour')", run: (value) => value.round('hour') },
+        ],
+        [
+          { say: 'format.24h', code: ".format('HH:mm')", run: (value) => value.format('HH:mm') },
+          format('short'),
+        ],
       ],
     },
     {
@@ -102,12 +118,39 @@ export function sentencesFor(locale = 'en') {
         ],
       ],
     },
+    {
+      id: 'birthday',
+      steps: [
+        [
+          annual('birthday.oct17', '10/17', '17/10'),
+          annual('birthday.feb29', '02/29', '29/02'),
+          annual('birthday.dec25', '12/25', '25/12'),
+        ],
+        [
+          { say: 'birthday.next', code: '.next()', run: (value) => value.next() },
+          { say: 'birthday.in2028', code: '.in(2028)', run: (value) => value.in(2028) },
+          { say: 'birthday.prev', code: '.previous()', run: (value) => value.previous() },
+        ],
+        [
+          { say: 'birthday.fromNow', code: '.fromNow()', run: (value) => value.fromNow() },
+          format('full'),
+          { say: 'birthday.weekday', code: ".format('dddd')", run: (value) => value.format('dddd') },
+        ],
+      ],
+    },
   ];
 }
 
 export const SENTENCES = sentencesFor('en');
 
-const NOUN = { datetime: 'DateTime', date: 'CalendarDate', time: 'Time', duration: 'Duration', dateRange: 'DateRange' };
+const NOUN = {
+  datetime: 'DateTime',
+  date: 'CalendarDate',
+  time: 'Time',
+  duration: 'Duration',
+  dateRange: 'DateRange',
+  monthDay: 'MonthDay',
+};
 export const describe = (value, { kindOf }) => {
   if (typeof value === 'string') { return { noun: 'string', text: `'${value}'` }; }
   if (typeof value === 'number') { return { noun: 'number', text: String(value) }; }

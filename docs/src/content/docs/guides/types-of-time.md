@@ -92,7 +92,7 @@ opens.until(lunch).format('long', 'en-US'); // '3 hours, 30 minutes'
 
 ## YearMonth
 
-Use [`YearMonth`](/api/year-month/) when a value has a year and a month with no day, such as a billing period, a card expiry, or a month input.
+Use [`YearMonth`](/guides/months-and-days/#billing-months-and-card-expiries) when a value has a year and a month with no day, such as a billing period, a card expiry, or a month input.
 
 ```js
 import { monthYear, yearMonth } from 'native-dates';
@@ -108,7 +108,7 @@ It counts in months and years, and `on()` picks any day inside that month as a c
 
 ## MonthDay
 
-Use [`MonthDay`](/api/month-day/) for a recurring date without a year, such as a birthday or an annual holiday.
+Use [`MonthDay`](/guides/months-and-days/#birthdays-and-annual-holidays) for a recurring date without a year, such as a birthday or an annual holiday.
 
 ```js
 import { monthDay } from 'native-dates';
