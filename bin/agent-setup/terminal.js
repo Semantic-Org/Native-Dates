@@ -45,37 +45,49 @@ export class Terminal {
 
   static marks = {
     unicode: {
-      todo: '○',
+      ask: '?',
       done: '✓',
       fail: '✗',
       warn: '▲',
-      on: '◉',
-      off: '○',
+      // a rule beside lines that only inform, so they never read as choices
+      rail: '│',
+      picked: '●',
+      unpicked: '○',
+      checked: '◼',
+      unchecked: '◻',
       cursor: '❯',
       between: ' · ',
+      arrows: '↑/↓',
       busy: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
     },
     ascii: {
-      todo: '-',
+      ask: '?',
       done: '+',
       fail: 'x',
       warn: '!',
-      on: '[x]',
-      off: '[ ]',
+      rail: '|',
+      picked: '(*)',
+      unpicked: '( )',
+      checked: '[x]',
+      unchecked: '[ ]',
       cursor: '>',
       between: ', ',
+      arrows: 'up/down',
       busy: ['|', '/', '-', '\\'],
     },
   };
 
   // the level and role each mark is inked in
   static markInks = {
-    todo: ['info', 'faded'],
+    ask: ['info', 'badge'],
     busy: ['info', 'badge'],
     done: ['info', 'badge'],
-    on: ['info', 'badge'],
-    off: ['info', 'faded'],
+    picked: ['info', 'badge'],
+    checked: ['info', 'badge'],
     cursor: ['info', 'badge'],
+    rail: ['info', 'faded'],
+    unpicked: ['info', 'faded'],
+    unchecked: ['info', 'faded'],
     warn: ['warn', 'badge'],
     fail: ['error', 'badge'],
   };
@@ -154,8 +166,8 @@ export class Terminal {
     const room = fit ? (this.output.columns || columns) - mark.length - labelWidth - tail.length - 8 : Infinity;
     const shown = text.length > room ? `${text.slice(0, Math.max(0, room - 1))}…` : text;
     const level = { fail: 'error', warn: 'warn' }[state] ?? 'info';
-    const sentence = this.say(shown, { level, faded: ['todo', 'off'].includes(state) });
-    const name = this.say(label.padEnd(labelWidth), { faded: ['todo', 'off'].includes(state) });
+    const sentence = this.say(shown, { level, faded: state === 'unchecked' });
+    const name = this.say(label.padEnd(labelWidth), { faded: state === 'unchecked' });
     return `  ${this.mark(state, mark)} ${name} ${sentence}${tail && ` ${this.say(tail, { faded: true })}`}`;
   }
 
@@ -257,6 +269,67 @@ export class Terminal {
     this.input.setRawMode(false);
     this.input.pause();
     this.onKey = null;
+  }
+
+  // the short line an answered question leaves behind, which stays on screen
+  record(question, answer, { cancelled = false } = {}) {
+    return `  ${this.mark(cancelled ? 'fail' : 'done')} ${this.say(question, { faded: true })} ${this.say(answer)}`;
+  }
+
+  // one live question with one answer: the first option is the default and enter takes it
+  // answers with the option's index, or -1 when the person backs out. shortcuts maps a key to an option
+  async pickOne(question, options, { keys, cancelled, shortcuts = {} }) {
+    let at = 0;
+    let answer;
+    while (answer === undefined) {
+      this.draw([
+        `  ${this.mark('ask')} ${this.strong(question)}`,
+        ...options.map((option, index) => {
+          const isAt = index === at;
+          return `  ${this.mark(isAt ? 'picked' : 'unpicked')} ${this.say(option, { faded: !isAt })}`;
+        }),
+        `  ${this.hint(...keys)}`,
+      ]);
+      const key = await this.readKey();
+      if (['up', 'k'].includes(key)) { at = (at + options.length - 1) % options.length; }
+      else if (['down', 'j'].includes(key)) { at = (at + 1) % options.length; }
+      else if (['return', 'enter'].includes(key)) { answer = at; }
+      else if (key in shortcuts) { answer = shortcuts[key]; }
+      else if (key === 'escape') { answer = -1; }
+    }
+    this.draw([this.record(question, answer === -1 ? cancelled : options[answer], { cancelled: answer === -1 })]);
+    this.release();
+    return answer;
+  }
+
+  // one live question with several answers: rows are { label, text, name, on }, switched with space
+  // answers false when the person backs out, and stays on the question while nothing is selected
+  async pickSeveral(question, rows, { keys, empty, cancelled }) {
+    let at = 0;
+    let warning = '';
+    for (;;) {
+      this.draw([
+        `  ${this.mark('ask')} ${this.strong(question)}`,
+        ...rows.map(({ label, text, on }, index) => {
+          const pointer = index === at ? this.mark('cursor') : ' '.repeat(this.marks.cursor.length);
+          return `  ${pointer} ${this.row(on ? 'checked' : 'unchecked', label, text, { fit: true }).trimStart()}`;
+        }),
+        `  ${warning ? this.say(warning, { level: 'warn' }) : this.hint(...keys)}`,
+      ]);
+      const key = await this.readKey();
+      const chosen = rows.filter(({ on }) => on).map(({ name }) => name);
+      warning = '';
+      if (['up', 'k'].includes(key)) { at = (at + rows.length - 1) % rows.length; }
+      else if (['down', 'j'].includes(key)) { at = (at + 1) % rows.length; }
+      else if (key === 'space') { rows[at].on = !rows[at].on; }
+      else if (['return', 'enter'].includes(key) && !chosen.length) { warning = empty; }
+      else if (['return', 'enter', 'escape'].includes(key)) {
+        const backedOut = key === 'escape';
+        this.draw([this.record(question, backedOut ? cancelled : chosen.join(', '), { cancelled: backedOut })]);
+        this.release();
+        return !backedOut;
+      }
+    }
   }
 
   // a typed answer for a terminal that cannot redraw, with the end of input or Ctrl+C read as 'n'

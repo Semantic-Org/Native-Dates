@@ -46,14 +46,21 @@ export class Setup {
     noteUpdated: 'added the note to `{file}`',
 
     question: 'Make these changes?',
-    answerKeys: ['enter yes', 'c choose', 'n no'],
-    chooseKeys: ['arrows move', 'space switch on or off', 'enter confirm', 'esc cancel'],
+    yes: 'Yes',
+    choose: 'Let me choose',
+    no: 'No',
+    pickOneKeys: ['{arrows} to move', 'enter to confirm'],
+    chooseQuestion: 'Which changes?',
+    pickSeveralKeys: ['{arrows} to move', 'space to select', 'enter to confirm'],
+    noneSelected: 'nothing is selected. Press space to select a change, or esc to cancel',
+    cancelled: 'cancelled',
     typedQuestion: 'Make these changes? (Y/n) ',
     declined: 'nothing was written',
     needsYes: 'nothing was written. Run `npx {name} --yes` to make these changes',
 
     ready: 'ready. Agents working in this project now find {skills}',
-    docs: 'docs {homepage}',
+    docs: 'docs at {homepage}',
+    again: 'to skip the questions next time, run `npx {name} {flags}`',
     kept: '`{path}` was already there with different contents. Left as it was',
     failed:
       '`{command}` failed, so nothing after it was written. Fix what {manager} reports below, or install `{name}` yourself, then run `npx {name}` again',
@@ -103,9 +110,11 @@ shows what it will change and asks before writing
     this.project = new Project({ ...this, root });
     this.items = this.project.plan().filter(({ step }) => !this.given.has(`no-${step}`)).map((item) => ({
       ...item,
-      state: 'todo',
-      on: true,
+      label: item.step,
+      // what the change is called once chosen: its folder or file, or the step itself
+      name: item.plan[1].folder ?? item.plan[1].file ?? item.step,
       text: this.words(...item.plan),
+      on: true,
     }));
     this.kept = this.project.otherSkills.map((path) => terminal.row('warn', 'kept', this.words('kept', { path })));
 
@@ -116,14 +125,29 @@ shows what it will change and asks before writing
       for (const line of this.kept) { terminal.line(line); }
       return 0;
     }
+    const asking = !this.given.has('yes');
+    if (asking) {
+      // what will change, beside a rule and without marks, so it reads as a preview and never as choices
+      for (const { label, text } of this.items) { terminal.line(terminal.row('rail', label, text)); }
+      terminal.line();
+      if (!terminal.interactive) { return this.print(this.words('needsYes'), 1); }
+    }
     if (terminal.redraws) { terminal.hideCursor(); }
-    if (!this.given.has('yes') && !await this.ask()) { return this.decline(); }
-    return this.finish(await this.apply());
+    try {
+      if (asking && !await this.ask()) {
+        return this.print(`  ${terminal.say(this.words('declined'), { faded: true })}\n`, 1);
+      }
+      if (asking) { terminal.line(); }
+      return this.finish(await this.apply(), asking);
+    }
+    finally {
+      if (terminal.redraws) { terminal.restoreCursor(); }
+    }
   }
 
-  print(text) {
+  print(text, status = 0) {
     this.terminal.line(text);
-    return 0;
+    return status;
   }
 
   refuse(key, values) {
@@ -136,97 +160,75 @@ shows what it will change and asks before writing
   *******************************/
 
   // true when the person agrees to at least one change
-  // where lines redraw it is one key, elsewhere a typed answer, and with nobody to ask it is the way to say yes
+  // one question is live at a time, enter takes its highlighted default, and each answer stays as a record
   async ask() {
     const { terminal, copy } = this;
-    if (!terminal.redraws) {
-      for (const line of this.rows()) { terminal.line(line); }
-      terminal.line();
-      if (!terminal.interactive) { return false; }
-      const agreed = ['', 'y', 'yes'].includes(await terminal.readLine(`  ${copy.typedQuestion}`));
-      if (agreed) { terminal.line(); }
-      return agreed;
-    }
-    terminal.draw([...this.rows(), '', `  ${terminal.strong(copy.question)}  ${terminal.hint(...copy.answerKeys)}`]);
-    const answers = { return: 'yes', enter: 'yes', y: 'yes', c: 'choose', n: 'no', escape: 'no', q: 'no' };
-    let answer;
-    while (!answer) { answer = answers[await terminal.readKey()]; }
-    const agreed = answer === 'yes' || (answer === 'choose' && await this.choose());
+    if (!terminal.redraws) { return ['', 'y', 'yes'].includes(await terminal.readLine(`  ${copy.typedQuestion}`)); }
+    const keys = (hints) => hints.map((hint) => fill(hint, { arrows: terminal.marks.arrows }));
+    const { cancelled } = copy;
+    const answer = await terminal.pickOne(copy.question, [copy.yes, copy.choose, copy.no], {
+      keys: keys(copy.pickOneKeys),
+      shortcuts: { y: 0, n: 2 },
+      cancelled,
+    });
+    const agreed = answer === 0 || (answer === 1 && await terminal.pickSeveral(copy.chooseQuestion, this.items, {
+      keys: keys(copy.pickSeveralKeys),
+      empty: copy.noneSelected,
+      cancelled,
+    }));
     terminal.stopKeys();
     return agreed;
   }
 
-  // the same list with a switch on each line, true when the person confirms with something still on
-  async choose() {
-    const { terminal, items, copy } = this;
-    for (let at = 0;;) {
-      terminal.draw([
-        ...items.map(({ on, step, text }, index) => {
-          const pointer = index === at ? terminal.mark('cursor') : ' '.repeat(terminal.marks.cursor.length);
-          return `  ${pointer} ${terminal.row(on ? 'on' : 'off', step, text, { fit: true }).trimStart()}`;
-        }),
-        '',
-        `  ${terminal.hint(...copy.chooseKeys)}`,
-      ]);
-      const key = await terminal.readKey();
-      if (['up', 'k'].includes(key)) { at = (at + items.length - 1) % items.length; }
-      else if (['down', 'j', 'tab'].includes(key)) { at = (at + 1) % items.length; }
-      else if (key === 'space') { items[at].on = !items[at].on; }
-      else if (['return', 'enter'].includes(key)) { return items.some(({ on }) => on); }
-      else if (['escape', 'q'].includes(key)) { return false; }
+  // the flags that repeat this run without questions, or nothing when a choice has no flag to stand for it
+  get repeatFlags() {
+    const steps = ['install', 'skills', 'note'];
+    const flags = ['--yes', ...steps.filter((step) => this.given.has(`no-${step}`)).map((step) => `--no-${step}`)];
+    for (const step of steps) {
+      const items = this.items.filter(({ label }) => label === step);
+      const off = items.filter(({ on }) => !on).length;
+      if (off && off < items.length) { return null; }
+      if (off) { flags.push(`--no-${step}`); }
     }
-  }
-
-  // with nobody to ask, the refusal carries the command that says yes
-  decline() {
-    const { terminal } = this;
-    for (const item of this.items) { item.on = true; }
-    if (terminal.redraws) {
-      terminal.draw([...this.rows(), '', `  ${terminal.say(this.words('declined'), { faded: true })}`]);
-      terminal.restoreCursor();
-    }
-    else { terminal.line(terminal.interactive ? `  ${this.words('declined')}` : this.words('needsYes')); }
-    if (terminal.interactive) { terminal.line(); }
-    return 1;
+    return flags.join(' ');
   }
 
   /*******************************
                Apply
   *******************************/
 
-  // makes each change that is still on, in order, and answers with the failure that stopped it, if one did
-  // where lines redraw the list itself turns from plan into progress, elsewhere each result is one new line
+  // makes each change that is still selected, in order, and answers with the failure that stopped it, if one did
+  // each step is one line: a turning mark and a count of seconds while it runs, then what was done
   async apply() {
     const { terminal } = this;
-    const stop = terminal.redraws ? terminal.animate(() => terminal.draw(this.rows())) : () => {};
-    let failure;
     for (const item of this.items.filter(({ on }) => on)) {
+      const show = () => terminal.draw([this.row(item)]);
       item.started = Date.now();
       item.state = 'busy';
-      if (terminal.redraws) { terminal.draw(this.rows()); }
+      const stop = terminal.redraws ? terminal.animate(show) : () => {};
+      if (terminal.redraws) { show(); }
+      let failure;
       try {
         item.text = this.words(...await item.apply());
         item.state = 'done';
-        if (item.step === 'install') { item.tail = `${((Date.now() - item.started) / 1000).toFixed(1)}s`; }
+        if (item.label === 'install') { item.tail = `${((Date.now() - item.started) / 1000).toFixed(1)}s`; }
       }
       catch (error) {
         item.state = 'fail';
         failure = error;
       }
-      if (terminal.redraws) { terminal.draw(this.rows()); }
+      stop();
+      if (terminal.redraws) {
+        show();
+        terminal.release();
+      }
       else { terminal.line(this.row(item)); }
-      if (failure) { break; }
+      if (failure) { return failure; }
     }
-    stop();
-    if (terminal.redraws) {
-      terminal.release();
-      terminal.restoreCursor();
-    }
-    return failure;
   }
 
   // what was done, what was left alone, and where to go next, or why it stopped and the way out
-  finish(failure) {
+  finish(failure, asked) {
     const { terminal, homepage, notices } = this;
     if (failure) {
       terminal.line(`\n  ${terminal.say(this.words('failed', failure), { level: 'error' })}`);
@@ -238,8 +240,10 @@ shows what it will change and asks before writing
     }
     for (const line of this.kept) { terminal.line(line); }
     const skills = joinWords(this.project.skills.map((skill) => `\`${skill}\``));
+    const flags = asked && this.repeatFlags;
     terminal.line(`\n  ${terminal.mark('done')} ${terminal.say(this.words('ready', { skills }))}`);
-    if (homepage) { terminal.line(`    ${terminal.say(this.words('docs', { homepage }), { faded: true })}`); }
+    if (homepage) { terminal.line(`    ${terminal.say(this.words('docs'), { faded: true })}`); }
+    if (flags) { terminal.line(`    ${terminal.say(this.words('again', { flags }), { faded: true })}`); }
     if (notices.length) { terminal.line(); }
     for (const { label, text } of notices) { terminal.line(terminal.row('warn', label, text)); }
     terminal.line();
@@ -261,13 +265,9 @@ shows what it will change and asks before writing
   }
 
   // a busy row counts its seconds, and a finished install keeps the time it took
-  row({ state, step, text, started, tail }) {
+  row({ state, label, text, started, tail }) {
     const seconds = state === 'busy' ? `${Math.floor((Date.now() - started) / 1000)}s` : tail;
-    return this.terminal.row(state, step, text, { tail: seconds, fit: this.terminal.redraws });
-  }
-
-  rows() {
-    return this.items.filter(({ on }) => on).map((item) => this.row(item));
+    return this.terminal.row(state, label, text, { tail: seconds, fit: this.terminal.redraws });
   }
 }
 

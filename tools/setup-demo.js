@@ -6,7 +6,7 @@
 
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -79,6 +79,8 @@ server.listen(0, '127.0.0.1', () => {
   });
   child.on('exit', (status) => {
     server.close();
+    // the tarballs and the npm cache go, and the demo project stays to be looked at
+    rmSync(scratch, { recursive: true, force: true });
     console.log(`  demo project  ${project}\n`);
     process.exitCode = status ?? 1;
   });

@@ -56,8 +56,7 @@ export class Project {
     this.manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
     this.skills = readdirSync(join(packageDir, 'skills'));
     this.noteMarkers = [`<!-- ${name}:start -->`, `<!-- ${name}:end -->`];
-    const sentence = note.replaceAll('{skill}', `.agents/skills/${name}/SKILL.md`);
-    this.note = [this.noteMarkers[0], `## ${name}`, '', sentence, this.noteMarkers[1]].join('\n');
+    this.noteSentence = note;
     // on disk as a direct dependency, nested under an alias, or as an alias's pnpm sibling
     this.installPaths = [
       `node_modules/${name}`,
@@ -215,6 +214,18 @@ export class Project {
       && realPath(claude) !== realPath(join(this.root, 'AGENTS.md'))
       && !/@(\.\/)?AGENTS\.md/.test(readFileSync(claude, 'utf8'));
     return separate ? ['AGENTS.md', 'CLAUDE.md'] : ['AGENTS.md'];
+  }
+
+  // the entry skill at a path that exists: a skills folder holding it, else the installed package's own copy
+  get skillPath() {
+    const folder = Object.keys(Project.skillFolders).find((folder) => this.skillState(folder, this.name) === 'ready');
+    const home = folder ?? `${this.installPath ?? `node_modules/${this.name}`}/skills`;
+    return `${home}/${this.name}/SKILL.md`;
+  }
+
+  get note() {
+    const [start, end] = this.noteMarkers;
+    return [start, `## ${this.name}`, '', this.noteSentence.replaceAll('{skill}', this.skillPath), end].join('\n');
   }
 
   withNote(content) {

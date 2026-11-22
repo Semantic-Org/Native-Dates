@@ -211,6 +211,16 @@ describe('npx native-dates', () => {
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(written);
   });
 
+  it('points the note at the installed copy of the skill when --no-skills leaves the agent folders empty', () => {
+    const dir = project();
+    const { status } = setup(dir, '--yes', '--no-skills');
+    expect(status).toBe(0);
+    expect(existsSync(join(dir, '.agents'))).toBe(false);
+    const [, path] = readFileSync(join(dir, 'AGENTS.md'), 'utf8').match(/Read `([^`]+)`/);
+    expect(path).toBe('node_modules/native-dates/skills/native-dates/SKILL.md');
+    expect(existsSync(join(dir, path))).toBe(true);
+  });
+
   it('leaves out the steps switched off with --no-install and --no-note', () => {
     const dir = project();
     const { status, calls: ran } = setup(dir, '--yes', '--no-install', '--no-note');
@@ -239,13 +249,13 @@ describe('npx native-dates', () => {
     expect(silenced).not.toContain('\x1b[');
   });
 
-  // c opens the checklist, space switches the first line off, which is the install
+  // down and enter pick 'Let me choose', then space deselects the first row, which is the install
   it.runIf(process.platform === 'linux')('in a terminal lets the person switch a change off before confirming', () => {
     const dir = project();
     const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
     const { status } = spawnSync('script', ['-qec', command, '/dev/null'], {
       cwd: dir,
-      input: 'c \r',
+      input: 'j\r \r',
       encoding: 'utf8',
       timeout: 30_000,
       env: { PATH: `${managers}${delimiter}${dirname(process.execPath)}${delimiter}/usr/bin${delimiter}/bin` },
