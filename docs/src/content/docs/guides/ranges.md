@@ -68,17 +68,18 @@ booking.intersection(holiday).toString(); // '2026-11-15/2026-11-18'
 
 `intersection()` returns `null` when two ranges do not overlap, so you can branch on it directly when checking room availability or scheduling conflicts.
 
-## Walking and splitting spans
+## Walking, counting, and splitting spans
 
-Call `points()` to step across a range and collect every date, time, or moment along the way. Because it returns a plain array, standard array methods work right on the result:
+Call `every()` to step across a range and collect each date, time, or moment along the way. On a `DateRange`, call `count()` to count days, weekdays, weekends, or a specific weekday directly:
 
 ```js
 import { dateRange } from 'native-dates';
 
 const sprint = dateRange('2026-05-01', '2 weeks');
-const workdays = sprint.points('day').filter((d) => d.isWeekday());
 
-workdays.length; // 10
+sprint.every('day').length; // 14
+sprint.count('weekdays'); // 10
+sprint.count('mondays'); // 2
 ```
 
 Call `split()` when you want sub-ranges instead of individual points, such as dividing a shift into booking slots or a sprint into weekly buckets:

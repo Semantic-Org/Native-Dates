@@ -95,8 +95,8 @@ export function sentencesFor(locale = 'en') {
           { say: 'range.nov', code: "dateRange('2026-11-01', '2026-11-30')", run: (_, { dateRange }, tag) => localize(dateRange('2026-11-01', '2026-11-30'), tag) },
         ],
         [
-          { say: 'points.day', code: ".points('day')", run: (value) => value.points('day') },
-          { say: 'points.2days', code: ".points(2, 'days')", run: (value) => value.points(2, 'days') },
+          { say: 'points.day', code: ".every('day')", run: (value) => value.every('day') },
+          { say: 'points.2days', code: ".every(2, 'days')", run: (value) => value.every(2, 'days') },
         ],
         [
           { say: 'filter.weekday', code: '.filter((d) => d.isWeekday())', run: (value) => value.filter((d) => d.isWeekday()) },

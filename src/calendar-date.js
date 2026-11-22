@@ -320,9 +320,9 @@ export class CalendarDate {
   }
 
   // expand across this date's actual hours in `zone` (23 or 25 hours on DST transition days)
-  points(step, ...rest) {
+  every(step, ...rest) {
     const [name, zone] = stepArguments(step, rest);
-    return this.at('00:00', zone).range('day').points(step, name);
+    return this.at('00:00', zone).range('day').every(step, name);
   }
 
   split(step, ...rest) {

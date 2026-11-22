@@ -98,7 +98,7 @@ weekdayNames('narrow', undefined, 'pt-BR');
 weekdayNames('short', 'monday', 'en-US');
 // ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-const daysInGrid = date('2026-11-18', { locale: 'en-US' }).range('week').points('day');
+const daysInGrid = date('2026-11-18', { locale: 'en-US' }).range('week').every('day');
 daysInGrid[0].format({ weekday: 'short' }); // 'Sun'
 ```
 :::

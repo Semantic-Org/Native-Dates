@@ -42,7 +42,7 @@ Core holds what nearly every caller needs:
 - Natural-language arithmetic (`plus`/`minus`, with zero-cost `add`/`subtract` prototype aliases), rounding, weekday stepping (`next`/`previous`), comparisons, and `until`/`since`
 - `Intl` preset formatting (`short`, `medium`, `long`, `full`, `date`, `time`, `month`, `text`), `Intl` options bags, custom named formats via `configure({ formats })`, and token patterns (`YYYY-MM-DD HH:mm`) with `monthNames()` and `weekdayNames()`
 - Relative phrases (`fromNow()`, `from(other)`: `'3 hours ago'`, `'in 2 days'`, `'yesterday'`) via `Intl.RelativeTimeFormat`
-- Ranges from any point (`.to()`, `.for()`, `.through()`, `.range()`, `.points()`, `.split()`, `.splitBy()`) with `contains`/`includes`, `overlaps`, and `intersection`
+- Ranges from any point (`.to()`, `.for()`, `.through()`, `.range()`, `.every()`, `.count()`, `.split()`, `.splitBy()`) with `contains`/`includes`, `overlaps`, and `intersection`
 - Duration phrases (`'1h 30m'`, `'2 weeks and 3 days'`) and fractional unit spilling (`1.5 days` -> `1d 12h`)
 - Standard IANA zones, fixed offsets, `UTC`, per-value `.locale()`, `configure({ zone, locale, weekStart, formats, weekdayNames, ordinals })`, `compare`, `earliest`, `latest`, `dayOfWeek`, and `kindOf`
 

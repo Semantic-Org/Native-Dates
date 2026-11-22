@@ -140,7 +140,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | Code | Thrown by | Cause |
 |---|---|---|
 | `invalidRange` | `DateRange`, `DateTimeRange`, `to()` | Range `end` is earlier than `start`. |
-| `invalidStep` | `points()`, `split()` | Step duration passed to `points()` or `split()` is zero or negative. |
+| `invalidStep` | `every()`, `split()` | Step duration passed to `every()` or `split()` is zero or negative. |
 | `unsupportedIntersection` | `TimeRange.intersection()` | Two overnight time ranges overlap in two separate windows across midnight. |
 | `unsupportedZone` | `TimeRange.in()` | Calling `in()` on a `TimeRange`, which has no calendar date to place in a zone. |
 

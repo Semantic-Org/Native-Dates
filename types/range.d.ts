@@ -145,13 +145,13 @@ declare abstract class BaseRange<Point, Input> {
    *
    * @example
    * ```ts
-   * dateRange('2026-01-31', '2026-04-30').points('month').map(String);
+   * dateRange('2026-01-31', '2026-04-30').every('month').map(String);
    * // ['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30']
    * ```
    *
-   * @see {@link https://nativedates.dev/api/ranges/#points points}
+   * @see {@link https://nativedates.dev/api/ranges/#every every}
    */
-  points(step: Unit | DurationInput): Point[];
+  every(step: Unit | DurationInput): Point[];
   /**
    * Walks forward from `start` by `count` of `unit` and returns every point inside the range.
    *
@@ -159,9 +159,9 @@ declare abstract class BaseRange<Point, Input> {
    * @param unit - Step unit name, such as `'days'` or `'hours'`
    * @returns Ordered array of points inside the range
    *
-   * @see {@link https://nativedates.dev/api/ranges/#points points}
+   * @see {@link https://nativedates.dev/api/ranges/#every every}
    */
-  points(count: number | string, unit: Unit): Point[];
+  every(count: number | string, unit: Unit): Point[];
 
   /**
    * Divides the range into contiguous sub-ranges of `step`, clamping the final chunk to `end`.
@@ -346,6 +346,24 @@ export class DateRange extends BaseRange<CalendarDate, CalendarDateInput> {
    * @see {@link https://nativedates.dev/api/ranges/#daterange DateRange}
    */
   constructor(interval: string, options?: Zone | ReadOptions);
+
+  /**
+   * Counts days in this `DateRange`, optionally filtered to weekdays, weekends, or a specific weekday.
+   *
+   * @param kind - `'days'` (default), `'weekdays'`, `'weekends'`, or a weekday name such as `'mondays'`
+   * @returns Number of matching calendar days in this range
+   *
+   * @example
+   * ```ts
+   * const sprint = dateRange('2026-05-01', '2 weeks');
+   * sprint.count(); // 14
+   * sprint.count('weekdays'); // 10
+   * sprint.count('mondays'); // 2
+   * ```
+   *
+   * @see {@link https://nativedates.dev/api/ranges/#count count}
+   */
+  count(kind?: string): number;
 
   /**
    * Converts this `DateRange` into a half-open `DateTimeRange` from midnight on the start day
