@@ -6,17 +6,19 @@ import {
   datetime,
   datetimeRange,
   endOfToday,
+  monthDay,
   now,
   startOfToday,
   time,
   today,
+  yearMonth,
 } from 'native-dates';
 import { afterEach, describe, expect, it } from 'vitest';
 
 const noonInJuly = '2026-07-01T12:00:00Z';
 
 afterEach(() => {
-  timezones.IST = 'Asia/Kolkata';
+  delete timezones.IST;
   delete timezones.WIB;
   configure({ zone: null, zoneAliases: null });
 });
@@ -303,7 +305,7 @@ describe('timezones export', () => {
   it('exposes built-in abbreviation mappings to IANA zones', () => {
     expect(timezones.JST).toBe('Asia/Tokyo');
     expect(timezones.PT).toBe('America/Los_Angeles');
-    expect(timezones.IST).toBe('Asia/Kolkata');
+    expect(timezones.CET).toBe('Europe/Paris');
   });
 
   it('uses overridden entries on the timezones object', () => {
@@ -315,5 +317,112 @@ describe('timezones export', () => {
     timezones.WIB = 'Asia/Jakarta';
     expect(datetime(noonInJuly, 'WIB').zone).toBe('Asia/Jakarta');
     expect(datetime(noonInJuly, 'wib').zone).toBe('Asia/Jakarta');
+  });
+});
+
+describe('@native-dates/plugins/zones cities and abbreviations without an IANA name', () => {
+  it.each([
+    ['Beijing, Shenzhen, 北京', 'Asia/Shanghai'],
+    ['Osaka, Fukuoka, 東京', 'Asia/Tokyo'],
+    ['Busan, 서울', 'Asia/Seoul'],
+    ['Mumbai, New Delhi, Bengaluru', 'Asia/Kolkata'],
+    ['Brasília, Rio de Janeiro, rio', 'America/Sao_Paulo'],
+    ['Saint Petersburg, St. Petersburg, SPB, Москва, мск, MSK', 'Europe/Moscow'],
+    ['Ekaterinburg', 'Asia/Yekaterinburg'],
+    ['Astana', 'Asia/Almaty'],
+    ['Makkah, Jeddah', 'Asia/Riyadh'],
+    ['Doha', 'Asia/Qatar'],
+    ['Abu Dhabi', 'Asia/Dubai'],
+    ['Manama', 'Asia/Bahrain'],
+    ['Rabat', 'Africa/Casablanca'],
+    ['Bruxelles', 'Europe/Brussels'],
+    ['Geneva, Genève', 'Europe/Zurich'],
+    ['Munich, Frankfurt', 'Europe/Berlin'],
+    ['CDMX', 'America/Mexico_City'],
+    ['La Habana', 'America/Havana'],
+    ['Quito', 'America/Guayaquil'],
+    ['NYC, Washington DC, Boston', 'America/New_York'],
+    ['LA, San Francisco, Seattle', 'America/Los_Angeles'],
+    ['Ottawa, HNE', 'America/Toronto'],
+    ['ART', 'America/Argentina/Buenos_Aires'],
+    ['COT', 'America/Bogota'],
+    ['CLT', 'America/Santiago'],
+    ['FNT', 'America/Noronha'],
+    ['IRST', 'Asia/Tehran'],
+  ])('resolves %s to %s', (spellings, zone) => {
+    for (const spelling of spellings.split(', ')) {
+      expect(datetime(noonInJuly, spelling).zone, spelling).toBe(zone);
+    }
+  });
+
+  it('resolves "El Salvador" to its IANA zone and "Salvador" to America/Bahia', () => {
+    expect(datetime(noonInJuly, 'El Salvador').zone).toBe('America/El_Salvador');
+    expect(datetime(noonInJuly, 'Salvador').zone).toBe('America/Bahia');
+  });
+});
+
+describe('@native-dates/plugins/zones abbreviations used by several countries', () => {
+  afterEach(() => {
+    configure({ locale: null });
+  });
+
+  const zoneOf = (name, locale) => datetime(noonInJuly, { zone: name, locale }).zone;
+
+  it.each([
+    ['CST', 'en-US', 'America/Chicago'],
+    ['CST', 'zh-CN', 'Asia/Shanghai'],
+    ['CST', 'zh', 'Asia/Shanghai'],
+    ['CST', 'zh-TW', 'Asia/Taipei'],
+    ['CST', 'es-CU', 'America/Havana'],
+    ['CST', 'de', 'America/Chicago'],
+    ['CST', 'en-CN', 'Asia/Shanghai'],
+    ['AST', 'en-SA', 'Asia/Riyadh'],
+    ['ACT', 'en-BR', 'America/Rio_Branco'],
+    ['CST', 'en-CN, en;q=0.8', 'Asia/Shanghai'],
+    ['CST', 'tlh, zh-TW;q=0.8', 'Asia/Taipei'],
+    ['IST', 'en-IN', 'Asia/Kolkata'],
+    ['IST', 'en-IE', 'Europe/Dublin'],
+    ['IST', 'he', 'Asia/Jerusalem'],
+    ['PST', 'fil', 'Asia/Manila'],
+    ['BST', 'bn', 'Asia/Dhaka'],
+    ['AST', 'ar-SA', 'Asia/Riyadh'],
+    ['ACT', 'pt-BR', 'America/Rio_Branco'],
+    ['AMT', 'hy', 'Asia/Yerevan'],
+    ['San Juan', 'es-PR', 'America/Puerto_Rico'],
+    ['San Juan', 'es-AR', 'America/Argentina/San_Juan'],
+  ])('resolves %s under locale %s to %s', (name, locale, zone) => {
+    expect(zoneOf(name, locale)).toBe(zone);
+  });
+
+  it('resolves by the locale of the value in in() and at()', () => {
+    const chinese = datetime(noonInJuly, 'UTC').locale('zh-CN');
+    expect(chinese.in('CST').zone).toBe('Asia/Shanghai');
+    expect(chinese.locale('en-US').in('CST').zone).toBe('America/Chicago');
+    expect(date('2026-07-01', { locale: 'zh-CN' }).at('09:00', 'CST').offset).toBe('+08:00');
+  });
+
+  it('resolves by configure({ locale }) and to the first listed zone once the locale is cleared', () => {
+    configure({ locale: 'zh-CN' });
+    expect(datetime(noonInJuly, 'CST').zone).toBe('Asia/Shanghai');
+    configure({ locale: null });
+    expect(zoneOf('CST', 'en-US')).toBe('America/Chicago');
+  });
+
+  it('resolves zone by the locale passed in the same configure() call', () => {
+    expect(configure({ locale: 'zh-CN', zone: 'CST' }).zone).toBe('Asia/Shanghai');
+  });
+
+  it('resolves by the locale option in monthDay() and yearMonth() from an instant', () => {
+    const options = { zone: 'CST', locale: 'zh-CN' };
+    expect(monthDay('2026-11-16T20:00:00Z', options).toString()).toBe('11-17');
+    expect(yearMonth('2026-11-30T20:00:00Z', options).toString()).toBe('2026-12');
+  });
+
+  it('resolves zoneAliases and timezones entries ahead of the locale', () => {
+    configure({ zoneAliases: { CST: 'America/Havana' } });
+    expect(zoneOf('CST', 'zh-CN')).toBe('America/Havana');
+    configure({ zoneAliases: null });
+    timezones.IST = 'Asia/Jerusalem';
+    expect(zoneOf('IST', 'en-IE')).toBe('Asia/Jerusalem');
   });
 });

@@ -1477,3 +1477,38 @@ describe('DateTime serialization and conversion', () => {
     expect(precise.toJSDate().toISOString()).toBe('2026-11-16T17:30:00.123Z');
   });
 });
+
+describe('datetime() year-first string parsing with any separator', () => {
+  it.each([
+    ['Han units before a clock', '2026年11月16日 14:30'],
+    ['Hangul units before a clock', '2026년 11월 16일 14:30'],
+    ['Korean spaced dots before a clock', '2026. 11. 16. 14:30'],
+  ])('parses %s (%j) as wall-clock time in the target zone', (_form, text) => {
+    expect(datetime(text, 'Asia/Tokyo')).toMatchObject({ year: 2026, month: 11, day: 16, hour: 14, minute: 30 });
+  });
+});
+
+describe('datetime() from Temporal values and strings in another calendar', () => {
+  it('converts a Persian ZonedDateTime, PlainDateTime, and PlainDate to ISO fields', () => {
+    const zoned = Temporal.ZonedDateTime.from('2026-11-16T10:00[Asia/Tehran][u-ca=persian]');
+    const moment = datetime(zoned);
+    expect(moment).toMatchObject({ year: 2026, month: 11, day: 16, zone: 'Asia/Tehran' });
+    expect(moment.format('YYYY-MM-DD')).toBe('2026-11-16');
+    expect(moment.date.toString()).toBe('2026-11-16');
+    expect(datetime(zoned.toPlainDateTime(), 'UTC')).toMatchObject({ year: 2026, month: 11, day: 16 });
+    expect(datetime(zoned.toPlainDate(), 'UTC')).toMatchObject({ year: 2026, month: 11, day: 16 });
+  });
+
+  it('converts a [u-ca=persian] string to ISO fields', () => {
+    expect(datetime('2026-11-16T10:00[Asia/Tokyo][u-ca=persian]')).toMatchObject({ year: 2026, month: 11, day: 16 });
+  });
+});
+
+describe('DateTime.isWeekend() and isWeekday() by locale', () => {
+  it('returns true on Friday and false on Sunday for ar-SA in the instance timezone', () => {
+    const friday = datetime('2026-11-20T12:00', 'Asia/Riyadh').locale('ar-SA');
+    expect([friday.isWeekend(), friday.isWeekday()]).toEqual([true, false]);
+    expect(friday.plus(2, 'days').isWeekend()).toBe(false);
+    expect(friday.locale('en-US').isWeekend()).toBe(false);
+  });
+});

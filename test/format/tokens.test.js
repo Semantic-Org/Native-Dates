@@ -584,3 +584,49 @@ describe('configure({ ordinals })', () => {
     expect(date('2026-11-01').format('Do', 'en-US')).toBe('1st');
   });
 });
+
+describe('format() unbracketed words in token patterns', () => {
+  const moment = datetime('2026-05-06T14:30:07', 'UTC');
+
+  it.each([
+    ['Portuguese às', 'DD/MM/YYYY às HH:mm'],
+    ['Portuguese há', 'há D'],
+    ['Spanish día', 'D [de] MMMM, día d'],
+    ['Catalan ordinal è', 'Dè MMMM'],
+    ["French 'h' after the hour", 'HHhmm'],
+    ["spaced French 'h' after the hour", 'HH h mm'],
+  ])('throws unknownFormat for unbracketed %s in %j', (_word, pattern) => {
+    expect(() => moment.format(pattern)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownFormat', at: pattern }),
+    );
+  });
+
+  it('formats the same words when they are wrapped in brackets', () => {
+    expect(moment.format('DD/MM/YYYY [às] HH:mm', 'pt-BR')).toBe('06/05/2026 às 14:30');
+    expect(moment.format('HH[h]mm', 'fr')).toBe('14h30');
+  });
+
+  it('copies a lone accented letter, a non-Latin suffix, and an ordinal mark beside a token to the output', () => {
+    expect(moment.format('D MMMM YYYY à HH:mm', 'fr')).toBe('6 mai 2026 à 14:30');
+    expect(moment.format('D MMMM YYYYг.', 'ru')).toBe('6 мая 2026г.');
+    expect(moment.format('Dº [de] MMMM', 'es')).toBe('6º de mayo');
+    expect(moment.format('YYYY年M月D日', 'ja')).toBe('2026年5月6日');
+    expect(moment.format('h:mm A', 'en-US')).toBe('2:30 PM');
+  });
+});
+
+describe('format() genitive month names beside a day token', () => {
+  const day = date('2026-05-06');
+
+  it('uses genitive/format month names when only literal text separates the month from the day', () => {
+    expect(day.format('D-го MMMM', 'ru')).toBe('6-го мая');
+    expect(day.format('D[-го] MMMM', 'ru')).toBe('6-го мая');
+    expect(day.format('D.MMMM', 'pl')).toBe('6.maja');
+    expect(day.format('D, MMMM', 'ru')).toBe('6, мая');
+  });
+
+  it('uses standalone month names when another token separates the month from the day', () => {
+    expect(datetime('2026-05-06T14:30', 'UTC').format('D HH:mm MMMM', 'ru')).toBe('6 14:30 май');
+    expect(day.format('MMMM YYYY', 'ru')).toBe('май 2026');
+  });
+});

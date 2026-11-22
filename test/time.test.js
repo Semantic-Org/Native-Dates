@@ -824,3 +824,30 @@ describe('Time.toString(), Time.toJSON(), Time.toTemporal(), and Time.as()', () 
     );
   });
 });
+
+describe("time() string parsing with an 'h' between hours and minutes", () => {
+  it.each([
+    ['14h30', '14:30:00'],
+    ['14 h 30', '14:30:00'],
+    ['9h05', '09:05:00'],
+    ['14H30', '14:30:00'],
+    ['14h30:15', '14:30:15'],
+  ])('parses %j as %s', (text, expected) => {
+    expect(time(text).toString()).toBe(expected);
+  });
+
+  it("parses fr-CA format('short') output '14 h 30' back to the same time", () => {
+    const written = time('14:30').format('short', 'fr-CA');
+    expect(time(written).toString(), written).toBe('14:30:00');
+  });
+
+  it.each(['14h', '8h', 'h30', '14h3', '25h00'])('throws invalidTime for %j', (text) => {
+    expect(() => time(text)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidTime', at: text }),
+    );
+  });
+
+  it("parses '8h' as a duration rather than eight o'clock in Time.prototype.for()", () => {
+    expect(time('22:00').for('8h').toString()).toBe('22:00:00/06:00:00');
+  });
+});

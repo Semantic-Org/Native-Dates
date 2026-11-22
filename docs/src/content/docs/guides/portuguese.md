@@ -1,25 +1,28 @@
 ---
 title: Portuguese
 lede: Format and parse Portuguese dates across Brazil and European or African locales.
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 Pass `'pt-BR'` or `'pt-PT'` through [Localization](/guides/localization/) to format dates in Portuguese. Brazil and Portugal share day-first numeric dates and lowercase months, while differing on medium presets and first-day ordinals.
 
 ## Parsing day/month/year dates
 
-Year-first ISO strings never swap month and day. For slash or dot input from forms, load [the loose plugin](/plugins/loose/) and enable `dayFirst` so `'06/11/2026'` reads as November 6 rather than June 11:
+Year-first ISO strings never swap month and day. With [the loose plugin](/plugins/loose/), Portuguese locales read slash dates, dot dates, and worded dates day-first automatically:
 
 ```js
 import '@native-dates/plugins/loose';
-import { configure, date } from 'native-dates';
+import { date, datetime } from 'native-dates';
 
-date('06/11/2026', { loose: true })?.toString(); // '2026-06-11'
-
-configure({ dayFirst: true });
-date('06/11/2026', { loose: true })?.toString(); // '2026-11-06'
-date('16.11.2026', { loose: true })?.toString(); // '2026-11-16'
-date('29/02/2026', { loose: true }); // null
+date('06/11/2026', { loose: true, locale: 'pt-BR' })?.toString(); // '2026-11-06'
+date('16.11.2026', { loose: true, locale: 'pt-PT' })?.toString(); // '2026-11-16'
+date('16 de novembro de 2026', { loose: true, locale: 'pt-BR' })?.toString(); // '2026-11-16'
+datetime('16 de novembro de 2026 às 14:30', {
+  loose: true,
+  locale: 'pt-BR',
+  zone: 'America/Sao_Paulo',
+})?.hour; // 14
+date('29/02/2026', { loose: true, locale: 'pt-BR' }); // null
 ```
 
 For partial dates, numeric day-month and month-year pairs parse in core without plugins, and loose mode matches Portuguese month names:
@@ -49,7 +52,7 @@ consulta.format('long'); // '16 de novembro de 2026 às 14:30'
 date('2026-11-16').format('medium', 'pt-PT'); // '16/11/2026'
 ```
 
-Wrap literal words in square brackets inside custom token patterns, including `'[de]'` and `'[às]'` before the hour:
+Wrap literal words like `'[de]'` and `'[às]'` in square brackets inside custom token patterns. Leaving them unbracketed throws an error instead of expanding stray letters:
 
 ```js
 consulta.format('DD/MM/YYYY [às] HH:mm'); // '16/11/2026 às 14:30'
@@ -103,24 +106,26 @@ Brazil spans four time zones and ended daylight saving time in 2019. `'America/S
 
 | Zone in Brazil | Primary IANA zone | Regional zones and aliases |
 |---|---|---|
-| Fernando de Noronha | `America/Noronha` | UTC-2. Resolves `'Noronha'`; alias `'FNT'` via `zoneAliases`. |
-| Brasília Time | `America/Sao_Paulo` | UTC-3, shared with Bahia, Recife, Fortaleza, and Belém; resolves `'BRT'`. |
-| Amazonas and Mato Grosso | `America/Manaus` | UTC-4, shared with Cuiabá, Campo Grande, and Porto Velho; alias `'AMT'`. |
-| Acre | `America/Rio_Branco` | UTC-5, shared with Eirunepé; alias `'ACT'`, which defaults to Adelaide. |
+| Fernando de Noronha | `America/Noronha` | UTC-2. Resolves `'Noronha'` and `'FNT'` directly. |
+| Brasília Time | `America/Sao_Paulo` | UTC-3, shared with Bahia, Recife, Fortaleza, and Belém; resolves `'BRT'`, Brasília, Rio de Janeiro, Belo Horizonte, and Salvador. |
+| Amazonas and Mato Grosso | `America/Manaus` | UTC-4, shared with Cuiabá, Campo Grande, and Porto Velho; resolves `'AMT'`. |
+| Acre | `America/Rio_Branco` | UTC-5, shared with Eirunepé; resolves `'ACT'` automatically under `'pt-BR'`. |
 
-With [the zones plugin](/plugins/zones/), accented IANA cities and `'BRT'` resolve directly, and `zoneAliases` maps regional abbreviations or cities outside IANA:
+With [the zones plugin](/plugins/zones/), major Brazilian cities and regional abbreviations resolve out of the box, including inline BRT in loose strings:
 
 ```js
+import '@native-dates/plugins/loose';
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
-
-configure({
-  zoneAliases: { brasilia: 'America/Sao_Paulo', act: 'America/Rio_Branco' },
-});
+import { datetime } from 'native-dates';
 
 datetime('2026-11-16T14:00', 'BRT').zone; // 'America/Sao_Paulo'
-datetime('2026-11-16T14:00', 'São Paulo').in('ACT').format('HH:mm Z');
-// '12:00 -05:00'
+datetime('2026-11-16T14:00', 'Brasília').zone; // 'America/Sao_Paulo'
+datetime('2026-11-16T14:00', 'São Paulo')
+  .locale('pt-BR')
+  .in('ACT')
+  .format('HH:mm Z'); // '12:00 -05:00'
+datetime('2026-11-16 14:30 BRT', { loose: true, zone: 'UTC' })?.toString();
+// '2026-11-16T17:30:00.000Z'
 ```
 
 Calendar dates return natural words out to *anteontem* for two days ago and *depois de amanhã* for two days ahead. `DateTime` counts elapsed hours and phrases future spans differently in Brazil and Portugal.

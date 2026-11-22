@@ -537,7 +537,7 @@ Relative day checks accept an optional time zone because which calendar day is t
 |---|---|---|
 | `isToday(zone?)`, `isTomorrow(zone?)`, `isYesterday(zone?)` | `boolean` | Whether this date matches today, tomorrow, or yesterday in the given or configured zone. |
 | `isPast(zone?)`, `isFuture(zone?)` | `boolean` | Whether this date is earlier or later than today in the given or configured zone. |
-| `isWeekday()`, `isWeekend()` | `boolean` | Monday through Friday vs. Saturday and Sunday. |
+| `isWeekday()`, `isWeekend()` | `boolean` | Working day vs. weekend day in the active locale, such as Saturday and Sunday in `en-US` or Friday and Saturday in `ar-SA`. |
 | `isLeapYear()` | `boolean` | Whether this date's year has 366 days. |
 
 ## Measuring spans

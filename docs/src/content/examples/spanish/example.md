@@ -12,10 +12,10 @@ related:
   - { title: loose, href: /plugins/loose/ }
 ---
 
-Setting `'es'` and `dayFirst: true` once in `configure()` applies Spanish formatting and day-first parsing across your whole app. Full dates keep weekday and month names lowercase and link day, month, and year with "de".
+Setting `'es'` once in `configure()` applies Spanish formatting and day-first loose parsing across your whole app. Full dates keep weekday and month names lowercase and link day, month, and year with "de".
 
 Date ranges collapse shared parts through `range.format('long')` without repeating the locale. A span inside May keeps "de mayo de 2026" once, while crossing into June prints each month name around the dash.
 
 Calendar headers read `start.yearMonth` to format "mayo de 2026" with its "de" connector intact.
 
-Because day-first order is already configured, `date(typed.value, { loose: true })` reads "01/05/2026" as May 1 and returns `null` on invalid text.
+Because `'es'` writes dates day-first, `date(typed.value, { loose: true })` reads "01/05/2026" as May 1 and returns `null` on invalid text.

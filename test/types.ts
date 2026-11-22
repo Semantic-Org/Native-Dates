@@ -114,7 +114,7 @@ export const strictDate: CalendarDate = date('2026-09-06', { loose: false });
 export const strictSpan: DateRange = dateRange('2026-09-01', '2026-09-07', { loose: false });
 export const strictMonth: YearMonth = yearMonth('2026-09', { loose: false });
 export const strictMonthDay: MonthDay = monthDay('09-06', { loose: false });
-export const zoned: unknown = looseZoned('Sep 7 2026', zone);
+export const zoned: unknown = looseZoned('Sep 7 2026', { zone });
 
 // options in a variable widen loose to boolean and remain nullable
 const held = { loose: true, zone };

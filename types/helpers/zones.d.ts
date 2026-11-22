@@ -118,8 +118,8 @@ export interface ActiveSettings {
   locale: Locale | undefined;
   /** Active ISO week-start number (1–7), or `undefined` when following the locale. */
   weekStart: number | undefined;
-  /** Whether loose numeric dates default to day-first order (`false` unless set with `@native-dates/plugins/loose`). */
-  dayFirst: boolean;
+  /** Loose numeric date order set with `@native-dates/plugins/loose`, or `undefined` when following the locale. */
+  dayFirst: boolean | undefined;
   /** Active custom zone alias map registered via `@native-dates/plugins/zones`. */
   zoneAliases: Record<string, string>;
   /** Custom weekday label overrides, if configured. */
