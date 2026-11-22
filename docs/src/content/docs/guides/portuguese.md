@@ -1,6 +1,6 @@
 ---
 title: Portuguese
-lede: Format and parse dates across Brazil, Portugal, and Portuguese-speaking Africa.
+lede: Format and parse Portuguese dates across Brazil and European or African locales.
 updated: 2026-11-21
 ---
 
@@ -56,7 +56,7 @@ consulta.format('DD/MM/YYYY [às] HH:mm'); // '16/11/2026 às 14:30'
 consulta.format('D [de] MMMM [de] YYYY'); // '16 de novembro de 2026'
 ```
 
-Brazilian short months and weekdays are lowercase with a period, and `dd` uses single-letter initials because *segunda* and *sexta* start with the same two letters.
+Brazilian short months and weekdays stay lowercase with a trailing period. `dd` uses single-letter initials because *segunda* and *sexta* share their first two letters.
 
 Brazil also writes the first of the month as *1º* in *1º de maio*, while Portugal uses plain numbers. Scope `ordinals` and weekday overrides to `'pt-BR'` so Portugal keeps its own defaults:
 
@@ -99,7 +99,7 @@ quarta.range('week', 'monday').toString(); // '2026-11-16/2026-11-22'
 
 ## Time zones and relative dates
 
-Brazil spans four time zones and ended daylight saving time in 2019, keeping `'America/Sao_Paulo'` on UTC-3 year-round while preserving historical summer offsets:
+Brazil spans four time zones and ended daylight saving time in 2019. `'America/Sao_Paulo'` stays on UTC-3 year-round while preserving historical summer offsets:
 
 | Zone in Brazil | Primary IANA zone | Regional zones and aliases |
 |---|---|---|
@@ -123,7 +123,7 @@ datetime('2026-11-16T14:00', 'São Paulo').in('ACT').format('HH:mm Z');
 // '12:00 -05:00'
 ```
 
-Calendar dates return natural words out to *anteontem* for two days ago and *depois de amanhã* for two days ahead, while `DateTime` counts elapsed hours and phrases future spans differently in Brazil and Portugal.
+Calendar dates return natural words out to *anteontem* for two days ago and *depois de amanhã* for two days ahead. `DateTime` counts elapsed hours and phrases future spans differently in Brazil and Portugal.
 
 Because UTC midnight happens at 21:00 Brasília Time, pass `today('America/Sao_Paulo')` on UTC servers instead of calling `fromNow()`:
 

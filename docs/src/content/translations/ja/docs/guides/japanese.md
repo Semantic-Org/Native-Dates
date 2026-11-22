@@ -1,5 +1,5 @@
 ---
-source: '070167d78583'
+source: 'ea2690ed7f8c'
 reviewed: false
 title: 日本語
 lede: 和暦や括弧付き曜日のフォーマットからスラッシュ日付の読み取り、週の始まりの統一までを扱います。
@@ -115,7 +115,6 @@ datetime('2026-11-16T09:30', 'JST').zone; // 'Asia/Tokyo'
 
 configure({ zoneAliases: { osaka: 'Asia/Tokyo', fukuoka: 'Asia/Tokyo' } });
 datetime('2026-11-16T09:30', 'osaka').zone; // 'Asia/Tokyo'
-configure({ zoneAliases: null });
 ```
 
 日本語ロケールは壁掛けカレンダーと同じ日曜始まりになるため、月曜始まりの業務スケジュールでは `'monday'` を渡すか `weekStart` で固定します。

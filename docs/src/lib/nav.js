@@ -130,7 +130,7 @@ export const SECTIONS = [
         ],
       },
       {
-        ...named('nav.group.languages'),
+        ...named('nav.group.localization'),
         items: [
           { ...titled('nav.lang.japanese'), slug: 'examples/japanese' },
           { ...titled('nav.lang.chinese'), slug: 'examples/chinese' },

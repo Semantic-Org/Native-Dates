@@ -1,5 +1,5 @@
 ---
-source: '83ac67113f71'
+source: '109fbc324713'
 reviewed: false
 title: Português
 lede: Formate e leia datas no Brasil, em Portugal e nos países africanos de língua portuguesa.

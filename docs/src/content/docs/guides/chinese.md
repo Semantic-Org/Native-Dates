@@ -1,10 +1,10 @@
 ---
 title: Chinese
-lede: Handle regional formats and lunar calendar display across Mainland China, Taiwan, Hong Kong, and Singapore.
+lede: Handle regional date formats and lunar calendars across Chinese-speaking markets.
 updated: 2026-11-21
 ---
 
-Pass a regional tag like `'zh-CN'` or `'zh-TW'` through [Localization](/guides/localization/) to match each region's script, date order, clock cycle, and week start.
+Pass a regional tag like `'zh-CN'` or `'zh-TW'` through [Localization](/guides/localization/). Each region sets its own script, date order, clock cycle, and week start.
 
 ## China Standard Time and CST
 
@@ -69,7 +69,7 @@ sunday.locale('zh-HK').range('week').toString(); // '2026-11-15/2026-11-21'
 sunday.locale('zh-HK').startOf('week', 'monday').toString(); // '2026-11-09'
 ```
 
-In Simplified Chinese, `'Ah:mm'` prints *上午* or *下午*, while `dayPeriod: 'short'` subdivides the day into natural periods like pre-dawn *凌晨*, morning *早上*, noon *中午*, and evening *晚上*:
+In Simplified Chinese, `'Ah:mm'` prints *上午* or *下午*. Pass `dayPeriod: 'short'` for natural periods like pre-dawn *凌晨*, morning *早上*, noon *中午*, and evening *晚上*:
 
 ```js
 import { time } from 'native-dates';
@@ -101,7 +101,7 @@ slot.format('dd / ddd / dddd'); // '五 / 周五 / 星期五'
 slot.format('ddd', 'zh-TW'); // '週五'
 ```
 
-Core factories parse slash, dot, and unpadded year-first strings directly, while `dayFirst: true` with [the loose plugin](/plugins/loose/) handles Hong Kong and Singapore slash dates:
+Core factories parse slash, dot, and unpadded year-first strings directly. For Hong Kong and Singapore day-first slash dates, pass `dayFirst: true` with [the loose plugin](/plugins/loose/):
 
 ```js
 import '@native-dates/plugins/loose';
@@ -117,7 +117,7 @@ date('16/11/2026', { loose: true, dayFirst: true }).toString(); // '2026-11-16'
 
 Pass `'zh-CN-u-ca-chinese'` when formatting a date or moment so presets print stem-branch years, first-month *正月*, and leap months like *闰六月*.
 
-Token templates always read Gregorian fields. Because partial dates have no day, lunar tags fall back to Gregorian, whereas Taiwan's Minguo era `'zh-TW-u-ca-roc'` aligns with Gregorian months:
+Token templates always read Gregorian fields. Partial dates fall back to Gregorian because they have no day, while Taiwan's Minguo tag `'zh-TW-u-ca-roc'` aligns with Gregorian months:
 
 ```js
 import { date, yearMonth } from 'native-dates';

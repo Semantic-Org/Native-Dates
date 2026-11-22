@@ -1,5 +1,5 @@
 ---
-source: '3d31a1c30a49'
+source: 'cabe36d958e4'
 reviewed: false
 title: 中文
 lede: 处理中国大陆、台湾、香港与新加坡的格式差异、时区缩写和农历展示。

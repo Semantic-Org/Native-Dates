@@ -1,6 +1,6 @@
 ---
 title: Arabic
-lede: Handle Eastern and Western numerals, regional month names, Hijri dates, plural forms, and Ramadan clock shifts.
+lede: Format Arabic dates across regional calendars and Eastern or Western numeral scripts.
 updated: 2026-11-21
 ---
 
@@ -23,7 +23,7 @@ invoice.format('long', 'ar-EG-u-nu-latn'); // '16 نوفمبر 2026'
 invoice.format('long', 'ar-MA-u-nu-arab'); // '١٦ نونبر ٢٠٢٦'
 ```
 
-Token patterns always emit ASCII digits while localizing month and weekday words, whereas numeric presets insert right-to-left marks `\u200F` before slashes. Prefer `'YYYY-MM-DD'` in assertions, CSVs, and URLs:
+Token patterns always emit ASCII digits while localizing month and weekday words. Numeric presets insert right-to-left marks `\u200F` before slashes, so prefer `'YYYY-MM-DD'` in assertions, CSVs, and URLs:
 
 ```js
 invoice.format('YYYY-MM-DD', 'ar-EG'); // '2026-11-16'
@@ -61,10 +61,10 @@ Gregorian month names and 12- vs. 24-hour clocks divide into four regional famil
 
 | Region | Sample tags | Output behavior |
 |---|---|---|
-| Egypt, Gulf, Sudan | `ar-EG`, `ar-SA` | Egyptian and Gulf months like يناير, يوليو, نوفمبر with 12-hour ص / م for AM and PM. |
-| Levant and Iraq | `ar-LB`, `ar-IQ` | Levantine months like كانون الثاني, تموز, تشرين الثاني with a 12-hour clock. |
+| Egypt, Gulf, Sudan | `ar-EG, ar-SA` | Egyptian and Gulf months like يناير, يوليو, نوفمبر with 12-hour ص / م for AM and PM. |
+| Levant and Iraq | `ar-LB, ar-IQ` | Levantine months like كانون الثاني, تموز, تشرين الثاني with a 12-hour clock. |
 | Morocco | `ar-MA` | Moroccan months like ماي, يوليوز, غشت, شتنبر, نونبر, دجنبر with a 24-hour clock. |
-| Algeria and Tunisia | `ar-DZ`, `ar-TN` | Maghreb months like جانفي, فيفري, جوان, جويلية, أوت with a 12-hour clock. |
+| Algeria and Tunisia | `ar-DZ, ar-TN` | Maghreb months like جانفي, فيفري, جوان, جويلية, أوت with a 12-hour clock. |
 
 ```js
 import { datetime } from 'native-dates';
@@ -138,7 +138,7 @@ Browsers can reorder signs in ISO dates or UTC offsets inside right-to-left para
 
 ## Parsing inputs and time zones
 
-Pass `dayFirst: true` with [the loose plugin](/plugins/loose/) for day-month-year slash dates across Arabic locales, and match single-word Arabic months in partial dates:
+Pass `dayFirst: true` with [the loose plugin](/plugins/loose/) for day-month-year slash dates. Partial dates also match single-word Arabic months in loose mode:
 
 ```js
 import '@native-dates/plugins/loose';
@@ -162,7 +162,7 @@ configure({
 datetime('2026-11-16T09:00', 'Makkah').zone; // 'Asia/Riyadh'
 ```
 
-Schedule with full IANA zones rather than fixed offsets: `'Africa/Casablanca'` shifts back an hour during Ramadan, and Cairo springs forward at midnight to 01:00:
+Schedule with full IANA zones rather than fixed offsets. `'Africa/Casablanca'` shifts back an hour during Ramadan, and Cairo springs forward at midnight to 01:00:
 
 ```js
 datetime('2026-02-14T12:00', 'Africa/Casablanca').offset; // '+01:00'

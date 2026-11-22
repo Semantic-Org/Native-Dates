@@ -1,6 +1,6 @@
 ---
 title: Spanish
-lede: Handle regional formats, week starts, and clock changes across Spain and the Americas.
+lede: Handle regional Spanish date formats and clock conventions across Spain and the Americas.
 updated: 2026-11-21
 ---
 
@@ -8,7 +8,7 @@ Bare `'es'` uses Spain's Monday week start and 24-hour clock. Apps serving Latin
 
 ## Spain, Latin America, and the US
 
-Spain formats times on a 24-hour clock, while Latin America and US Spanish use 12-hour clocks with regional AM/PM spacing, date separators, and Peruvian *setiembre*:
+Spain uses a 24-hour clock. Latin America and US Spanish use 12-hour clocks with regional AM/PM spacing, date separators, and Peruvian *setiembre*:
 
 ```js
 import { datetime } from 'native-dates';
@@ -23,7 +23,7 @@ cita.format('long', 'es-PE'); // '16 de setiembre de 2026 a las 5:30 p. m.'
 cita.date.format('short', 'es-PR'); // '09/16/26'
 ```
 
-First day of the week also splits across the Spanish-speaking world, and the generic `'es-419'` Latin America tag starts on Monday unlike Mexico or Colombia:
+First day of the week also splits across the Spanish-speaking world. The generic `'es-419'` tag starts on Monday, unlike Mexico or Colombia:
 
 | Tags | Start and time | Regional convention |
 |---|---|---|
@@ -102,7 +102,7 @@ yearMonth('enero de 2026', { loose: true, locale: 'es' }).toString(); // '2026-0
 
 ## Time zones and midnight DST jumps
 
-Most of Mexico stays on UTC-6 year-round outside northern border cities and Quintana Roo, whereas `'CST'` maps to Chicago and observes US daylight saving:
+Most of Mexico stays on UTC-6 year-round outside northern border cities and Quintana Roo. `'CST'` maps to Chicago and observes US daylight saving:
 
 ```js
 import '@native-dates/plugins/zones';

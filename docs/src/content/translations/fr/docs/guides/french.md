@@ -1,5 +1,5 @@
 ---
-source: '6d8f7b342530'
+source: 'eb02cc8a081c'
 reviewed: false
 title: Français
 lede: Formatez et analysez les dates en France, au Québec, en Suisse, en Belgique et en Afrique francophone.

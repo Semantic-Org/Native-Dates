@@ -1,6 +1,6 @@
 ---
 title: French
-lede: Format and parse dates across France, Quebec, Switzerland, Belgium, and French-speaking Africa.
+lede: Format and parse French dates across regional clocks and week starts.
 updated: 2026-11-21
 ---
 
@@ -16,7 +16,7 @@ Short date order, clock separators, and first day of the week shift across Frenc
 | `fr-CA` | `'2026-11-01 14 h 30'` | `7` — Sunday | ISO date order in Canada, spaced `'h'` clock notation, and July as `'juill.'`. |
 | `fr-CH` | `'01.11.26 14:30'` | `1` — Monday | Dot separators and two-digit year in `'short'`, four digits with `'L'`. |
 | `fr-BE` | `'1/11/26 14:30'` | `1` — Monday | Unpadded day and two-digit year in `'short'`, four digits with `'L'`. |
-| `fr-DZ` | `'01/11/2026 2:30 PM'` | `6` — Saturday | Saturday week start and 12-hour clock in CLDR data. |
+| `fr-DZ` | `'01/11/2026 2:30 PM'` | `6` — Saturday | Saturday week start and 12-hour clock by default. |
 
 Pass the full regional tag so presets print local punctuation:
 
@@ -98,7 +98,7 @@ date('14.07.2026', { loose: true, dayFirst: true }); // CalendarDate(2026-07-14)
 date('2026-07-14', { loose: true, dayFirst: true }); // CalendarDate(2026-07-14)
 ```
 
-Partial dates match French month names and accented abbreviations in loose mode, while `dayMonth()` and `duration()` work in core without plugins:
+Partial dates match French month names and accented abbreviations in loose mode. `dayMonth()` and `duration()` work in core without plugins:
 
 ```js
 import { dayMonth, duration, monthDay, yearMonth } from 'native-dates';

@@ -1,5 +1,5 @@
 ---
-source: 'dc0d7b95f6cd'
+source: '8c14d62fdf29'
 reviewed: false
 title: 한국어
 lede: 한국어 마침표 날짜를 파싱하고 괄호 요일, 월요일 주간 기준, 음력 명절을 포맷합니다.

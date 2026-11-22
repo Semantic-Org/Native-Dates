@@ -1,6 +1,6 @@
 ---
 title: Korean
-lede: Parse dotted Korean dates and format parenthesized weekdays, Monday workweeks, and lunar holidays.
+lede: Parse dotted Korean dates and format weekdays and lunar holidays in Korean.
 updated: 2026-11-21
 ---
 
@@ -38,7 +38,7 @@ Avoid two-digit years in dotted inputs: `'12.11.26'` collides with month-day-yea
 
 ## Parenthesized weekdays and AM/PM order
 
-The `'full'` preset prints full weekday names like *화요일* for Tuesday, while `'llll'` and short weekday options put single-character weekdays in parentheses and join ranges across a tilde:
+The `'full'` preset prints full weekday names like *화요일* for Tuesday. `'llll'` and short weekday options put single-character weekdays in parentheses and join ranges with a tilde:
 
 ```js
 import { date } from 'native-dates';
@@ -66,7 +66,7 @@ slot.format('YYYY년 M월 D일 A h시 m분'); // '2026년 5월 5일 오후 2시 
 slot.format('MMM Do (dd)'); // '5월 5일 (화)'
 ```
 
-Korean places *오전* for AM and *오후* for PM before the hour, while `'ko-KR-u-hc-h23'` switches 12-hour presets to 24-hour time:
+Korean places *오전* for AM and *오후* for PM before the hour. Pass `'ko-KR-u-hc-h23'` to switch 12-hour presets to 24-hour time:
 
 ```js
 slot.format('medium'); // '2026. 5. 5. 오후 2:05'
@@ -101,7 +101,7 @@ today('Asia/Seoul');
 
 ## Sunday calendars and Monday workweeks
 
-Locale `'ko-KR'` starts weeks on Sunday like wall calendars, whereas Korean workweeks, settlements, and ISO `weekOfYear` count from Monday:
+Locale `'ko-KR'` starts weeks on Sunday like wall calendars. Korean workweeks, settlements, and ISO `weekOfYear` count from Monday:
 
 ```js
 import { date, weekdayNames } from 'native-dates';
@@ -128,7 +128,7 @@ wed.startOf('week').toString(); // '2026-11-16'
 
 ## Relative dates and lunar holidays
 
-Korean calendar dates return *그저께* for two days ago and *모레* for two days ahead, while `DateTime` returns *지금* at zero seconds and counted units otherwise:
+Korean calendar dates return *그저께* for two days ago and *모레* for two days ahead. `DateTime` returns *지금* at zero seconds and counted units otherwise:
 
 ```js
 import { date, datetime } from 'native-dates';

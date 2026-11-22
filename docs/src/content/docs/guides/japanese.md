@@ -19,7 +19,7 @@ date('2026-11-16').format('short', 'ja-u-ca-japanese'); // 'R8/11/16'
 date('2026-11-16').format('llll', 'ja-u-ca-japanese'); // '令和8年11月16日(月)'
 ```
 
-Token templates like `'YYYY年M月D日'` and the `year` property always read Gregorian years, even when an imperial locale is set on the value. Use presets or options objects when you want era names:
+Token templates like `'YYYY年M月D日'` and the `year` property always read Gregorian years, even with an imperial locale attached. Use presets or options objects when you want era names:
 
 ```js
 const reiwa = date('2026-11-16').locale('ja-u-ca-japanese');
@@ -63,7 +63,7 @@ day.format('MMMMDo(ddd)'); // '11月16日(月)'
 day.format({ month: 'long', day: 'numeric', weekday: 'short' }); // '11月16日(月)'
 ```
 
-Time defaults to 24-hour notation. Pass `hour12: true` to format midnight and noon as 0-based *午前0:30* and *午後0:30* per Japanese convention, whereas `'Ah:mm'` counts from 1 to 12:
+Time defaults to 24-hour notation. Pass `hour12: true` for Japanese 0-based *午前0:30* and *午後0:30*, or use `'Ah:mm'` to count from 1 to 12:
 
 ```js
 import { datetime } from 'native-dates';
@@ -114,7 +114,6 @@ datetime('2026-11-16T09:30', 'JST').zone; // 'Asia/Tokyo'
 
 configure({ zoneAliases: { osaka: 'Asia/Tokyo', fukuoka: 'Asia/Tokyo' } });
 datetime('2026-11-16T09:30', 'osaka').zone; // 'Asia/Tokyo'
-configure({ zoneAliases: null });
 ```
 
 Japanese locales start weeks on Sunday like wall calendars. Pass `'monday'` or pin `weekStart` when building Monday-first business schedules:
@@ -147,7 +146,7 @@ span.format('M月D日(ddd)'); // '11月16日(月) – 11月20日(金)'
 time('09:00').to('17:30').format('short', 'ja-JP'); // '9時00分～17時30分'
 ```
 
-`CalendarDate` returns natural words out to *一昨日* for two days ago and *明後日* for two days ahead, while `DateTime` outputs counted units so hour differences never misread as calendar days:
+`CalendarDate` returns natural words out to *一昨日* for two days ago and *明後日* for two days ahead. `DateTime` always outputs counted units so hour differences never misread as calendar days:
 
 ```js
 import { date, datetime, duration } from 'native-dates';

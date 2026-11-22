@@ -20,7 +20,7 @@ release.format('medium'); // '16 нояб. 2026 г.'
 yearMonth('2026-11').format('long', 'ru'); // 'ноябрь 2026 г.'
 ```
 
-Custom token patterns omit *г.* for compact UI labels, switching `MMMM` and `MMM` from nominative *май* to genitive *мая* for May right after a day token:
+Custom token patterns omit *г.* for compact UI labels. Right after a day token, `MMMM` and `MMM` switch from nominative *май* to genitive *мая*:
 
 ```js
 const may = date('2026-05-06').locale('ru');
@@ -51,7 +51,7 @@ weekdayNames('narrow', undefined, 'ru');
 date('2026-11-16').format('dddd, D MMMM', 'ru'); // 'понедельник, 16 ноября'
 ```
 
-Russian dates place no period after the day number, so `Do` outputs a plain number unless customized alongside capitalized weekdays in [`configure()`](/api/configure/):
+Russian dates place no period after the day number, so `Do` outputs a plain number. Customize ordinals or capitalized weekdays in [`configure()`](/api/configure/):
 
 ```js
 import { configure, date } from 'native-dates';
@@ -115,7 +115,7 @@ datetime('16.11.2026, 14:30', { zone: 'Europe/Moscow', loose: true });
 Without `dayFirst`, loose mode defaults to month-first order. Input `'16.11.2026'` returns `null`, while `'06.11.2026'` becomes June 11 instead of November 6.
 :::
 
-Core reads dotted day-month and month-year pairs directly, and loose mode matches both nominative and genitive Russian month names on partial dates:
+Core reads dotted day-month and month-year pairs directly. Loose mode matches both nominative and genitive Russian month names on partial dates:
 
 ```js
 import { dayMonth, monthDay, monthYear, yearMonth } from 'native-dates';
