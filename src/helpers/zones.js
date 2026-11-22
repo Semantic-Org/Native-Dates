@@ -202,4 +202,6 @@ const weekInfo = (tag) => {
 export const weekStart = (override, tag) =>
   override !== undefined ? dayOfWeek(override) : settings.weekStart ?? weekInfo(tag).firstDay;
 
-export const isWeekend = (day, tag) => weekInfo(tag).weekend.includes(day);
+export const weekendDays = (tag) => weekInfo(tag).weekend;
+
+export const isWeekend = (day, tag) => weekendDays(tag).includes(day);

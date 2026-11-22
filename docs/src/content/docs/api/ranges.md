@@ -357,7 +357,7 @@ timeRange('22:00', '02:00').every(1, 'hour').map(String);
 dateRange.count(kind?): number
 ```
 
-Counts calendar days inside a `DateRange` without allocating intermediate date instances. Pass `'days'` (the default), `'weekdays'`, `'weekends'`, or a weekday name such as `'mondays'`.
+Counts calendar days inside a `DateRange` without allocating intermediate date instances. Pass `'days'` (the default), `'weekdays'`, `'weekends'`, or a weekday name such as `'mondays'`. `'weekdays'` and `'weekends'` follow the active locale's weekend days.
 
 **Parameters**
 
