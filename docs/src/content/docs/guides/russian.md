@@ -1,7 +1,7 @@
 ---
 title: Russian
 lede: Format inflected months and plural units in Russian, and parse dotted dates and regional time zones.
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 Pass `'ru'` through [Localization](/guides/localization/) to format dates in Russian. Built-in `Intl` data handles grammatical month cases and three-way duration plurals with zero locale files.
@@ -31,10 +31,10 @@ may.format('D MMM'); // '6 мая'
 date('2026-03-08').format('D MMM', 'ru'); // '8 мар.'
 ```
 
-Wrap literal case endings like `[-го]` in brackets between the day and month so genitive inflection still applies to `MMMM`:
+Literal case endings like `-го` between the day and month keep genitive inflection on `MMMM`, with or without brackets:
 
 ```js
-may.format('D[-го] MMMM'); // '6-го мая'
+may.format('D-го MMMM'); // '6-го мая'
 ```
 
 ## Weekdays, lowercase names, and day numbers
@@ -98,22 +98,21 @@ moment.plus(2, 'days').from(moment); // 'через 2 дня'
 
 ## Parsing dotted dates and Russian month names
 
-Core accepts year-first `'2026.11.16'` strings and rejects day-first dots. Load [the loose plugin](/plugins/loose/) and enable `dayFirst` to read dotted day-first dates:
+Core accepts year-first `'2026.11.16'` strings. With [the loose plugin](/plugins/loose/), `locale: 'ru'` reads day-first dotted dates, inflected month names, and the *г.* year suffix automatically without setting `dayFirst`:
 
 ```js
 import '@native-dates/plugins/loose';
-import { configure, date, datetime } from 'native-dates';
+import { date, datetime } from 'native-dates';
 
-configure({ dayFirst: true });
-
-date('16.11.2026', { loose: true }); // CalendarDate(2026-11-16)
-date('06.11.2026', { loose: true }); // CalendarDate(2026-11-06)
-datetime('16.11.2026, 14:30', { zone: 'Europe/Moscow', loose: true });
+date('16.11.2026', { loose: true, locale: 'ru' })?.toString(); // '2026-11-16'
+date('06.11.2026', { loose: true, locale: 'ru' })?.toString(); // '2026-11-06'
+date('16 ноября 2026 г.', { loose: true, locale: 'ru' })?.toString(); // '2026-11-16'
+datetime('16.11.2026, 14:30', {
+  zone: 'Europe/Moscow',
+  locale: 'ru',
+  loose: true,
+})?.hour; // 14
 ```
-
-:::warning[Swapped day and month values]
-Without `dayFirst`, loose mode defaults to month-first order. Input `'16.11.2026'` returns `null`, while `'06.11.2026'` becomes June 11 instead of November 6.
-:::
 
 Core reads dotted day-month and month-year pairs directly. Loose mode matches both nominative and genitive Russian month names on partial dates:
 
@@ -123,35 +122,33 @@ import { dayMonth, monthDay, monthYear, yearMonth } from 'native-dates';
 dayMonth('06.11').toString(); // '11-06'
 monthYear('11.2026').toString(); // '2026-11'
 monthDay('16 ноября', { loose: true, locale: 'ru' })?.toString(); // '11-16'
-yearMonth('ноябрь 2026', { loose: true, locale: 'ru' })?.toString(); // '2026-11'
+yearMonth('ноябрь 2026 г.', { loose: true, locale: 'ru' })?.toString(); // '2026-11'
 ```
 
 ## Time zones across Russia and neighboring countries
 
 Russia spans eleven time zones without seasonal clock changes, and Kazakhstan unified on UTC+5 in 2024. Full IANA identifiers preserve historical offset transitions across every zone.
 
-With [the zones plugin](/plugins/zones/), IANA city names match in any letter case, and `zoneAliases` maps abbreviations, alternate spellings, and Cyrillic names:
+With [the zones plugin](/plugins/zones/), IANA cities, `'MSK'`, `'мск'`, `'Москва'`, Saint Petersburg, `'SPB'`, Kazan, Ekaterinburg, and Astana resolve directly with no aliases:
 
 | Input | Default status | Resolution |
 |---|---|---|
 | `'Europe/Moscow'`, `'Asia/Almaty'` | Works in core | Full IANA identifiers work out of the box and keep historical offset rules. |
 | `'Moscow'`, `'Yekaterinburg'`, `'Minsk'` | Works with plugin | Cities present in IANA identifiers match in any letter case with the zones plugin. |
-| `'MSK'`, `'SPB'`, `'Kazan'`, `'Astana'`, `'мск'` | Needs alias | Map local abbreviations, unlisted cities, and Cyrillic names in `zoneAliases`. |
-
-Register project aliases once in [`configure()`](/api/configure/):
+| `'MSK'`, `'мск'`, `'SPB'`, `'Kazan'`, `'Astana'` | Works with plugin | Built-in regional abbreviations, alternate spellings, and Cyrillic names resolve directly. |
 
 ```js
+import '@native-dates/plugins/loose';
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
+import { datetime } from 'native-dates';
 
-configure({
-  zoneAliases: {
-    MSK: 'Europe/Moscow',
-    мск: 'Europe/Moscow',
-    Astana: 'Asia/Almaty',
-  },
-});
 datetime('2026-11-16T12:00:00Z', 'MSK').format('HH:mm', 'ru'); // '15:00'
 datetime('2026-11-16T12:00:00Z', 'мск').zone; // 'Europe/Moscow'
+datetime('2026-11-16T12:00:00Z', 'SPB').zone; // 'Europe/Moscow'
 datetime('2026-11-16T12:00:00Z', 'Astana').offset; // '+05:00'
+datetime('16 ноября 2026 14:30 мск', {
+  loose: true,
+  locale: 'ru',
+  zone: 'UTC',
+})?.toString(); // '2026-11-16T11:30:00.000Z'
 ```

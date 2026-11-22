@@ -1,5 +1,5 @@
 ---
-source: '109fbc324713'
+source: 0bb440c74fbf
 reviewed: false
 title: Português
 lede: Formate e leia datas em português nos padrões do Brasil, da Europa e da África.
@@ -9,18 +9,21 @@ Passe `'pt-BR'` ou `'pt-PT'` em [Localização](/guides/localization/) para form
 
 ## Lendo datas no padrão dia/mês/ano
 
-Strings ISO com ano na frente nunca invertem mês e dia. Para entradas com barras ou pontos, carregue [o plugin flexível](/plugins/loose/) com `dayFirst` para que `'06/11/2026'` seja lido como 6 de novembro:
+Strings ISO com ano na frente nunca invertem mês e dia. Com [o plugin flexível](/plugins/loose/), os locales em português leem datas com barras, com pontos e por extenso no padrão dia/mês/ano automaticamente, sem precisar definir `dayFirst`:
 
 ```js
 import '@native-dates/plugins/loose';
-import { configure, date } from 'native-dates';
+import { date, datetime } from 'native-dates';
 
-date('06/11/2026', { loose: true })?.toString(); // '2026-06-11'
-
-configure({ dayFirst: true });
-date('06/11/2026', { loose: true })?.toString(); // '2026-11-06'
-date('16.11.2026', { loose: true })?.toString(); // '2026-11-16'
-date('29/02/2026', { loose: true }); // null
+date('06/11/2026', { loose: true, locale: 'pt-BR' })?.toString(); // '2026-11-06'
+date('16.11.2026', { loose: true, locale: 'pt-PT' })?.toString(); // '2026-11-16'
+date('16 de novembro de 2026', { loose: true, locale: 'pt-BR' })?.toString(); // '2026-11-16'
+datetime('16 de novembro de 2026 às 14:30', {
+  loose: true,
+  locale: 'pt-BR',
+  zone: 'America/Sao_Paulo',
+})?.hour; // 14
+date('29/02/2026', { loose: true, locale: 'pt-BR' }); // null
 ```
 
 Em datas parciais, pares numéricos de dia-mês e mês-ano são lidos no núcleo sem plugins, e o modo flexível reconhece meses em português:
@@ -50,7 +53,7 @@ consulta.format('long'); // '16 de novembro de 2026 às 14:30'
 date('2026-11-16').format('medium', 'pt-PT'); // '16/11/2026'
 ```
 
-Envolva palavras literais entre colchetes nos padrões de tokens, incluindo `'[de]'` e `'[às]'` antes do horário:
+Envolva palavras literais entre colchetes nos padrões de tokens, incluindo `'[de]'` e `'[às]'` antes do horário. Deixar `'às'` sem colchetes lança `unknownFormat` em vez de expandir `s` como segundos:
 
 ```js
 consulta.format('DD/MM/YYYY [às] HH:mm'); // '16/11/2026 às 14:30'
@@ -104,24 +107,26 @@ O Brasil abrange quatro fusos horários e encerrou o horário de verão em 2019,
 
 | Fuso no Brasil | Zona IANA principal | Demais zonas e siglas |
 |---|---|---|
-| Fernando de Noronha | `America/Noronha` | UTC-2. Resolve `'Noronha'`; cadastre `'FNT'` em `zoneAliases`. |
-| Horário de Brasília | `America/Sao_Paulo` | UTC-3, junto com Bahia, Recife, Fortaleza e Belém; resolve `'BRT'`. |
-| Amazonas e Mato Grosso | `America/Manaus` | UTC-4, junto com Cuiabá, Campo Grande e Porto Velho; cadastre `'AMT'`. |
-| Acre | `America/Rio_Branco` | UTC-5, junto com Eirunepé; cadastre `'ACT'`, que aponta para Adelaide. |
+| Fernando de Noronha | `America/Noronha` | UTC-2. Resolve `'Noronha'` e `'FNT'` diretamente. |
+| Horário de Brasília | `America/Sao_Paulo` | UTC-3, junto com Bahia, Recife, Fortaleza e Belém; resolve `'BRT'`, Brasília, Rio de Janeiro, Belo Horizonte e Salvador. |
+| Amazonas e Mato Grosso | `America/Manaus` | UTC-4, junto com Cuiabá, Campo Grande e Porto Velho; resolve `'AMT'`. |
+| Acre | `America/Rio_Branco` | UTC-5, junto com Eirunepé; resolve `'ACT'` automaticamente em `'pt-BR'`. |
 
-Com [o plugin de fusos](/plugins/zones/), cidades IANA acentuadas e `'BRT'` funcionam direto, e `zoneAliases` mapeia siglas regionais ou cidades fora da IANA:
+Com [o plugin de fusos](/plugins/zones/), cidades e siglas brasileiras são resolvidas nativamente, incluindo `'BRT'` inline em strings flexíveis:
 
 ```js
+import '@native-dates/plugins/loose';
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
-
-configure({
-  zoneAliases: { brasilia: 'America/Sao_Paulo', act: 'America/Rio_Branco' },
-});
+import { datetime } from 'native-dates';
 
 datetime('2026-11-16T14:00', 'BRT').zone; // 'America/Sao_Paulo'
-datetime('2026-11-16T14:00', 'São Paulo').in('ACT').format('HH:mm Z');
-// '12:00 -05:00'
+datetime('2026-11-16T14:00', 'Brasília').zone; // 'America/Sao_Paulo'
+datetime('2026-11-16T14:00', 'São Paulo')
+  .locale('pt-BR')
+  .in('ACT')
+  .format('HH:mm Z'); // '12:00 -05:00'
+datetime('2026-11-16 14:30 BRT', { loose: true, zone: 'UTC' })?.toString();
+// '2026-11-16T17:30:00.000Z'
 ```
 
 Datas de calendário retornam palavras naturais até *anteontem* e *depois de amanhã*, enquanto `DateTime` conta horas corridas e diferencia expressões futuras entre Brasil e Portugal.

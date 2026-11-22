@@ -1,5 +1,5 @@
 ---
-source: 'cabe36d958e4'
+source: de72f94c712b
 reviewed: false
 title: 中文
 lede: 处理各中文地区的日期格式与农历显示。
@@ -9,7 +9,7 @@ lede: 处理各中文地区的日期格式与农历显示。
 
 ## 中国标准时间与 CST 缩写
 
-表示北京时间请传入 `'Asia/Shanghai'`。不同于固定的东八区偏移，它能输出本地化时区名，并保留 1986 至 1991 年的中国夏令时偏移：
+表示北京时间请传入 `'Asia/Shanghai'`。不同于固定的东八区偏移，它能输出本地化时区名（如 *中国标准时间*），并保留 1986 至 1991 年的中国夏令时偏移：
 
 ```js
 import { datetime } from 'native-dates';
@@ -20,18 +20,17 @@ release.format('YYYY-MM-DD HH:mm zzzz'); // '2026-11-16 17:30 中国标准时间
 datetime('1988-07-15T00:00:00Z', 'Asia/Shanghai').offset; // '+09:00'
 ```
 
-按北美惯例，[时区插件](/plugins/zones/)将 `'CST'` 映射为芝加哥时间，并将乌鲁木齐解析为东六区新疆时间。可在 `zoneAliases` 中重定向该缩写或补充深圳等大陆城市：
+加载[时区插件](/plugins/zones/)后，`'CST'` 会跟随当前区域设置，在 `'zh-CN'` 下解析为 `'Asia/Shanghai'`，在 `'zh-TW'` 下解析为 `'Asia/Taipei'`。北京、深圳、广州等主要城市以及 `'北京'` 无需配置别名即可开箱解析，而乌鲁木齐仍保持东六区新疆时间：
 
 ```js
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
+import { datetime } from 'native-dates';
 
-datetime('2026-11-16T09:30:00Z', 'CST').zone; // 'America/Chicago'
-datetime('2026-11-16T09:30:00Z', 'Urumqi').offset; // '+06:00'
-
-configure({ zoneAliases: { CST: 'Asia/Shanghai', shenzhen: 'Asia/Shanghai' } });
-datetime('2026-11-16T09:30:00Z', 'CST').zone; // 'Asia/Shanghai'
+datetime('2026-11-16T09:30:00Z', { zone: 'CST', locale: 'zh-CN' }).zone; // 'Asia/Shanghai'
+datetime('2026-11-16T09:30:00Z', { zone: 'CST', locale: 'zh-TW' }).zone; // 'Asia/Taipei'
+datetime('2026-11-16T09:30:00Z', 'Beijing').zone; // 'Asia/Shanghai'
 datetime('2026-11-16T09:30:00Z', 'Shenzhen').format('HH:mm', 'zh-CN'); // '17:30'
+datetime('2026-11-16T09:30:00Z', 'Urumqi').offset; // '+06:00'
 ```
 
 ## 地区差异
@@ -102,16 +101,24 @@ slot.format('dd / ddd / dddd'); // '五 / 周五 / 星期五'
 slot.format('ddd', 'zh-TW'); // '週五'
 ```
 
-核心函数直接解析斜杠、句点及不补零的年先头字符串，配合[宽松解析插件](/plugins/loose/)与 `dayFirst: true` 即可读取香港和新加坡的斜杠日期：
+核心函数可直接解析年先头的汉字日期、斜杠与句点格式，无需插件即可往返还原 `format('long')` 的输出。若需解析香港的日月年斜杠日期、全角数字、上下午时间或行内 `'CST'`，请加载[宽松解析插件](/plugins/loose/)：
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, datetime } from 'native-dates';
+import '@native-dates/plugins/zones';
+import { date, datetime, monthDay, time, yearMonth } from 'native-dates';
 
-date('2026/1/5').toString(); // '2026-01-05'
-datetime('2026.11.6 9:30', 'Asia/Shanghai').format('YYYY-MM-DD HH:mm');
-// '2026-11-06 09:30'
-date('16/11/2026', { loose: true, dayFirst: true }).toString(); // '2026-11-16'
+date('2026年11月16日').toString(); // '2026-11-16'
+yearMonth('2026年11月').toString(); // '2026-11'
+date('16/11/2026', { loose: true, locale: 'zh-HK' })?.toString(); // '2026-11-16'
+date('２０２６年１１月１６日', { loose: true })?.toString(); // '2026-11-16'
+time('下午5:05', { loose: true, locale: 'zh-TW' })?.toString(); // '17:05:00'
+monthDay('11月16日', { loose: true })?.toString(); // '11-16'
+datetime('2026年11月16日 14:30 CST', {
+  loose: true,
+  locale: 'zh-CN',
+  zone: 'UTC',
+})?.toString(); // '2026-11-16T06:30:00.000Z'
 ```
 
 ## 农历与民国纪年

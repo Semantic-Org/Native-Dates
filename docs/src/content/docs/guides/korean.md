@@ -1,40 +1,42 @@
 ---
 title: Korean
 lede: Parse dotted Korean dates and format weekdays and lunar holidays.
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 Pass `'ko-KR'` through [Localization](/guides/localization/) to format dates in Korean. Korean presets print spaced dots with a trailing period like `'2026. 11. 16.'` and place *오전* or *오후* before the hour.
 
 ## Dotted dates and Korean strings
 
-Compact year-first dot strings parse directly in core, while Korean presets add standard spaces and a trailing dot:
+Spaced Korean dot dates with trailing periods and Hangul unit strings parse directly in core with no plugins:
 
 ```js
-import { date } from 'native-dates';
+import { date, datetime, yearMonth } from 'native-dates';
 
-date('2026.11.16').locale('ko-KR').text; // '2026. 11. 16.'
-date('2026.1.5').toString(); // '2026-01-05'
+date('2026. 11. 16.').toString(); // '2026-11-16'
+date('2026년 11월 16일').toString(); // '2026-11-16'
+datetime('2026. 11. 16. 14:30', 'Asia/Seoul').toString(); // '2026-11-16T05:30:00.000Z'
+yearMonth('2026년 11월').toString(); // '2026-11'
 ```
 
-Import [the loose plugin](/plugins/loose/) and enable loose mode to read spaced dotted dates and timestamps from Korean portals or bank statements:
+Import [the loose plugin](/plugins/loose/) with `locale: 'ko'` to read two-digit year-first Korean short dates, *오전* / *오후* clocks, and Hangul month-days:
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, datetime } from 'native-dates';
+import { date, monthDay, time } from 'native-dates';
 
-date('2026. 11. 16.', { loose: true })?.toString(); // '2026-11-16'
-datetime('2026. 11. 16. 14:30', { zone: 'Asia/Seoul', loose: true })?.toString();
-// '2026-11-16T05:30:00.000Z'
+date('26. 5. 5.', { loose: true, locale: 'ko' })?.toString(); // '2026-05-05'
+date('12.11.26', { loose: true, locale: 'ko' })?.toString(); // '2012-11-26'
+time('오후 2:30', { loose: true, locale: 'ko' })?.toString(); // '14:30:00'
+monthDay('11월 16일', { loose: true })?.toString(); // '11-16'
 ```
 
-Avoid two-digit years in dotted inputs: `'12.11.26'` collides with month-day-year order, so pass four-digit years or separate year, month, and day numbers:
+Pass `locale: 'ko'` whenever reading two-digit years, since `'12.11.26'` reads as December 11, 2026 under an `en-US` runtime:
 
 | Input | Result | Handling |
 |---|---|---|
-| `'2026-11-16'`, `'2026.11.16'` | Parsed in core | Pass directly with no plugin. |
-| `'2026. 11. 16.'`, `'2026. 11. 16. 14:30'` | Parsed in loose mode | Import the loose plugin and pass `{ loose: true }`. |
-| `'26. 5. 5.'`, `'12.11.26'` | Ambiguous year | Expand to a four-digit year or pass numeric `(year, month, day)` arguments. |
+| `'2026. 11. 16.'`, `'2026년 11월 16일'` | Parsed in core | Pass directly with no plugin. |
+| `'26. 5. 5.'`, `'12.11.26'`, `'오후 2:30'` | Parsed in loose mode | Import the loose plugin and pass `{ loose: true, locale: 'ko' }`. |
 
 ## Parenthesized weekdays and AM/PM order
 
@@ -75,16 +77,18 @@ slot.format('medium', 'ko-KR-u-hc-h23'); // '2026. 5. 5. 14:05'
 
 ## Korea Standard Time and zone aliases
 
-Core accepts `'Asia/Seoul'` and fixed offsets. Import [the zones plugin](/plugins/zones/) to resolve `'KST'` and custom aliases for domestic cities or Hangul names:
+Core accepts `'Asia/Seoul'` and fixed offsets. Import [the zones plugin](/plugins/zones/) to resolve `'KST'`, `'서울'`, and Busan out of the box, including inline `'KST'` inside loose strings:
 
 ```js
+import '@native-dates/plugins/loose';
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
-
-configure({ zoneAliases: { busan: 'Asia/Seoul', 서울: 'Asia/Seoul' } });
+import { datetime } from 'native-dates';
 
 datetime('2026-11-16T14:30', 'KST').zone; // 'Asia/Seoul'
 datetime('2026-11-16T14:30', '서울').zone; // 'Asia/Seoul'
+datetime('2026-11-16T14:30', 'Busan').zone; // 'Asia/Seoul'
+datetime('2026. 11. 16. 14:30 KST', { loose: true, zone: 'UTC' })?.toString();
+// '2026-11-16T05:30:00.000Z'
 ```
 
 Short Korean zones print GMT+9, while `'zzz'` outputs the full Korean name *한국 표준시*. Because UTC servers stay on yesterday until 8:59 AM in Korea, pass Seoul to `today()`:

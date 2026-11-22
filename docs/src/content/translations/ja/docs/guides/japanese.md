@@ -1,5 +1,5 @@
 ---
-source: '35dcdba4a497'
+source: a6821d46a0ad
 reviewed: false
 title: 日本語
 lede: 和暦や括弧付き曜日のフォーマットからスラッシュ日付の読み取り、週の始まりの統一までを扱います。
@@ -78,18 +78,29 @@ midnight.format('Ah:mm'); // '午前12:30'
 
 ## スラッシュ表記と和暦入力
 
-日本の CSV や業務フォームで一般的な年先頭のスラッシュ区切りやドット区切りは、プラグインなしでコア機能のまま読み取れます。
+日本の CSV や業務フォームで一般的な年先頭の漢字表記・スラッシュ区切り・ドット区切りは、プラグインなしでコア機能のまま読み取れます。
 
 ```js
 import { date, datetime, yearMonth } from 'native-dates';
 
-date('2026/11/16'); // CalendarDate(2026-11-16)
-date('2026/1/5'); // CalendarDate(2026-01-05)
-datetime('2026/11/16 9:30', 'Asia/Tokyo'); // 2026-11-16T00:30:00.000Z
-yearMonth('2026/11'); // YearMonth(2026-11)
+date('2026年11月16日').toString(); // '2026-11-16'
+date('2026/1/5').toString(); // '2026-01-05'
+datetime('2026年11月16日 9:30', 'Asia/Tokyo').toString(); // '2026-11-16T00:30:00.000Z'
+yearMonth('2026年11月').toString(); // '2026-11'
 ```
 
-フォームで元号と年数を別々の欄で受け取る場合は、`Temporal.PlainDate` で和暦から西暦へ変換して渡します。
+[loose プラグイン](/plugins/loose/)を使えば、全角の数字や記号、*午前* / *午後* の時刻表記、漢字の月日表記も手動で正規化せずにそのまま読み取れます。
+
+```js
+import '@native-dates/plugins/loose';
+import { date, monthDay, time } from 'native-dates';
+
+date('２０２６／１１／１６', { loose: true })?.toString(); // '2026-11-16'
+time('午後2:30', { loose: true, locale: 'ja' })?.toString(); // '14:30:00'
+monthDay('11月16日', { loose: true })?.toString(); // '11-16'
+```
+
+`'令和8年11月16日'` のような元号文字列は構造化された入力が引き続き必要です。フォームで元号と年数を別々の欄で受け取る場合は、事前にカレンダー変換を行わずに和暦の `Temporal.PlainDate` をそのまま `date()` に渡せます。
 
 ```js
 const reiwaInput = Temporal.PlainDate.from({
@@ -98,23 +109,22 @@ const reiwaInput = Temporal.PlainDate.from({
   eraYear: 8,
   month: 11,
   day: 16,
-}).withCalendar('iso8601');
+});
 
 date(reiwaInput).toString(); // '2026-11-16'
 ```
 
 ## タイムゾーンと週の始まり
 
-コアは `'Asia/Tokyo'` と固定オフセットを受け付け、[zones プラグイン](/plugins/zones/)で `'JST'` も使えます。IANA には日本の都市として東京しか登録されていないため、大阪や福岡などの拠点名はエイリアスに登録します。
+コアは `'Asia/Tokyo'` と固定オフセットを受け付け、[zones プラグイン](/plugins/zones/)を使えば `'JST'` や `'東京'`、大阪・京都・福岡といった主要都市もそのまま解決できます。
 
 ```js
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
+import { datetime } from 'native-dates';
 
 datetime('2026-11-16T09:30', 'JST').zone; // 'Asia/Tokyo'
-
-configure({ zoneAliases: { osaka: 'Asia/Tokyo', fukuoka: 'Asia/Tokyo' } });
-datetime('2026-11-16T09:30', 'osaka').zone; // 'Asia/Tokyo'
+datetime('2026-11-16T09:30', 'Osaka').zone; // 'Asia/Tokyo'
+datetime('2026-11-16T09:30', '東京').zone; // 'Asia/Tokyo'
 ```
 
 日本語ロケールは壁掛けカレンダーと同じ日曜始まりになるため、月曜始まりの業務スケジュールでは `'monday'` を渡すか `weekStart` で固定します。

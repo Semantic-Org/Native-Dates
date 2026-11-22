@@ -1,5 +1,5 @@
 ---
-source: 'a7805d3a492b'
+source: c90ffef7bf88
 reviewed: false
 title: 한국어
 lede: 한국어 마침표 날짜를 파싱하고 요일과 음력 명절을 포맷합니다.
@@ -9,33 +9,35 @@ lede: 한국어 마침표 날짜를 파싱하고 요일과 음력 명절을 포�
 
 ## 마침표 날짜와 한국어 문자열
 
-공백 없는 연도 우선 점 표기는 코어에서 바로 읽히며, 한국어 프리셋으로 찍으면 표준 띄어쓰기와 끝 마침표가 붙습니다.
+공백과 끝 마침표가 있는 한국어 마침표 날짜와 한글 단위 문자열은 플러그인 없이 코어에서 바로 파싱됩니다.
 
 ```js
-import { date } from 'native-dates';
+import { date, datetime, yearMonth } from 'native-dates';
 
-date('2026.11.16').locale('ko-KR').text; // '2026. 11. 16.'
-date('2026.1.5').toString(); // '2026-01-05'
+date('2026. 11. 16.').toString(); // '2026-11-16'
+date('2026년 11월 16일').toString(); // '2026-11-16'
+datetime('2026. 11. 16. 14:30', 'Asia/Seoul').toString(); // '2026-11-16T05:30:00.000Z'
+yearMonth('2026년 11월').toString(); // '2026-11'
 ```
 
-포털이나 명세서의 공백 있는 마침표 날짜와 시각은 [느슨한 파싱 플러그인](/plugins/loose/)을 불러와 느슨한 모드로 읽습니다.
+두 자리 연도 우선 한국어 단축 날짜, *오전*·*오후* 시각, 한글 월·일 표기를 읽으려면 [느슨한 파싱 플러그인](/plugins/loose/)을 불러와 `locale: 'ko'` 옵션을 넘기세요.
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, datetime } from 'native-dates';
+import { date, monthDay, time } from 'native-dates';
 
-date('2026. 11. 16.', { loose: true })?.toString(); // '2026-11-16'
-datetime('2026. 11. 16. 14:30', { zone: 'Asia/Seoul', loose: true })?.toString();
-// '2026-11-16T05:30:00.000Z'
+date('26. 5. 5.', { loose: true, locale: 'ko' })?.toString(); // '2026-05-05'
+date('12.11.26', { loose: true, locale: 'ko' })?.toString(); // '2012-11-26'
+time('오후 2:30', { loose: true, locale: 'ko' })?.toString(); // '14:30:00'
+monthDay('11월 16일', { loose: true })?.toString(); // '11-16'
 ```
 
-마침표 입력에서 두 자리 연도는 피하세요. `'12.11.26'`은 월·일·연 순서와 겹치므로 네 자리 연도나 연·월·일 숫자 인자를 각각 넘깁니다.
+두 자리 연도를 읽을 때는 항상 `locale: 'ko'`를 넘기세요. `en-US` 런타임에서는 `'12.11.26'`이 2026년 12월 11일로 해석됩니다.
 
 | 입력 문자열 | 파싱 결과 | 권장 처리 방식 |
 |---|---|---|
-| `'2026-11-16'`, `'2026.11.16'` | 코어에서 바로 파싱 | 플러그인 없이 그대로 전달합니다. |
-| `'2026. 11. 16.'`, `'2026. 11. 16. 14:30'` | 느슨한 파싱에서 성공 | 느슨한 파싱 플러그인을 불러와 `{ loose: true }` 옵션을 켭니다. |
-| `'26. 5. 5.'`, `'12.11.26'` | 연도 자리 모호함 | 네 자리 연도로 넓히거나 숫자 `(year, month, day)` 인자로 넘깁니다. |
+| `'2026. 11. 16.'`, `'2026년 11월 16일'` | 코어에서 바로 파싱 | 플러그인 없이 그대로 전달합니다. |
+| `'26. 5. 5.'`, `'12.11.26'`, `'오후 2:30'` | 느슨한 모드에서 파싱 | 느슨한 파싱 플러그인을 불러와 `{ loose: true, locale: 'ko' }`를 넘깁니다. |
 
 ## 괄호 요일과 오전·오후 어순
 
@@ -76,16 +78,18 @@ slot.format('medium', 'ko-KR-u-hc-h23'); // '2026. 5. 5. 14:05'
 
 ## 한국 표준시와 시간대 별칭
 
-코어는 `'Asia/Seoul'`과 고정 오프셋을 받으며, [시간대 플러그인](/plugins/zones/)을 불러오면 `'KST'`와 국내 도시·한글 별칭을 해석합니다.
+코어는 `'Asia/Seoul'`과 고정 오프셋을 받으며, [시간대 플러그인](/plugins/zones/)을 불러오면 느슨한 문자열 안의 인라인 `'KST'`를 포함해 `'KST'`, `'서울'`, Busan을 별도 설정 없이 바로 해석합니다.
 
 ```js
+import '@native-dates/plugins/loose';
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
-
-configure({ zoneAliases: { busan: 'Asia/Seoul', 서울: 'Asia/Seoul' } });
+import { datetime } from 'native-dates';
 
 datetime('2026-11-16T14:30', 'KST').zone; // 'Asia/Seoul'
 datetime('2026-11-16T14:30', '서울').zone; // 'Asia/Seoul'
+datetime('2026-11-16T14:30', 'Busan').zone; // 'Asia/Seoul'
+datetime('2026. 11. 16. 14:30 KST', { loose: true, zone: 'UTC' })?.toString();
+// '2026-11-16T05:30:00.000Z'
 ```
 
 짧은 시간대는 GMT+9로 찍히고 한글 명칭은 `'zzz'` 토큰으로 출력합니다. UTC 서버는 오전 8시 59분까지 전날에 머무르므로 `today()`에 서울 시간대를 명시하세요.

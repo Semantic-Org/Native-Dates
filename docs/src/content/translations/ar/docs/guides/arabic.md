@@ -1,5 +1,5 @@
 ---
-source: '9ef2ba4c728f'
+source: f429abeeaad0
 reviewed: false
 title: العربية
 lede: نسّق التواريخ العربية عبر التقويمات الإقليمية والأرقام المشرقية أو الغربية.
@@ -95,20 +95,15 @@ wed.locale('ar-AE').startOf('week').toString(); // '2026-11-16'
 weekdayNames('narrow', undefined, 'ar-EG')[0]; // 'س'
 ```
 
-:::warning[عطلة الجمعة والسبت]
-تفحص `isWeekend()` يومي السبت والأحد وفق معيار ISO دائمًا بصرف النظر عن الإعداد المحلي. في أسواق عطلة الجمعة والسبت مثل السعودية ومصر وقطر والأردن، افحص `dayOfWeek` مباشرة لأن الأحد يوم عمل.
-:::
+تتبع `isWeekend()` و`isWeekday()` الإعداد المحلي النشط أيضًا. في أسواق عطلة الجمعة والسبت مثل السعودية ومصر، يكون الجمعة عطلة نهاية أسبوع والأحد يوم عمل:
 
 ```js
 const fri = date('2026-11-20').locale('ar-SA');
 const sun = date('2026-11-22').locale('ar-SA');
 
-fri.isWeekend(); // false
-sun.isWeekend(); // true
-
-const isLocalWeekend = (d) => d.dayOfWeek === 5 || d.dayOfWeek === 6;
-isLocalWeekend(fri); // true
-isLocalWeekend(sun); // false
+fri.isWeekend(); // true
+sun.isWeekend(); // false
+sun.isWeekday(); // true
 ```
 
 ## صيغ الجمع الست واتجاه النص
@@ -139,28 +134,28 @@ anchor.date.plus(2, 'days').from(anchor.date, 'ar-SA'); // 'بعد الغد'
 
 ## تحليل المدخلات والمناطق الزمنية
 
-مرّر `dayFirst: true` مع [الإضافة المرنة](/plugins/loose/) لقراءة التواريخ المفصولة بشرطات بصيغة يوم/شهر/سنة، وطابِق الأشهر العربية المفردة في التواريخ الجزئية:
+مع [الإضافة المرنة](/plugins/loose/)، تقرأ الإعدادات المحلية العربية التواريخ المفصولة بشرطات بصيغة يوم/شهر/سنة، والأرقام العربية المشرقية مع محارف الاتجاه، وساعات *ص* / *م*، وكلًا من الأشهر القياسية والمشرقية متعددة الكلمات تلقائيًا:
 
 ```js
 import '@native-dates/plugins/loose';
-import { date, monthDay, yearMonth } from 'native-dates';
+import { date, time, yearMonth } from 'native-dates';
 
-date('06/11/2026', { loose: true, dayFirst: true })?.toString(); // '2026-11-06'
-monthDay('17 أكتوبر', { loose: true, locale: 'ar-EG' })?.toString(); // '10-17'
-yearMonth('نوفمبر 2026', { loose: true, locale: 'ar-EG' })?.toString(); // '2026-11'
+date('06/11/2026', { loose: true, locale: 'ar-EG' })?.toString(); // '2026-11-06'
+date('١٦‏/١١‏/٢٠٢٦', { loose: true, locale: 'ar-EG' })?.toString(); // '2026-11-16'
+date('16 تشرين الثاني 2026', { loose: true, locale: 'ar-LB' })?.toString(); // '2026-11-16'
+time('٢:٣٠ م', { loose: true, locale: 'ar-EG' })?.toString(); // '14:30:00'
+yearMonth('تشرين الثاني 2026', { loose: true, locale: 'ar-LB' })?.toString(); // '2026-11'
 ```
 
-تحل [إضافة المناطق الزمنية](/plugins/zones/) الرياض والقاهرة ودبي وقطر والدار البيضاء مباشرة، وتُربط المدن غير المدرجة مثل مكة وجدة عبر `zoneAliases`:
+تحل [إضافة المناطق الزمنية](/plugins/zones/) الرياض والقاهرة ودبي ومكة وجدة والدوحة وأبوظبي والمنامة والرباط و`'GST'` مباشرة. ومع `'ar-SA'`، يُحلّ `'AST'` أيضًا إلى `'Asia/Riyadh'`:
 
 ```js
 import '@native-dates/plugins/zones';
-import { configure, date, datetime } from 'native-dates';
-
-configure({
-  zoneAliases: { makkah: 'Asia/Riyadh', jeddah: 'Asia/Riyadh', doha: 'Asia/Qatar' },
-});
+import { date, datetime } from 'native-dates';
 
 datetime('2026-11-16T09:00', 'Makkah').zone; // 'Asia/Riyadh'
+datetime('2026-11-16T09:00', 'Doha').zone; // 'Asia/Qatar'
+datetime('2026-11-16T09:00', { zone: 'AST', locale: 'ar-SA' }).zone; // 'Asia/Riyadh'
 ```
 
 جدوِل المواعيد بمعرّف IANA كامل بدل الإزاحة الثابتة، إذ تؤخر `'Africa/Casablanca'` الساعة في رمضان وتقدّم القاهرة ساعتها منتصف الليل إلى 01:00:

@@ -1,5 +1,5 @@
 ---
-source: 'eb02cc8a081c'
+source: 94334cb6d96d
 reviewed: false
 title: Français
 lede: Formatez et analysez les dates en français selon les horloges et débuts de semaine régionaux.
@@ -47,16 +47,15 @@ mercredi.locale('fr-CA').startOf('week', 'monday').toString(); // '2026-11-16'
 
 ## Typographie française et jetons de formatage
 
-Entourez les lettres littérales de crochets comme dans `'HH[h]mm'`. Un `h` nu affiche l’heure sur 12 heures sans erreur, et `a` sans accent insère AM ou PM :
+Entourez les lettres littérales de crochets comme dans `'HH[h]mm'`. Écrire `'HHhmm'` sans crochets lève `unknownFormat`, tandis qu’un *à* accentué isolé passe sans échappement :
 
 ```js
 import { datetime } from 'native-dates';
 
 const depart = datetime('2026-11-01T14:30:00', 'Europe/Paris').locale('fr-FR');
 
-depart.format('HHhmm'); // '14230'
 depart.format('HH[h]mm'); // '14h30'
-depart.format('[le] dddd D MMMM [à] HH[h]mm'); // 'le dimanche 1 novembre à 14h30'
+depart.format('[le] dddd D MMMM à HH[h]mm'); // 'le dimanche 1 novembre à 14h30'
 ```
 
 Le français écrit *1er* le premier du mois et des chiffres simples les autres jours. Déclarez une règle `ordinals` sur `'fr'`, dont héritent automatiquement les variantes régionales :
@@ -87,25 +86,31 @@ monthNames('short', 'fr-CA').slice(4, 8); // ['mai', 'juin', 'juill.', 'août']
 
 ## Analyser les dates et heures saisies
 
-Le noyau lit les dates ISO utilisées au Canada et refuse barres ou points. Activez `dayFirst` avec [le plugin souple](/plugins/loose/), sinon `'06/11/2026'` se lit comme le 11 juin :
+Le noyau lit directement les chaînes ISO canadiennes et les heures françaises séparées par `h` comme `'14h30'` ou `'14 h 30'`. Avec [le plugin souple](/plugins/loose/), `'fr'` lit les dates avec barres obliques jour en premier, les dates avec points, les ordinaux et les dates rédigées en toutes lettres sans activer `dayFirst` :
 
 ```js
 import '@native-dates/plugins/loose';
-import { date } from 'native-dates';
+import { date, datetime, time } from 'native-dates';
 
-date('06/11/2026', { loose: true }); // CalendarDate(2026-06-11)
-date('06/11/2026', { loose: true, dayFirst: true }); // CalendarDate(2026-11-06)
-date('14.07.2026', { loose: true, dayFirst: true }); // CalendarDate(2026-07-14)
-date('2026-07-14', { loose: true, dayFirst: true }); // CalendarDate(2026-07-14)
+time('14h30').toString(); // '14:30:00'
+time('14 h 30').toString(); // '14:30:00'
+date('06/11/2026', { loose: true, locale: 'fr' })?.toString(); // '2026-11-06'
+date('14.07.2026', { loose: true, locale: 'fr' })?.toString(); // '2026-07-14'
+date('1er mai 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-05-01'
+datetime('lundi 16 novembre 2026 à 14h30', {
+  loose: true,
+  locale: 'fr',
+  zone: 'Europe/Paris',
+})?.hour; // 14
 ```
 
-Les dates partielles reconnaissent les mois français et leurs abréviations en mode souple, tandis que `dayMonth()` et `duration()` fonctionnent sans plugin :
+Les dates partielles reconnaissent les mois français et leurs abréviations accentuées en mode souple. `dayMonth()` et `duration()` fonctionnent dans le noyau sans plugin :
 
 ```js
 import { dayMonth, duration, monthDay, yearMonth } from 'native-dates';
 
 dayMonth('14/07').toString(); // '07-14'
-monthDay('15 août', { loose: true, locale: 'fr' })?.toString(); // '08-15'
+monthDay('1er mai', { loose: true, locale: 'fr' })?.toString(); // '05-01'
 yearMonth('févr. 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-02'
 duration('2h 30m').toString(); // 'PT2H30M'
 ```
@@ -126,22 +131,16 @@ hiver.in('America/Montreal').format('short', 'fr-CA'); // '2026-01-15 09 h 00'
 mars.in('America/Montreal').format('short', 'fr-CA'); // '2026-03-16 10 h 00'
 ```
 
-Avec [le plugin zones](/plugins/zones/), les villes IANA accentuées comme Montréal et Nouméa fonctionnent directement. Associez les noms français Bruxelles et Genève ou le sigle canadien `'HNE'` dans `zoneAliases` :
+Avec [le plugin zones](/plugins/zones/), les villes IANA accentuées comme Montréal et Nouméa sont résolues directement, tout comme Bruxelles, Genève, Lyon, Marseille, Ottawa et les sigles canadiens `'HNE'` / `'HAE'`, sans aucun alias :
 
 ```js
 import '@native-dates/plugins/zones';
-import { configure, datetime } from 'native-dates';
+import { datetime } from 'native-dates';
 
-configure({
-  zoneAliases: {
-    bruxelles: 'Europe/Brussels',
-    geneve: 'Europe/Zurich',
-    hne: 'America/Montreal',
-  },
-});
 datetime('2026-11-16T09:30', 'Montréal').zone; // 'America/Montreal'
+datetime('2026-11-16T09:30', 'Bruxelles').zone; // 'Europe/Brussels'
 datetime('2026-11-16T09:30', 'Genève').zone; // 'Europe/Zurich'
-datetime('2026-11-16T09:30', 'HNE').zone; // 'America/Montreal'
+datetime('2026-11-16T09:30', 'HNE').zone; // 'America/Toronto'
 ```
 
 ## Dates relatives et espaces insécables
