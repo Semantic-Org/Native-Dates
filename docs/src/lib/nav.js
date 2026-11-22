@@ -51,7 +51,7 @@ export const SECTIONS = [
         ],
       },
       {
-        ...named('nav.group.languages'),
+        ...named('nav.group.handling'),
         items: LANGUAGE_GUIDES,
       },
     ],
@@ -172,7 +172,7 @@ export const hrefFor = (slug, code) => {
 };
 
 // promote the active locale's own language guide into Start right after Localization,
-// removing it from the bottom Languages directory so it only appears once in the sidebar
+// removing it from the bottom Handling time in group so it only appears once in the sidebar
 function groupsFor(section, code) {
   const ownGuide = section.key === 'guides' && LANGUAGE_GUIDES.find((it) => it.locale === code);
   if (!ownGuide) {
@@ -182,7 +182,7 @@ function groupsFor(section, code) {
     if (g.name === 'nav.group.start') {
       return { ...g, items: [...g.items, ownGuide] };
     }
-    if (g.name === 'nav.group.languages') {
+    if (g.name === 'nav.group.handling') {
       return { ...g, items: g.items.filter((it) => it.locale !== code) };
     }
     return g;
