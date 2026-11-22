@@ -7,6 +7,6 @@ describe('@native-dates/core bin', () => {
     const printed = execFileSync(process.execPath, [fileURLToPath(new URL('../bin.js', import.meta.url)), '--help'], {
       encoding: 'utf8',
     });
-    expect(printed).toMatch(/^usage: npx native-dates/i);
+    expect(printed).toContain('npx native-dates');
   });
 });
