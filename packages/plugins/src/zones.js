@@ -1,5 +1,5 @@
 import { isArray } from 'native-dates/helpers/utils';
-import { canonicalZone, setZoneExtension } from 'native-dates/helpers/zones';
+import { canonicalZone, intlLocale, setZoneExtension } from 'native-dates/helpers/zones';
 
 // checked before the tables below, left mutable so apps can override entries at startup
 // (`timezones.IST = 'Asia/Jerusalem'`) or via `configure({ zoneAliases })`
@@ -27,8 +27,8 @@ export const timezones = {
 };
 
 // checked before Temporal itself because bare IANA 'EST', 'MST', and 'HST' are legacy fixed-offset
-// zones without DST, whereas callers writing 'EST' expect America/New_York. An abbreviation that
-// countries use differently lists each zone, with the most common reading first
+// zones without DST, whereas callers writing 'EST' expect America/New_York
+// a list holds each country's zone for a shared abbreviation, most common first
 const abbreviations = {
   est: 'America/New_York',
   edt: 'America/New_York',
@@ -82,7 +82,7 @@ const abbreviations = {
 };
 
 // cities whose zone IANA names after another city, so 'Beijing' is Asia/Shanghai and 'Mumbai' is Asia/Kolkata
-const otherCities = {
+const cityAliases = {
   nyc: 'America/New_York',
   washington: 'America/New_York',
   'washington dc': 'America/New_York',
@@ -163,10 +163,10 @@ const otherCities = {
 
 const capitalize = (word) => (word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : '');
 
-const normalize = (text) => text.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[\s_-]+/g, ' ');
+const normalize = (text) =>
+  text.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s_-]+/g, ' ');
 
-// index both full IANA ids and leaf city names (including 3-part ids like America/Argentina/Buenos_Aires),
-// then the other cities
+// index both full IANA ids and leaf city names (including 3-part ids like America/Argentina/Buenos_Aires)
 let index;
 const cities = () => {
   if (!index) {
@@ -175,7 +175,7 @@ const cities = () => {
       full: new Map(ids.map((id) => [normalize(id), id])),
       city: new Map([
         ...ids.map((id) => [normalize(id.split('/').pop()), id]),
-        ...Object.entries(otherCities).map(([name, zone]) => [normalize(name), zone]),
+        ...Object.entries(cityAliases).map(([name, zone]) => [normalize(name), zone]),
       ]),
     };
   }
@@ -213,14 +213,12 @@ const isSameZone = (first, second) => {
   return zoned(first).equals(zoned(second));
 };
 
-// where a name lists several zones, the one in the caller's country is meant ('CST' is Asia/Shanghai
-// under 'zh-CN' and America/Havana under 'es-CU'), and the first one otherwise
+// of several zones a name can mean, pick the one in the locale's country ('CST' under 'zh-CN'), else the first
 const zoneFor = (target, locale) => {
   if (!isArray(target)) {
     return target;
   }
-  const country = new Intl.Locale(new Intl.DateTimeFormat(locale).resolvedOptions().locale).maximize();
-  const countryZones = country.getTimeZones?.() ?? [];
+  const countryZones = intlLocale(locale).maximize().getTimeZones?.() ?? [];
   return target.find((zone) => countryZones.some((id) => isSameZone(id, zone))) ?? target[0];
 };
 

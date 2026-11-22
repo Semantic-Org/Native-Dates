@@ -120,7 +120,7 @@ export class MonthDay {
         return MonthDay.#fromParts(fields, JSON.stringify(input));
       }
     }
-    return MonthDay.#dayOf(input, settings.zone).toPlainMonthDay();
+    return MonthDay.#dayOf(input, settings).toPlainMonthDay();
   }
 
   static #fromParts(parts, at = JSON.stringify(parts), explanation) {
@@ -151,7 +151,7 @@ export class MonthDay {
       );
     }
     if (opensOnDate(text)) {
-      return MonthDay.#dayOf(input, settings.zone).toPlainMonthDay();
+      return MonthDay.#dayOf(input, settings).toPlainMonthDay();
     }
     // avoid Date.parse() here: V8 defaults yearless strings like 'Feb 29' to 2001 and rolls them into March
     const named = settings.loose && parseLooseParts(text, settings);
@@ -165,11 +165,11 @@ export class MonthDay {
   }
 
   // convert non-ISO PlainDates to iso8601 before extracting month and day
-  static #dayOf(value, zone) {
+  static #dayOf(value, { zone, locale } = {}) {
     if (isPlainDate(value)) {
       return value.withCalendar('iso8601');
     }
-    const day = value instanceof CalendarDate ? value : new CalendarDate(value, { zone });
+    const day = value instanceof CalendarDate ? value : new CalendarDate(value, { zone, locale });
     return day.toTemporal().withCalendar('iso8601');
   }
 

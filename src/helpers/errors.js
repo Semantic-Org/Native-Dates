@@ -80,8 +80,10 @@ export const parseLoose = (text, options) => {
   return looseParser(text, options);
 };
 
-// month and day or year and month written in words ('16 de enero', 'ноябрь 2026 г.')
-export const parseLooseParts = (text, options) => partsParser(text, options);
+export const parseLooseParts = (text, options) => {
+  requireLoose();
+  return partsParser(text, options);
+};
 
 export const loosely = (build, codes = point) => {
   requireLoose();

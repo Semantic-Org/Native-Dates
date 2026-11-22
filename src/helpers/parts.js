@@ -19,9 +19,8 @@ export const wholeParts = (fields, names) => {
   return parts;
 };
 
-// a year written first has one reading whatever separates the parts ('2026/1/5', '2026. 11. 16.', '2026年11月16日'),
-// so normalize it (and single-digit hours like '9:00') to ISO 8601, dropping a closing dot or East Asian day label.
-// Latin letters never separate, which keeps ISO weeks and quarters ('2026-W05-1', '2026-Q4') out
+// normalize unambiguous year-first strings ('2026/1/5', '2026. 11. 16.', '2026年11月16日') and single-digit hours like
+// '9:00' to ISO 8601. Latin letters never separate the parts, which keeps ISO weeks and quarters ('2026-W05-1') out
 export const yearFirst = (text) =>
   text.replace(
     /^(\s*[+-]?\d{4,6})[^\dA-Za-z:]{1,2}(\d{1,2})[^\dA-Za-z:]{1,2}(\d{1,2})(?!\d)(?:[^\0-\u2fff]|\.)?(?:([T ])(\d)(?=:))?/,

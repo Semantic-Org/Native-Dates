@@ -6,10 +6,12 @@ import {
   datetime,
   datetimeRange,
   endOfToday,
+  monthDay,
   now,
   startOfToday,
   time,
   today,
+  yearMonth,
 } from 'native-dates';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -373,6 +375,9 @@ describe('@native-dates/plugins/zones abbreviations used by several countries', 
     ['CST', 'zh-TW', 'Asia/Taipei'],
     ['CST', 'es-CU', 'America/Havana'],
     ['CST', 'de', 'America/Chicago'],
+    ['CST', 'en-CN', 'Asia/Shanghai'],
+    ['AST', 'en-SA', 'Asia/Riyadh'],
+    ['ACT', 'en-BR', 'America/Rio_Branco'],
     ['IST', 'en-IN', 'Asia/Kolkata'],
     ['IST', 'en-IE', 'Europe/Dublin'],
     ['IST', 'he', 'Asia/Jerusalem'],
@@ -399,6 +404,16 @@ describe('@native-dates/plugins/zones abbreviations used by several countries', 
     expect(datetime(noonInJuly, 'CST').zone).toBe('Asia/Shanghai');
     configure({ locale: null });
     expect(zoneOf('CST', 'en-US')).toBe('America/Chicago');
+  });
+
+  it('resolves zone by the locale passed in the same configure() call', () => {
+    expect(configure({ locale: 'zh-CN', zone: 'CST' }).zone).toBe('Asia/Shanghai');
+  });
+
+  it('resolves by the locale option in monthDay() and yearMonth() from an instant', () => {
+    const options = { zone: 'CST', locale: 'zh-CN' };
+    expect(monthDay('2026-11-16T20:00:00Z', options).toString()).toBe('11-17');
+    expect(yearMonth('2026-11-30T20:00:00Z', options).toString()).toBe('2026-12');
   });
 
   it('resolves zoneAliases and timezones entries ahead of the locale', () => {

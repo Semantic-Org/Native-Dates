@@ -1022,7 +1022,7 @@ describe('date() numeric day and month order with { loose: true, locale }', () =
 describe('date() and datetime() non-ASCII digits with { loose: true }', () => {
   it.each([
     ['Arabic-Indic digits', 'ar-EG', '٢٠٢٦-١١-١٦'],
-    ['Arabic-Indic digits with direction marks', 'ar-EG', '١٦‏/١١‏/٢٠٢٦'],
+    ['Arabic-Indic digits with direction marks', 'ar-EG', '١٦\u200f/١١\u200f/٢٠٢٦'],
     ['Arabic-Indic digits under a locale that prints Western ones', 'ar-AE', '١٦/١١/٢٠٢٦'],
     ['Persian digits', 'en-GB', '۱۶/۱۱/۲۰۲۶'],
     ['Devanagari digits', 'hi', '१६/११/२०२६'],
@@ -1067,6 +1067,23 @@ describe('time() and datetime() localized AM/PM with { loose: true, locale }', (
     });
   });
 
+  it.each([
+    ['hi', '16 नवंबर 2026 14:30 बजे'],
+    ['ja', '2026年11月16日 14:30 会議室'],
+    ['ar-EG', '١٦ نوفمبر ٢٠٢٦ ١٤:٣٠ اليوم'],
+  ])('datetime() parses %s %j with a word in a caseless script after the clock', (locale, text) => {
+    expect(datetime(text, { loose: true, locale, zone: 'UTC' })?.toString()).toBe('2026-11-16T14:30:00.000Z');
+  });
+
+  it.each([
+    ['en-US', '16 November 2026 14:30 ambient', '2026-11-16T14:30:00.000Z'],
+    ['en-US', '16 November 2026 program 14:30', '2026-11-16T14:30:00.000Z'],
+    ['en-US', '16 November 2026 rpm 2:30', '2026-11-16T02:30:00.000Z'],
+    ['ar-EG', '١٦ نوفمبر ٢٠٢٦ اليوم ٢:٣٠', '2026-11-16T02:30:00.000Z'],
+  ])('datetime() parses %s %j without reading AM or PM from part of a word', (locale, text, expected) => {
+    expect(datetime(text, { loose: true, locale, zone: 'UTC' })?.toString()).toBe(expected);
+  });
+
   it("parses German 'am' before the day without treating it as AM", () => {
     const options = { loose: true, locale: 'de', zone: 'UTC' };
     expect(datetime('am 16. November 2026 um 14:30 Uhr', options)?.toString()).toBe('2026-11-16T14:30:00.000Z');
@@ -1107,6 +1124,13 @@ describe('monthDay() and yearMonth() connecting words and unit labels with { loo
     ['ar-EG', 'نوفمبر ٢٠٢٦', '2026-11'],
   ])('yearMonth() parses %s %j as %s', (locale, text, expected) => {
     expect(yearMonth(text, { loose: true, locale })?.toString()).toBe(expected);
+  });
+
+  it('parses a spaced numeric pair in the order of the function name rather than the locale', () => {
+    const options = { loose: true, locale: 'fr' };
+    expect(monthDay('7/9', options)?.toString()).toBe('07-09');
+    expect(monthDay('7 / 9', options)?.toString()).toBe('07-09');
+    expect(dayMonth('7 / 9', options)?.toString()).toBe('09-07');
   });
 
   it('returns null from monthDay() for a month and year and from yearMonth() for a month and day', () => {

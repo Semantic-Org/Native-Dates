@@ -75,6 +75,10 @@ export const configure = (options) => {
       });
     }
   });
+  // set first because a plugin may read zone names by the locale ('CST' under 'zh-CN')
+  if (locale !== undefined) {
+    settings.locale = locale ? checkedLocale(locale) : undefined;
+  }
   if (zoneAliases !== undefined) {
     if (!zoneExtension) {
       refuse('missingPlugin', 'zoneAliases', {
@@ -105,9 +109,6 @@ export const configure = (options) => {
   }
   if (zone !== undefined) {
     settings.zone = zone === null ? undefined : zoneId(zone);
-  }
-  if (locale !== undefined) {
-    settings.locale = locale ? checkedLocale(locale) : undefined;
   }
   if (weekStart !== undefined) {
     settings.weekStart = weekStart === null ? undefined : dayOfWeek(weekStart);
@@ -179,21 +180,21 @@ export const namedFormat = (spec) => (isString(spec) && settings.formats?.[spec]
 // fall back to configured locale when an override header like '*' resolves to undefined
 export const locale = (override) =>
   override === undefined ? settings.locale : checkedLocale(override) ?? settings.locale;
-// undefined leaves the order to the locale
 export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);
 
-// the first day and the weekend days of a locale's week, Monday and Saturday-Sunday where the runtime has no week data
+// pass single tag strings straight to Intl.Locale so region and -u-fw- extensions survive,
+// resolving through DateTimeFormat only for undefined (system locale) or tag arrays
+export const intlLocale = (activeLocale) =>
+  new Intl.Locale(
+    isString(activeLocale) ? activeLocale : new Intl.DateTimeFormat(activeLocale).resolvedOptions().locale,
+  );
+
 const weekInfos = new Map();
 const weekInfo = (tag) => {
   const activeLocale = locale(tag);
   const key = String(activeLocale);
   if (!weekInfos.has(key)) {
-    // pass single tag strings straight to Intl.Locale so region and -u-fw- extensions survive,
-    // resolving through DateTimeFormat only for undefined (system locale) or tag arrays
-    const resolvedLocale = isString(activeLocale)
-      ? activeLocale
-      : new Intl.DateTimeFormat(activeLocale).resolvedOptions().locale;
-    weekInfos.set(key, new Intl.Locale(resolvedLocale).getWeekInfo?.() ?? { firstDay: 1, weekend: [6, 7] });
+    weekInfos.set(key, intlLocale(activeLocale).getWeekInfo?.() ?? { firstDay: 1, weekend: [6, 7] });
   }
   return weekInfos.get(key);
 };
@@ -201,5 +202,4 @@ const weekInfo = (tag) => {
 export const weekStart = (override, tag) =>
   override !== undefined ? dayOfWeek(override) : settings.weekStart ?? weekInfo(tag).firstDay;
 
-// Friday and Saturday in ar-SA, Friday alone in fa-IR, Sunday alone in hi-IN
 export const isWeekend = (day, tag) => weekInfo(tag).weekend.includes(day);

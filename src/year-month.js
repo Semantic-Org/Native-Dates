@@ -37,7 +37,6 @@ import { zoneId } from './helpers/zones.js';
   Arithmetic accepts only months, quarters, and years, and .on(day) clamps overflow days like 31 to the month's end
 */
 
-// a year written first has one reading whatever follows it ('2026-11', '2026/11', '2026年11月')
 const noDay = /^([+-]\d{6}|\d{4})[^\dA-Za-z:]{1,2}(\d{1,2})(?:[^\0-\u2fff]|\.)?$/;
 const monthFirst = /^(\d{1,2})\s*[-/.]\s*(\d{2}|\d{4})$/;
 
@@ -149,7 +148,9 @@ export class YearMonth {
     }
     const plain = isPlainDate(input)
       ? input
-      : (input instanceof CalendarDate ? input : new CalendarDate(input, { zone: settings.zone })).toTemporal();
+      : (input instanceof CalendarDate
+        ? input
+        : new CalendarDate(input, { zone: settings.zone, locale: settings.locale })).toTemporal();
     return plain.withCalendar('iso8601').toPlainYearMonth();
   }
 
