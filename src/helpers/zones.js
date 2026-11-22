@@ -182,11 +182,11 @@ export const locale = (override) =>
   override === undefined ? settings.locale : checkedLocale(override) ?? settings.locale;
 export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);
 
-// pass single tag strings straight to Intl.Locale so region and -u-fw- extensions survive,
-// resolving through DateTimeFormat only for undefined (system locale) or tag arrays
+// take the first tag Intl supports as it was written, so region and -u-fw- extensions survive where
+// DateTimeFormat would resolve 'en-CN' to 'en', and use the system locale when none is supported
 export const intlLocale = (activeLocale) =>
   new Intl.Locale(
-    isString(activeLocale) ? activeLocale : new Intl.DateTimeFormat(activeLocale).resolvedOptions().locale,
+    Intl.DateTimeFormat.supportedLocalesOf(activeLocale)[0] ?? new Intl.DateTimeFormat().resolvedOptions().locale,
   );
 
 const weekInfos = new Map();

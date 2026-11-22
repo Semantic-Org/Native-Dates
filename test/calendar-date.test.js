@@ -1339,6 +1339,12 @@ describe('CalendarDate.isWeekend() and isWeekday() by locale', () => {
     expect(days.map((day) => day.isWeekday())).toEqual(weekend.map((rests) => !rests));
   });
 
+  it('returns the weekend of the first supported tag in an Accept-Language header', () => {
+    expect(friday.locale('en-SA, en;q=0.8').isWeekend()).toBe(true);
+    expect(friday.locale('tlh, ar-SA;q=0.8').isWeekend()).toBe(true);
+    expect(friday.locale('en, en-SA;q=0.8').isWeekend()).toBe(false);
+  });
+
   it('uses configure({ locale }) when the date has no locale', () => {
     configure({ locale: 'ar-EG' });
     expect([friday.isWeekend(), sunday.isWeekend()]).toEqual([true, false]);
