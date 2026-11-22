@@ -1,6 +1,6 @@
 ---
 title: Time zones
-lede: Pair every moment with an IANA time zone, view the same instant anywhere in the world, and step cleanly across daylight saving transitions.
+lede: View moments in any IANA time zone and step cleanly across daylight saving transitions.
 updated: 2026-11-22
 ---
 

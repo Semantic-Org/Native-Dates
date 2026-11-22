@@ -1,6 +1,6 @@
 ---
 title: Writing a plugin
-lede: Extend Native Dates with opt-in prototype methods, cross-bundle type checks, and TypeScript module augmentation.
+lede: Extend Native Dates with opt-in prototype methods and TypeScript module augmentation.
 updated: 2026-11-12
 ---
 

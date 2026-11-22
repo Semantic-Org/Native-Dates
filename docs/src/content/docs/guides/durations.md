@@ -1,6 +1,6 @@
 ---
 title: Durations
-lede: Create lengths of time from unit helpers or plain phrases, measure spans between dates, and convert or format totals.
+lede: Create lengths of time from unit helpers or plain phrases, and measure or format spans.
 updated: 2026-11-16
 ---
 

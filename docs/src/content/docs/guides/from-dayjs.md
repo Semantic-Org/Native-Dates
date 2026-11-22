@@ -1,6 +1,6 @@
 ---
 title: Coming from Day.js
-lede: Replace dayjs() wrappers and plugin chains with dedicated date types, 1-indexed months, built-in ranges, and zero-setup time zones.
+lede: Replace dayjs() wrappers and plugin chains with dedicated date types and built-in time zones.
 updated: 2026-11-20
 ---
 

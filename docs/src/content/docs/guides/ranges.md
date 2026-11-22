@@ -4,11 +4,11 @@ lede: Work with spans between two dates, times, or moments, from overlap checks 
 updated: 2026-11-22
 ---
 
-A [range](/api/ranges/) models a span with a start and an end, such as a hotel booking, a store's opening hours, or a scheduled meeting. Each time type has a matching range class so calendar days stay calendar days and clock spans never pick up a fake date.
+A [range](/api/ranges/) models a span with a start and an end, such as a hotel booking, opening hours, or a scheduled meeting. Each time type gets its own range class so calendar days stay calendar days and clock spans never pick up a fake date.
 
 ## Creating ranges
 
-Create a range directly from raw inputs with [`dateRange()`](/api/range-fn/), [`timeRange()`](/api/range-fn/#timerange), or [`datetimeRange()`](/api/range-fn/#datetimerange). Each factory accepts two endpoints, a start paired with a duration, or a single interval string:
+Create a range directly with [`dateRange()`](/api/range-fn/), [`timeRange()`](/api/range-fn/#timerange), or [`datetimeRange()`](/api/range-fn/#datetimerange). Each factory accepts two endpoints, a start and a duration, or a single interval string:
 
 ```js
 import { dateRange, datetimeRange, timeRange } from 'native-dates';
@@ -42,7 +42,7 @@ const second = timeRange('10:00am', '11:00am');
 first.overlaps(second); // false
 ```
 
-When a `TimeRange` ends earlier on the clock than it starts, it wraps across midnight to model overnight shifts or late-night venues:
+When a clock range ends earlier than it starts, it wraps across midnight to cover overnight shifts or late-night venues:
 
 ```js
 const nightShift = timeRange('22:00', '06:00');
@@ -66,11 +66,11 @@ booking.overlaps(holiday); // true
 booking.intersection(holiday).toString(); // '2026-11-15/2026-11-18'
 ```
 
-`intersection()` returns `null` when two ranges do not overlap, so you can branch on it directly when checking room availability or scheduling conflicts.
+`intersection()` returns `null` when two ranges do not overlap. That makes it easy to branch on availability or scheduling conflicts.
 
 ## Walking, counting, and splitting spans
 
-Call `every()` to step across a range and collect each date, time, or moment along the way. On a `DateRange`, call `count()` to count days, weekdays, weekends, or a specific weekday directly:
+Call `every()` to step across a range and collect each date, time, or moment along the way. On a date range, call `count()` to count days, weekdays, weekends, or a specific weekday directly:
 
 ```js
 import { dateRange } from 'native-dates';
@@ -109,7 +109,7 @@ week.format('YYYY-MM-DD'); // '2026-09-01 – 2026-09-07'
 timeRange('9:00am', '5:00pm').format('short', 'en-US'); // '9:00 AM – 5:00 PM'
 ```
 
-Every range exposes `.duration` for its length and serializes to an ISO 8601 interval string with `toString()` or `JSON.stringify()`, which parses straight back through the same factory:
+Every range exposes its length on `.duration` and writes an ISO 8601 interval string with `toString()`. Passing that string back to the same factory restores the range:
 
 ```js
 const raw = week.toString(); // '2026-09-01/2026-09-07'

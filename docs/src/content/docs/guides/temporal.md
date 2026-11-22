@@ -1,6 +1,6 @@
 ---
 title: Working with Temporal
-lede: How Native Dates maps onto JavaScript's Temporal API, accepts raw Temporal objects, and runs on older engines.
+lede: How Native Dates maps onto JavaScript's Temporal API and interops with raw Temporal values.
 updated: 2026-11-22
 ---
 

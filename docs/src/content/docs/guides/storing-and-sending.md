@@ -1,6 +1,6 @@
 ---
 title: Storing and sending
-lede: Serialize dates, times, timestamps, ranges, and durations cleanly across JSON APIs, SQL columns, URLs, and HTML inputs.
+lede: Serialize dates, times, and spans cleanly across JSON APIs, databases, and HTML inputs.
 updated: 2026-11-12
 ---
 

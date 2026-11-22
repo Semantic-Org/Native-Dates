@@ -25,7 +25,7 @@ Condensed from Semantic UI Next (`next:ai/skills/contributing/extend-bench-suite
 Add a benchmark only when:
 
 - **Verifying a `Perf:` optimization** and guarding against future regressions on that path, or
-- **Covering an unmeasured hot path** that applications execute frequently (parsing ISO strings, calendar/zoned arithmetic, `range.points()`, `compare()` sorting, preset and token formatting).
+- **Covering an unmeasured hot path** that applications execute frequently (parsing ISO strings, calendar/zoned arithmetic, `range.every()`, `compare()` sorting, preset and token formatting).
 
 Avoid speculative microbenchmarks that increase CI runtime without guarding a real hot path.
 
