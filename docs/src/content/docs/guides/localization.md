@@ -20,10 +20,10 @@ When you set nothing, every `.text` property, `format()` call, range, duration, 
 Single-user browser apps that follow the reader's system language need no setup at all:
 
 ```js
-import { date, hours, today } from 'native-dates';
+import { dateRange, hours, today } from 'native-dates';
 
 today().text;
-date('2026-09-01').to('2026-09-07').format('medium');
+dateRange('2026-09-01', '2026-09-07').format('medium');
 hours(2).format('long');
 ```
 

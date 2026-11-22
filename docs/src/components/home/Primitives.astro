@@ -8,8 +8,8 @@ import { highlight } from '../../scripts/site.js';
 
 const locale = Astro.currentLocale;
 const rows = primitivesFor(locale);
-const { date, datetime, duration, IS_RANGE, monthDay, now, time, yearMonth } = library;
-const made = (row) => new Function('date', 'datetime', 'duration', 'monthDay', 'now', 'time', 'yearMonth', `return (${row.ours});`)(date, datetime, duration, monthDay, now, time, yearMonth);
+const { date, dateRange, datetime, duration, IS_RANGE, monthDay, now, time, timeRange, yearMonth } = library;
+const made = (row) => new Function('date', 'dateRange', 'datetime', 'duration', 'monthDay', 'now', 'time', 'timeRange', 'yearMonth', `return (${row.ours});`)(date, dateRange, datetime, duration, monthDay, now, time, timeRange, yearMonth);
 const printed = (value) => {
   const temporal = (v) => (v.toTemporal ? v.toTemporal() : v);
   if (Array.isArray(value)) { return value.map(String).join(' to '); }
@@ -28,6 +28,7 @@ const HOLDS = {
   yearMonth: (legacy, ours) => legacy.getFullYear() === ours.year && legacy.getMonth() + 1 === ours.month,
   monthDay: (legacy, ours) => legacy.getMonth() + 1 === ours.month && legacy.getDate() === ours.day,
   range: (legacy, ours) => legacy.map(day).join() === [ours.start, ours.end].map(String).join(),
+  timeRange: (legacy, ours) => legacy.join() === [ours.start, ours.end].map((t) => t.hour * 60 + t.minute).join(),
 };
 for (const row of rows) {
   const ours = made(row);

@@ -86,14 +86,45 @@ export function sentencesFor(locale = 'en') {
         [format('narrow'), format('short'), format('digital')],
       ],
     },
+    {
+      id: 'range',
+      steps: [
+        [
+          { say: 'range.may', code: "dateRange('2026-05-01', '2 weeks')", run: (_, { dateRange }, tag) => localize(dateRange('2026-05-01', '2 weeks'), tag) },
+          { say: 'range.jan', code: "dateRange('2026-01-01', '2026-01-14')", run: (_, { dateRange }, tag) => localize(dateRange('2026-01-01', '2026-01-14'), tag) },
+          { say: 'range.nov', code: "dateRange('2026-11-01', '2026-11-30')", run: (_, { dateRange }, tag) => localize(dateRange('2026-11-01', '2026-11-30'), tag) },
+        ],
+        [
+          { say: 'points.day', code: ".points('day')", run: (value) => value.points('day') },
+          { say: 'points.2days', code: ".points(2, 'days')", run: (value) => value.points(2, 'days') },
+        ],
+        [
+          { say: 'filter.weekday', code: '.filter((d) => d.isWeekday())', run: (value) => value.filter((d) => d.isWeekday()) },
+          { say: 'filter.weekend', code: '.filter((d) => d.isWeekend())', run: (value) => value.filter((d) => d.isWeekend()) },
+        ],
+        [
+          { say: 'pick.count', code: '.length', run: (value) => value.length },
+          { say: 'pick.last', code: '.at(-1)', run: (value) => value.at(-1) },
+        ],
+      ],
+    },
   ];
 }
 
 export const SENTENCES = sentencesFor('en');
 
-const NOUN = { datetime: 'DateTime', date: 'CalendarDate', time: 'Time', duration: 'Duration' };
-export const describe = (value, { kindOf }) =>
-  typeof value === 'string' ? { noun: 'string', text: `'${value}'` } : { noun: NOUN[kindOf(value)], text: value.text };
+const NOUN = { datetime: 'DateTime', date: 'CalendarDate', time: 'Time', duration: 'Duration', dateRange: 'DateRange' };
+export const describe = (value, { kindOf }) => {
+  if (typeof value === 'string') { return { noun: 'string', text: `'${value}'` }; }
+  if (typeof value === 'number') { return { noun: 'number', text: String(value) }; }
+  if (Array.isArray(value)) {
+    const first = value[0];
+    const kind = first ? NOUN[kindOf(first)] : 'value';
+    const text = value.length > 2 ? `${first.text} … ${value.at(-1).text}` : value.map((v) => v.text).join(', ');
+    return { noun: `${kind}[${value.length}]`, text };
+  }
+  return { noun: NOUN[kindOf(value)], text: value.text };
+};
 
 export function read(sentence, picks, library, locale = 'en') {
   let value;

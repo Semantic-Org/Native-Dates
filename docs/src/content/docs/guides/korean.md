@@ -41,7 +41,7 @@ Avoid two-digit years in dotted inputs: `'12.11.26'` collides with month-day-yea
 The `'full'` preset prints full weekday names like *화요일* for Tuesday. `'llll'` and short weekday options put single-character weekdays in parentheses and join ranges with a tilde:
 
 ```js
-import { date } from 'native-dates';
+import { date, dateRange } from 'native-dates';
 
 const holiday = date('2026-05-05').locale('ko-KR');
 
@@ -49,7 +49,7 @@ holiday.format('llll'); // '2026년 5월 5일 (화)'
 holiday.format({ month: 'long', day: 'numeric', weekday: 'short' });
 // '5월 5일 (화)'
 
-const week = date('2026-11-16').to('2026-11-20');
+const week = dateRange('2026-11-16', '2026-11-20');
 week.format({ month: 'long', day: 'numeric', weekday: 'short' }, 'ko-KR');
 // '11월 16일 (월)~20일 (금)'
 ```
