@@ -972,6 +972,23 @@ describe('DateRange count()', () => {
     expect(sprint.count(' Fridays ')).toBe(2);
   });
 
+  it('follows the active locale weekend days for weekdays and weekends', () => {
+    // 2026-05-01 is Friday through 2026-05-07 Thursday (one full 7-day week)
+    // plus partial spans starting Friday: 2026-05-01..2026-05-03 (Fri, Sat, Sun)
+    for (const tag of ['en-US', 'ar-SA', 'fa-IR', 'en-IN']) {
+      for (let len = 1; len <= 10; len++) {
+        const span = dateRange('2026-05-01', `${len} days`, { locale: tag });
+        const all = span.every('day');
+        expect(span.count('weekdays')).toBe(all.filter((d) => d.isWeekday()).length);
+        expect(span.count('weekends')).toBe(all.filter((d) => d.isWeekend()).length);
+      }
+    }
+    expect(dateRange('2026-05-01', '2026-05-03', { locale: 'ar-SA' }).count('weekends')).toBe(2);
+    expect(dateRange('2026-05-01', '2026-05-03', { locale: 'ar-SA' }).count('weekdays')).toBe(1);
+    expect(dateRange('2026-05-01', '2026-05-03', { locale: 'fa-IR' }).count('weekends')).toBe(1);
+    expect(dateRange('2026-05-01', '2026-05-03', { locale: 'en-IN' }).count('weekends')).toBe(1);
+  });
+
   it('throws unknownKind for unrecognized or non-string count kinds', () => {
     const sprint = dateRange('2026-05-01', '2 weeks');
     expect(() => sprint.count('weeks')).toThrowError(

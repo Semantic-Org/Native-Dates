@@ -18,6 +18,7 @@ import {
   weekdayNamed,
   zoneOptions,
 } from './helpers/units.js';
+import { weekendDays } from './helpers/zones.js';
 import { Time } from './time.js';
 
 /*
@@ -407,7 +408,7 @@ export class DateRange extends Range {
     const start = this.start.dayOfWeek;
     const hits = (day) => weeks + ((day - start + 7) % 7 < extra ? 1 : 0);
     if (key === 'weekday' || key === 'weekend') {
-      const off = hits(6) + hits(7);
+      const off = weekendDays(this.locale()).reduce((sum, day) => sum + hits(day), 0);
       return key === 'weekend' ? off : total - off;
     }
     const target = weekdayNamed(key);
