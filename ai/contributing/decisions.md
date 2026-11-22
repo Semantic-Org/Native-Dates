@@ -9,9 +9,9 @@ Active package decisions grouped by area, newest first.
 ### Zones, Offsets, and Serialization
 
 - **D22:** `@native-dates/plugins/zones` maps non-IANA city names and resolves shared abbreviations by locale (2026-11-22) [L131-L135](decisions/package.md#d22-native-datespluginszones-maps-non-iana-city-names-and-resolves-shared-abbreviations-by-locale-2026-11-22)
-  - Reopen: city additions turn the table into an open-ended gazetteer, or locale-driven abbreviation lookup surprises callers parsing foreign-country timestamps under a viewer's UI locale.
+  - Reopen: recurring city issues and PRs turn the alias table into an open-ended gazetteer, or bug reports show locale-driven zone lookup misreading foreign-country abbreviations under a viewer's UI locale.
 - **D21:** Time zone abbreviations inside `{ loose: true }` strings resolve like the `zone` option rather than `Date.parse()` (2026-11-22) [L125-L129](decisions/package.md#d21-time-zone-abbreviations-inside--loose-true--strings-resolve-like-the-zone-option-rather-than-dateparse-2026-11-22)
-  - Reopen: callers parsing RFC 2822 email or HTTP headers rely on fixed standard-time offsets for `'EST'` or `'PST'` while the zones plugin is loaded.
+  - Reopen: bug reports show users parsing RFC 2822 email or HTTP timestamps expecting fixed standard-time offsets for `'EST'` or `'PST'` while `@native-dates/plugins/zones` is loaded.
 - **D2:** `DateTime` serializes to ISO 8601 UTC rather than Temporal's bracketed `[Zone]` string (2026-11-05) [L11-L15](decisions/package.md#d2-datetime-serializes-to-iso-8601-utc-rather-than-temporals-bracketed-zone-string-2026-11-05)
   - Reopen: RFC 9557 bracketed zone strings gain broad database and parser support and callers request round-tripping `.zone` through JSON.
 - **D1:** Trailing `Z` and numeric offsets in `datetime()` set the instant, not `.zone` (2026-11-05) [L5-L9](decisions/package.md#d1-trailing-z-and-numeric-offsets-in-datetime-set-the-instant-not-zone-2026-11-05)
@@ -32,7 +32,7 @@ Active package decisions grouped by area, newest first.
 ### Arithmetic, Boundaries, and Weekdays
 
 - **D19:** `isWeekend()` and `isWeekday()` follow the locale like week boundaries do (2026-11-22) [L113-L117](decisions/package.md#d19-isweekend-and-isweekday-follow-the-locale-like-week-boundaries-do-2026-11-22)
-  - Reopen: server code keys payroll or business-day schedules on `isWeekend()` and hits unexpected variance across request locales, or callers need an explicit `configure()` weekend override.
+  - Reopen: bug reports show users surprised when `.locale()` changes `isWeekend()` or `isWeekday()` results, or users request a `configure()` weekend override.
 - **D17:** Adjacent unit boundaries use `startOfNext()` and `startOfPrevious()` instead of overloading `next()` and `previous()` (2026-11-19) [L101-L105](decisions/package.md#d17-adjacent-unit-boundaries-use-startofnext-and-startofprevious-instead-of-overloading-next-and-previous-2026-11-19)
   - Reopen: callers consistently try unit names in `next()` and `previous()`, or expect numeric weekdays in `startOfNext()`.
 - **D14:** Numeric day of the week is `dayOfWeek` (`1`-`7`) while token `d` keeps Moment's `0`-`6` (2026-11-17) [L83-L87](decisions/package.md#d14-numeric-day-of-the-week-is-dayofweek-1-7-while-token-d-keeps-moments-0-6-2026-11-17)
@@ -52,7 +52,7 @@ Active package decisions grouped by area, newest first.
 ### Parsing, Inputs, and Comparisons
 
 - **D20:** Loose parsing reads non-ISO dates in the active locale while `monthDay()` and `dayMonth()` keep function-name order (2026-11-22) [L119-L123](decisions/package.md#d20-loose-parsing-reads-non-iso-dates-in-the-active-locale-while-monthday-and-daymonth-keep-function-name-order-2026-11-22)
-  - Reopen: a locale's `Intl` short date order diverges from what its users type, or falling back to the host runtime locale misparses inputs on servers that omit both `locale` and `dayFirst`.
+  - Reopen: user reports show a locale's `Intl` short date order diverging from how native speakers type dates, or bug reports show unconfigured host locales causing unexpected `{ loose: true }` parses across environments.
 - **D12:** Core parses unambiguous non-ISO inputs and refuses inputs with two readings (2026-11-16) [L71-L75](decisions/package.md#d12-core-parses-unambiguous-non-iso-inputs-and-refuses-inputs-with-two-readings-2026-11-16)
   - Reopen: a non-ISO form accepted in core misparses real input, or callers repeatedly hit one of the remaining refusals where an explicit option could disambiguate.
 
@@ -115,10 +115,10 @@ Every package decision (`D1`..`Dn`) in file order.
 - **D18:** `native-dates/helpers/*` stays open for official plugins without semver guarantees (2026-11-20) [L107-L111](decisions/package.md#d18-native-dateshelpers-stays-open-for-official-plugins-without-semver-guarantees-2026-11-20)
   - Reopen: third-party consumers couple to `native-dates/helpers/*` in production and break on minor releases.
 - **D19:** `isWeekend()` and `isWeekday()` follow the locale like week boundaries do (2026-11-22) [L113-L117](decisions/package.md#d19-isweekend-and-isweekday-follow-the-locale-like-week-boundaries-do-2026-11-22)
-  - Reopen: server code keys payroll or business-day schedules on `isWeekend()` and hits unexpected variance across request locales, or callers need an explicit `configure()` weekend override.
+  - Reopen: bug reports show users surprised when `.locale()` changes `isWeekend()` or `isWeekday()` results, or users request a `configure()` weekend override.
 - **D20:** Loose parsing reads non-ISO dates in the active locale while `monthDay()` and `dayMonth()` keep function-name order (2026-11-22) [L119-L123](decisions/package.md#d20-loose-parsing-reads-non-iso-dates-in-the-active-locale-while-monthday-and-daymonth-keep-function-name-order-2026-11-22)
-  - Reopen: a locale's `Intl` short date order diverges from what its users type, or falling back to the host runtime locale misparses inputs on servers that omit both `locale` and `dayFirst`.
+  - Reopen: user reports show a locale's `Intl` short date order diverging from how native speakers type dates, or bug reports show unconfigured host locales causing unexpected `{ loose: true }` parses across environments.
 - **D21:** Time zone abbreviations inside `{ loose: true }` strings resolve like the `zone` option rather than `Date.parse()` (2026-11-22) [L125-L129](decisions/package.md#d21-time-zone-abbreviations-inside--loose-true--strings-resolve-like-the-zone-option-rather-than-dateparse-2026-11-22)
-  - Reopen: callers parsing RFC 2822 email or HTTP headers rely on fixed standard-time offsets for `'EST'` or `'PST'` while the zones plugin is loaded.
+  - Reopen: bug reports show users parsing RFC 2822 email or HTTP timestamps expecting fixed standard-time offsets for `'EST'` or `'PST'` while `@native-dates/plugins/zones` is loaded.
 - **D22:** `@native-dates/plugins/zones` maps non-IANA city names and resolves shared abbreviations by locale (2026-11-22) [L131-L135](decisions/package.md#d22-native-datespluginszones-maps-non-iana-city-names-and-resolves-shared-abbreviations-by-locale-2026-11-22)
-  - Reopen: city additions turn the table into an open-ended gazetteer, or locale-driven abbreviation lookup surprises callers parsing foreign-country timestamps under a viewer's UI locale.
+  - Reopen: recurring city issues and PRs turn the alias table into an open-ended gazetteer, or bug reports show locale-driven zone lookup misreading foreign-country abbreviations under a viewer's UI locale.
