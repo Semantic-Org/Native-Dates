@@ -151,7 +151,7 @@ standup.startOfNext('wednesday').text; // 'Nov 18, 2026, 12:00 AM EST'
 
 ## Building and stepping ranges
 
-Create a [range](/api/ranges/) with `dateRange()`, `timeRange()`, or `datetimeRange()`, or chain `for()` and `to()` off an existing point. Walk across its steps or divide it into smaller sub-ranges:
+Create a [range](/guides/ranges/) with `dateRange()`, `timeRange()`, or `datetimeRange()`, or chain `for()` and `to()` off an existing point. Walk across its steps or divide it into smaller sub-ranges:
 
 ```js
 import { dateRange } from 'native-dates';

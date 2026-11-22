@@ -36,6 +36,7 @@ export const SECTIONS = [
           { title: 'Time zones', slug: 'guides/time-zones' },
           { title: 'Date math', slug: 'guides/date-math' },
           { title: 'Durations', slug: 'guides/durations' },
+          { title: 'Ranges', slug: 'guides/ranges' },
           { title: 'Formatting', slug: 'guides/formatting' },
           { title: 'Parsing', slug: 'guides/parsing' },
           { title: 'Storing and sending', slug: 'guides/storing-and-sending' },

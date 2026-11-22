@@ -123,7 +123,7 @@ February 29 lands on February 28 in non-leap years automatically when you call `
 
 ## Ranges
 
-Use [Ranges](/api/ranges/) for a span between two dates, times, or moments. Create one directly with `dateRange()`, `timeRange()`, or `datetimeRange()`:
+Use [Ranges](/guides/ranges/) for a span between two dates, times, or moments. Create one directly with `dateRange()`, `timeRange()`, or `datetimeRange()`:
 
 ```js
 import { dateRange, timeRange } from 'native-dates';
