@@ -1,6 +1,6 @@
 ---
 title: Parsing
-lede: Read ISO strings, clock times, partial dates, ranges, duration phrases, and user input without silent guesswork.
+lede: Read ISO strings, durations, ranges, and loose user input without silent guesswork.
 updated: 2026-11-22
 ---
 

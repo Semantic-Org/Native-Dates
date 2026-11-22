@@ -1,6 +1,6 @@
 ---
 title: Coming from Moment
-lede: Move off Moment and moment-timezone to immutable values, built-in tokens and ranges, zero bundled timezone data, and incremental Date interop.
+lede: Move off Moment and moment-timezone to immutable values with built-in tokens and zero bundled tzdata.
 updated: 2026-11-22
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: Installation
-lede: Install the core package, add a Temporal polyfill for Safari or older runtimes, and set app-wide defaults.
+lede: Install the core package, add a Temporal polyfill for older runtimes, and configure defaults.
 updated: 2026-11-16
 ---
 

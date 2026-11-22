@@ -1,6 +1,6 @@
 ---
 title: Formatting
-lede: Format dates, times, ranges, and durations with Intl presets, locale tags, token patterns, and relative phrases.
+lede: Format dates, times, and durations with localized presets, token patterns, or relative phrases.
 updated: 2026-11-22
 ---
 

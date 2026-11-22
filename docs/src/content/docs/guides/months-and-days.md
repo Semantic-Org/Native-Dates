@@ -4,11 +4,11 @@ lede: Store a month without a day, or a recurring birthday without a year.
 updated: 2026-11-22
 ---
 
-In plain JavaScript, storing a credit card expiry usually means sticking a fake 1st on the end, and a birthday without a birth year means picking a dummy year like 2000. [`YearMonth`](/api/year-month/) and [`MonthDay`](/api/month-day/) store just the parts that actually exist.
+In plain JavaScript, storing a card expiry means sticking a fake 1st on the end. Storing a birthday without a birth year means picking a dummy leap year like 2000. [`YearMonth`](/api/year-month/) and [`MonthDay`](/api/month-day/) store just the parts that actually exist.
 
 ## Billing months and card expiries
 
-Use [`yearMonth()`](/api/year-month-fn/) for ISO strings like `'2026-11'` or `(year, month)` numbers, and [`monthYear()`](/api/year-month-fn/#monthyear) for card-expiry strings like `'11/28'`:
+Use [`yearMonth()`](/api/year-month-fn/) for ISO strings or year-and-month numbers, and [`monthYear()`](/api/year-month-fn/#monthyear) for card expiries like 11/28:
 
 ```js
 import { monthYear, yearMonth } from 'native-dates';
@@ -34,7 +34,7 @@ Day 31 lands on the last day of shorter months automatically, including February
 
 ## Birthdays and annual holidays
 
-Use [`monthDay()`](/api/month-day-fn/) for month-first strings like `'10/17'` or `'10-17'`, and [`dayMonth()`](/api/month-day-fn/#daymonth) for day-first strings like `'17/10'`. The function name sets the order, so `'05/10'` means the same thing everywhere:
+Use [`monthDay()`](/api/month-day-fn/) for month-first strings and [`dayMonth()`](/api/month-day-fn/#daymonth) for day-first strings. The function name sets the order, so 05/10 means the same thing everywhere:
 
 ```js
 import { dayMonth, monthDay } from 'native-dates';
@@ -67,7 +67,7 @@ leapDay.fallsOn('2028-02-29'); // true
 
 ## Moving between months, days, and full dates
 
-Read `.yearMonth` or `.monthDay` off any `CalendarDate` or `DateTime`, or call `as()` mid-chain:
+Read `.yearMonth` or `.monthDay` off any date or moment, or call `as()` mid-chain:
 
 ```js
 import { date, datetime } from 'native-dates';
@@ -80,11 +80,11 @@ datetime('2026-11-01T02:00:00Z', 'America/Los_Angeles').as('yearMonth').toString
 // '2026-10'
 ```
 
-Going the other way, call `on()` with a day on a `YearMonth` or `in()` with a year on a `MonthDay` to get a full `CalendarDate`.
+Going the other way, call `on()` with a day on a month or `in()` with a year on a birthday to get a full calendar date.
 
 ## Formatting and storing
 
-Both types format with `.text` and `format()`, and turn into ISO strings with `toString()` or `JSON.stringify()`:
+Both types format through `.text` and `format()`, and turn into ISO strings with `toString()`:
 
 ```js
 import { monthDay, yearMonth } from 'native-dates';
@@ -97,4 +97,4 @@ yearMonth('2026-11').toString(); // '2026-11'
 monthDay('10/17').toString(); // '10-17'
 ```
 
-Strings like `'2026-11'` and `'10-17'` store cleanly in a database or URL and parse straight back through `yearMonth()` and `monthDay()`.
+Strings like 2026-11 and 10-17 store cleanly in a database or URL and parse straight back through `yearMonth()` and `monthDay()`.

@@ -144,7 +144,7 @@ function weekKey(day) {
 }
 ```
 
-ISO week numbers from `weekOfYear` and `'W'` always count weeks from Monday. ISO weekday numbers from `dayOfWeek` and `'E'` follow the same Monday-first numbering.
+ISO week numbers from `weekOfYear` always count weeks from Monday, and `dayOfWeek` follows the same Monday-first numbering.
 
 Weekend checks follow the active locale too. `isWeekend()` and `isWeekday()` treat Friday and Saturday as the weekend in Saudi Arabia and Egypt, and Friday alone in Iran. India uses Sunday alone, while most other locales use Saturday and Sunday:
 
