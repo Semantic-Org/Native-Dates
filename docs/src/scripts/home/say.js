@@ -67,9 +67,9 @@ export function mountSay(root, library) {
     const by = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
     if (!by) { return; }
     event.preventDefault();
-    const visible = tabs.filter((tab) => tab.offsetParent !== null);
-    const tab = visible[(visible.indexOf(document.activeElement) + by + visible.length) % visible.length];
+    const tab = tabs[(tabs.indexOf(document.activeElement) + by + tabs.length) % tabs.length];
     tab.focus();
+    tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     show(tab);
   });
 

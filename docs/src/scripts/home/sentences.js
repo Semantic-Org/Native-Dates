@@ -111,7 +111,6 @@ export function sentencesFor(locale = 'en') {
     },
     {
       id: 'birthday',
-      desktopOnly: true,
       steps: [
         [
           annual('birthday.oct17', '10/17', '17/10'),
