@@ -3,10 +3,13 @@
 //   npm run setup:demo              # a new empty project in the temp folder
 //   npm run setup:demo -- --yes     # anything after -- goes to the command
 //   DEMO_DIR=~/my-app npm run setup:demo   # an existing project instead
+//   DEMO_INSTALLED=older npm run setup:demo                  # a project that has an older copy, skills included
+//   DEMO_INSTALLED=older-without-skills npm run setup:demo   # an older copy from before skills were packaged
+//   DEMO_INSTALLED=newer npm run setup:demo                  # a copy newer than this checkout
 
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -62,8 +65,35 @@ server.listen(0, '127.0.0.1', () => {
   if (!process.env.DEMO_DIR) {
     writeFileSync(join(project, 'package.json'), '{\n  "name": "demo-app",\n  "private": true\n}\n');
   }
-  console.log(`\n  demo project  ${project}\n  running       npx native-dates ${process.argv.slice(2).join(' ')}\n`);
-  const child = spawn(['npx', 'native-dates', ...process.argv.slice(2)].join(' '), {
+  // an earlier install: this checkout's package under another version, without its skills or bin for one that predates them
+  // the newest command is then asked for by name, since npx would otherwise run the copy already in the project
+  const state = process.env.DEMO_DIR ? undefined : process.env.DEMO_INSTALLED;
+  const command = state ? 'native-dates@latest' : 'native-dates';
+  if (state) {
+    const { file, manifest } = tarballs.find((tarball) => tarball.manifest.name === 'native-dates');
+    const [major, minor, patch] = manifest.version.split('.').map(Number);
+    const version = state === 'newer'
+      ? `${major}.${minor}.${patch + 1}`
+      : `${major}.${minor}.${Math.max(patch - 1, 0)}`;
+    const copy = join(project, 'node_modules/native-dates');
+    mkdirSync(copy, { recursive: true });
+    execFileSync('tar', ['-xzf', join(scratch, file), '--strip-components=1', '-C', copy]);
+    writeFileSync(join(copy, 'package.json'), JSON.stringify({ ...manifest, version }, null, 2));
+    if (state === 'older-without-skills') {
+      rmSync(join(copy, 'skills'), { recursive: true, force: true });
+      rmSync(join(copy, 'bin'), { recursive: true, force: true });
+    }
+    const dependencies = { 'native-dates': `^${version}` };
+    writeFileSync(
+      join(project, 'package.json'),
+      `${JSON.stringify({ name: 'demo-app', private: true, dependencies }, null, 2)}\n`,
+    );
+    console.log(
+      `\n  installed     native-dates ${version}${state === 'older-without-skills' ? ', with no skills' : ''}`,
+    );
+  }
+  console.log(`\n  demo project  ${project}\n  running       npx ${command} ${process.argv.slice(2).join(' ')}\n`);
+  const child = spawn(['npx', command, ...process.argv.slice(2)].join(' '), {
     cwd: project,
     stdio: 'inherit',
     shell: true,

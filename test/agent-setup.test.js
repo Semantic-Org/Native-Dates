@@ -38,9 +38,10 @@ beforeAll(() => {
   for (const manager of ['npm', 'pnpm', 'yarn', 'bun']) {
     const script = [
       '#!/usr/bin/env node',
-      `const { appendFileSync, mkdirSync, symlinkSync } = require('node:fs');`,
+      `const { appendFileSync, mkdirSync, rmSync, symlinkSync } = require('node:fs');`,
       `appendFileSync(${JSON.stringify(calls)}, '${manager} ' + process.argv.slice(2).join(' ') + '\\n');`,
       `mkdirSync('node_modules', { recursive: true });`,
+      `rmSync('node_modules/native-dates', { recursive: true, force: true });`,
       `symlinkSync(${JSON.stringify(published)}, 'node_modules/native-dates');`,
     ];
     writeFileSync(join(managers, manager), `${script.join('\n')}\n`);
@@ -296,6 +297,63 @@ describe('npx native-dates', () => {
     expect(readFileSync(calls, 'utf8')).toBe('');
     expect(lstatSync(join(dir, '.agents/skills/native-dates')).isDirectory()).toBe(true);
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(true);
+  });
+
+  // a copy of the package on disk under another version, as an earlier install leaves it
+  function installed(dir, installedVersion, { skills = true } = {}) {
+    const copy = join(dir, 'node_modules/native-dates');
+    cpSync(published, copy, { recursive: true });
+    const manifest = JSON.parse(readFileSync(join(copy, 'package.json'), 'utf8'));
+    writeFileSync(join(copy, 'package.json'), JSON.stringify({ ...manifest, version: installedVersion }));
+    if (!skills) { rmSync(join(copy, 'skills'), { recursive: true }); }
+  }
+  const dependsOn = { 'package.json': '{ "name": "app", "dependencies": { "native-dates": "*" } }' };
+
+  it('offers to update an older install, and the done line names both versions', () => {
+    const dir = project(dependsOn);
+    installed(dir, '0.0.1');
+    expect(setup(dir).output).toContain(`from 0.0.1 to ${version}`);
+    const { status, output, calls: ran } = setup(dir, '--yes');
+    expect(status).toBe(0);
+    expect(ran).toBe(`npm install native-dates@${version}`);
+    expect(output).toMatch(new RegExp(`updated .native-dates. from 0\\.0\\.1 to ${version.replace(/\./g, '\\.')}`));
+    expect(readlinkSync(join(dir, '.agents/skills/native-dates'))).toBe(
+      '../../node_modules/native-dates/skills/native-dates',
+    );
+  });
+
+  it("links the older install's own skills when the update is switched off", () => {
+    const dir = project(dependsOn);
+    installed(dir, '0.0.1');
+    const { status, calls: ran } = setup(dir, '--yes', '--no-install');
+    expect(status).toBe(0);
+    expect(ran).toBe('');
+    expect(readlinkSync(join(dir, '.claude/skills/native-dates'))).toBe(
+      '../../node_modules/native-dates/skills/native-dates',
+    );
+    expect(JSON.parse(readFileSync(join(dir, 'node_modules/native-dates/package.json'), 'utf8')).version).toBe('0.0.1');
+  });
+
+  it('places no skills and writes no note beside an older install that carries none and is not updated', () => {
+    const dir = project(dependsOn);
+    installed(dir, '0.0.1', { skills: false });
+    const { status, output, calls: ran } = setup(dir, '--yes', '--no-install');
+    expect(status).toBe(1);
+    expect(ran).toBe('');
+    expect(output).toContain('carries no skills');
+    expect(output).toContain('not set up');
+    expect(existsSync(join(dir, '.agents')) || existsSync(join(dir, '.claude')) || existsSync(join(dir, 'AGENTS.md')))
+      .toBe(false);
+  });
+
+  it('leaves a newer install alone, links its skills, and says it was left', () => {
+    const dir = project(dependsOn);
+    installed(dir, '99.0.0');
+    const { status, output, calls: ran } = setup(dir, '--yes');
+    expect(status).toBe(0);
+    expect(ran).toBe('');
+    expect(output).toContain('99.0.0` is newer than this command');
+    expect(existsSync(join(dir, '.agents/skills/native-dates/SKILL.md'))).toBe(true);
   });
 
   it('refuses outside a project and on an unknown option without writing', () => {

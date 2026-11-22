@@ -14,6 +14,9 @@ import { Terminal } from './terminal.js';
 */
 
 export class Setup {
+  // the flag that switches each step off: an update is the install step for a project that has an older copy
+  static stepFlags = { install: 'install', update: 'install', skills: 'skills', note: 'note' };
+
   static flags = {
     '--yes': 'yes',
     '-y': 'yes',
@@ -32,13 +35,19 @@ export class Setup {
     alreadySetUp: 'already set up for coding agents in this project',
 
     install: '`{command}`',
+    update: '`{command}` takes `{name}` from {from} to {to}',
+    updateName: 'update {from} to {to}',
     skills: '`{folder}` for {readers}',
     note: '`{file}` gains a note telling agents to read the skill first',
     noteNew: '`{file}` is created, telling agents to read the skill first',
 
     installAdded: 'added `{name}@{version}` with {manager}',
     installRan: 'ran `{command}`',
+    updateDone: 'updated `{name}` from {from} to {to} with {manager}',
     skillsDone: '{placed} into `{folder}`',
+    skillsWithheld:
+      'nothing placed in `{folder}`. The installed {from} carries no skills, and the ones in {to} describe a different version',
+    noteWithheld: '`{file}` left alone, since there is no skill for it to point to',
     linked: 'linked {count} {noun}',
     copied: 'copied {count} {noun}',
     nouns: ['skill', 'skills'],
@@ -59,6 +68,8 @@ export class Setup {
     needsYes: 'nothing was written. Run `npx {name} --yes` to make these changes',
 
     ready: 'ready. Agents working in this project now find {skills}',
+    notReady: 'not set up. Update `{name}` to {version}, then run `npx {name}` again',
+    newer: '`{name}@{installed}` is newer than this command ({version}) and was left as it is',
     docs: 'docs at {homepage}',
     again: 'to skip the questions next time, run `npx {name} {flags}`',
     kept: '`{path}` was already there with different contents. Left as it was',
@@ -69,13 +80,13 @@ export class Setup {
     usage: `usage: npx {name} [options]
 
 sets the project in this folder up for coding agents
-  install  adds {name} with the project's package manager, unless it is already a dependency
+  install  adds {name} with the project's package manager, or updates a copy older than this command
   skills   links its skills into .agents/skills and .claude/skills
   note     adds a short note to AGENTS.md (and CLAUDE.md when there is one) telling agents to read the skill
 
 shows what it will change and asks before writing
   -y, --yes       make the changes without asking, for agents and scripts
-  --no-install    leave the package to you
+  --no-install    leave the package as it is, neither added nor updated
   --no-skills     leave the skill folders alone
   --no-note       leave AGENTS.md and CLAUDE.md alone
   -v, --version   show the version
@@ -109,15 +120,20 @@ shows what it will change and asks before writing
     if (!existsSync(join(root, 'package.json'))) { return this.refuse('noProject', { folder: root }); }
 
     this.project = new Project({ ...this, root });
-    this.items = this.project.plan().filter(({ step }) => !this.given.has(`no-${step}`)).map((item) => ({
+    const { installedVersion: installed, isNewer } = this.project;
+    this.items = this.project.plan().filter(({ step }) => !this.given.has(`no-${Setup.stepFlags[step]}`)).map((
+      item,
+    ) => ({
       ...item,
       label: item.step,
       // what the change is called once chosen: its folder or file, or the step itself
-      name: item.plan[1].folder ?? item.plan[1].file ?? item.step,
+      name: item.plan[1].folder ?? item.plan[1].file
+        ?? (item.step === 'update' ? this.words('updateName', item.plan[1]) : item.step),
       text: this.words(...item.plan),
       on: true,
     }));
     this.kept = this.project.otherSkills.map((path) => terminal.row('warn', 'kept', this.words('kept', { path })));
+    if (isNewer) { this.kept.push(terminal.row('warn', 'kept', this.words('newer', { installed }))); }
 
     const setUp = !this.items.length;
     terminal.line(`\n  ${terminal.badge()} ${terminal.say(version)}`);
@@ -201,7 +217,7 @@ shows what it will change and asks before writing
     const steps = ['install', 'skills', 'note'];
     const flags = ['--yes', ...steps.filter((step) => this.given.has(`no-${step}`)).map((step) => `--no-${step}`)];
     for (const step of steps) {
-      const items = this.items.filter(({ label }) => label === step);
+      const items = this.items.filter(({ label }) => Setup.stepFlags[label] === step);
       const off = items.filter(({ on }) => !on).length;
       if (off && off < items.length) { return null; }
       if (off) { flags.push(`--no-${step}`); }
@@ -225,9 +241,12 @@ shows what it will change and asks before writing
       if (terminal.redraws) { show(); }
       let failure;
       try {
-        item.text = this.words(...await item.apply());
-        item.state = 'done';
-        if (item.label === 'install') { item.tail = `${((Date.now() - item.started) / 1000).toFixed(1)}s`; }
+        const [key, values, state = 'done'] = await item.apply();
+        item.text = this.words(key, values);
+        item.state = state;
+        if (Setup.stepFlags[item.label] === 'install') {
+          item.tail = `${((Date.now() - item.started) / 1000).toFixed(1)}s`;
+        }
       }
       catch (error) {
         item.state = 'fail';
@@ -257,13 +276,19 @@ shows what it will change and asks before writing
     for (const line of this.kept) { terminal.line(line); }
     const skills = joinWords(this.project.skills.map((skill) => `\`${skill}\``));
     const flags = asked && this.repeatFlags;
-    terminal.line(`\n  ${terminal.mark('done')} ${terminal.say(this.words('ready', { skills }))}`);
+    // ready only when an agent has a skill to read, which a withheld step can leave it without
+    const isReady = existsSync(`${this.root}/${this.project.skillPath}`);
+    const closing = isReady ? this.words('ready', { skills }) : this.words('notReady');
+    terminal.line(
+      `\n  ${terminal.mark(isReady ? 'done' : 'warn')} ${terminal.say(closing, { level: isReady ? 'info' : 'warn' })}`,
+    );
     if (homepage) { terminal.line(`    ${terminal.say(this.words('docs'), { faded: true })}`); }
-    if (flags) { terminal.line(`    ${terminal.say(this.words('again', { flags }), { faded: true })}`); }
+    if (flags && isReady) { terminal.line(`    ${terminal.say(this.words('again', { flags }), { faded: true })}`); }
     if (notices.length) { terminal.line(); }
     for (const { label, text } of notices) { terminal.line(terminal.row('warn', label, text)); }
     terminal.line();
-    return 0;
+    // a run that could place no skill has not done what was asked
+    return isReady ? 0 : 1;
   }
 
   /*******************************
@@ -280,10 +305,10 @@ shows what it will change and asks before writing
     return fill(copy[key], { name, version, homepage, placed: placed.join(' and '), ...values });
   }
 
-  // a busy row counts its seconds, and a finished install keeps the time it took
+  // a busy row counts its seconds and is cut to the width, since it is redrawn in place. a finished one prints whole
   row({ state, label, text, started, tail }) {
     const seconds = state === 'busy' ? `${Math.floor((Date.now() - started) / 1000)}s` : tail;
-    return this.terminal.row(state, label, text, { tail: seconds, fit: this.terminal.redraws });
+    return this.terminal.row(state, label, text, { tail: seconds, fit: this.terminal.redraws && state === 'busy' });
   }
 }
 

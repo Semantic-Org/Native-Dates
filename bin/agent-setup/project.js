@@ -77,16 +77,18 @@ export class Project {
       pending.some((skill) => skill.folder === folder)
     );
     return [
-      ...(command ? [{ step: 'install', plan: ['install', { command }], apply: () => this.install() }] : []),
+      ...(command
+        ? [{ step: this.isOlder ? 'update' : 'install', plan: this.installPlan, apply: () => this.install() }]
+        : []),
       ...folders.map((folder) => ({
         step: 'skills',
         plan: ['skills', { folder, readers: Project.skillFolders[folder] }],
-        apply: () => ['skillsDone', { folder, ...this.placeSkills(folder) }],
+        apply: () => this.placeSkills(folder),
       })),
       ...this.pendingNotes.map((file) => ({
         step: 'note',
         plan: [existsSync(join(this.root, file)) ? 'note' : 'noteNew', { file }],
-        apply: () => [this.writeNote(file) ? 'noteCreated' : 'noteUpdated', { file }],
+        apply: () => this.writeNote(file),
       })),
     ];
   }
@@ -114,13 +116,51 @@ export class Project {
     return this.installPaths.find((path) => existsSync(`${this.root}/${path}/package.json`));
   }
 
+  // the version on disk, which is the library the project's code runs against
+  get installedVersion() {
+    const path = this.installPath;
+    return path ? JSON.parse(readFileSync(`${this.root}/${path}/package.json`, 'utf8')).version : null;
+  }
+
+  // -1, 0 or 1 by the three numbers of each version
+  static compareVersions(one, other) {
+    const numbers = (version) => version.split(/[.+-]/).slice(0, 3).map(Number);
+    const [a, b] = [numbers(one), numbers(other)];
+    const at = a.findIndex((number, index) => number !== b[index]);
+    return at === -1 ? 0 : Math.sign(a[at] - b[at]);
+  }
+
+  // the installed copy is older than this command, so its skills, if it has any, describe an older library
+  get isOlder() {
+    return Boolean(this.installPath) && Project.compareVersions(this.installedVersion, this.version) < 0;
+  }
+
+  // never downgraded: a newer copy is left as it is and its own skills are the ones linked
+  get isNewer() {
+    return Boolean(this.installPath) && Project.compareVersions(this.installedVersion, this.version) > 0;
+  }
+
+  // the name the project depends on, which can be an alias. an alias is released in step with the package
+  get dependencyName() {
+    const { dependencies, devDependencies, optionalDependencies } = this.manifest;
+    const declared = { ...dependencies, ...devDependencies, ...optionalDependencies };
+    return [this.name, ...this.aliases].find((name) => name in declared) ?? this.name;
+  }
+
+  // an older copy is brought up to this command's version, and a newer or equal one is left alone
   // nothing to run under Yarn Plug'n'Play, where a declared package has no node_modules folder to appear in
   get installCommand() {
-    if (this.installPath) { return null; }
-    if (!this.isDependency) {
-      return [this.packageManager, Project.addCommands[this.packageManager], `${this.name}@${this.version}`];
-    }
+    const add = [this.packageManager, Project.addCommands[this.packageManager]];
+    if (this.installPath) { return this.isOlder ? [...add, `${this.dependencyName}@${this.version}`] : null; }
+    if (!this.isDependency) { return [...add, `${this.name}@${this.version}`]; }
     return existsSync(join(this.root, '.pnp.cjs')) ? null : [this.packageManager, 'install'];
+  }
+
+  get installPlan() {
+    const command = this.installCommand.join(' ');
+    return this.isOlder
+      ? ['update', { command, from: this.installedVersion, to: this.version }]
+      : ['install', { command }];
   }
 
   // one shell string, since Windows only finds npm and its peers through a shell
@@ -128,7 +168,9 @@ export class Project {
   install() {
     const manager = this.packageManager;
     const command = this.installCommand.join(' ');
-    const done = this.isDependency ? ['installRan', { command }] : ['installAdded', { manager }];
+    const updated = ['updateDone', { manager, from: this.installedVersion, to: this.version }];
+    const installed = this.isDependency ? ['installRan', { command }] : ['installAdded', { manager }];
+    const done = this.isOlder ? updated : installed;
     return new Promise((resolve, reject) => {
       const child = spawn(command, { cwd: this.root, shell: true, stdio: ['ignore', 'pipe', 'pipe'] });
       let output = '';
@@ -195,12 +237,22 @@ export class Project {
     return 'copied';
   }
 
-  // how many skills were linked and how many copied
+  // the installed copy carries no skills and is not this command's version, so the only skills at hand
+  // describe a different library than the project has. placing them would teach an agent the wrong API
+  get skillsWithheld() {
+    const path = this.installPath;
+    return Boolean(path) && !existsSync(`${this.root}/${path}/skills`) && this.installedVersion !== this.version;
+  }
+
+  // how many skills were linked and how many copied, or that none were placed and which versions disagree
   // pending is read again here, since the install may have only just put the package on disk
   placeSkills(folder) {
+    if (this.skillsWithheld) {
+      return ['skillsWithheld', { folder, from: this.installedVersion, to: this.version }, 'warn'];
+    }
     const placed = this.pendingSkills.filter((skill) => skill.folder === folder).map((skill) => this.placeSkill(skill));
     const count = (how) => placed.filter((entry) => entry === how).length;
-    return { linked: count('linked'), copied: count('copied') };
+    return ['skillsDone', { folder, linked: count('linked'), copied: count('copied'), to: this.version }];
   }
 
   /*******************************
@@ -244,11 +296,12 @@ export class Project {
     });
   }
 
-  // answers whether the file is new
+  // a note that points at no skill is worse than none, so it is only written once the skill is there
   writeNote(file) {
+    if (!existsSync(`${this.root}/${this.skillPath}`)) { return ['noteWithheld', { file }, 'warn']; }
     const path = join(this.root, file);
     const isNew = !existsSync(path);
     writeFileSync(path, this.withNote(isNew ? '' : readFileSync(path, 'utf8')));
-    return isNew;
+    return [isNew ? 'noteCreated' : 'noteUpdated', { file }];
   }
 }
