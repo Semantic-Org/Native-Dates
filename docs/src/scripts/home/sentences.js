@@ -47,10 +47,17 @@ const MEETINGS = {
 };
 
 const TAGS = { ar: 'ar-EG' };
+const DAY_FIRST = new Set(['ar', 'ru', 'es', 'pt-BR', 'fr']);
 const localize = (value, locale) => (locale && locale !== 'en' ? value.locale(TAGS[locale] ?? locale) : value);
 
 export function sentencesFor(locale = 'en') {
   const [atChoices, inChoices] = MEETINGS[locale] ?? MEETINGS.en;
+  const dayFirst = DAY_FIRST.has(locale);
+  const annual = (say, md, dm) => ({
+    say,
+    code: dayFirst ? `dayMonth('${dm}')` : `monthDay('${md}')`,
+    run: (_, { dayMonth, monthDay }, tag) => localize(dayFirst ? dayMonth(dm) : monthDay(md), tag),
+  });
   return [
     {
       id: 'meeting',
@@ -102,12 +109,40 @@ export function sentencesFor(locale = 'en') {
         ],
       ],
     },
+    {
+      id: 'birthday',
+      desktopOnly: true,
+      steps: [
+        [
+          annual('birthday.oct17', '10/17', '17/10'),
+          annual('birthday.feb29', '02/29', '29/02'),
+          annual('birthday.dec25', '12/25', '25/12'),
+        ],
+        [
+          { say: 'birthday.next', code: '.next()', run: (value) => value.next() },
+          { say: 'birthday.in2028', code: '.in(2028)', run: (value) => value.in(2028) },
+          { say: 'birthday.prev', code: '.previous()', run: (value) => value.previous() },
+        ],
+        [
+          { say: 'birthday.fromNow', code: '.fromNow()', run: (value) => value.fromNow() },
+          format('full'),
+          { say: 'birthday.weekday', code: ".format('dddd')", run: (value) => value.format('dddd') },
+        ],
+      ],
+    },
   ];
 }
 
 export const SENTENCES = sentencesFor('en');
 
-const NOUN = { datetime: 'DateTime', date: 'CalendarDate', time: 'Time', duration: 'Duration', dateRange: 'DateRange' };
+const NOUN = {
+  datetime: 'DateTime',
+  date: 'CalendarDate',
+  time: 'Time',
+  duration: 'Duration',
+  dateRange: 'DateRange',
+  monthDay: 'MonthDay',
+};
 export const describe = (value, { kindOf }) => {
   if (typeof value === 'string') { return { noun: 'string', text: `'${value}'` }; }
   if (typeof value === 'number') { return { noun: 'number', text: String(value) }; }

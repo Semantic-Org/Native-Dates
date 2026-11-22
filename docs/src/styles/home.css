@@ -473,6 +473,7 @@
   .say-head { padding-inline: 12px; }
   .say-where { display: none; }
   .say-tab { padding: 0 9px; font-size: var(--fs-xs); }
+  .say-tab[data-desktop-only] { display: none; }
   .say-grid { padding: 20px 16px 4px; }
   .year { padding: 20px 16px 16px; }
   .year-clocks { gap: 8px; }

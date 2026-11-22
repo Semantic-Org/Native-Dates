@@ -16,7 +16,7 @@ const sentences = sentencesFor(locale).map((sentence) => ({ ...sentence, values:
   <div class="say-head">
     <div class="say-tabs" role="tablist" aria-label={t(locale, 'home.say.tabs')}>
       {sentences.map((s, i) => (
-        <button class="say-tab" type="button" role="tab" id={`say-tab-${s.id}`} aria-controls={`say-${s.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>{t(locale, `home.say.tab.${s.id}`)}</button>
+        <button class="say-tab" type="button" role="tab" id={`say-tab-${s.id}`} aria-controls={`say-${s.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-desktop-only={s.desktopOnly ? '' : undefined}>{t(locale, `home.say.tab.${s.id}`)}</button>
       ))}
     </div>
     <span class="say-where" data-say-where hidden></span>
