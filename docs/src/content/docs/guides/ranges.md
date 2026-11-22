@@ -77,7 +77,8 @@ import { dateRange } from 'native-dates';
 
 const sprint = dateRange('2026-05-01', '2 weeks');
 
-sprint.every('day').length; // 14
+sprint.every('week').map(String); // ['2026-05-01', '2026-05-08']
+sprint.count(); // 14
 sprint.count('weekdays'); // 10
 sprint.count('mondays'); // 2
 ```

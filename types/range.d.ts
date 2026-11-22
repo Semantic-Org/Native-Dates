@@ -363,7 +363,30 @@ export class DateRange extends BaseRange<CalendarDate, CalendarDateInput> {
    *
    * @see {@link https://nativedates.dev/api/ranges/#count count}
    */
-  count(kind?: string): number;
+  count(
+    kind?:
+      | 'days'
+      | 'day'
+      | 'weekdays'
+      | 'weekday'
+      | 'weekends'
+      | 'weekend'
+      | 'mondays'
+      | 'tuesdays'
+      | 'wednesdays'
+      | 'thursdays'
+      | 'fridays'
+      | 'saturdays'
+      | 'sundays'
+      | 'monday'
+      | 'tuesday'
+      | 'wednesday'
+      | 'thursday'
+      | 'friday'
+      | 'saturday'
+      | 'sunday'
+      | (string & {}),
+  ): number;
 
   /**
    * Converts this `DateRange` into a half-open `DateTimeRange` from midnight on the start day

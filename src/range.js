@@ -397,8 +397,8 @@ export class DateRange extends Range {
   static kind = 'date';
 
   count(kind = 'days') {
+    const key = String(kind).trim().toLowerCase().replace(/s$/, '');
     const total = this.duration.days;
-    const key = isString(kind) ? kind.trim().toLowerCase().replace(/s$/, '') : '';
     if (key === 'day') {
       return total;
     }
@@ -406,18 +406,16 @@ export class DateRange extends Range {
     const extra = total % 7;
     const start = this.start.dayOfWeek;
     const hits = (day) => weeks + ((day - start + 7) % 7 < extra ? 1 : 0);
-    if (key === 'weekend') {
-      return hits(6) + hits(7);
-    }
-    if (key === 'weekday') {
-      return total - hits(6) - hits(7);
+    if (key === 'weekday' || key === 'weekend') {
+      const off = hits(6) + hits(7);
+      return key === 'weekend' ? off : total - off;
     }
     const target = weekdayNamed(key);
     return target
       ? hits(target)
       : refuse('unknownKind', String(kind), {
         explanation: isDevelopment
-          ? "expected 'days', 'weekdays', 'weekends', or a weekday name such as 'mondays'"
+          ? "expected 'days', 'weekdays', 'weekends', or a weekday name such as 'mondays'. For other units, use `.duration.total(unit)`"
           : 0,
       });
   }

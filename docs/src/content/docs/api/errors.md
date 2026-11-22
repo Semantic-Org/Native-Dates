@@ -118,7 +118,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `unknownLocale` | `locale()`, factories, `format()`, `monthNames()`, `weekdayNames()`, `configure()` | Locale tag, tag list, or `Accept-Language` header contains an invalid language tag. |
 | `unknownFormat` | `format()`, `monthNames()`, `weekdayNames()` | Invalid format spec or `Intl` options, unsupported duration or label style, or unrecognized tokens outside `[brackets]`. |
 | `unsupportedToken` | `format()` | Token pattern asks for a field the value lacks, such as `HH` on a `CalendarDate` or `YYYY` on a `Time`. |
-| `unknownKind` | `as()` | Target kind is not supported by the receiver. |
+| `unknownKind` | `as()`, `DateRange.count()` | Target kind is not supported by the receiver. |
 
 ### Arithmetic and measurement
 

@@ -972,7 +972,7 @@ describe('DateRange count()', () => {
     expect(sprint.count(' Fridays ')).toBe(2);
   });
 
-  it('throws unknownKind for unrecognized count kinds', () => {
+  it('throws unknownKind for unrecognized or non-string count kinds', () => {
     const sprint = dateRange('2026-05-01', '2 weeks');
     expect(() => sprint.count('weeks')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownKind', at: 'weeks' }),
@@ -980,6 +980,17 @@ describe('DateRange count()', () => {
     expect(() => sprint.count('monay')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownKind', at: 'monay' }),
     );
+    expect(() => sprint.count(1)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownKind', at: '1' }),
+    );
+    expect(() => sprint.count(null)).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownKind', at: 'null' }),
+    );
+  });
+
+  it('is defined only on DateRange, not DateTimeRange or TimeRange', () => {
+    expect(datetimeRange('2026-05-01T09:00', '2h', 'UTC').count).toBeUndefined();
+    expect(timeRange('09:00', '17:00').count).toBeUndefined();
   });
 });
 

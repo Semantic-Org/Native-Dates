@@ -3,7 +3,7 @@ title: Ranges
 lede: Spans between two dates, moments, or times of day, with containment, overlap, and stepping.
 import: import { DateRange, DateTimeRange, TimeRange } from 'native-dates'
 size: core
-updated: 2026-11-14
+updated: 2026-11-22
 ---
 
 ## Range classes
