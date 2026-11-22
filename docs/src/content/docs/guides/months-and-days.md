@@ -1,10 +1,10 @@
 ---
 title: Months and days
-lede: Model billing months, card expiries, and recurring annual dates without inventing a fake day or year.
+lede: Store a month without a day, or a recurring birthday without a year.
 updated: 2026-11-22
 ---
 
-With JavaScript's `Date`, storing a credit card expiry means inventing day 1, and storing a birthday without a birth year means inventing a fake leap year like 2000. [`YearMonth`](/api/year-month/) and [`MonthDay`](/api/month-day/) represent standalone months and recurring days directly so you never carry fields you do not have.
+In plain JavaScript, storing a credit card expiry usually means sticking a fake 1st on the end, and a birthday without a birth year means picking a dummy year like 2000. [`YearMonth`](/api/year-month/) and [`MonthDay`](/api/month-day/) store just the parts that actually exist.
 
 ## Billing months and card expiries
 
@@ -21,7 +21,7 @@ billing.quarter; // 4
 expiry.isPast('UTC'); // false
 ```
 
-Check whether a calendar date falls inside a month with `contains()`, step forward by months or quarters with `plus()`, and pick a concrete day with `on()`:
+Check whether a date falls inside a month with `contains()`, step forward by months or quarters with `plus()`, and pick a specific day with `on()`:
 
 ```js
 billing.contains('2026-11-16'); // true
@@ -30,11 +30,11 @@ yearMonth('2026-02').on(31).toString(); // '2026-02-28'
 yearMonth('2028-02').on(31).toString(); // '2028-02-29'
 ```
 
-Day 31 clamps cleanly to the end of shorter months, which makes end-of-month billing runs straightforward without separate leap-year checks.
+Day 31 lands on the last day of shorter months automatically, including February 29 in leap years.
 
 ## Birthdays and annual holidays
 
-Use [`monthDay()`](/api/month-day-fn/) for month-first strings like `'10/17'` or `'10-17'`, and [`dayMonth()`](/api/month-day-fn/#daymonth) for day-first strings like `'17/10'`. The function name fixes the order so `'05/10'` never depends on locale settings:
+Use [`monthDay()`](/api/month-day-fn/) for month-first strings like `'10/17'` or `'10-17'`, and [`dayMonth()`](/api/month-day-fn/#daymonth) for day-first strings like `'17/10'`. The function name sets the order, so `'05/10'` means the same thing everywhere:
 
 ```js
 import { dayMonth, monthDay } from 'native-dates';
@@ -46,7 +46,7 @@ birthday.equals(european); // true
 birthday.in(2027).toString(); // '2027-10-17'
 ```
 
-Find the next or most recent occurrence relative to today or any reference date with `next()` and `previous()`:
+Find the next or most recent occurrence from today or any reference date with `next()` and `previous()`:
 
 ```js
 birthday.next('2026-05-01').toString(); // '2026-10-17'
@@ -54,7 +54,7 @@ birthday.next('2026-10-17').toString(); // '2027-10-17'
 birthday.previous('2026-10-17').toString(); // '2025-10-17'
 ```
 
-Leap-day dates resolve automatically in common years. Use `fallsOn()` when checking whether a calendar date is that year's observance:
+February 29 shifts to February 28 in non-leap years. Call `fallsOn()` to check whether a given date matches:
 
 ```js
 const leapDay = monthDay(2, 29);
@@ -67,7 +67,7 @@ leapDay.fallsOn('2028-02-29'); // true
 
 ## Moving between months, days, and full dates
 
-Read `.yearMonth` or `.monthDay` directly off any `CalendarDate` or `DateTime`, or call `as()` mid-chain:
+Read `.yearMonth` or `.monthDay` off any `CalendarDate` or `DateTime`, or call `as()` mid-chain:
 
 ```js
 import { date, datetime } from 'native-dates';
@@ -80,11 +80,11 @@ datetime('2026-11-01T02:00:00Z', 'America/Los_Angeles').as('yearMonth').toString
 // '2026-10'
 ```
 
-Going the other way, anchor a `YearMonth` to a day with `on()` or place a `MonthDay` in a year with `in()` to get a full `CalendarDate`.
+Going the other way, call `on()` with a day on a `YearMonth` or `in()` with a year on a `MonthDay` to get a full `CalendarDate`.
 
 ## Formatting and storing
 
-Both types format through the runtime's locale rules with `.text` and `format()`, and serialize to compact ISO strings with `toString()` or `JSON.stringify()`:
+Both types format with `.text` and `format()`, and turn into ISO strings with `toString()` or `JSON.stringify()`:
 
 ```js
 import { monthDay, yearMonth } from 'native-dates';
@@ -97,4 +97,4 @@ yearMonth('2026-11').toString(); // '2026-11'
 monthDay('10/17').toString(); // '10-17'
 ```
 
-Storing `'2026-11'` or `'10-17'` in your database or URL keeps the wire format unambiguous and parses straight back through `yearMonth()` and `monthDay()`.
+Strings like `'2026-11'` and `'10-17'` store cleanly in a database or URL and parse straight back through `yearMonth()` and `monthDay()`.
