@@ -58,7 +58,7 @@ export class Setup {
     choose: 'Customize',
     no: 'No',
     pickOneKeys: ['{arrows} move', 'enter confirm'],
-    chooseQuestion: 'Select changes',
+    chooseQuestion: 'Which changes?',
     pickSeveralKeys: ['{arrows} move', 'space toggle', 'enter confirm', 'esc back'],
     noneSelected: 'nothing selected. Space to toggle, esc to go back',
     cancelled: 'cancelled',
@@ -68,12 +68,12 @@ export class Setup {
 
     ready: 'ready. Agents can now find {skills}',
     notReady: 'setup incomplete. Update `{name}` to {version} and re-run `npx {name}`',
-    newer: '`{name}@{installed}` kept. Newer than CLI ({version})',
+    newer: '`{name}@{installed}`. Newer than CLI ({version})',
     docs: 'docs: {homepage}',
     again: 'skip prompts next time: `npx {name} {flags}`',
-    kept: '`{path}` kept. Existing file differs',
+    kept: '`{path}`. Already exists with different contents',
     failed:
-      '`{command}` failed. No further changes made; fix the {manager} error below or install `{name}` manually, then re-run `npx {name}`',
+      '`{command}` failed. No further changes made. Fix the {manager} error below or install `{name}` manually, then re-run `npx {name}`',
     noProject: 'no `package.json` in {folder}. Run `npx {name}` from your project root',
     unknownOption: 'unknown option `{option}`. Run `npx {name} --help` for usage',
     usage: `Usage: npx {name} [options]

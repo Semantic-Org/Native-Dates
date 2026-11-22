@@ -235,7 +235,7 @@ describe('npx native-dates', () => {
       await type('n', 0);
       const status = await new Promise((done) => child.on('close', done));
       const shown = output.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '');
-      expect(shown).toContain('Select changes');
+      expect(shown).toContain('Which changes?');
       expect(shown).toMatch(/Apply changes\? No/);
       expect(shown).not.toContain('cancelled');
       expect(status).toBe(0);
@@ -352,7 +352,7 @@ describe('npx native-dates', () => {
     const { status, output, calls: ran } = setup(dir, '--yes');
     expect(status).toBe(0);
     expect(ran).toBe('');
-    expect(output).toContain('99.0.0` kept. Newer than CLI');
+    expect(output).toContain('99.0.0`. Newer than CLI');
     expect(existsSync(join(dir, '.agents/skills/native-dates/SKILL.md'))).toBe(true);
   });
 
