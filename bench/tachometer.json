@@ -1,0 +1,5 @@
+{
+  "sampleSize": 50,
+  "timeout": 3,
+  "autoSampleConditions": ["2%"]
+}

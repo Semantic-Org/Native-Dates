@@ -12,7 +12,7 @@ type: workflow
 > **Workflow:** `extend-bench-suite`
 > **Load when:** porting or extending benchmark operations in `bench/` or adjusting `bench/tachometer.json`
 
-> status: reference spec (2026-11-19). Porting `tools/bench.js` and `bench/` is tracked in [`plan/roadmap.md`](../plan/roadmap.md). Follow these rules as benchmarks are added.
+> status: active (2026-11-23). Runner and parallel CI reporting live in [`tools/bench.js`](../../../tools/bench.js) and [`tools/ci/bench/`](../../../tools/ci/bench/README.md).
 
 **Core rule: size each benchmark operation to 20-100 ms on CI runners.** Shared GitHub Actions runners add ~2 ms of fixed scheduling jitter per sample regardless of workload duration. A 2 ms operation experiences ±30% relative noise (`Unsure` on every PR), whereas a 50 ms operation keeps relative noise near ±1%.
 
@@ -41,14 +41,16 @@ Each file `bench/<name>.js` compiles to an isolated benchmark page, and each exp
 import { date } from 'native-dates';
 
 // build fixtures at module scope outside the timed export
-const inputs = Array.from({ length: 10_000 }, (_, i) => `2026-01-${String((i % 28) + 1).padStart(2, '0')}`);
+const inputs = Array.from({ length: 15_000 }, (_, i) => `2026-01-${String((i % 28) + 1).padStart(2, '0')}`);
+export let sink = null;
 
-export function parseDate10k() {
-  for (const input of inputs) { date(input); }
+// purpose: parses 15,000 varied ISO calendar date strings into frozen CalendarDate instances
+export function parseIsoDate15k() {
+  for (const input of inputs) { sink = date(input); }
 }
 ```
 
-`tools/bench.js` inspects the module's exports via `esbuild` and generates the HTML runner and tachometer config automatically. Before each exported function runs, the runner invokes `globalThis.gc` for a synchronous major garbage collection.
+`tools/bench.js` inspects exported functions via `esbuild` and generates the HTML runner and tachometer config automatically, while `tools/ci/bench/reporter.js` indexes optional `// purpose:` comments into the collapsible PR glossary. Before each exported function runs, the runner invokes `globalThis.gc` for a synchronous major garbage collection.
 
 ---
 
@@ -102,11 +104,12 @@ Keep default sampling parameters unless empirical runner data justifies changing
 ## Local Verification Before Pushing
 
 ```sh
-npm run bench                             # single-tree run: verify each op takes 20-100 ms
+npm run bench                             # single-tree run across all bench/*.js files
+node tools/bench.js --suite parse         # single-suite run: verify each op takes 20-100 ms
 node tools/bench.js --head . --base .     # A/A zero-change run: check baseline interval width
 ```
 
-Requires Chrome and a matching major version of `chromedriver` (`npm install chromedriver@<major> --no-save`).
+Requires Chrome (`tools/bench.js` automatically installs the matching major version of `chromedriver` on first run).
 
 ---
 
