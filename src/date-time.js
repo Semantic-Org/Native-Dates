@@ -147,7 +147,7 @@ export class DateTime {
 
   static #parse(text, settings, timeZone, disambiguation) {
     const trimmed = yearFirst(text.trim());
-    const isoStart = opensOnDate(trimmed);
+    const isoStart = settings.loose ? opensOnDate(trimmed) : false;
     if (settings.loose && !isoStart) {
       const zoned = parseLoose(trimmed, settings);
       if (zoned) {
@@ -180,8 +180,7 @@ export class DateTime {
       );
     }
     catch (error) {
-      const zoned = settings.loose && isoStart && error.code === 'invalidDateTime'
-        && parseLoose(trimmed, settings);
+      const zoned = isoStart && error.code === 'invalidDateTime' && parseLoose(trimmed, settings);
       if (!zoned) {
         throw error;
       }
