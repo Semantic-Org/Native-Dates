@@ -13,7 +13,7 @@
 | Staging and production docs deploys | Vercel project, 2 domains, 3 secrets | `.github/workflows/staging-deploy.yml` and `release-deploy.yml` |
 | Local HTTPS docs dev server (`:443`) | Trusted local dev CA | `npm -w docs run cert` (`docs/cert/README.md`) |
 
-Packages are published to npm manually from a maintainer machine. No npm token is stored in GitHub Actions.
+Packages are published to npm manually from a maintainer machine via [`tools/release.js`](../../../tools/release.js) (`npm run release:check`, `npm run release:bump`, `npm run release:publish`). No npm token is stored in GitHub Actions.
 
 ## CI Checks (`test.yml`, `bundle-size.yml`, `bench.yml`)
 
