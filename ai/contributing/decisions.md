@@ -52,7 +52,7 @@ Active package decisions grouped by area, newest first.
 ### Parsing, Inputs, and Comparisons
 
 - **D26:** Loose parsing returns `null` unless year, month, and day are all written (2026-11-23) [L155-L159](decisions/package.md#d26-loose-parsing-returns-null-unless-year-month-and-day-are-all-written-2026-11-23)
-  - Reopen: callers parsing human-typed current-year dates like `'Nov 16'` ask for an explicit reference-year option on `date()` rather than `monthDay().in(year)`.
+  - Reopen: callers report friction from human-typed current-year dates like `'Nov 16'` returning `null`.
 - **D25:** Per-call `locale` decides numeric date order ahead of `configure({ dayFirst })` (2026-11-23) [L149-L153](decisions/package.md#d25-per-call-locale-decides-numeric-date-order-ahead-of-configure-dayfirst--2026-11-23)
   - Reopen: server apps passing per-request `Accept-Language` headers alongside `configure({ dayFirst: true })` report wanting the configured `dayFirst` setting to override per-call `locale`.
 - **D20:** Loose parsing follows the locale while `monthDay()` and `dayMonth()` keep function-name order (2026-11-22) [L119-L123](decisions/package.md#d20-loose-parsing-follows-the-locale-while-monthday-and-daymonth-keep-function-name-order-2026-11-22)
@@ -133,4 +133,4 @@ Every package decision (`D1`..`Dn`) in file order.
 - **D25:** Per-call `locale` decides numeric date order ahead of `configure({ dayFirst })` (2026-11-23) [L149-L153](decisions/package.md#d25-per-call-locale-decides-numeric-date-order-ahead-of-configure-dayfirst--2026-11-23)
   - Reopen: server apps passing per-request `Accept-Language` headers alongside `configure({ dayFirst: true })` report wanting the configured `dayFirst` setting to override per-call `locale`.
 - **D26:** Loose parsing returns `null` unless year, month, and day are all written (2026-11-23) [L155-L159](decisions/package.md#d26-loose-parsing-returns-null-unless-year-month-and-day-are-all-written-2026-11-23)
-  - Reopen: callers parsing human-typed current-year dates like `'Nov 16'` ask for an explicit reference-year option on `date()` rather than `monthDay().in(year)`.
+  - Reopen: callers report friction from human-typed current-year dates like `'Nov 16'` returning `null`.
