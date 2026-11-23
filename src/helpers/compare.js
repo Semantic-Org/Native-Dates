@@ -25,26 +25,20 @@ export const point = (input) => {
   if (input?.[IS_DATE_TIME] || input?.[IS_CALENDAR_DATE] || input?.[IS_TIME] || input?.[IS_YEAR_MONTH]) {
     return input;
   }
-  if (isString(input)) {
-    const text = input.trim();
-    if (looksLikeTime.test(text)) {
-      return new Time(text);
-    }
-    if (looksLikeDateTime.test(text)) {
-      return new DateTime(text);
-    }
-    return new CalendarDate(text);
+  if (isString(input) ? looksLikeTime.test(input.trim()) : isPlainTime(input)) {
+    return new Time(input);
   }
   // bare numbers default to epoch ms when first (compare(Date.now(), dt)), whereas asKindOf() below
   // coerces a trailing number to match the leading argument (compare(time('09:00'), 9))
-  if (isDate(input) || isNumber(input) || isZonedDateTime(input) || isInstant(input) || isPlainDateTime(input)) {
+  if (
+    isString(input)
+      ? looksLikeDateTime.test(input.trim())
+      : isDate(input) || isNumber(input) || isZonedDateTime(input) || isInstant(input) || isPlainDateTime(input)
+  ) {
     return new DateTime(input);
   }
-  if (isPlainDate(input)) {
+  if (isString(input) || isPlainDate(input)) {
     return new CalendarDate(input);
-  }
-  if (isPlainTime(input)) {
-    return new Time(input);
   }
   if (input instanceof Temporal.PlainYearMonth) {
     return new YearMonth(input);
