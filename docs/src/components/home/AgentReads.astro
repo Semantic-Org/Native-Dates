@@ -1,0 +1,175 @@
+---
+import { AGENT_PROMPT, AGENT_QUOTES } from '../../data/agent-quotes.js';
+import { t } from '../../lib/i18n.js';
+
+const locale = Astro.currentLocale;
+
+const SOURCE_MARK = {
+  anthropic:
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.304 3.541h-3.672l6.696 16.918H24Zm-10.608 0L0 20.459h3.744l1.37-3.553h7.005l1.369 3.553h3.744L10.536 3.541Zm-.371 10.223L8.616 7.82l2.291 5.945Z"/></svg>',
+  openai:
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.282 9.821a6 6 0 0 0-.516-4.91a6.05 6.05 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a6 6 0 0 0-3.998 2.9a6.05 6.05 0 0 0 .743 7.097a5.98 5.98 0 0 0 .51 4.911a6.05 6.05 0 0 0 6.515 2.9A6 6 0 0 0 13.26 24a6.06 6.06 0 0 0 5.772-4.206a6 6 0 0 0 3.997-2.9a6.06 6.06 0 0 0-.747-7.073M13.26 22.43a4.48 4.48 0 0 1-2.876-1.04l.141-.081l4.779-2.758a.8.8 0 0 0 .392-.681v-6.737l2.02 1.168a.07.07 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494M3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085l4.783 2.759a.77.77 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646M2.34 7.896a4.5 4.5 0 0 1 2.366-1.973V11.6a.77.77 0 0 0 .388.677l5.815 3.354l-2.02 1.168a.08.08 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.08.08 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667m2.01-3.023l-.141-.085l-4.774-2.782a.78.78 0 0 0-.785 0L9.409 9.23V6.897a.07.07 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.8.8 0 0 0-.393.681zm1.097-2.365l2.602-1.5l2.607 1.5v2.999l-2.597 1.5l-2.607-1.5Z"/></svg>',
+  google:
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></svg>',
+  x:
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>',
+  yours:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 5 4-5 4M12 16h7"/></svg>',
+};
+
+const COPY_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+const CHECK_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+const CHEVRON_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+const PREV_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+const NEXT_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+
+const esc = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const renderQuote = (text) => esc(text).replace(/`([^`]+)`/g, '<code>$1</code>');
+
+// pack tall entries into solo columns and consecutive short entries into stacked pairs, ending on the prompt tile
+const entries = [...AGENT_QUOTES, { id: 'your-agent', kind: 'prompt', size: 'short', source: 'yours' }];
+const columns = [];
+for (const entry of entries) {
+  if (entry.size === 'tall') {
+    columns.push({ type: 'tall', items: [entry] });
+  }
+  else {
+    const prev = columns.at(-1);
+    if (prev?.type === 'pair' && prev.items.length < 2) {
+      prev.items.push(entry);
+    }
+    else {
+      columns.push({ type: 'pair', items: [entry] });
+    }
+  }
+}
+
+// duplicate the column set once for seamless looping while hiding the clone from screen readers and tab order
+const sets = [false, true];
+---
+<div class="reads" data-reads>
+  <div class="container">
+    <div class="reads-head">
+      <div class="reads-title">
+        <p class="reads-eyebrow">{t(locale, 'home.reads.eyebrow')}</p>
+        <h2>{t(locale, 'home.reads.title')}</h2>
+      </div>
+      <div class="reads-controls">
+        <button class="reads-copy" type="button" data-reads-copy>
+          <span class="reads-copy-icon" aria-hidden="true" set:html={COPY_ICON} />
+          <span class="reads-copy-check" aria-hidden="true" set:html={CHECK_ICON} />
+          <span data-reads-copy-label>{t(locale, 'home.reads.copy')}</span>
+        </button>
+        <button
+          class="reads-inspect"
+          type="button"
+          aria-expanded="false"
+          aria-controls="reads-prompt-drawer"
+          data-reads-toggle
+        >
+          <span>{t(locale, 'home.reads.inspect')}</span>
+          <Fragment set:html={CHEVRON_ICON} />
+        </button>
+        <div class="reads-nav">
+          <button
+            class="reads-step"
+            type="button"
+            aria-label={t(locale, 'home.reads.prev')}
+            data-reads-prev
+            set:html={PREV_ICON}
+          />
+          <button
+            class="reads-step"
+            type="button"
+            aria-label={t(locale, 'home.reads.next')}
+            data-reads-next
+            set:html={NEXT_ICON}
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="reads-drawer" id="reads-prompt-drawer" hidden>
+      <div class="reads-drawer-head">
+        <span class="reads-drawer-label">{t(locale, 'home.reads.promptLabel')}</span>
+        <span class="reads-drawer-tools">Claude Code · Codex · Gemini CLI · Cursor</span>
+        <button class="copy" type="button" data-copy="#agent-read-prompt" aria-label={t(locale, 'home.reads.copy')}></button>
+      </div>
+      <pre class="reads-drawer-body" id="agent-read-prompt" lang="en" dir="ltr" set:text={AGENT_PROMPT} />
+    </div>
+  </div>
+
+  <div class="reads-rail" dir="ltr" data-reads-rail>
+    <div class="reads-track" role="region" aria-label={t(locale, 'home.reads.list')} tabindex="0" data-reads-track>
+      {sets.map((cloned) => (
+        <div class="reads-set" data-reads-set aria-hidden={cloned ? 'true' : undefined}>
+          {columns.map((col) => (
+            <div class:list={['reads-col', col.type === 'tall' ? 'is-tall' : 'is-pair']}>
+              {col.items.map((item) => (
+                item.kind === 'prompt'
+                  ? (
+                    <article class="read-card is-short is-yours">
+                      <p class="read-quote">{t(locale, 'home.reads.yours.copy')}</p>
+                      <div class="read-yours-foot">
+                        <p class="read-by">
+                          <span class="read-mark is-yours" aria-hidden="true" set:html={SOURCE_MARK.yours} />
+                          <strong>{t(locale, 'home.reads.yours.name')}</strong>
+                        </p>
+                        <button
+                          class="reads-copy is-compact"
+                          type="button"
+                          tabindex={cloned ? -1 : undefined}
+                          data-reads-copy
+                        >
+                          <span class="reads-copy-icon" aria-hidden="true" set:html={COPY_ICON} />
+                          <span class="reads-copy-check" aria-hidden="true" set:html={CHECK_ICON} />
+                          <span data-reads-copy-label>{t(locale, 'home.reads.copy')}</span>
+                        </button>
+                      </div>
+                    </article>
+                  )
+                  : item.size === 'tall'
+                  ? (
+                    <figure class="read-card is-tall" lang="en" dir="ltr">
+                      <figcaption class="read-brand">
+                        <span class="read-mark" aria-hidden="true" set:html={SOURCE_MARK[item.source]} />
+                        <strong>{item.brand ?? item.name}</strong>
+                      </figcaption>
+                      <div class="read-foot">
+                        <blockquote class="read-quote" set:html={renderQuote(item.quote)} />
+                        {item.kind === 'human' && (
+                          <p class="read-by">
+                            <strong>{item.name}</strong>
+                            {item.role && <span>{item.role}</span>}
+                          </p>
+                        )}
+                      </div>
+                    </figure>
+                  )
+                  : (
+                    <figure class="read-card is-short" lang="en" dir="ltr">
+                      <blockquote class="read-quote" set:html={renderQuote(item.quote)} />
+                      <figcaption class="read-by">
+                        <span class="read-mark is-quiet" aria-hidden="true" set:html={SOURCE_MARK[item.source]} />
+                        <strong>{item.name}</strong>
+                        {item.role && <span>{item.role}</span>}
+                      </figcaption>
+                    </figure>
+                  )
+              ))}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="container">
+    <p class="reads-disclaimer">{t(locale, 'home.reads.disclaimer')}</p>
+  </div>
+</div>
