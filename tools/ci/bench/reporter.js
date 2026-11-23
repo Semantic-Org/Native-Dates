@@ -289,6 +289,7 @@ export function buildReport({
   run = {},
   repo = '',
   wallClockSec = null,
+  expectedSuites = [],
 }) {
   const sampleSize = Number(sampling.sampleSize ?? 50);
   const timeout = Number(sampling.timeout ?? 3);
@@ -342,6 +343,17 @@ export function buildReport({
     historySummary[metric.history_status ?? 'no-history']++;
   }
 
+  const conclusion = run.conclusion ?? '';
+  const presentSuites = new Set(classified.map((metric) => metric.suite));
+  const indexedSuites = [...new Set([...benchIndex.keys()].map((id) => id.split('/')[0]))].sort();
+  const targetSuites = expectedSuites.length > 0
+    ? expectedSuites
+    : conclusion && conclusion !== 'success'
+    ? indexedSuites
+    : [];
+  const missingSuites = targetSuites.filter((suite) => !presentSuites.has(suite));
+  const partial = missingSuites.length > 0 || Boolean(conclusion && conclusion !== 'success');
+
   return {
     head: { sha: head.sha ?? '', ref: head.ref ?? '', msg: head.msg ?? '' },
     base: { sha: baseSha, ref: base.ref || 'main' },
@@ -349,12 +361,15 @@ export function buildReport({
       url: run.url ?? '',
       id: run.id || extractRunId(run.url),
       reportUrl: run.reportUrl ?? '',
+      conclusion,
     },
     repo,
     wall_clock_seconds: wallClockSec,
     sample_size: sampleSize,
     timeout_minutes: timeout,
     noise_floor_percent: floor,
+    partial,
+    missing_suites: missingSuites,
     summary,
     history_summary: historySummary,
     post: classified.length > 0,
@@ -439,7 +454,18 @@ export function renderComment(report) {
     lines.push(`<sup>${escapeText(report.head.msg)}</sup>`, '');
   }
 
-  lines.push(`> [!${state.alertType}]`, `> ${state.body}`, '');
+  const alertType = report.partial && state.alertType !== 'CAUTION' ? 'WARNING' : state.alertType;
+  const alertLines = [`> [!${alertType}]`, `> ${state.body}`];
+  if (report.partial) {
+    const missing = report.missing_suites?.length
+      ? ` Missing suite results: ${report.missing_suites.map((suite) => `\`${escapeCode(suite)}\``).join(', ')}.`
+      : '';
+    const statusLabel = report.run.conclusion && report.run.conclusion !== 'success'
+      ? ` (\`${escapeCode(report.run.conclusion)}\`)`
+      : '';
+    alertLines.push(`> ⚠️ **Partial benchmark run${statusLabel}.**${missing}`);
+  }
+  lines.push(...alertLines, '');
 
   const counts = [
     `✅ ${faster.length} faster`,
@@ -749,6 +775,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       repo: { type: 'string', default: process.env.GITHUB_REPOSITORY ?? '' },
       'run-url': { type: 'string', default: '' },
       'run-id': { type: 'string', default: '' },
+      'run-conclusion': { type: 'string', default: '' },
+      'expected-suites': { type: 'string', default: '' },
       'report-url': { type: 'string', default: '' },
       'wall-clock': { type: 'string' },
       out: { type: 'string', default: './bench-report' },
@@ -759,6 +787,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(2);
   }
   const results = readResults(values.results);
+  const expectedSuites = values['expected-suites']
+    .split(',')
+    .map((suite) => suite.trim())
+    .filter(Boolean);
   const report = buildReport({
     results,
     sampling: readSampling(values['repo-root']),
@@ -766,9 +798,15 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     prHistory: loadPrHistory(values['pr-history']),
     head: { sha: values.sha, ref: values.ref, msg: values.msg },
     base: { sha: values['base-sha'], ref: values['base-ref'] },
-    run: { url: values['run-url'], id: values['run-id'], reportUrl: values['report-url'] },
+    run: {
+      url: values['run-url'],
+      id: values['run-id'],
+      reportUrl: values['report-url'],
+      conclusion: values['run-conclusion'],
+    },
     repo: values.repo,
     wallClockSec: values['wall-clock'] !== undefined ? Number(values['wall-clock']) : null,
+    expectedSuites,
   });
   writeReport(report, values.out);
   console.log(

@@ -1,6 +1,8 @@
 import { date, datetime } from 'native-dates';
 
-// 30 locale and zone pairs reserved exclusively for coldLocales so its first run hits empty Intl and token caches
+const loadedAt = Date.now();
+
+// 30 locale and zone pairs reserved exclusively for coldLocales600 so its run hits empty Intl and token caches
 const coldPairs = [
   ['America/Toronto', 'fr-CA'],
   ['America/Mexico_City', 'es-MX'],
@@ -34,42 +36,49 @@ const coldPairs = [
   ['Europe/Dublin', 'en-IE'],
 ];
 
-const coldStamps = Array.from({ length: 20 }, (_, index) => 1_740_000_000_000 + index * 1_234_567_000);
+const coldStamps = Array.from({ length: 20 }, (_, index) => 1_740_000_000_123 + index * 1_234_567_891);
 
 const presetZones = ['UTC', 'America/New_York', 'Europe/Paris'];
 const presetLocales = ['en-US', 'de-DE', 'fr-FR', 'es-419'];
-const customBag = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
 
-const presetInstants = Array.from({ length: 1_200 }, (_, index) =>
-  datetime(1_740_000_000_000 + index * 5_432_000, {
+const presetInstants = Array.from({ length: 8_000 }, (_, index) =>
+  datetime(1_740_000_000_111 + index * 4_321_123, {
     zone: presetZones[index % presetZones.length],
     locale: presetLocales[index % presetLocales.length],
   }));
 
-const tokenInstants = Array.from({ length: 2_000 }, (_, index) =>
-  datetime(1_740_000_000_000 + index * 3_723_000, {
-    zone: index % 2 === 0 ? 'UTC' : 'America/New_York',
+const presetDays = Array.from(
+  { length: 8_000 },
+  (_, index) =>
+    date('1995-01-01', { locale: presetLocales[index % presetLocales.length] }).plus(
+      (index * 3_571) % 12_000,
+      'days',
+    ),
+);
+
+const tokenInstants = Array.from({ length: 28_000 }, (_, index) =>
+  datetime(1_735_000_000_222 + index * 2_718_281, {
+    zone: index % 3 === 0 ? 'UTC' : index % 3 === 1 ? 'America/New_York' : 'Europe/Berlin',
     locale: index % 4 === 3 ? 'de-DE' : 'en-US',
   }));
 
-const anchorTime = datetime('2026-11-23T12:00:00Z');
-const anchorDate = date('2026-11-23');
-const relativeInstants = Array.from({ length: 1_000 }, (_, index) => {
-  const offsetMs = Math.floor(15_000 * 1.018 ** (index % 600)) * (index % 2 === 0 ? -1 : 1);
-  return datetime(anchorTime.epochMilliseconds + offsetMs);
+// anchor relative fixtures around Date.now() so live fromNow() calls span seconds through years in any calendar year
+const relativeInstants = Array.from({ length: 3_000 }, (_, index) => {
+  const offsetMs = Math.floor(12_000 * 1.011 ** (index % 1_200)) * (index % 2 === 0 ? -1 : 1) + index * 17;
+  return datetime(loadedAt + offsetMs, 'Europe/Berlin');
 });
-const relativeDates = Array.from({ length: 1_000 }, (_, index) => anchorDate.plus((index % 400) - 200, 'days'));
+const baseDay = date(new Date(loadedAt).toISOString().slice(0, 10));
+const relativeDates = Array.from({ length: 3_000 }, (_, index) => baseDay.plus(((index * 97) % 500) - 250, 'days'));
 
 // pre-warm steady-state format paths without touching any locale or zone in coldPairs
-for (let i = 0; i < 512; i++) {
-  const sample = presetInstants[i % presetInstants.length];
-  sample.format('medium');
-  void sample.text;
-  sample.format(customBag);
-  tokenInstants[i % tokenInstants.length].format('YYYY-MM-DD HH:mm:ss');
-  tokenInstants[i % tokenInstants.length].format('dddd, MMMM Do YYYY h:mm A');
-  relativeInstants[i % relativeInstants.length].from(anchorTime);
-  relativeDates[i % relativeDates.length].from(anchorDate);
+for (let i = 0; i < 256; i++) {
+  presetInstants[i].format('medium');
+  presetInstants[i].format({ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  presetDays[i].format({ weekday: 'short', day: 'numeric' });
+  tokenInstants[i].format('YYYY-MM-DD HH:mm:ss');
+  tokenInstants[i].format('dddd, MMMM Do YYYY h:mm A');
+  relativeInstants[i].fromNow();
+  relativeDates[i].fromNow();
 }
 
 export let sink = '';
@@ -85,29 +94,29 @@ export function coldLocales600() {
   }
 }
 
-// purpose: formats 60,000 DateTime presets, .text getters, and custom Intl option bags across 4 locales and 3 zones
-export function formatIntlPreset60k() {
-  for (let i = 0; i < 20_000; i++) {
-    const point = presetInstants[i % presetInstants.length];
-    sink = point.format('medium');
-    sink = point.text;
-    sink = point.format(customBag);
+// purpose: formats 24,000 DateTime presets and inline DateTime/CalendarDate option bags across 4 locales and 3 zones
+export function formatPresetsAndBags24k() {
+  for (let i = 0; i < presetInstants.length; i++) {
+    sink = presetInstants[i].format('medium');
+    // write option literals inline at the callsite so per-call cache-key serialization stays on the timed path
+    sink = presetInstants[i].format({ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    sink = presetDays[i].format({ weekday: 'short', day: 'numeric' });
   }
 }
 
-// purpose: formats 36,000 ASCII and localized word/ordinal token patterns (YYYY-MM-DD HH:mm:ss and dddd, MMMM Do)
-export function formatToken36k() {
-  for (let i = 0; i < 18_000; i++) {
-    const point = tokenInstants[i % tokenInstants.length];
+// purpose: formats 56,000 distinct ASCII and localized word/ordinal token patterns across 3 zones and 2 locales
+export function formatToken56k() {
+  for (let i = 0; i < tokenInstants.length; i++) {
+    const point = tokenInstants[i];
     sink = point.format('YYYY-MM-DD HH:mm:ss');
     sink = point.format('dddd, MMMM Do YYYY h:mm A');
   }
 }
 
-// purpose: formats 4,000 relative time and calendar phrases across seconds, hours, days, months, and years
-export function formatRelative4k() {
-  for (let i = 0; i < 2_000; i++) {
-    sink = relativeInstants[i % relativeInstants.length].from(anchorTime);
-    sink = relativeDates[i % relativeDates.length].from(anchorDate);
+// purpose: formats 6,000 live DateTime.fromNow() and CalendarDate.fromNow() phrases across seconds through months
+export function formatRelativeNow6k() {
+  for (let i = 0; i < relativeInstants.length; i++) {
+    sink = relativeInstants[i].fromNow();
+    sink = relativeDates[i].fromNow();
   }
 }

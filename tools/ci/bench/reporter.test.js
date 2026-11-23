@@ -321,6 +321,41 @@ describe('buildReport() and renderComment()', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('flags partial benchmark runs and lists missing suites when a matrix cell fails', () => {
+    const dir = writeResultsDir({
+      'parse.json': [{ op: 'fasterOp', pct: [-15, -10], abs: [-6, -4] }],
+    });
+    const benchIndex = new Map([
+      ['parse/fasterOp', { source: { path: 'bench/parse.js', line: 10 }, purpose: 'parses dates' }],
+      ['workloads/monthGrid', { source: { path: 'bench/workloads.js', line: 20 }, purpose: 'builds month grid' }],
+    ]);
+
+    try {
+      const failedRun = buildReport({
+        results: readResults(dir),
+        benchIndex,
+        run: { conclusion: 'failure' },
+      });
+      expect(failedRun.partial).toBe(true);
+      expect(failedRun.missing_suites).toEqual(['workloads']);
+      const markdown = renderComment(failedRun);
+      expect(markdown).toContain('> [!WARNING]');
+      expect(markdown).toContain('⚠️ **Partial benchmark run (`failure`).** Missing suite results: `workloads`.');
+
+      // narrowed plugin-only runs that succeed should not be marked partial
+      const narrowedSuccess = buildReport({
+        results: readResults(dir),
+        benchIndex,
+        run: { conclusion: 'success' },
+      });
+      expect(narrowedSuccess.partial).toBe(false);
+      expect(narrowedSuccess.missing_suites).toEqual([]);
+    }
+    finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('fetch-pr-history helpers', () => {
