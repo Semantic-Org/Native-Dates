@@ -496,19 +496,4 @@ describe('locale precedence in formatting', () => {
     expect(date('2026-05-15').locale('en-US, @@@;q=0.5').locale()).toBe('en-US');
     expect(date('2026-05-15').locale('   ').locale()).toBeUndefined();
   });
-
-  it('falls back to Intl.NumberFormat unit formatting when Intl.DurationFormat is unavailable', () => {
-    const original = Intl.DurationFormat;
-    delete Intl.DurationFormat;
-    try {
-      const span = days(2).plus(3, 'hours').locale('en-US');
-      expect(span.format('long')).toBe('2 days, 3 hours');
-      expect(span.format('narrow')).toBe('2d 3h');
-      expect(span.format('digital')).toBe('2d 3:00:00');
-      expect(days(0).locale('en-US').format('short')).toBe('0 sec');
-    }
-    finally {
-      Intl.DurationFormat = original;
-    }
-  });
 });

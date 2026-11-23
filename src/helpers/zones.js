@@ -172,16 +172,14 @@ export const checkedLocale = (tag) => {
   if (tag === undefined || tag === null || (isString(tag) && !tag.trim())) {
     return undefined;
   }
-  // bracket array keys so ['es', 'en'] doesn't collide with header string 'es,en'
-  const key = isString(tag) ? tag : `[${tag}]`;
-  if (!knownLocales.has(key)) {
-    const explanation = isDevelopment
-      ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
-      : 0;
-    if (!isString(tag)) {
-      guard(() => Intl.getCanonicalLocales(tag), 'unknownLocale', String(tag), explanation);
-      return tag;
-    }
+  const explanation = isDevelopment
+    ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
+    : 0;
+  if (!isString(tag)) {
+    guard(() => Intl.getCanonicalLocales(tag), 'unknownLocale', String(tag), explanation);
+    return tag;
+  }
+  if (!knownLocales.has(tag)) {
     if (!/[;,*]/.test(tag)) {
       const normalized = guard(
         () => Intl.getCanonicalLocales(tag.trim().replace(/_/g, '-'))[0],
@@ -189,7 +187,7 @@ export const checkedLocale = (tag) => {
         tag,
         explanation,
       );
-      return knownLocales.set(key, normalized);
+      return knownLocales.set(tag, normalized);
     }
     // parse RFC 9110 Accept-Language q-weights case-insensitively, dropping '*' wildcards, q=0, and malformed fallback tags
     const entries = tag.split(',')
@@ -206,9 +204,9 @@ export const checkedLocale = (tag) => {
       refuse('unknownLocale', tag, { explanation });
     }
     // headers with no accepted language (like '*' or `es;q=0`) resolve to undefined
-    knownLocales.set(key, valid.length > 1 ? Object.freeze(valid) : valid[0]);
+    knownLocales.set(tag, valid.length > 1 ? Object.freeze(valid) : valid[0]);
   }
-  return knownLocales.get(key);
+  return knownLocales.get(tag);
 };
 
 // checked before built-in presets so apps can redefine names like 'short'
