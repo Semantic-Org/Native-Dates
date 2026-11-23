@@ -1,242 +1,200 @@
-import { compare, configure, date, datetime, today } from 'native-dates';
+import { compare, date, datetime } from 'native-dates';
+
+import { checkAnswer } from './helpers/checks.js';
+import { between, distinctInstants, holdClock, pad, requireHost, seeded } from './helpers/fixtures.js';
 
 /*
-  one records app and the things a person does to it, each op one pass over the rows a real app holds.
-  Fixtures and expected answers use only Temporal and Intl, so the same tasks can be written against another library
+  an orders table and a dashboard in a browser that sits in Berlin and reads English.
+  the app configures nothing, so every value takes the browser's own zone and locale.
+  ops run in session order and later ops use what earlier ops built
 */
 
 /*******************************
             Fixture
 *******************************/
 
-// the viewer opens the app at 10:30 on a Sunday in Berlin, and the clock holds there for every op
-const viewer = { zone: 'Europe/Berlin', locale: 'de-DE', now: Date.UTC(2026, 10, 22, 9, 30) };
-Date.now = () => viewer.now;
+// wire data only, so no library code runs before the first op
+const viewer = { zone: 'Europe/Berlin', locale: 'en-US', now: Date.UTC(2026, 10, 22, 9, 30) };
+holdClock(viewer.now);
 
-// mulberry32, so every sample and both sides read identical rows
-const seeded = (seed) => () => {
-  seed = (seed + 0x6d2b79f5) | 0;
-  let value = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-  value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
-  return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
-};
 const random = seeded(20261122);
-const between = (low, high) => low + Math.floor(random() * (high - low));
+const titles = ['Invoice', 'Quote', 'Delivery', 'Service', 'Callback', 'Contract', 'Reminder', 'Credit'];
 
-// 18 months, so both offsets and both clock changes in the viewer's zone appear
-const ordersFrom = Date.UTC(2025, 5, 1);
-const ordersTo = Date.UTC(2026, 10, 22);
-// a 90 day dashboard window that crosses the October clock change
-const eventsFrom = Date.UTC(2026, 7, 25);
-const eventsTo = Date.UTC(2026, 10, 22);
-
-const titles = ['Rechnung', 'Angebot', 'Lieferung', 'Wartung', 'Rückruf', 'Vertrag', 'Mahnung', 'Gutschrift'];
-
+// 18 months of orders, so both offsets and both clock changes appear
+const placed = distinctInstants(random, 1_000, Date.UTC(2025, 5, 1), viewer.now);
+// edited between 20 seconds and 46 days ago, most of them recently
+const ages = new Set();
+while (ages.size < placed.length) {
+  ages.add(Math.floor(20_000 * 10 ** (random() * 5.3)));
+}
+const edited = [...ages];
 // real due dates repeat, 90 distinct days from a month overdue to two months out
 const dueFrom = Temporal.PlainDate.from('2026-10-23');
 
-// distinct to the millisecond so no answer can be remembered by input string
-const distinctInstants = (count, from, to) => {
-  const seen = new Set();
-  const instants = [];
-  while (instants.length < count) {
-    const ms = between(from, to);
-    if (!seen.has(ms)) {
-      seen.add(ms);
-      instants.push(ms);
-    }
-  }
-  return instants;
-};
-
-const orderCount = 10_000;
-const orders = distinctInstants(orderCount, ordersFrom, ordersTo).map((ms, index) => ({
+const orders = placed.map((ms, index) => ({
   id: 1000 + index,
   title: `${titles[index % titles.length]} ${1000 + index}`,
-  placedAt: ms,
-  dueOn: dueFrom.add({ days: between(0, 90) }).toString(),
+  placedAt: new Date(ms).toISOString(),
+  updatedAt: new Date(viewer.now - edited[index]).toISOString(),
+  dueOn: dueFrom.add({ days: between(random, 0, 90) }).toString(),
 }));
 
-// the browser receives JSON strings, the server's database driver hands back Date objects
-const pageSize = 1_000;
-const wireOrders = orders.slice(0, pageSize).map((order) => ({
-  ...order,
-  placedAt: new Date(order.placedAt).toISOString(),
-}));
-const driverPages = Array.from(
-  { length: 10 },
-  (_, page) =>
-    orders.slice(page * pageSize, (page + 1) * pageSize).map((order) => ({
-      ...order,
-      placedAt: new Date(order.placedAt),
-    })),
-);
-const events = distinctInstants(10_000, eventsFrom, eventsTo).map((ms, index) => ({
+// a 90 day dashboard window that crosses the October clock change
+const feed = distinctInstants(random, 10_000, Date.UTC(2026, 7, 25), viewer.now).map((ms, index) => ({
   id: index,
   at: new Date(ms).toISOString(),
 }));
 
 /*******************************
+              Ops
+*******************************/
+
+let table = [];
+let events = [];
+
+// purpose: opens a page of 1,000 orders from JSON and shows when each was placed and its due date
+export function openTable1k() {
+  table = orders.map((order) => ({
+    ...order,
+    placedAt: datetime(order.placedAt),
+    updatedAt: datetime(order.updatedAt),
+    dueOn: date(order.dueOn),
+  }));
+  return table.map((row) => [row.placedAt.format('medium'), row.dueOn.text]);
+}
+
+// purpose: refreshes the "edited 5 minutes ago" and "due in 3 days" labels on the 1,000 rows held
+export function refreshLabels1k() {
+  return table.map((row) => [row.updatedAt.fromNow(), row.dueOn.fromNow()]);
+}
+
+// purpose: a click on the due date header sorts the 1,000 rows held
+export function sortByDue1k() {
+  return table.toSorted((a, b) => compare(a.dueOn, b.dueOn));
+}
+
+// purpose: a dashboard reads 10,000 events from JSON and buckets them by the viewer's local day
+export function groupByDay10k() {
+  events = feed.map((event) => ({ ...event, at: datetime(event.at) }));
+  return Object.groupBy(events, (event) => event.at.date.toString());
+}
+
+// purpose: writes the 10,000 events held to CSV with a fixed stamp and a weekday and month label
+export function exportRows10k() {
+  const lines = events.map((event) =>
+    `${event.id},${event.at.format('YYYY-MM-DD HH:mm')},"${event.at.format('dddd, D MMMM')}"`
+  );
+  return ['id,at,day', ...lines].join('\n');
+}
+
+/*******************************
         Expected Answers
 *******************************/
 
+// the same tasks in plain Temporal and Intl, built when a check runs so they add nothing before an op
+
 const zonedOf = (ms) => Temporal.Instant.fromEpochMilliseconds(ms).toZonedDateTimeISO(viewer.zone);
-const viewerToday = zonedOf(viewer.now).toPlainDate();
-const daysUntil = (dueOn) => viewerToday.until(Temporal.PlainDate.from(dueOn)).days;
-const pad = (value) => String(value).padStart(2, '0');
-
-const mediumFormat = new Intl.DateTimeFormat(viewer.locale, {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-  timeZone: viewer.zone,
-});
-const relativeAuto = new Intl.RelativeTimeFormat(viewer.locale, { numeric: 'auto' });
-const relativeAlways = new Intl.RelativeTimeFormat(viewer.locale, { numeric: 'always' });
-
-// Moment and Day.js day cutoffs: days under a week, weeks under 26 days, months under 320 days
+const utcOf = (plain) => Date.UTC(plain.year, plain.month - 1, plain.day);
+const intl = (options, timeZone = viewer.zone) => new Intl.DateTimeFormat(viewer.locale, { ...options, timeZone });
 const roundAway = (value) => Math.sign(value) * Math.round(Math.abs(value));
-const relativeDays = (days) => {
+const byDay = ([a], [b]) => (a < b ? -1 : 1);
+const minute = 60;
+const hour = 3_600;
+const day = 86_400;
+const month = 30.436875 * day;
+const year = 365.2425 * day;
+
+// Moment and Day.js cutoffs: 45 seconds, 45 minutes, 22 hours, 26 days, 320 days
+const sinceEdit = (ms, relative) => {
+  const seconds = (ms - viewer.now) / 1000;
+  const size = Math.abs(seconds);
+  const [unit, length] = size < 45
+    ? ['second', 1]
+    : size < 45 * minute
+    ? ['minute', minute]
+    : size < 22 * hour
+    ? ['hour', hour]
+    : size < 26 * day
+    ? ['day', day]
+    : size < 320 * day
+    ? ['month', month]
+    : ['year', year];
+  const value = roundAway(seconds / length);
+  return relative[value === 0 ? 'auto' : 'always'].format(value, unit);
+};
+
+// whole days under a week, weeks under 26 days, months under 320 days
+const untilDue = (days, relative) => {
   const size = Math.abs(days);
   if (size < 7) {
-    return relativeAuto.format(days, 'day');
+    return relative.auto.format(days, 'day');
   }
   return size < 26
-    ? relativeAlways.format(roundAway(days / 7), 'week')
+    ? relative.always.format(roundAway(days / 7), 'week')
     : size < 320
-    ? relativeAlways.format(roundAway(days / 30.436875), 'month')
-    : relativeAlways.format(roundAway(days / 365.2425), 'year');
+    ? relative.always.format(roundAway(days * day / month), 'month')
+    : relative.always.format(roundAway(days * day / year), 'year');
 };
 
-const exportLine = (order) => {
-  const placed = zonedOf(order.placedAt);
-  const stamp = `${placed.year}-${pad(placed.month)}-${pad(placed.day)} ${pad(placed.hour)}:${pad(placed.minute)}`;
-  return `${order.id},${stamp},${order.dueOn},"${order.title}"`;
-};
-
-// built when a check runs, after the op's measure, so expected answers add nothing to page load
-const answers = {
-  openTable: () =>
-    wireOrders.map((order) => [
-      mediumFormat.format(Date.parse(order.placedAt)),
-      relativeDays(daysUntil(order.dueOn)),
-    ]),
-  passThrough: () => driverPages.map((page) => JSON.stringify(page)),
-  sortByDate: () =>
-    wireOrders.toSorted((a, b) => (a.dueOn < b.dueOn ? -1 : a.dueOn > b.dueOn ? 1 : 0)).map((order) => order.id),
-  dueSoon: () => wireOrders.filter((order) => daysUntil(order.dueOn) <= 7).map((order) => order.id),
-  groupByDay: () => {
-    const counts = new Map();
-    for (const event of events) {
-      const day = zonedOf(Date.parse(event.at)).toPlainDate().toString();
-      counts.set(day, (counts.get(day) ?? 0) + 1);
-    }
-    return [...counts].sort(([a], [b]) => (a < b ? -1 : 1));
+const expected = {
+  openTable1k() {
+    const medium = intl({ dateStyle: 'medium', timeStyle: 'short' });
+    const dueText = intl({ dateStyle: 'medium' }, 'UTC');
+    return orders.map((order) => [
+      medium.format(Date.parse(order.placedAt)),
+      dueText.format(utcOf(Temporal.PlainDate.from(order.dueOn))),
+    ]);
   },
-  exportRows: () => ['id,placedAt,dueOn,title', ...orders.map(exportLine)].join('\n'),
+  refreshLabels1k() {
+    const today = zonedOf(viewer.now).toPlainDate();
+    const relative = {
+      auto: new Intl.RelativeTimeFormat(viewer.locale, { numeric: 'auto' }),
+      always: new Intl.RelativeTimeFormat(viewer.locale, { numeric: 'always' }),
+    };
+    return orders.map((order) => [
+      sinceEdit(Date.parse(order.updatedAt), relative),
+      untilDue(today.until(Temporal.PlainDate.from(order.dueOn)).days, relative),
+    ]);
+  },
+  sortByDue1k: () =>
+    orders.toSorted((a, b) => (a.dueOn < b.dueOn ? -1 : a.dueOn > b.dueOn ? 1 : 0)).map((order) => order.id),
+  groupByDay10k() {
+    const days = new Map();
+    for (const event of feed) {
+      const key = zonedOf(Date.parse(event.at)).toPlainDate().toString();
+      days.set(key, [...(days.get(key) ?? []), event.id]);
+    }
+    return [...days].sort(byDay);
+  },
+  exportRows10k() {
+    const weekday = intl({ weekday: 'long' });
+    const monthName = intl({ month: 'long' });
+    const lines = feed.map((event) => {
+      const ms = Date.parse(event.at);
+      const at = zonedOf(ms);
+      const stamp = `${at.year}-${pad(at.month)}-${pad(at.day)} ${pad(at.hour)}:${pad(at.minute)}`;
+      return `${event.id},${stamp},"${weekday.format(ms)}, ${at.day} ${monthName.format(ms)}"`;
+    });
+    return ['id,at,day', ...lines].join('\n');
+  },
 };
-
-/*******************************
-              App
-*******************************/
-
-configure({ zone: viewer.zone, locale: viewer.locale });
-
-// rows the app already holds once a page or an export has loaded
-const table = wireOrders.map((order) => ({ ...order, placedAt: datetime(order.placedAt), dueOn: date(order.dueOn) }));
-const everyOrder = orders.map((order) => ({ ...order, placedAt: datetime(order.placedAt), dueOn: date(order.dueOn) }));
-
-// purpose: opens a page of 1,000 orders from JSON, showing when each was placed and when it is due
-export function openTable() {
-  return wireOrders.map((order) => {
-    const row = { placedAt: datetime(order.placedAt), dueOn: date(order.dueOn) };
-    return [row.placedAt.format('medium'), row.dueOn.fromNow()];
-  });
-}
-
-// purpose: an API handler answers 10 requests of 1,000 rows, reading each Date from the database and sending JSON
-export function passThrough() {
-  return driverPages.map((rows) =>
-    JSON.stringify(rows.map((row) => ({
-      id: row.id,
-      title: row.title,
-      placedAt: datetime(row.placedAt),
-      dueOn: date(row.dueOn),
-    })))
-  );
-}
-
-// purpose: a click on the due date header sorts the 1,000 rows on screen
-export function sortByDate() {
-  return table.toSorted((a, b) => compare(a.dueOn, b.dueOn)).map((row) => row.id);
-}
-
-// purpose: a filter keeps the 1,000 rows on screen that are due within a week, overdue included
-export function dueSoon() {
-  const day = today();
-  return table.filter((task) => day.until(task.dueOn, 'days') <= 7).map((task) => task.id);
-}
-
-// purpose: a dashboard buckets 10,000 events by the viewer's local day across a clock change
-export function groupByDay() {
-  return Object.groupBy(events, (event) => datetime(event.at).date.toString());
-}
-
-// purpose: writes 10,000 held orders to CSV with fixed token formats
-export function exportRows() {
-  const lines = everyOrder.map((order) =>
-    `${order.id},${order.placedAt.format('YYYY-MM-DD HH:mm')},${order.dueOn.format('YYYY-MM-DD')},"${order.title}"`
-  );
-  return ['id,placedAt,dueOn,title', ...lines].join('\n');
-}
 
 /*******************************
              Checks
 *******************************/
 
-// long strings like a JSON body or a CSV report a short window from the first differing character
-const firstDifference = (answered, expected, at = 'the answer') => {
-  if (Array.isArray(expected)) {
-    for (let index = 0; index < Math.max(answered?.length ?? 0, expected.length); index++) {
-      const found = firstDifference(answered?.[index], expected[index], `${at}[${index}]`);
-      if (found) {
-        return found;
-      }
-    }
-    return Array.isArray(answered) ? undefined : { at, answered, expected };
-  }
-  if (typeof answered === 'string' && typeof expected === 'string' && answered !== expected) {
-    let index = 0;
-    while (answered[index] === expected[index]) {
-      index++;
-    }
-    return {
-      at: `${at} at character ${index}`,
-      answered: answered.slice(index, index + 40),
-      expected: expected.slice(index, index + 40),
-    };
-  }
-  return JSON.stringify(answered) === JSON.stringify(expected) ? undefined : { at, answered, expected };
-};
+// each day beside the ids filed under it
+const idsOf = (groups) => Object.entries(groups).map(([day, list]) => [day, list.map((event) => event.id)]).sort(byDay);
 
-const checkAnswer = (name, answered, expected) => {
-  const found = firstDifference(answered, expected);
-  if (found) {
-    throw new Error(
-      `bench/records.js ${name} answered ${JSON.stringify(found.answered)} where ${
-        JSON.stringify(found.expected)
-      } was expected, in ${found.at}`,
-    );
-  }
+const check = (op, answered, wanted) => {
+  requireHost('records.js', viewer);
+  checkAnswer(`records ${op}`, answered, wanted);
 };
-
-const countsOf = (groups) =>
-  Object.entries(groups).map(([day, list]) => [day, list.length]).sort(([a], [b]) => (a < b ? -1 : 1));
 
 export const checks = {
-  openTable: (answer) => checkAnswer('openTable', answer, answers.openTable()),
-  passThrough: (answer) => checkAnswer('passThrough', answer, answers.passThrough()),
-  sortByDate: (answer) => checkAnswer('sortByDate', answer, answers.sortByDate()),
-  dueSoon: (answer) => checkAnswer('dueSoon', answer, answers.dueSoon()),
-  groupByDay: (answer) => checkAnswer('groupByDay', countsOf(answer), answers.groupByDay()),
-  exportRows: (answer) => checkAnswer('exportRows', answer, answers.exportRows()),
+  openTable1k: (cells) => check('openTable1k', cells, expected.openTable1k()),
+  refreshLabels1k: (labels) => check('refreshLabels1k', labels, expected.refreshLabels1k()),
+  sortByDue1k: (rows) => check('sortByDue1k', rows.map((row) => row.id), expected.sortByDue1k()),
+  groupByDay10k: (groups) => check('groupByDay10k', idsOf(groups), expected.groupByDay10k()),
+  exportRows10k: (csv) => check('exportRows10k', csv, expected.exportRows10k()),
 };

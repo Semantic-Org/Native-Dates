@@ -29,6 +29,11 @@ const sides = args.base
 const benchDir = join(root, 'bench');
 const sampling = JSON.parse(readFileSync(join(benchDir, 'tachometer.json'), 'utf8'));
 
+// a reader's browser sits in a zone with clock changes, where a runner's own is UTC.
+// Chrome and Node both take the zone from TZ, and bench files that configure no zone read it
+const host = { zone: 'Europe/Berlin', language: 'en-US' };
+process.env.TZ = host.zone;
+
 // resolve bare package imports from the target checkout so head and base bundle their own code
 const resolveFromCheckout = (checkoutDir) => ({
   name: 'resolve-from-checkout',
@@ -135,7 +140,11 @@ for (const file of files) {
         name: side,
         url: `${side}/${name}.html`,
         // required so globalThis.gc() is exposed for inter-op heap cleanup
-        browser: { name: 'chrome', headless: true, addArguments: ['--js-flags=--expose-gc'] },
+        browser: {
+          name: 'chrome',
+          headless: true,
+          addArguments: ['--js-flags=--expose-gc', `--lang=${host.language}`],
+        },
         measurement: ops.map((entryName) => ({ mode: 'performance', entryName })),
       })),
     }),
