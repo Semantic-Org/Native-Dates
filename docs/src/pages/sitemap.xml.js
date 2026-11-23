@@ -6,15 +6,22 @@ import { inLanguage, localePath, TRANSLATED } from '../lib/i18n.js';
 
 export async function GET({ site }) {
   const entries = await getCollection('docs');
+  const examples = await getCollection('examples');
   const pages = [
     { path: '/' },
     { path: '/plugins/' },
+    { path: '/examples/' },
     ...entries.map((e) => ({ path: `/${e.id}/`, updated: e.data.updated })),
+    ...examples.map((e) => ({ path: `/examples/${e.id}/` })),
   ];
   for (const { code } of TRANSLATED) {
     for (const e of entries) {
       const { translated, draft } = await inLanguage(e, code);
       if (translated && !draft) { pages.push({ path: localePath(`/${e.id}/`, code) }); }
+    }
+    for (const e of examples) {
+      const { translated, draft } = await inLanguage(e, code);
+      if (translated && !draft) { pages.push({ path: localePath(`/examples/${e.id}/`, code) }); }
     }
   }
   const day = (d) => d.toISOString().slice(0, 10);

@@ -8,6 +8,7 @@ const SECTION_LABEL = { guides: 'Guide', api: 'API reference', plugins: 'Plugin'
 
 export async function getStaticPaths() {
   const entries = await getCollection('docs');
+  const examples = await getCollection('examples');
   return [
     {
       params: { slug: 'index' },
@@ -24,6 +25,14 @@ export async function getStaticPaths() {
         lede: 'Opt-in subpath modules for city time zones, lenient parsing, and legacy Date methods.',
       },
     },
+    {
+      params: { slug: 'examples' },
+      props: {
+        title: 'Examples',
+        section: 'Examples',
+        lede: 'Interactive examples running live in the browser across time zones, durations, calendars, and locales.',
+      },
+    },
     ...entries.map((e) => ({
       params: { slug: e.id },
       props: {
@@ -31,6 +40,14 @@ export async function getStaticPaths() {
         lede: e.data.lede,
         section: SECTION_LABEL[e.id.split('/')[0]] ?? SECTIONS[0].label,
         symbol: !!e.data.kind,
+      },
+    })),
+    ...examples.map((e) => ({
+      params: { slug: `examples/${e.id}` },
+      props: {
+        title: e.data.title,
+        lede: e.data.description,
+        section: 'Example',
       },
     })),
   ];

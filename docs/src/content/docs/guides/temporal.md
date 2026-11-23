@@ -1,7 +1,7 @@
 ---
 title: Working with Temporal
 lede: How Native Dates maps onto JavaScript's Temporal API and interops with raw Temporal values.
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 Native Dates is a thin, ergonomic layer over JavaScript's built-in `Temporal` and Intl APIs.
@@ -77,9 +77,9 @@ Each instance holds a real Temporal object internally, so `toTemporal()` returns
 
 ## Polyfilling older runtimes
 
-Modern browsers and current Node releases ship Temporal natively, so core includes zero polyfill code in its bundle.
+Current Chrome, Edge, Firefox, Node 26+, Deno, and Bun ship `Temporal` natively, so core includes zero polyfill code in its bundle.
 
-If your application supports older browsers or Node versions without native support, install `@native-dates/polyfill` alongside `temporal-polyfill`:
+Safari, older browsers, and Node 24–25 need `@native-dates/polyfill` alongside `temporal-polyfill`. Server code calling `Duration.format()` requires Node 24+ because older Node releases lack `Intl.DurationFormat`:
 
 ```sh
 npm install @native-dates/polyfill temporal-polyfill
