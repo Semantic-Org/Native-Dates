@@ -6,7 +6,7 @@
 - **Browser-Native I18N** - Time zones, daylight transitions and calendar math handled exactly as the browser specifies (and committee adjudicated) not the library
 - **Immutability**  - Prevents js pitfalls of accidental date mutations when working with copies 
 - **Legibility** - Natural phrases (`'1h 30m'`, `today().plus(2, 'days').at('9am')`) and `Intl` presets
-- **Small Core** -  ~14kb bt for core, everything arbitary is a plugin (day.js style)
+- **Small Core** -  under 15kb bt for core, everything arbitary is a plugin (day.js style)
 
 ### Usage
 

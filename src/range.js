@@ -163,14 +163,15 @@ class Range {
   contains(value) {
     if (value instanceof Range) {
       const rival = this.#make(this.kind, value);
-      if (this.isEmpty() || rival.isEmpty()) {
-        return false;
-      }
+      let holds;
       if (this.kind === 'time') {
         const [start, end] = Range.#spanOf(this);
-        return Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart >= start && rivalEnd <= end);
+        holds = Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart >= start && rivalEnd <= end);
       }
-      return !rival.start.isBefore(this.start) && !rival.end.isAfter(this.end);
+      else {
+        holds = !rival.start.isBefore(this.start) && !rival.end.isAfter(this.end);
+      }
+      return holds && !this.isEmpty() && !rival.isEmpty();
     }
     return this.#holds(value);
   }

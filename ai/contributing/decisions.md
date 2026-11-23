@@ -51,6 +51,10 @@ Active package decisions grouped by area, newest first.
 
 ### Parsing, Inputs, and Comparisons
 
+- **D26:** Loose parsing returns `null` unless year, month, and day are all written (2026-11-23) [L155-L159](decisions/package.md#d26-loose-parsing-returns-null-unless-year-month-and-day-are-all-written-2026-11-23)
+  - Reopen: callers parsing human-typed current-year dates like `'Nov 16'` ask for an explicit reference-year option on `date()` rather than `monthDay().in(year)`.
+- **D25:** Per-call `locale` decides numeric date order ahead of `configure({ dayFirst })` (2026-11-23) [L149-L153](decisions/package.md#d25-per-call-locale-decides-numeric-date-order-ahead-of-configure-dayfirst--2026-11-23)
+  - Reopen: server apps passing per-request `Accept-Language` headers alongside `configure({ dayFirst: true })` report wanting the configured `dayFirst` setting to override per-call `locale`.
 - **D20:** Loose parsing follows the locale while `monthDay()` and `dayMonth()` keep function-name order (2026-11-22) [L119-L123](decisions/package.md#d20-loose-parsing-follows-the-locale-while-monthday-and-daymonth-keep-function-name-order-2026-11-22)
   - Reopen: speakers report a locale's `Intl` short date order diverging from typed input, or unconfigured host locales cause inconsistent `{ loose: true }` results across environments.
 - **D12:** Core accepts unambiguous non-ISO inputs and refuses inputs with two readings (2026-11-16) [L71-L75](decisions/package.md#d12-core-accepts-unambiguous-non-iso-inputs-and-refuses-inputs-with-two-readings-2026-11-16)
@@ -126,3 +130,7 @@ Every package decision (`D1`..`Dn`) in file order.
   - Reopen: browser developers report collapsed DevTools previews missing timezone or formatted text frequently enough to warrant a cheap non-`Intl` preview property.
 - **D24:** Ranges built with `.for()` accept only explicit durations, while `.to()` keeps both endpoints and durations (2026-11-23) [L143-L147](decisions/package.md#d24-ranges-built-with-for-accept-only-explicit-durations-while-to-keeps-both-endpoints-and-durations-2026-11-23)
   - Reopen: callers building ranges from numeric millisecond constants ask for a millisecond shorthand on `.for()` rather than `milliseconds(n)` or `(n, 'ms')`.
+- **D25:** Per-call `locale` decides numeric date order ahead of `configure({ dayFirst })` (2026-11-23) [L149-L153](decisions/package.md#d25-per-call-locale-decides-numeric-date-order-ahead-of-configure-dayfirst--2026-11-23)
+  - Reopen: server apps passing per-request `Accept-Language` headers alongside `configure({ dayFirst: true })` report wanting the configured `dayFirst` setting to override per-call `locale`.
+- **D26:** Loose parsing returns `null` unless year, month, and day are all written (2026-11-23) [L155-L159](decisions/package.md#d26-loose-parsing-returns-null-unless-year-month-and-day-are-all-written-2026-11-23)
+  - Reopen: callers parsing human-typed current-year dates like `'Nov 16'` ask for an explicit reference-year option on `date()` rather than `monthDay().in(year)`.
