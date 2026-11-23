@@ -3,45 +3,55 @@ import { createInterface, emitKeypressEvents } from 'node:readline';
 /*
   the organisation's terminal voice for a command a person watches. the look is formatServerLog's in @semantic-ui/utils:
   a bold [namespace] badge, grey prose with brighter tokens, later sentences that recede, colour only where it shows.
-  it adds what a log line has no use for: a mark per row, a block of lines redrawn in place, and key input
+  it adds what a log line has no use for: code in the docs site's code blue, a mark per row, a block of lines
+  redrawn in place, and key input
 */
 
 export class Terminal {
   // the design-token colours formatServerLog prints, per level
+  // code is the docs site's --c-blue, so a command reads here as it does on the site. a warning or a failure
+  // keeps its own tint, since a blue command inside a red sentence reads as two messages
   static palette = {
     info: {
       badge: [117, 158, 185],
       prose: [152, 152, 152],
       token: [202, 202, 202],
+      code: [121, 192, 255],
       faded: [116, 116, 116],
       fadedToken: [164, 164, 164],
+      fadedCode: [110, 150, 188],
     },
     warn: {
       badge: [255, 232, 130],
       prose: [255, 232, 130],
       token: [255, 236, 164],
+      code: [255, 236, 164],
       faded: [190, 164, 119],
       fadedToken: [211, 186, 142],
+      fadedCode: [211, 186, 142],
     },
     error: {
       badge: [255, 108, 93],
       prose: [255, 108, 93],
       token: [255, 156, 141],
+      code: [255, 156, 141],
       faded: [187, 109, 99],
       fadedToken: [215, 137, 127],
+      fadedCode: [215, 137, 127],
     },
   };
 
   // the same roles for a terminal with 16 colours, where a 24-bit code would print as the wrong colour
   static basicPalette = {
-    info: { badge: 36, prose: 39, token: 97, faded: 90, fadedToken: 37 },
-    warn: { badge: 33, prose: 33, token: 93, faded: 90, fadedToken: 37 },
-    error: { badge: 31, prose: 31, token: 91, faded: 90, fadedToken: 37 },
+    info: { badge: 36, prose: 39, token: 97, code: 96, faded: 90, fadedToken: 37, fadedCode: 36 },
+    warn: { badge: 33, prose: 33, token: 93, code: 93, faded: 90, fadedToken: 37, fadedCode: 37 },
+    error: { badge: 31, prose: 31, token: 91, code: 91, faded: 90, fadedToken: 37, fadedCode: 37 },
   };
 
-  // what reads as a token: quoted and backticked text, paths, and numbers with their unit
+  // what stands out in a sentence. the first group reads as code: backticked text, addresses, paths, and file
+  // names. the second reads as a token: quoted text, and numbers with their unit
   static tokens =
-    /("[^"]+"|'[^']+'|`[^`]+`|(?:\.{1,2}\/|\/)[\w./-]+|(?<![\w.-])\d+(?:\.\d+)?(?:ms|s|m|h|B|KB|MB|GB)?(?![\w.-]))/g;
+    /(`[^`]+`|https?:\/\/[^\s`]*[\w/]|(?<!\w)(?:\.{1,2}\/|\/|\.[\w-]+\/)[\w./-]*[\w/]|(?<![\w/.-])[\w.-]+\.(?:md|json|toml)(?![\w-]))|("[^"]+"|'[^']+'|(?<![\w.-])\d+(?:\.\d+)?(?:ms|s|m|h|B|KB|MB|GB)?(?![\w.-]))/g;
 
   static marks = {
     unicode: {
@@ -123,19 +133,21 @@ export class Terminal {
                Voice
   *******************************/
 
-  // a sentence in the organisation's voice: tokens stand out, and everything after the first sentence recedes
+  // a sentence in the organisation's voice: code and tokens stand out, and everything after the first sentence
+  // recedes. colour marks code here, so its backticks are dropped. without colour they stay and do that job
   say(text, { level = 'info', faded = false } = {}) {
     if (!this.colors) { return text; }
     const boundary = faded ? -1 : text.indexOf('. ');
-    const clause = (part, prose, token) =>
-      this.ink(level, prose) + part.replace(Terminal.tokens, (match) =>
-        `${this.ink(level, token)}${match}${this.ink(level, prose)}`)
-      + '\x1b[0m';
-    if (faded) { return clause(text, 'faded', 'fadedToken'); }
-    if (boundary === -1) { return clause(text, 'prose', 'token'); }
-    return `${clause(text.slice(0, boundary + 1), 'prose', 'token')} ${
-      clause(text.slice(boundary + 2), 'faded', 'fadedToken')
-    }`;
+    const clause = (part, recedes) => {
+      const role = (name) => (recedes ? `faded${name === 'prose' ? '' : name[0].toUpperCase() + name.slice(1)}` : name);
+      const prose = this.ink(level, recedes ? 'faded' : 'prose');
+      return prose + part.replace(Terminal.tokens, (match, code) => {
+        const shown = code?.startsWith('`') ? code.slice(1, -1) : match;
+        return `${this.ink(level, role(code ? 'code' : 'token'))}${shown}${prose}`;
+      }) + '\x1b[0m';
+    };
+    if (faded || boundary === -1) { return clause(text, faded); }
+    return `${clause(text.slice(0, boundary + 1), false)} ${clause(text.slice(boundary + 2), true)}`;
   }
 
   // the one line a person has to act on
@@ -164,9 +176,9 @@ export class Terminal {
     const marks = this.marks[state];
     const mark = Array.isArray(marks) ? marks[this.frame % marks.length] : marks;
     const room = fit ? (this.output.columns || columns) - mark.length - labelWidth - tail.length - 8 : Infinity;
-    const shown = text.length > room ? `${text.slice(0, Math.max(0, room - 1))}…` : text;
+    const cut = text.length > room ? `${text.slice(0, Math.max(0, room - 1))}…` : text;
     const level = { fail: 'error', warn: 'warn' }[state] ?? 'info';
-    const sentence = this.say(shown, { level, faded: state === 'unchecked' });
+    const sentence = this.say(this.closed(cut), { level, faded: state === 'unchecked' });
     const name = this.say(label.padEnd(labelWidth), { faded: state === 'unchecked' });
     return `  ${this.mark(state, mark)} ${name} ${sentence}${tail && ` ${this.say(tail, { faded: true })}`}`;
   }
@@ -186,7 +198,19 @@ export class Terminal {
       if (line && line.length + word.length + 1 > width) { lines.push(word); }
       else { lines[lines.length - 1] = line ? `${line} ${word}` : word; }
     }
-    return lines.map((line, index) => this.row(state, index ? '' : label, line));
+    // a command cut across lines opens again on the next one, so every piece is inked as code
+    let open = false;
+    const pieces = lines.map((line) => {
+      const piece = this.closed(open ? `\`${line}` : line);
+      open = piece !== (open ? `\`${line}` : line);
+      return piece;
+    });
+    return pieces.map((line, index) => this.row(state, index ? '' : label, line));
+  }
+
+  // closes a backtick left open by a cut, where colour marks code and a lone backtick would print as itself
+  closed(text) {
+    return this.colors && text.split('`').length % 2 === 0 ? `${text}\`` : text;
   }
 
   mark(state, mark = this.marks[state]) {

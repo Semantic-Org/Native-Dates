@@ -314,6 +314,10 @@ describe('npx native-dates', () => {
       env: environment([], { FORCE_COLOR: '3' }),
     }).stdout;
     expect(forced).toContain('\x1b[1m\x1b[38;2;117;158;185m[native-dates]');
+    // code is inked in the docs site's code blue, which takes the place of its backticks
+    expect(forced).toContain(`\x1b[38;2;121;192;255mnpm install native-dates@${version}\x1b[`);
+    expect(forced).not.toContain('`');
+    expect(plain).toContain(`\`npm install native-dates@${version}\``);
     const silenced = spawnSync(process.execPath, [join(published, 'bin/native-dates.js')], {
       cwd: dir,
       encoding: 'utf8',

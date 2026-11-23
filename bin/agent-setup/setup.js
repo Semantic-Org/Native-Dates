@@ -167,7 +167,7 @@ Options (previews changes and prompts by default):
         terminal.line();
         // the same run with yes added, so a flag already given is not lost when it is typed again
         const flags = ['--yes', ...args.filter((arg) => Setup.flags[arg] !== 'yes')].join(' ');
-        if (!terminal.interactive) { return this.print(this.words('needsYes', { flags }), 1); }
+        if (!terminal.interactive) { return this.print(terminal.say(this.words('needsYes', { flags })), 1); }
       }
     }
     if (terminal.redraws) { terminal.hideCursor(); }
