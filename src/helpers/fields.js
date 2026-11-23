@@ -7,18 +7,9 @@ import { isDigits, isTemporalDuration, plural, unit, units } from './units.js';
 
 export const fieldNames = units.map(plural);
 
-// cascade fractional units downward (1.5 days -> 1d 12h). Months vary in length so they are omitted
-// and rejected below, and toFixed(9) strips IEEE-754 float residue so 0.1h doesn't leak stray nanoseconds
-const spillsInto = {
-  year: ['month', 12],
-  week: ['day', 7],
-  day: ['hour', 24],
-  hour: ['minute', 60],
-  minute: ['second', 60],
-  second: ['millisecond', 1000],
-  millisecond: ['microsecond', 1000],
-  microsecond: ['nanosecond', 1000],
-};
+// cascade fractional units downward (1.5 days -> 1d 12h). Months vary in length so factor 0 rejects them
+// below, and toFixed(9) strips IEEE-754 float residue so 0.1h doesn't leak stray nanoseconds
+const spillFactors = [12, 0, 7, 24, 60, 60, 1000, 1000, 1000];
 
 export const spill = (fields, name, value) => {
   if (name === 'quarter') {
@@ -30,11 +21,13 @@ export const spill = (fields, name, value) => {
     });
   }
   const whole = Math.trunc(value);
-  const fraction = Number((value - whole).toFixed(9));
-  fields[plural(name)] = (fields[plural(name)] ?? 0) + whole;
+  const key = plural(name);
+  fields[key] = (fields[key] ?? 0) + whole;
+  const fraction = value === whole ? 0 : Number((value - whole).toFixed(9));
   if (fraction) {
-    const next = spillsInto[name];
-    if (!next) {
+    const index = units.indexOf(name);
+    const factor = spillFactors[index];
+    if (!factor) {
       refuse('invalidFraction', `${value} ${name}`, {
         explanation: isDevelopment
           ? 'months and nanoseconds must be whole numbers because months vary in length and nanoseconds are the smallest unit. Use whole months, or specify days instead'
@@ -42,7 +35,7 @@ export const spill = (fields, name, value) => {
       });
     }
     // round sub-nanosecond remainders to the nearest nanosecond
-    spill(fields, next[0], Number((fraction * next[1]).toFixed(next[0] === 'nanosecond' ? 0 : 9)));
+    spill(fields, units[index + 1], Number((fraction * factor).toFixed(index > 7 ? 0 : 9)));
   }
   return fields;
 };
@@ -67,7 +60,7 @@ const parseWords = (text) => {
     });
   }
   // bare numeric string like '1500' defaults to milliseconds, matching duration(1500)
-  if (/^-?\d+(\.\d+)?$/.test(phrase)) {
+  if (isDigits(phrase)) {
     return spill({}, 'millisecond', Number(phrase));
   }
   const found = [];
@@ -83,7 +76,7 @@ const parseWords = (text) => {
     });
   }
   // '-1h 30m' negates every unit, whereas '-1h +30m' keeps explicit signs so oneSign() rejects it
-  const negateAll = found[0]?.[0] === '-' && found.slice(1).every(([sign]) => sign === '');
+  const negateAll = found[0]?.[0] === '-' && found.every(([sign], index) => !index || !sign);
   const fields = {};
   each(found, ([sign, amount, name]) => {
     spill(fields, unit(name), negateAll || sign === '-' ? -amount : amount);
@@ -94,14 +87,13 @@ const parseWords = (text) => {
 // ISO years are always 12 months, so months carry into years without a calendar anchor
 export const carriedMonths = (years = 0, months = 0) => {
   const whole = years * 12 + months;
-  const [carried, left] = [Math.trunc(whole / 12), whole % 12];
+  const carried = Math.trunc(whole / 12);
+  const left = whole % 12;
   return { ...(carried && { years: carried }), ...(left && { months: left }) };
 };
 
-const twoSigns = (fields) => new Set(Object.values(fields).filter(Boolean).map(Math.sign)).size > 1;
-
 const oneSign = (fields, at) => {
-  if (twoSigns(fields)) {
+  if (new Set(Object.values(fields).filter(Boolean).map(Math.sign)).size > 1) {
     refuse('conflictingSigns', at, {
       explanation: isDevelopment
         ? "all units in a duration must have the same sign. Chain `.plus()` and `.minus()` on a date or time instead, such as `start.plus(1, 'hour').minus(30, 'minutes')`"
@@ -112,12 +104,9 @@ const oneSign = (fields, at) => {
 };
 
 export const fieldsFrom = (input, name) => {
-  if (isNumber(input)) {
-    return spill({}, name === undefined ? 'millisecond' : unit(name), input);
-  }
-  // accept numeric strings from form inputs or query params when paired with a unit, e.g. ('30', 'days')
-  if (isString(input) && isDigits(input) && name !== undefined) {
-    return spill({}, unit(name), Number(input));
+  // accept numbers or numeric strings from form inputs when paired with a unit, e.g. ('30', 'days')
+  if (isNumber(input) || (name !== undefined && isDigits(input))) {
+    return spill({}, name === undefined ? 'millisecond' : unit(name), Number(input));
   }
   if (name !== undefined && input != null) {
     refuseType('invalidDuration', `${isPlainObject(input) ? JSON.stringify(input) : input} ${name}`, {
@@ -133,8 +122,9 @@ export const fieldsFrom = (input, name) => {
     return fieldsOf(input);
   }
   if (isString(input)) {
-    return /^[-+]?P/i.test(input.trim())
-      ? fieldsOf(guard(() => Temporal.Duration.from(input.trim()), 'invalidDuration', input))
+    const trimmed = input.trim();
+    return /^[-+]?P/i.test(trimmed)
+      ? fieldsOf(guard(() => Temporal.Duration.from(trimmed), 'invalidDuration', input))
       : oneSign(parseWords(input), input);
   }
   if (isPlainObject(input)) {
@@ -165,7 +155,7 @@ export const clockFields = (fields) => {
 // while sub-day clock units combine through Temporal so 2h minus 30m resolves to 1h 30m
 export const addFields = (a, b, sign, anchor) => {
   const fields = {};
-  each(['years', 'months', 'weeks', 'days'], (field) => {
+  each(fieldNames.slice(0, 4), (field) => {
     const sum = (a[field] ?? 0) + sign * (b[field] ?? 0);
     if (sum) {
       fields[field] = sum;
@@ -198,7 +188,10 @@ export const temporalDurationOf = (fields) =>
     ? guard(() => Temporal.Duration.from(fields), 'invalidDuration', fields)
     : new Temporal.Duration();
 
-export const temporalDurationFrom = (input, name) => temporalDurationOf(fieldsFrom(input, name));
+export const temporalDurationFrom = (input, name) => {
+  const fields = fieldsFrom(input, name);
+  return isNumber(input) && (input | 0) === input ? fields : temporalDurationOf(fields);
+};
 
 // plural keys ({ hours: 2 }) distinguish a duration bag from a point's singular fields ({ hour: 2 })
 export const isDurationFields = (value) =>

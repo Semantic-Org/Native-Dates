@@ -257,7 +257,7 @@ export class CalendarDate {
           : 0,
       });
     }
-    return temporalDurationOf(fields);
+    return isNumber(amount) && (amount | 0) === amount ? fields : temporalDurationOf(fields);
   }
 
   set(fields, value) {
@@ -287,7 +287,20 @@ export class CalendarDate {
   }
 
   endOf(name, firstDay) {
-    return this.startOf(name, firstDay).plus(stepOf(unit(name))).minus({ days: 1 });
+    switch (unit(name)) {
+      case 'year':
+        return this.#next(this.#plain.with({ month: 12, day: 31 }));
+      case 'quarter':
+        return this.#next(this.#plain.with({ month: quarterStart(this.month) + 2, day: 31 }));
+      case 'month':
+        return this.#next(this.#plain.with({ day: 31 }));
+      case 'week':
+        return this.#next(
+          this.#plain.add({ days: 6 - ((this.dayOfWeek - weekStart(firstDay, this.#locale) + 7) % 7) }),
+        );
+      default:
+        return this.startOf(name);
+    }
   }
 
   startOfNext(target, firstDay) {
