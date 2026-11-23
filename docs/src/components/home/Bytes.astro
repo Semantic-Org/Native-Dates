@@ -39,7 +39,7 @@ const plugins = PLUGINS.map((p, i) => ({
       {plugins.map((p) => (
         <li>
           <label class="bytes-plugin">
-            <input type="checkbox" value={p.name} data-bytes-pick />
+            <input type="checkbox" id={`bytes-plugin-${p.name}`} name="plugin" value={p.name} data-bytes-pick />
             <code>{p.name}</code>
             <span class="bytes-what">{t(locale, `home.plugin.${p.name}`)}</span>
             <bdi class="bytes-adds">+{formatSize(p.adds)}</bdi>
