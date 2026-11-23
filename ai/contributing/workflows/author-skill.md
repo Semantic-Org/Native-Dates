@@ -18,7 +18,7 @@ Read the [authoring standard](../standards/ai-author-context.md) before writing 
 
 ## Delivery and Layout
 
-Skills in `ai/skills/` are published with the `native-dates` npm package (`"files"` in `package.json`) and served by the docs site through `/skills/<skill>.md` and `/llms.txt`. An optional MCP server can expose the same files to tool-calling agents.
+Skills in `ai/skills/` are published with the `native-dates` npm package, where `prepack` lays each one out as `skills/<name>/SKILL.md` (`tools/skills.js`), the folder pnpm and skill installers read from an installed dependency. The docs site serves the same files through `/skills/<skill>.md` and `/llms.txt`. An optional MCP server can expose the same files to tool-calling agents.
 
 | Layout | Path pattern | When to use |
 |---|---|---|
@@ -34,7 +34,7 @@ Keep contributor records and docs workflows in `ai/contributing/` so they stay o
 1. Discuss goals, non-goals, and edge cases with the author before drafting if no outline exists yet.
 2. Read the implementation across `src/`, `types/`, `packages/plugins/`, and `packages/polyfill/`, along with the user docs and examples in `docs/src/content/`. Ignore old skills being replaced so their framing does not carry over.
 3. Treat each skill as self-contained. Downstream agents load one file without repository access, so the survey shows what to distill into the skill rather than what to leave out.
-4. Confirm the title, `skill` identifier, audience, and consumption subtype with the author:
+4. Confirm the title, `name` identifier, audience, and consumption subtype with the author:
 
 | Subtype | How agents read it | Length budget |
 |---|---|---|
@@ -56,16 +56,17 @@ Split along user intents rather than arbitrary line counts. If Skill B is unusab
 
 ## Phase 2: Writing
 
-Create each file in `ai/skills/` with the frontmatter required by the [authoring standard](../standards/ai-author-context.md):
+Create each file in `ai/skills/` with [Agent Skills](https://agentskills.io/specification) frontmatter. The format requires `name` and `description`, and its reference validator rejects any key the format does not define, so the fields from the [authoring standard](../standards/ai-author-context.md) sit under `metadata` as strings (checked by `npm run ai`):
 
 ```yaml
 ---
-title: Action-Oriented Title
-description: Concise scope statement of what the skill covers and what belongs in companion skills.
-keywords: [search, terms, beyond, title, "@native-dates/plugins"]
-audience: usage # essentials | usage | authoring
-skill: kebab-case-id
-type: skill # skill | workflow | ref
+name: kebab-case-id # the file name, and the folder in skills/<name>/SKILL.md
+description: "Concise scope statement of what the skill covers, when to load it, and what belongs in companion skills (1024 characters at most)."
+metadata:
+  title: Action-Oriented Title
+  keywords: "search, terms, beyond, title, @native-dates/plugins"
+  audience: usage # essentials | usage | authoring
+  type: skill # skill | workflow | ref
 ---
 ```
 

@@ -1,10 +1,11 @@
 ---
-title: Plugins, Loose Parsing, Zone Aliases, and Polyfill for native-dates
+name: native-dates-plugins
 description: "Companion guide for @native-dates/plugins (zones, loose, legacy-date), @native-dates/polyfill, and authoring custom native-dates prototype plugins. Use whenever code parses localized, non-ISO, or slash/dot dates and times ('06/11/2026', '17 octobre 2026', '오후 2:30', non-ASCII digits, { loose: true, dayFirst }), resolves city names ('Berlin', 'Beijing', 'Mumbai') or locale-aware timezone abbreviations ('CST', 'IST', 'EST', 'PT', zoneAliases), shims legacy Date.prototype getters (getFullYear, getMonth, getDay), polyfills Temporal on Safari, older browsers, or Node <26, or extends native-dates class prototypes."
-keywords: ["@native-dates/plugins", "@native-dates/polyfill", "temporal-polyfill", zones, loose, legacy-date, dayFirst, zoneAliases, timezones, getFullYear, getTimezoneOffset, sideEffects, missingPlugin]
-audience: usage
-skill: native-dates-plugins
-type: skill
+metadata:
+  title: Plugins, Loose Parsing, Zone Aliases, and Polyfill for native-dates
+  keywords: "@native-dates/plugins, @native-dates/polyfill, temporal-polyfill, zones, loose, legacy-date, dayFirst, zoneAliases, timezones, getFullYear, getTimezoneOffset, sideEffects, missingPlugin"
+  audience: usage
+  type: skill
 ---
 
 # Plugins, Loose Parsing, Zone Aliases, and Polyfill for native-dates

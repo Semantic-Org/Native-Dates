@@ -88,6 +88,8 @@
   "home.nav.close": "Close navigation",
   "home.hero.title": "Dates solved by the platform, written in natural language",
   "home.hero.lede": "<a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal\" target=\"_blank\" rel=\"noopener\">Temporal</a> and <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl\" target=\"_blank\" rel=\"noopener\">Intl</a> gave the browser real time zones, DST-safe calendar math, and locale formatting. Native Dates wraps them in a readable, immutable API in <span class=\"ltr\">{size}&nbsp;<abbr title=\"minified and Brotli compressed\">br</abbr></span>.",
+  "home.install.label": "Install",
+  "home.install.withAgent": "With your agent",
   "home.install.copy": "Copy install command",
   "home.hero.start": "Get started",
   "home.hero.api": "API reference",

@@ -1,10 +1,11 @@
-// validates YAML frontmatter, markdown links, #anchors, GFM tables, unclosed fences, ai/ paths, and AGENTS.md symlinks
+// validates YAML frontmatter, markdown links, #anchors, GFM tables, unclosed fences, ai/ paths, skill frontmatter, and AGENTS.md symlinks
 
 import { existsSync, lstatSync, readdirSync, readFileSync, readlinkSync, statSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { checkSkills } from '../skills.js';
 import { checkDecisions } from './decisions-index.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -214,6 +215,7 @@ for (const link of ['CLAUDE.md', 'GEMINI.md']) {
 }
 
 errors.push(...checkDecisions());
+errors.push(...checkSkills());
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   for (const error of errors) { console.error(`  x ${error}`); }

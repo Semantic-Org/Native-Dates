@@ -7,14 +7,15 @@
 | Path | Package | Contents |
 |---|---|---|
 | `src/` | `native-dates` | Core date library: `index.js` barrel, one noun class per file (`range.js` holds `Range` and its three subclasses), and category-grouped utilities in `helpers/` |
+| `bin/` | `native-dates` | The `npx native-dates` setup command. `native-dates.js` holds this library's words, and `agent-setup/` is the command itself (`Setup`, `Project`, `Terminal`), written to be copied whole by sibling libraries: it installs the package, links its skills into `.agents/skills` and `.claude/skills`, and adds a note to `AGENTS.md`, asking first. Node built-ins only, never imported by `src/`. `npm run setup:demo` runs it against this checkout without publishing. With `--global`, or the answer "Globally", it runs each found agent's own plugin install instead of linking project folders (`Project.agents` is the table of agents, their binaries and commands) |
 | `types/` | | Hand-authored TypeScript declarations mirroring `src/`. Their doc comments power editor hover/autocomplete (`@see` links follow [`types.md`](../standards/types.md)) |
-| `ai/skills/` | `native-dates` | Agent skills (`native-dates.md`, `native-dates-plugins.md`), published in `package.json` `"files"` and served via `/skills/<skill>.md`, `/llms.txt`, and `/llms-full.txt` ([`ai-author-context.md`](../standards/ai-author-context.md)) |
+| `ai/skills/` | `native-dates` | Agent skills (`native-dates.md`, `native-dates-plugins.md`), packed into the npm tarball as `skills/<name>/SKILL.md` by `tools/skills.js` and served via `/skills/<skill>.md`, `/llms.txt`, `/llms-full.txt`, and the discovery index `/.well-known/agent-skills/index.json` ([`author-skill.md`](../workflows/author-skill.md), [`ai-author-context.md`](../standards/ai-author-context.md)). `prepack` also stamps the package version into each packed skill's `metadata.version`, writes `plugin.json` and `.claude-plugin/plugin.json` into the tarball, while the committed `.claude-plugin/marketplace.json` points agents' plugin installs at the npm release. Packing leaves that file alone: after a version bump, `node tools/skills.js stamp` rewrites it, and a test fails until it matches `package.json` |
 | `ai/contributing/` | private | Internal design decisions, bundle budget, project roadmap, upstream standards, and contributor workflows |
-| `packages/core/` | `@native-dates/core` | Thin scoped re-export of `native-dates` |
+| `packages/core/` | `@native-dates/core` | Thin scoped re-export of `native-dates`, with a `"skills"` field pointing agent tooling at the skills `native-dates` ships and a `bin.js` that hands `npx native-dates` to the same setup command |
 | `packages/plugins/` | `@native-dates/plugins` | Opt-in side-effect plugins (`zones`, `loose`, `legacy-date`) in `src/`, with module-augmentation declarations in `types/` |
 | `packages/polyfill/` | `@native-dates/polyfill` | Conditional `temporal-polyfill` loader that dynamically imports the polyfill only when `globalThis.Temporal` is absent |
 | `docs/` | private | Astro documentation site (`nativedates.dev`, see [`docs/README.md`](../../../docs/README.md)) |
-| `tools/` | private | Static gates (`gates/{ai,budget,prose,errors,comments}.js`), CI bundle size reporter (`ci/bundle/`), git hooks (`hooks/`), and `size.js` |
+| `tools/` | private | Static gates (`gates/{ai,budget,prose,errors,comments}.js`), CI bundle size reporter (`ci/bundle/`), git hooks (`hooks/`), `size.js`, and the skill packer `skills.js` |
 
 How `src/` is laid out and how a class is structured follow [`folders-and-filenames.md`](../standards/legibility/folders-and-filenames.md), [`code-structures.md`](../standards/legibility/code-structures.md), and [`coding-standards.md`](../standards/coding-standards.md).
 
@@ -68,7 +69,7 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, `"sideE
 - `npm run types`: `tsc --noEmit` (under both NodeNext and `bundler` resolution) over `test/types.ts` against hand-authored `.d.ts` declarations.
 - `npm run errors`: `tools/gates/errors.js` checking `. Capital` splits, punctuation, structured error helpers, and error code vocabulary.
 - `npm run comments`: `tools/gates/comments.js` checking comment ratios, run length, word overlap, and banned process jargon.
-- `npm run ai`: `tools/gates/ai.js` checking Markdown links, `#heading` anchors, GFM tables, `ai/` paths, and `AGENTS.md` symlinks.
+- `npm run ai`: `tools/gates/ai.js` checking Markdown links, `#heading` anchors, GFM tables, `ai/` paths, skill frontmatter, and `AGENTS.md` symlinks.
 - `npm run size`: `tools/gates/budget.js` over the rows of `tools/size.js`.
 
 ## Bundle Size Measurement

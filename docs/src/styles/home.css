@@ -60,9 +60,24 @@
 
 
 .install { margin-top: 0; display: inline-flex; flex-direction: column; gap: 0; }
+/* which install line shows is data-install on <html>, restored before first paint (scripts/home/install.js) */
+.install-picker {
+  align-self: flex-start; display: flex; gap: 2px; margin-bottom: 12px; padding: 3px;
+  border: 1px solid var(--line-2); border-radius: var(--r-2); background: var(--surface-1);
+}
+.install-picker button {
+  height: 26px; padding: 0 10px; border: 0; border-radius: var(--r-1); background: transparent; cursor: pointer;
+  color: var(--text-3); font: 500 var(--fs-xs)/1 var(--font-sans);
+}
+.install-picker button:hover { color: var(--text); }
+:root:not([data-install='agent']) [data-install-pick='npm'],
+:root[data-install='agent'] [data-install-pick='agent'] { color: var(--text); background: var(--surface-3); }
+:root:not([data-install='agent']) [data-install-cmd='agent'],
+:root[data-install='agent'] [data-install-cmd='npm'] { visibility: hidden; }
 
+/* a shell line reads left to right in every language */
 .install-cmd {
-  display: flex; align-items: center; gap: 12px;
+  direction: ltr; display: flex; align-items: center; gap: 12px;
   height: 50px; padding-block: 0; padding-inline: 16px 8px;
   border: 1px solid var(--line-2); border-radius: var(--r-3);
   background: var(--code-bg);
@@ -150,7 +165,7 @@
 .say-label[style*='--row: 2'] { line-height: 52px; }
 .say-label[style*='--row: 3'] { line-height: 44px; }
 .say-cell { grid-column: calc(var(--col) + 2); grid-row: var(--row); min-width: 116px; }
-.say-grid:not([hidden]) .say-cell { animation: say-in 0.5s var(--ease) both; animation-delay: calc(0.25s + var(--col) * 0.3s + var(--row) * 0.08s); }
+.say-grid:not([hidden]) .say-cell { animation: say-in 0.4s var(--ease) both; animation-delay: calc(0.1s + var(--col) * 0.15s + var(--row) * 0.05s); }
 @keyframes say-in {
   from { opacity: 0; translate: 0 8px; }
 }
@@ -463,7 +478,7 @@
   .topbar .search-trigger .keys { display: none; }
   .topbar .search-trigger .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .install-cmd { width: 100%; min-width: 0; font-size: var(--fs-xs); height: 44px; }
-  .hero .install-cmd, .closer .install-cmd { display: none; }
+  .hero .install, .closer .install-cmd { display: none; }
   .hero-copy { text-align: center; }
   .hero-copy h1, .hero .lede { margin-inline: auto; text-wrap: balance; }
   .hero-side { align-items: center; max-width: none; margin-top: 20px; }
