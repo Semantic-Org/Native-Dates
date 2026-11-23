@@ -273,6 +273,10 @@ export class MonthDay {
     return this.#plain.toString();
   }
 
+  toJSON() {
+    return this.toString();
+  }
+
   toTemporal() {
     return this.#plain;
   }
@@ -295,7 +299,7 @@ export class MonthDay {
   }
 }
 
-alias(MonthDay, { lang: 'locale', isOn: 'fallsOn', last: 'previous', toJSON: 'toString' });
+alias(MonthDay, { lang: 'locale', isOn: 'fallsOn', last: 'previous' });
 
 export const monthDay = (input, dayOrOptions) => {
   const build = () =>

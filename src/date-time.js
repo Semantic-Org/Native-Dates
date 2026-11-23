@@ -453,9 +453,11 @@ export class DateTime {
 
   until(other, name) {
     const end = new DateTime(other, this.zone).toTemporal();
+    const hours = Math.abs(end.epochMilliseconds - this.epochMilliseconds) / 36e5;
     // sub-day spans use exact elapsed hours so day-0 'compatible' resolution starting in a fall-back fold hour cannot add 1h or throw
-    const subDay = (this.offset === end.offset && Math.abs(end.epochMilliseconds - this.epochMilliseconds) < 864e5)
-      || !this.#zoned.toPlainDateTime().until(end.toPlainDateTime()).days;
+    const subDay = hours < 26
+      && ((this.offset === end.offset && hours < 24)
+        || !this.#zoned.toPlainDateTime().until(end.toPlainDateTime()).days);
     const span = anchored(this.#zoned.until(end, { largestUnit: subDay ? 'hour' : 'day' }), this.#zoned, this.#locale);
     return name === undefined ? span : span.total(name);
   }
@@ -496,6 +498,10 @@ export class DateTime {
     return this.#zoned.toInstant().toString({ fractionalSecondDigits: digits });
   }
 
+  toJSON() {
+    return this.toString();
+  }
+
   toJSDate() {
     return new Date(this.epochMilliseconds);
   }
@@ -518,7 +524,7 @@ export class DateTime {
   }
 }
 
-alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative: 'from', toJSON: 'toString' });
+alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative: 'from' });
 
 export const datetime = (input, options) => {
   const settings = zoneOptions(options);

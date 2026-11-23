@@ -2,10 +2,10 @@ import { cached } from './utils.js';
 
 import { guard } from './errors.js';
 
-// DateTime lets a defined options.timeZone override its zone, while plain dates and times pin 'UTC' to match epochOf()
-export const zonedDateTimeFormat = cached((locale, options, zone) =>
+// DateTime passes options.timeZone ?? zone in format.js, while plainDateTimeFormat always pins 'UTC' to match epochOf()
+export const zonedDateTimeFormat = cached((locale, options, timeZone) =>
   guard(
-    () => new Intl.DateTimeFormat(locale, { ...options, timeZone: options.timeZone ?? zone }),
+    () => new Intl.DateTimeFormat(locale, { ...options, timeZone }),
     'unknownFormat',
     options,
   )

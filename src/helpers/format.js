@@ -122,7 +122,7 @@ export const epochOf = (kind, subject) => {
 
 export const formatter = (kind, options, locale, zone) =>
   kind === 'datetime'
-    ? zonedDateTimeFormat(pickLocale(locale), options, zone)
+    ? zonedDateTimeFormat(pickLocale(locale), options, options.timeZone ?? zone)
     : plainDateTimeFormat(pickLocale(locale), options);
 
 export const formatIntl = (kind, subject, options, locale, zone) =>

@@ -309,6 +309,10 @@ export class YearMonth {
     return this.#plain.toString();
   }
 
+  toJSON() {
+    return this.toString();
+  }
+
   toTemporal() {
     return this.#plain;
   }
@@ -331,7 +335,7 @@ export class YearMonth {
   }
 }
 
-alias(YearMonth, { add: 'plus', subtract: 'minus', lang: 'locale', includes: 'contains', toJSON: 'toString' });
+alias(YearMonth, { add: 'plus', subtract: 'minus', lang: 'locale', includes: 'contains' });
 
 export const yearMonth = (input, monthOrOptions) => {
   const build = () =>

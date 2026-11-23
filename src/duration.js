@@ -329,6 +329,10 @@ export class Duration {
     return this.#temporal.toString();
   }
 
+  toJSON() {
+    return this.toString();
+  }
+
   toTemporal() {
     return this.#temporal;
   }
@@ -347,14 +351,7 @@ export class Duration {
   }
 }
 
-alias(Duration, {
-  add: 'plus',
-  subtract: 'minus',
-  lang: 'locale',
-  as: 'total',
-  toJSON: 'toString',
-  valueOf: 'toMilliseconds',
-});
+alias(Duration, { add: 'plus', subtract: 'minus', lang: 'locale', as: 'total', valueOf: 'toMilliseconds' });
 
 export const duration = (input, unitOrOptions) => {
   const hasOptions = isPlainObject(unitOrOptions);

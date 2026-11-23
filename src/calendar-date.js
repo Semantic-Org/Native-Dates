@@ -454,6 +454,10 @@ export class CalendarDate {
     return this.#plain.toString();
   }
 
+  toJSON() {
+    return this.toString();
+  }
+
   toJSDate(zone) {
     return this.at('00:00', zone).toJSDate();
   }
@@ -488,7 +492,6 @@ alias(CalendarDate, {
   formatRelative: 'from',
   through: 'to',
   splitBy: 'split',
-  toJSON: 'toString',
 });
 
 export const date = (input, monthOrOptions, day) => {
