@@ -4,7 +4,7 @@ kind: function
 lede: Create a Time from a 12-hour or 24-hour clock string, numbers, fields, or a timestamp.
 import: import { time } from 'native-dates'
 size: core
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 ## Reading clock times
@@ -73,13 +73,14 @@ type: Time
 description: "A `Time` representing a time of day, or `null` when loose mode cannot read `input`."
 ```
 
-When the [loose plugin](/plugins/loose/) is loaded, loose mode parses localized AM/PM clock times and informal timestamp strings, returning `null` on unreadable input:
+When the [loose plugin](/plugins/loose/) is loaded, loose mode parses localized day-period clocks, dotted clocks in locales that use them, and informal timestamp strings, returning `null` on unreadable input:
 
 ```js
 import { time } from 'native-dates';
 import '@native-dates/plugins/loose';
 
 time('오후 2:30', { loose: true, locale: 'ko' })?.toString(); // '14:30:00'
+time('14.30', { loose: true, locale: 'fi' })?.toString(); // '14:30:00'
 time('Mon, 16 Nov 2026 17:30:00 GMT', {
   zone: 'America/New_York',
   loose: true,

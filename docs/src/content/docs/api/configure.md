@@ -4,7 +4,7 @@ kind: function
 lede: Read or update process-wide defaults for time zone, locale, week start, formats, token names, and plugins.
 import: import { configure, dayOfWeek } from 'native-dates'
 size: core
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 ## Global defaults
@@ -67,7 +67,7 @@ configure({ zone: null, locale: null, weekStart: null });
       description: "Reusable custom formats passed to `format(name)`, where each value is a token pattern or `Intl` options object. Custom names take precedence over built-in presets, and `null` clears them."
     - name: dayFirst
       type: boolean | null
-      description: "Override the active locale's numeric date order in `@native-dates/plugins/loose`. Unset or `null` follows the active locale."
+      description: "Default numeric date order for loose calls that omit per-call `dayFirst` and `locale`. Unset or `null` follows the active locale."
     - name: zoneAliases
       type: Record<string, Zone | null> | null
       description: "Custom names mapped to zones with `@native-dates/plugins/zones`. Pass `null` for a key or the whole map to clear aliases."

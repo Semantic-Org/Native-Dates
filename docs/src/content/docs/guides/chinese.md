@@ -1,7 +1,7 @@
 ---
 title: Chinese
 lede: Handle regional date formats and lunar calendars across Chinese-speaking markets.
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 Pass a regional tag like `'zh-CN'` or `'zh-TW'` through [Localization](/guides/localization/). Each region sets its own script, date order, clock cycle, and week start.
@@ -100,7 +100,7 @@ slot.format('dd / ddd / dddd'); // '五 / 周五 / 星期五'
 slot.format('ddd', 'zh-TW'); // '週五'
 ```
 
-Core factories parse Han year-first dates, slashes, and dots directly, round-tripping the long preset with no plugins. For Hong Kong day-first slash dates, fullwidth digits, AM/PM clocks, or inline CST, load [the loose plugin](/plugins/loose/):
+Core factories parse Han year-first dates, slashes, and dots directly, round-tripping the long preset with no plugins. For Hong Kong day-first slash dates, fullwidth digits, day-period clocks, or inline CST, load [the loose plugin](/plugins/loose/):
 
 ```js
 import '@native-dates/plugins/loose';
@@ -112,6 +112,8 @@ yearMonth('2026年11月').toString(); // '2026-11'
 date('16/11/2026', { loose: true, locale: 'zh-HK' })?.toString(); // '2026-11-16'
 date('２０２６年１１月１６日', { loose: true })?.toString(); // '2026-11-16'
 time('下午5:05', { loose: true, locale: 'zh-TW' })?.toString(); // '17:05:00'
+time('晚上9:10', { loose: true, locale: 'zh-CN' })?.toString(); // '21:10:00'
+time('凌晨12:00', { loose: true, locale: 'zh-TW' })?.toString(); // '00:00:00'
 monthDay('11月16日', { loose: true })?.toString(); // '11-16'
 datetime('2026年11月16日 14:30 CST', {
   loose: true,
@@ -119,6 +121,8 @@ datetime('2026年11月16日 14:30 CST', {
   zone: 'UTC',
 })?.toString(); // '2026-11-16T06:30:00.000Z'
 ```
+
+Loose mode reads both *上午* / *下午* and part-of-day words like *凌晨*, *中午*, and *晚上* across `'zh-CN'` and `'zh-TW'`.
 
 ## Chinese lunar and Minguo calendars
 

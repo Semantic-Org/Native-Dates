@@ -197,6 +197,23 @@ describe('time() with { loose: true }', () => {
     expect(time('17:30:15', { loose: true })?.toString()).toBe('17:30:15');
   });
 
+  it('reads a part-of-day phrase beside an out-of-bucket hour across midnight without crossing noon', () => {
+    expect(time('2:30 at night', { loose: true, locale: 'en' })?.toString()).toBe('02:30:00');
+    expect(time('12:30 at night', { loose: true, locale: 'en' })?.toString()).toBe('00:30:00');
+    expect(time('11:30 at night', { loose: true, locale: 'en' })?.toString()).toBe('23:30:00');
+    expect(time('6:30 in the afternoon', { loose: true, locale: 'en' })?.toString()).toBe('18:30:00');
+    expect(time('9:30 in the afternoon', { loose: true, locale: 'en' })?.toString()).toBe('21:30:00');
+    expect(time('2:30 de la noche', { loose: true, locale: 'es' })?.toString()).toBe('02:30:00');
+    expect(time('2:30 de la mañana', { loose: true, locale: 'es' })?.toString()).toBe('02:30:00');
+    expect(time('12:30 de la mañana', { loose: true, locale: 'es' })?.toString()).toBe('00:30:00');
+    expect(time('2:30 da noite', { loose: true, locale: 'pt' })?.toString()).toBe('02:30:00');
+    expect(time('2:30 da manhã', { loose: true, locale: 'pt' })?.toString()).toBe('02:30:00');
+    expect(time('11:30 nachts', { loose: true, locale: 'de' })?.toString()).toBe('23:30:00');
+    expect(time('2:30 nachts', { loose: true, locale: 'de' })?.toString()).toBe('02:30:00');
+    expect(time('晚上2:30', { loose: true, locale: 'zh' })?.toString()).toBe('02:30:00');
+    expect(time('下午12:30', { loose: true, locale: 'zh' })?.toString()).toBe('12:30:00');
+  });
+
   it('accepts Date, DateTime, and plain object fields', () => {
     const afternoon = new Date('2026-09-06T14:30:00Z');
     expect(time(afternoon, { loose: true, zone: 'Asia/Tokyo' })?.toString()).toBe('23:30:00');

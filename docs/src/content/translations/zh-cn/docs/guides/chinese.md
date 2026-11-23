@@ -1,5 +1,5 @@
 ---
-source: c5bf0eb5728a
+source: a507b213ffd1
 reviewed: false
 title: 中文
 lede: 处理各中文地区的日期格式与农历显示。
@@ -101,7 +101,7 @@ slot.format('dd / ddd / dddd'); // '五 / 周五 / 星期五'
 slot.format('ddd', 'zh-TW'); // '週五'
 ```
 
-核心函数可直接解析年先头的汉字日期、斜杠与句点格式，无需插件即可往返还原 long 预设的输出。若需解析香港的日月年斜杠日期、全角数字、上下午时间或行内 CST，请加载[宽松解析插件](/plugins/loose/)：
+核心函数可直接解析年先头的汉字日期、斜杠与句点格式，无需插件即可往返还原 long 预设的输出。若需解析香港的日月年斜杠日期、全角数字、时段时刻或行内 CST，请加载[宽松解析插件](/plugins/loose/)：
 
 ```js
 import '@native-dates/plugins/loose';
@@ -113,6 +113,8 @@ yearMonth('2026年11月').toString(); // '2026-11'
 date('16/11/2026', { loose: true, locale: 'zh-HK' })?.toString(); // '2026-11-16'
 date('２０２６年１１月１６日', { loose: true })?.toString(); // '2026-11-16'
 time('下午5:05', { loose: true, locale: 'zh-TW' })?.toString(); // '17:05:00'
+time('晚上9:10', { loose: true, locale: 'zh-CN' })?.toString(); // '21:10:00'
+time('凌晨12:00', { loose: true, locale: 'zh-TW' })?.toString(); // '00:00:00'
 monthDay('11月16日', { loose: true })?.toString(); // '11-16'
 datetime('2026年11月16日 14:30 CST', {
   loose: true,
@@ -120,6 +122,8 @@ datetime('2026年11月16日 14:30 CST', {
   zone: 'UTC',
 })?.toString(); // '2026-11-16T06:30:00.000Z'
 ```
+
+宽松解析在 `'zh-CN'` 和 `'zh-TW'` 下均可识别上午、下午以及凌晨、中午、晚上等时段词。
 
 ## 农历与民国纪年
 

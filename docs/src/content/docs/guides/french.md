@@ -1,7 +1,7 @@
 ---
 title: French
 lede: Format and parse French dates across regional clocks and week starts.
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 Bare `'fr'` uses metropolitan French conventions. Pass a regional tag like `'fr-CA'` through [Localization](/guides/localization/) when your readers expect local date order, clock separators, and week starts.
@@ -96,12 +96,16 @@ time('14 h 30').toString(); // '14:30:00'
 date('06/11/2026', { loose: true, locale: 'fr' })?.toString(); // '2026-11-06'
 date('14.07.2026', { loose: true, locale: 'fr' })?.toString(); // '2026-07-14'
 date('1er mai 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-05-01'
+date('6 juil 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-07-06'
+date('6 jui 2026', { loose: true, locale: 'fr' }); // null
 datetime('lundi 16 novembre 2026 à 14h30', {
   loose: true,
   locale: 'fr',
   zone: 'Europe/Paris',
 })?.hour; // 14
 ```
+
+Shortened month names must match a single month, so *juil* parses as July while *jui* returns `null` because it opens both *juin* and *juillet*.
 
 Partial dates match French month names and accented abbreviations in loose mode. [`dayMonth()`](/api/month-day-fn/#daymonth) and [`duration()`](/api/duration-fn/) work in core without plugins:
 

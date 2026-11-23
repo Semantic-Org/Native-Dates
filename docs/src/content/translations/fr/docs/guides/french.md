@@ -1,5 +1,5 @@
 ---
-source: d739697da0a0
+source: 08799833eceb
 reviewed: false
 title: Français
 lede: Formatez et analysez les dates en français selon les horloges et débuts de semaine régionaux.
@@ -97,12 +97,16 @@ time('14 h 30').toString(); // '14:30:00'
 date('06/11/2026', { loose: true, locale: 'fr' })?.toString(); // '2026-11-06'
 date('14.07.2026', { loose: true, locale: 'fr' })?.toString(); // '2026-07-14'
 date('1er mai 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-05-01'
+date('6 juil 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-07-06'
+date('6 jui 2026', { loose: true, locale: 'fr' }); // null
 datetime('lundi 16 novembre 2026 à 14h30', {
   loose: true,
   locale: 'fr',
   zone: 'Europe/Paris',
 })?.hour; // 14
 ```
+
+Les abréviations de mois doivent désigner un seul mois : *juil* correspond à juillet, tandis que *jui* renvoie `null` car il correspond à la fois à *juin* et à *juillet*.
 
 Les dates partielles reconnaissent les mois français et leurs abréviations accentuées en mode souple. `dayMonth()` et `duration()` fonctionnent dans le noyau sans plugin :
 

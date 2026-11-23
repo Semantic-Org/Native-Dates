@@ -363,16 +363,24 @@ dialog.search::backdrop { background: oklch(0 0 0 / 0.6); backdrop-filter: blur(
   border-bottom: 1px solid var(--line);
   background: var(--code-head);
 }
-.code-head [role=tablist] { display: flex; flex: none; gap: 2px; }
+.code-head [role=tablist] {
+  position: relative;
+  display: flex; flex: 1 1 auto; min-width: 0; gap: 2px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.code-head [role=tablist]::-webkit-scrollbar { display: none; }
 .code-tab {
+  flex: none;
   height: 30px; padding: 0 10px;
   border: 0; border-radius: var(--r-2); background: transparent;
-  color: var(--text-3); font: 400 var(--fs-xs)/1 var(--font-mono); cursor: pointer;
+  color: var(--text-3); font: 400 var(--fs-xs)/1 var(--font-mono); white-space: nowrap; cursor: pointer;
 }
+.code-tab[lang] { font-family: var(--font-sans); }
 .code-tab:hover { color: var(--text-2); }
 .code-tab[aria-selected='true'] { color: var(--text); background: var(--surface-3); }
 .code-file { padding: 0 8px; color: var(--text-3); font: 400 var(--fs-xs)/1 var(--font-mono); }
-.code-head .copy { margin-inline-start: auto; }
+.code-head .copy { flex: none; margin-inline-start: auto; }
+.code[data-variants]:not([data-hydrated]) .swap > pre:not(:first-child) { visibility: hidden; }
 
 .copy {
   display: inline-grid; place-items: center;
