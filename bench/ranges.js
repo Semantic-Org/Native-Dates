@@ -1,9 +1,11 @@
-import { date, dateRange, datetime, datetimeRange } from 'native-dates';
+import { date, dateRange, datetime, datetimeRange, now, timeRange } from 'native-dates';
 
-// 80% non-overlapping and 20% overlapping pairs to exercise both fast endpoint rejection and true overlap paths
-const baseInstant = Date.parse('2026-03-08T00:00:00Z');
-const dtPairs = Array.from({ length: 1_000 }, (_, index) => {
-  const startA = baseInstant + index * 3_600_000;
+const pad = (value) => String(value).padStart(2, '0');
+
+// 80% disjoint and 20% overlapping pairs over 4,000 distinct intervals across spring-forward DST
+const baseInstant = Date.parse('2026-03-01T00:00:00.250Z');
+const dtPairs = Array.from({ length: 4_000 }, (_, index) => {
+  const startA = baseInstant + index * 900_137;
   const endA = startA + 3_600_000;
   const overlaps = index % 5 === 0;
   const startB = overlaps ? startA + 1_800_000 : endA + 3_600_000;
@@ -14,8 +16,8 @@ const dtPairs = Array.from({ length: 1_000 }, (_, index) => {
   ];
 });
 
-const dPairs = Array.from({ length: 1_000 }, (_, index) => {
-  const startA = date('2026-01-01').plus(index % 300, 'days');
+const dPairs = Array.from({ length: 4_000 }, (_, index) => {
+  const startA = date('2020-01-01').plus((index * 79) % 2_500, 'days');
   const endA = startA.plus(5, 'days');
   const overlaps = index % 5 === 0;
   const startB = overlaps ? startA.plus(3, 'days') : endA.plus(4, 'days');
@@ -26,45 +28,89 @@ const dPairs = Array.from({ length: 1_000 }, (_, index) => {
   ];
 });
 
-const monthSpan = dateRange('2026-03-01', '2026-03-31');
-const arabicQuarter = dateRange('2026-01-01', '2026-03-31').locale('ar-EG');
+// 450 distinct ISO leave intervals ('YYYY-MM-DD/YYYY-MM-DD') formatted and weekday-counted in en-US and ar-EG
+const leavePeriods = Array.from({ length: 450 }, (_, index) => {
+  const startMs = Date.UTC(2025, 0, 1) + index * 2 * 86_400_000;
+  const endMs = startMs + ((index % 12) + 2) * 86_400_000;
+  const s = new Date(startMs).toISOString().slice(0, 10);
+  const e = new Date(endMs).toISOString().slice(0, 10);
+  return [`${s}/${e}`, index % 3 === 0 ? 'ar-EG' : 'en-US'];
+});
+
 const dstDayWindow = datetime('2026-03-08T08:00', 'America/New_York').to(
   datetime('2026-03-08T18:00', 'America/New_York'),
 );
 
-for (let i = 0; i < 256; i++) {
+// 1,500 store schedules as wire strings, one-third crossing midnight ('22:00' to '02:00')
+const storeHours = Array.from({ length: 1_500 }, (_, index) => {
+  const minute = pad((index * 15) % 60);
+  if (index % 3 === 0) {
+    const openHour = 18 + (index % 6);
+    const closeHour = 1 + (index % 5);
+    return [`${pad(openHour)}:${minute}`, `${pad(closeHour)}:${minute}`];
+  }
+  const openHour = 6 + (index % 5);
+  const closeHour = 16 + (index % 7);
+  return [`${pad(openHour)}:${minute}`, `${pad(closeHour)}:${minute}`];
+});
+
+for (let i = 0; i < 128; i++) {
   const [dtA, dtB, dtPoint] = dtPairs[i];
   dtA.overlaps(dtB);
   dtA.contains(dtPoint);
   const [dA, dB, dPoint] = dPairs[i];
   dA.overlaps(dB);
   dA.contains(dPoint);
-  monthSpan.every(1, 'day');
+  const [period, locale] = leavePeriods[i];
+  const leave = dateRange(period, { locale });
+  leave.format('medium');
+  leave.count('weekdays');
   dstDayWindow.split(30, 'minutes');
-  monthSpan.count('weekdays');
-  arabicQuarter.count('weekdays');
+  const [opens, closes] = storeHours[i];
+  timeRange(opens, closes).contains(now('America/New_York').time);
+  timeRange('09:00', '17:00').every(15, 'minutes');
 }
 
 export let sink = 0;
 
-// purpose: runs 20,000 overlaps() and contains() checks across DateTimeRange and DateRange pairs (80% disjoint, 20% overlapping)
-export function overlapsAndContains20k() {
+// purpose: runs 16,000 overlaps() and contains() checks across distinct DateTimeRange and DateRange pairs
+export function overlapsAndContains16k() {
   let hits = 0;
-  for (let i = 0; i < 5_000; i++) {
-    const [dtA, dtB, dtPoint] = dtPairs[i % dtPairs.length];
+  for (let i = 0; i < dtPairs.length; i++) {
+    const [dtA, dtB, dtPoint] = dtPairs[i];
     if (dtA.overlaps(dtB)) { hits++; }
     if (dtA.contains(dtPoint)) { hits++; }
-    const [dA, dB, dPoint] = dPairs[i % dPairs.length];
+    const [dA, dB, dPoint] = dPairs[i];
     if (dA.overlaps(dB)) { hits++; }
     if (dA.contains(dPoint)) { hits++; }
   }
   sink = hits;
 }
 
-// purpose: expands daily points via every(), splits 30-minute slots across DST, and counts locale-aware weekdays 30 times
-export function everySplitAndCount30() {
-  for (let i = 0; i < 30; i++) {
-    sink = monthSpan.every(1, 'day').length + dstDayWindow.split(30, 'minutes').length;
-    sink += monthSpan.count('weekdays') + arabicQuarter.count('weekdays');
+// purpose: parses 450 ISO leave ranges, formats medium labels, counts en-US/ar-EG weekdays, and splits DST slots
+export function leaveRangesAndSlots() {
+  let totalDays = 0;
+  for (let i = 0; i < leavePeriods.length; i++) {
+    const [period, locale] = leavePeriods[i];
+    const leave = dateRange(period, { locale });
+    totalDays += leave.format('medium').length + leave.count('weekdays');
   }
+  for (let i = 0; i < 15; i++) {
+    totalDays += dstDayWindow.split(30, 'minutes').length;
+  }
+  sink = totalDays;
+}
+
+// purpose: filters 1,500 TimeRange store schedules (one-third overnight) against live now().time and steps 15m slots
+export function storeHoursOpenNow() {
+  const current = now('America/New_York').time;
+  let openCount = 0;
+  for (let i = 0; i < storeHours.length; i++) {
+    const [opens, closes] = storeHours[i];
+    if (timeRange(opens, closes).contains(current)) { openCount++; }
+  }
+  for (let day = 0; day < 6; day++) {
+    openCount += timeRange('09:00', '17:00').every(15, 'minutes').length;
+  }
+  sink = openCount;
 }

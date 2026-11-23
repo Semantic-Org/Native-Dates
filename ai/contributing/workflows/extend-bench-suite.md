@@ -40,13 +40,16 @@ Each file `bench/<name>.js` compiles to an isolated benchmark page, and each exp
 ```js
 import { date } from 'native-dates';
 
-// build fixtures at module scope outside the timed export
-const inputs = Array.from({ length: 15_000 }, (_, i) => `2026-01-${String((i % 28) + 1).padStart(2, '0')}`);
+// build distinct wire inputs at module scope so an input-string cache cannot win unrealistically
+const epochStart = Date.UTC(1975, 0, 1);
+const inputs = Array.from({ length: 25_000 }, (_, i) =>
+  new Date(epochStart + ((i * 7_919 + 1_009) % 25_000) * 86_400_000).toISOString().slice(0, 10)
+);
 export let sink = null;
 
-// purpose: parses 15,000 varied ISO calendar date strings into frozen CalendarDate instances
-export function parseIsoDate15k() {
-  for (const input of inputs) { sink = date(input); }
+// purpose: parses 25,000 distinct ISO calendar date strings into frozen CalendarDate instances
+export function parseIsoDate25k() {
+  for (let i = 0; i < inputs.length; i++) { sink = date(inputs[i]); }
 }
 ```
 
@@ -60,8 +63,8 @@ export function parseIsoDate15k() {
 - **`async` exports are supported** and timed until the returned promise resolves.
 - **Never await `requestAnimationFrame` inside a loop**, which quantizes each iteration to the 16.66 ms display clock and masks real CPU changes.
 - **Warm steady-state paths symmetrically at module scope.** Run a short (`128-512` iteration) module-level warmup on steady-state operations so lazy-vs-eager fixture constructor changes do not shift V8 inline-cache tiering into the timed loop on one side only.
-- **Avoid cross-op state pollution.** Exported functions in the same file run sequentially in source declaration order on a fresh page per sample. Place cold-cache operations first using disjoint locales/zones untouched by module warmup, or isolate configuration-mutating operations in their own `bench/<name>.js` file.
-- **Use realistic input shapes** rather than identical repeated strings that hit a single cache slot unrealistically (unless specifically benchmarking cached formatting).
+- **Avoid cross-op state pollution.** Exported functions in the same file run sequentially in source declaration order on a fresh page per sample. Place cold-cache operations first using disjoint locales/zones untouched by module warmup (or dynamically `await import('native-dates')` inside an `async` export in [`bench/startup.js`](../../../bench/startup.js) to include module evaluation).
+- **Write idiomatic callsites with distinct inputs.** Keep option literals inline inside loops (so per-call cache keying stays measured), keep live clock calls (`isToday()`, `fromNow()`, `isPast()`) where real code writes them, and generate non-repeating wire inputs rather than cycling a small set of strings.
 
 ---
 

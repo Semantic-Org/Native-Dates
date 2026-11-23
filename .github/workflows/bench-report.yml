@@ -127,6 +127,7 @@ jobs:
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
           RUN_URL: ${{ github.event.workflow_run.html_url }}
           RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
           REPORT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           STARTED: ${{ github.event.workflow_run.created_at }}
           ENDED: ${{ github.event.workflow_run.updated_at }}
@@ -143,6 +144,7 @@ jobs:
             --repo "$REPO" \
             --run-url "$RUN_URL" \
             --run-id "$RUN_ID" \
+            --run-conclusion "$RUN_CONCLUSION" \
             --report-url "$REPORT_URL" \
             --wall-clock "$WALL_CLOCK" \
             --out bench-report

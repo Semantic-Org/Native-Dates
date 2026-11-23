@@ -69,7 +69,9 @@ Each row in `tools/size.js` models a consumer import (`import { now }`, `native-
 
 - **`Faster` / `Slower`:** An operation enters these tables only when its entire 95% confidence interval clears the resolution floor (`2%` by default). When an untouched operation appears in `Slower`, treat it as a real runtime effect rather than dismissing it as runner noise.
 - **`⚪ No change` (collapsed):** Entire 95% interval lies inside `±floor`.
-- **`🔍 Unsure` (collapsed):** Confidence interval straddles the resolution floor. Normal when half-width matches `Expected noise`; if more than 2x wider, check for heap churn or short (`< 20 ms`) loop counts.
+- **`🔍 Unsure` (collapsed):** Split into **Inconclusive** (variance more than 2x wider than duration predicts) and **Too Fast to Measure Precisely** (short operation limited by ~2 ms runner scheduling jitter).
+- **Partial runs:** If a matrix cell fails or times out, the alert banner warns `⚠️ Partial benchmark run` and lists missing suites so an incomplete run never passes as a clean result.
+- **Read beside Bundle Size:** `Perf:` optimizations default to `0 B` growth on `native-dates (full)` ([`budget.md`](../budget.md)); evaluate runtime wins alongside byte cost.
 - **Across runs:** Never compare raw `ms` numbers across separate GitHub Actions runs (runner speed varies up to 2x). Tachometer interleaves `head` and `base` in one browser session so relative `%` intervals stay valid.
 
 ---

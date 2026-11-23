@@ -1,45 +1,56 @@
 import { date, datetime } from 'native-dates';
 
+const pad = (value, width = 2) => String(value).padStart(width, '0');
+
+// coprime stride (7919 is prime) permutes 25,000 sequential epoch days into 25,000 distinct YYYY-MM-DD strings
+const epochStart = Date.UTC(1975, 0, 1);
 const isoDates = Array.from({ length: 25_000 }, (_, index) => {
-  const year = 2020 + (index % 10);
-  const month = String((index % 12) + 1).padStart(2, '0');
-  const day = String((index % 28) + 1).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const dayOffset = (index * 7_919 + 1_009) % 25_000;
+  const point = new Date(epochStart + dayOffset * 86_400_000);
+  return `${point.getUTCFullYear()}-${pad(point.getUTCMonth() + 1)}-${pad(point.getUTCDate())}`;
 });
 
+// 8,000 distinct timestamps mixing JS .sssZ, default-zone .sssZ, Postgres microsecond +00, and wall-clock strings
+const baseInstant = Date.UTC(2025, 0, 1, 0, 0, 0, 137);
 const zonedInputs = Array.from({ length: 8_000 }, (_, index) => {
-  const month = String((index % 12) + 1).padStart(2, '0');
-  const day = String((index % 28) + 1).padStart(2, '0');
-  const hour = String(index % 24).padStart(2, '0');
-  const minute = String(index % 60).padStart(2, '0');
-  if (index % 4 === 0) {
-    return [`2026-${month}-${day}T${hour}:${minute}:00Z`, 'America/New_York'];
+  const slot = (index * 4_999 + 313) % 8_000;
+  const ms = baseInstant + slot * 5_912_341 + (index % 997);
+  const iso = new Date(ms).toISOString();
+  const mode = index % 4;
+  if (mode === 0) {
+    return [iso, 'America/New_York'];
   }
-  if (index % 4 === 1) {
-    return [`2026-${month}-${day}T${hour}:${minute}:00-04:00`, 'America/New_York'];
+  if (mode === 1) {
+    return [iso, undefined];
   }
-  return [`2026-${month}-${day}T${hour}:${minute}`, index % 2 === 0 ? 'America/New_York' : 'Europe/Berlin'];
+  if (mode === 2) {
+    const pg = `${iso.slice(0, 10)} ${iso.slice(11, 23)}${pad((index * 137) % 1_000, 3)}+00`;
+    return [pg, 'Europe/Berlin'];
+  }
+  return [iso.slice(0, 19), index % 8 === 3 ? 'America/New_York' : 'Europe/Berlin'];
 });
 
 // pre-warm V8 inline caches symmetrically so lazy-vs-eager constructor changes do not skew JIT tiering
 for (let i = 0; i < 512; i++) {
   date(isoDates[i]);
-  datetime(zonedInputs[i][0], zonedInputs[i][1]);
+  const [input, zone] = zonedInputs[i];
+  if (zone) { datetime(input, zone); }
+  else { datetime(input); }
 }
 
 export let sink = null;
 
-// purpose: parses 25,000 varied ISO calendar date strings into frozen CalendarDate instances
+// purpose: parses 25,000 distinct ISO calendar date strings across 68 years into frozen CalendarDate instances
 export function parseIsoDate25k() {
   for (let i = 0; i < isoDates.length; i++) {
     sink = date(isoDates[i]);
   }
 }
 
-// purpose: parses 8,000 UTC, fixed-offset, and wall-clock ISO timestamps across America/New_York and Europe/Berlin
+// purpose: parses 8,000 distinct .sssZ, default-zone, Postgres +00, and wall-clock timestamps across DST zones
 export function parseZonedDateTime8k() {
   for (let i = 0; i < zonedInputs.length; i++) {
     const [input, zone] = zonedInputs[i];
-    sink = datetime(input, zone);
+    sink = zone ? datetime(input, zone) : datetime(input);
   }
 }
