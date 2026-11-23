@@ -126,14 +126,14 @@ describe('buildReport() and renderComment()', () => {
           abs: [-0.1, 0.1],
           samples: Array.from({ length: 50 }, (_, i) => 3 + (i % 2) * 2),
         },
-        // 60 ms op with tight samples but wide [-8%, +8%] interval: exceeds 2x expected noise
+        // 85 ms op with high-variance samples and wide [-8%, +8%] interval: exceeds 2x fixed runner jitter -> Inconclusive
         {
           op: 'noisyOp',
-          headMean: [60, 61],
-          baseMean: [60, 61],
+          headMean: [80, 90],
+          baseMean: [80, 90],
           pct: [-8, 8],
-          abs: [-5, 5],
-          samples: Array.from({ length: 50 }, () => 60),
+          abs: [-6, 6],
+          samples: Array.from({ length: 50 }, (_, i) => 70 + (i % 2) * 30),
         },
       ],
     });
