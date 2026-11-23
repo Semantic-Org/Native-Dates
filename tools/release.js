@@ -520,6 +520,7 @@ async function runPublish(flags) {
   const allowDirty = Boolean(flags['allow-dirty']);
   const allowBranch = Boolean(flags['allow-branch']);
   const offline = Boolean(flags.offline);
+  const noRelease = Boolean(flags['no-release']);
   const yes = Boolean(flags.yes);
   const tag = typeof flags.tag === 'string' ? flags.tag : 'latest';
   let otp = typeof flags.otp === 'string' ? flags.otp : '';
@@ -554,6 +555,19 @@ async function runPublish(flags) {
     user = registry.user;
     plan = registry.plan;
     findings.push(...registry.findings);
+    if (!noRelease) {
+      const gh = defaultExec('gh', ['auth', 'status'], root);
+      if (gh.status !== 0) {
+        findings.push(
+          'not logged in to GitHub CLI (run `gh auth login`, or pass --no-release to skip tagging and GitHub Release)',
+        );
+      }
+    }
+  }
+
+  let releaseNotes = '';
+  if (!noRelease && !findings.some((f) => f.startsWith('CHANGELOG.md:'))) {
+    releaseNotes = extractChangelogSection(version, { dir: root });
   }
 
   if (findings.length) {
@@ -574,6 +588,7 @@ async function runPublish(flags) {
     }
   }
 
+  const isPrerelease = Boolean(parseSemver(version)?.pre.length);
   console.log('');
   console.log(`Publish plan${dryRun ? ' (DRY RUN)' : ''}:`);
   console.log(`  version: ${version}`);
@@ -584,6 +599,10 @@ async function runPublish(flags) {
     const action = item.status === 'skip' ? 'skip (already on npm)' : 'publish';
     console.log(`  - ${item.name.padEnd(24)} ${item.version}  [${action}]`);
   }
+  if (!noRelease) {
+    console.log(`  - git tag + push         v${version}`);
+    console.log(`  - GitHub Release         v${version}${isPrerelease ? ' (prerelease)' : ''} from CHANGELOG.md`);
+  }
   console.log('');
 
   if (!dryRun && !yes) {
@@ -592,7 +611,9 @@ async function runPublish(flags) {
       process.exitCode = 1;
       return;
     }
-    const confirmation = await ask(`Type "${version}" to publish to npm: `);
+    const confirmation = await ask(
+      `Type "${version}" to publish to npm${noRelease ? '' : ' and create GitHub Release'}: `,
+    );
     if (confirmation !== version) {
       console.error(`aborted: expected '${version}', received '${confirmation}'`);
       process.exitCode = 1;
@@ -636,16 +657,45 @@ async function runPublish(flags) {
   }
 
   if (dryRun) {
+    if (!noRelease && releaseNotes) {
+      console.log(`\n[dry-run] Would tag v${version}, push to origin, and create GitHub Release with notes:\n`);
+      process.stdout.write(releaseNotes);
+    }
     console.log(`\nDry run passed for all ${toPublish.length} packages at ${version}.`);
+    return;
   }
-  else {
-    console.log(`\nPublished all ${toPublish.length} packages at ${version}.`);
-    console.log('Next step: create the release tag and GitHub Release:');
-    console.log(`  git tag -a v${version} -m "v${version}" && git push origin v${version}`);
-    console.log(
-      `  npm run release:notes -- --extract | gh release create v${version} --title "v${version}" --notes-file -`,
+
+  console.log(`\nPublished all ${toPublish.length} packages at ${version}.`);
+  if (noRelease) { return; }
+
+  const tagName = `v${version}`;
+  console.log(`\nTagging and pushing ${tagName}...`);
+  for (const args of [['tag', '-a', tagName, '-m', tagName], ['push', 'origin', tagName]]) {
+    const res = spawnSync('git', args, { cwd: root, stdio: 'inherit' });
+    if (res.status !== 0) {
+      console.error(`git ${args.join(' ')} failed after npm publish`);
+      process.exitCode = res.status ?? 1;
+      return;
+    }
+  }
+
+  console.log(`Creating GitHub Release ${tagName} from CHANGELOG.md...`);
+  const ghArgs = ['release', 'create', tagName, '--title', tagName, '--notes-file', '-'];
+  if (isPrerelease) { ghArgs.push('--prerelease'); }
+  const ghRes = spawnSync('gh', ghArgs, {
+    cwd: root,
+    input: releaseNotes,
+    stdio: ['pipe', 'inherit', 'inherit'],
+  });
+  if (ghRes.status !== 0) {
+    console.error(`gh release create failed. Tag ${tagName} was pushed; re-run manually with:`);
+    console.error(
+      `  npm run release:notes -- --extract | gh release create ${tagName} --title "${tagName}" --notes-file -`,
     );
+    process.exitCode = ghRes.status ?? 1;
+    return;
   }
+  console.log(`\nReleased ${tagName} (npm + git tag + GitHub Release).`);
 }
 
 async function main() {
@@ -700,7 +750,7 @@ async function main() {
   if (command === 'bump') {
     const [target] = rest;
     if (!target) {
-      console.error('usage: node tools/release.js bump <patch|minor|major|x.y.z> [--dry-run]');
+      console.error('usage: node tools/release.js bump <patch|minor|major|x.y.z> [--dry-run] [--no-notes]');
       process.exitCode = 1;
       return;
     }
@@ -710,16 +760,26 @@ async function main() {
     for (const file of result.files) {
       console.log(`  - ${file}`);
     }
+    if (!flags['no-notes']) {
+      const hasPriorTag = defaultExec('git', ['describe', '--tags', '--abbrev=0'], root).status === 0;
+      if (hasPriorTag) {
+        const { fromTag, markdown } = generateNotes({ dir: root, version: result.to });
+        prependChangelog(markdown, { dir: root, version: result.to, dryRun });
+        console.log(
+          `${
+            dryRun ? '[dry-run] Would prepend' : 'Prepended'
+          } v${result.to} notes (since ${fromTag}) into CHANGELOG.md`,
+        );
+      }
+    }
     if (!dryRun) {
       const verified = checkLockstep(root);
-      const nonChangelog = verified.findings.filter((f) => !f.startsWith('CHANGELOG.md:'));
-      if (nonChangelog.length) {
-        printFindings('post-bump check', nonChangelog);
+      if (verified.findings.length) {
+        printFindings('post-bump check', verified.findings);
         process.exitCode = 1;
         return;
       }
-      console.log('Next step: generate and review changelog notes:');
-      console.log('  npm run release:notes -- --write');
+      console.log('Next step: review CHANGELOG.md, merge to main, then run `npm run release:publish`.');
     }
     return;
   }
@@ -731,9 +791,9 @@ async function main() {
 
   console.error('usage: node tools/release.js <check|bump|notes|publish> [options]');
   console.error('  check   [--strict] [--allow-dirty] [--allow-branch] [--offline]');
-  console.error('  bump    <patch|minor|major|x.y.z> [--dry-run]');
+  console.error('  bump    <patch|minor|major|x.y.z> [--dry-run] [--no-notes]');
   console.error('  notes   [--write] [--extract] [--from=<tag>] [--dry-run]');
-  console.error('  publish [--dry-run] [--otp=123456] [--tag=latest] [--resume] [--skip-checks]');
+  console.error('  publish [--dry-run] [--otp=123456] [--tag=latest] [--resume] [--skip-checks] [--no-release]');
   process.exitCode = 1;
 }
 
