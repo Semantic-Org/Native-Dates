@@ -1,7 +1,8 @@
-import { canonicalZone, setZoneExtension } from 'native-dates/helpers/zones';
+import { isArray } from 'native-dates/helpers/utils';
+import { canonicalZone, intlLocale, setZoneExtension } from 'native-dates/helpers/zones';
 
-// ambiguous abbreviations (IST can mean Kolkata, Jerusalem, or Dublin), left mutable so apps can
-// override entries at startup (`timezones.IST = 'Asia/Jerusalem'`) or via `configure({ zoneAliases })`
+// checked before the tables below, left mutable so apps can override entries at startup
+// (`timezones.IST = 'Asia/Jerusalem'`) or via `configure({ zoneAliases })`
 export const timezones = {
   ET: 'America/New_York',
   CT: 'America/Chicago',
@@ -15,13 +16,11 @@ export const timezones = {
   CET: 'Europe/Paris',
   ECT: 'Europe/Paris',
   EET: 'Europe/Helsinki',
-  IRST: 'Europe/Dublin',
+  IRST: 'Asia/Tehran',
   AET: 'Australia/Sydney',
-  ACT: 'Australia/Adelaide',
   AWT: 'Australia/Perth',
   NZT: 'Pacific/Auckland',
   BRT: 'America/Sao_Paulo',
-  IST: 'Asia/Kolkata',
   INST: 'Asia/Kolkata',
   JST: 'Asia/Tokyo',
   SGT: 'Asia/Singapore',
@@ -29,17 +28,18 @@ export const timezones = {
 
 // checked before Temporal itself because bare IANA 'EST', 'MST', and 'HST' are legacy fixed-offset
 // zones without DST, whereas callers writing 'EST' expect America/New_York
+// a list holds each country's zone for a shared abbreviation, most common first
 const abbreviations = {
   est: 'America/New_York',
   edt: 'America/New_York',
   eastern: 'America/New_York',
-  cst: 'America/Chicago',
+  cst: ['America/Chicago', 'Asia/Shanghai', 'Asia/Taipei', 'America/Havana'],
   cdt: 'America/Chicago',
   central: 'America/Chicago',
   mst: 'America/Denver',
   mdt: 'America/Denver',
   mountain: 'America/Denver',
-  pst: 'America/Los_Angeles',
+  pst: ['America/Los_Angeles', 'Asia/Manila'],
   pdt: 'America/Los_Angeles',
   pacific: 'America/Los_Angeles',
   akst: 'America/Anchorage',
@@ -47,10 +47,30 @@ const abbreviations = {
   alaska: 'America/Anchorage',
   hst: 'Pacific/Honolulu',
   hawaii: 'Pacific/Honolulu',
-  bst: 'Europe/London',
+  ast: ['America/Halifax', 'Asia/Riyadh'],
+  hne: 'America/Toronto',
+  hae: 'America/Toronto',
+  art: 'America/Argentina/Buenos_Aires',
+  cot: 'America/Bogota',
+  clt: 'America/Santiago',
+  amt: ['America/Manaus', 'Asia/Yerevan'],
+  fnt: 'America/Noronha',
+  bst: ['Europe/London', 'Asia/Dhaka'],
   cest: 'Europe/Paris',
+  msk: 'Europe/Moscow',
+  мск: 'Europe/Moscow',
+  wat: 'Africa/Lagos',
+  eat: 'Africa/Nairobi',
+  sast: 'Africa/Johannesburg',
+  gst: 'Asia/Dubai',
+  pkt: 'Asia/Karachi',
+  ist: ['Asia/Kolkata', 'Europe/Dublin', 'Asia/Jerusalem'],
+  ict: 'Asia/Bangkok',
+  wib: 'Asia/Jakarta',
+  pht: 'Asia/Manila',
   jst: 'Asia/Tokyo',
   kst: 'Asia/Seoul',
+  act: ['Australia/Adelaide', 'America/Rio_Branco'],
   aest: 'Australia/Sydney',
   aedt: 'Australia/Sydney',
   nzst: 'Pacific/Auckland',
@@ -59,6 +79,86 @@ const abbreviations = {
   hkt: 'Asia/Hong_Kong',
   gmt: 'UTC',
   z: 'UTC',
+};
+
+// cities whose zone IANA names after another city, so 'Beijing' is Asia/Shanghai and 'Mumbai' is Asia/Kolkata
+const cityAliases = {
+  nyc: 'America/New_York',
+  washington: 'America/New_York',
+  'washington dc': 'America/New_York',
+  boston: 'America/New_York',
+  miami: 'America/New_York',
+  atlanta: 'America/New_York',
+  houston: 'America/Chicago',
+  dallas: 'America/Chicago',
+  la: 'America/Los_Angeles',
+  'san francisco': 'America/Los_Angeles',
+  seattle: 'America/Los_Angeles',
+  'las vegas': 'America/Los_Angeles',
+  ottawa: 'America/Toronto',
+  cdmx: 'America/Mexico_City',
+  guadalajara: 'America/Mexico_City',
+  habana: 'America/Havana',
+  'la habana': 'America/Havana',
+  'san juan': ['America/Argentina/San_Juan', 'America/Puerto_Rico'],
+  quito: 'America/Guayaquil',
+  brasilia: 'America/Sao_Paulo',
+  'rio de janeiro': 'America/Sao_Paulo',
+  rio: 'America/Sao_Paulo',
+  'belo horizonte': 'America/Sao_Paulo',
+  salvador: 'America/Bahia',
+  manchester: 'Europe/London',
+  edinburgh: 'Europe/London',
+  lyon: 'Europe/Paris',
+  marseille: 'Europe/Paris',
+  bruxelles: 'Europe/Brussels',
+  geneva: 'Europe/Zurich',
+  geneve: 'Europe/Zurich',
+  bern: 'Europe/Zurich',
+  munich: 'Europe/Berlin',
+  frankfurt: 'Europe/Berlin',
+  hamburg: 'Europe/Berlin',
+  barcelona: 'Europe/Madrid',
+  milan: 'Europe/Rome',
+  ankara: 'Europe/Istanbul',
+  'saint petersburg': 'Europe/Moscow',
+  'st. petersburg': 'Europe/Moscow',
+  spb: 'Europe/Moscow',
+  kazan: 'Europe/Moscow',
+  москва: 'Europe/Moscow',
+  ekaterinburg: 'Asia/Yekaterinburg',
+  astana: 'Asia/Almaty',
+  makkah: 'Asia/Riyadh',
+  mecca: 'Asia/Riyadh',
+  jeddah: 'Asia/Riyadh',
+  doha: 'Asia/Qatar',
+  'abu dhabi': 'Asia/Dubai',
+  manama: 'Asia/Bahrain',
+  islamabad: 'Asia/Karachi',
+  lahore: 'Asia/Karachi',
+  mumbai: 'Asia/Kolkata',
+  delhi: 'Asia/Kolkata',
+  'new delhi': 'Asia/Kolkata',
+  bangalore: 'Asia/Kolkata',
+  bengaluru: 'Asia/Kolkata',
+  chennai: 'Asia/Kolkata',
+  hyderabad: 'Asia/Kolkata',
+  hanoi: 'Asia/Ho_Chi_Minh',
+  beijing: 'Asia/Shanghai',
+  shenzhen: 'Asia/Shanghai',
+  guangzhou: 'Asia/Shanghai',
+  北京: 'Asia/Shanghai',
+  busan: 'Asia/Seoul',
+  서울: 'Asia/Seoul',
+  osaka: 'Asia/Tokyo',
+  kyoto: 'Asia/Tokyo',
+  fukuoka: 'Asia/Tokyo',
+  東京: 'Asia/Tokyo',
+  rabat: 'Africa/Casablanca',
+  abuja: 'Africa/Lagos',
+  'cape town': 'Africa/Johannesburg',
+  pretoria: 'Africa/Johannesburg',
+  wellington: 'Pacific/Auckland',
 };
 
 const capitalize = (word) => (word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : '');
@@ -73,7 +173,10 @@ const cities = () => {
     const ids = Intl.supportedValuesOf('timeZone');
     index = {
       full: new Map(ids.map((id) => [normalize(id), id])),
-      city: new Map(ids.map((id) => [normalize(id.split('/').pop()), id])),
+      city: new Map([
+        ...ids.map((id) => [normalize(id.split('/').pop()), id]),
+        ...Object.entries(cityAliases).map(([name, zone]) => [normalize(name), zone]),
+      ]),
     };
   }
   return index;
@@ -104,11 +207,26 @@ const alias = (key, zoneAliases) => {
   return abbreviations[key];
 };
 
-const resolveZone = (id, zoneAliases) => {
+// Temporal treats a link and its zone as equal, so Asia/Calcutta from Intl matches Asia/Kolkata
+const isSameZone = (first, second) => {
+  const zoned = (id) => Temporal.Instant.fromEpochMilliseconds(0).toZonedDateTimeISO(id);
+  return zoned(first).equals(zoned(second));
+};
+
+// of several zones a name can mean, pick the one in the locale's country ('CST' under 'zh-CN'), else the first
+const zoneFor = (target, locale) => {
+  if (!isArray(target)) {
+    return target;
+  }
+  const countryZones = intlLocale(locale).maximize().getTimeZones?.() ?? [];
+  return target.find((zone) => countryZones.some((id) => isSameZone(id, zone))) ?? target[0];
+};
+
+const resolveZone = (id, zoneAliases, locale) => {
   const key = normalize(id);
   return (
-    canonicalZone(alias(key, zoneAliases) ?? id.trim())
-      ?? canonicalZone(cities().full.get(key) ?? cities().city.get(key) ?? '')
+    canonicalZone(zoneFor(alias(key, zoneAliases), locale) ?? id.trim())
+      ?? canonicalZone(cities().full.get(key) ?? zoneFor(cities().city.get(key), locale) ?? '')
       ?? rebuilt(key)
   );
 };

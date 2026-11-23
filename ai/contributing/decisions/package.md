@@ -4,108 +4,132 @@
 
 ## D1: Trailing `Z` and numeric offsets in `datetime()` set the instant, not `.zone` (2026-11-05)
 
-Database and JSON timestamps normally arrive with `Z` (`'2026-03-08T04:30:00Z'`). Adopting `'UTC'` or a fixed offset from the input string (like Moment's `parseZone`) would silently disable DST rules on subsequent `.plus(1, 'day')` or `.startOf('day')` calls unless callers remember `.in(zone)`.
+API and database timestamps usually arrive with a trailing `Z` (`'2026-03-08T04:30:00Z'`). If `datetime()` adopted `'UTC'` or a fixed offset from the input string (as Moment's `parseZone` does), later `.plus(1, 'day')` and `.startOf('day')` calls would silently skip daylight-saving rules unless the caller remembered to chain `.in(zone)`.
 
-Reopen: downstream bug reports show callers passing `Z` strings expecting `.hour` and `.zone` to default to `'UTC'`.
+Reopen: developers report expecting `datetime('...Z')` or offset strings to keep `.zone` and `.hour` in `'UTC'` or that offset rather than converting to the active zone.
 
 ## D2: `DateTime` serializes to ISO 8601 UTC rather than Temporal's bracketed `[Zone]` string (2026-11-05)
 
-`Temporal.ZonedDateTime.prototype.toString()` appends `-05:00[America/New_York]`, which `Date.parse()`, PostgreSQL `timestamptz`, and standard ISO 8601 parsers reject. `toString()` and `toJSON()` output standard UTC strings (`...Z`) so `DateTime` values work directly in JSON payloads and database parameters.
+`Temporal.ZonedDateTime.prototype.toString()` appends `-05:00[America/New_York]`, which `Date.parse()`, PostgreSQL `timestamptz`, and standard ISO 8601 parsers reject. `toString()` and `toJSON()` emit standard UTC strings (`...Z`) so `DateTime` values work directly in JSON payloads and database queries.
 
-Reopen: RFC 9557 bracketed zone strings gain broad database and parser support and callers request round-tripping `.zone` through JSON.
+Reopen: RFC 9557 bracketed zone strings gain broad parser and database support and users ask to round-trip `.zone` through JSON.
 
 ## D3: Instances freeze on construction with `text` as an eager own property (2026-11-05)
 
-Setting `text` as the first enumerable own property shows the human-readable value first in `console.log()` and object spreads without clicking prototype getters in DevTools or Node. On `Duration`, eager `Intl.DurationFormat` formatting (~14 µs in Node) was accepted over a lazy getter so console output behaves the same across every class.
+Putting `text` on the instance as its first own property shows the human-readable value inline in `console.log()` and DevTools instead of hiding it behind prototype getters. On `Duration`, eager `Intl.DurationFormat` formatting (~14 µs in Node) was accepted over a lazy getter so every class inspects the same way.
 
-Reopen: benchmark profiles in `bench/` show eager `text` construction dominating hot arithmetic or `range.points()` loops.
+Reopen: profiles in `bench/` or user performance reports show eager `text` formatting dominating hot arithmetic or `range.every()` loops.
 
 ## D4: Plugins attach on subpath import instead of requiring `use()` or `extend()` (2026-11-08)
 
-Explicit registration (`use(plugin)`, used initially and removed) recreates Day.js's load-order bug when a module parses or formats a date before startup code runs, and requires TypeScript callers to keep runtime `use()` calls in sync with type imports. Because prototype methods and parser hooks are process-wide anyway, `use()` added ordering bugs without isolating instances.
+Explicit registration (`use(plugin)`, built initially and removed) brings back Day.js's load-order bug whenever a module runs before startup registration, and forces TypeScript projects to keep runtime `use()` calls in sync with type imports. Because prototype methods and parser hooks are process-wide either way, `use()` added ordering bugs without isolating instances.
 
-Reopen: a standard bundler configuration tree-shakes an imported `@native-dates/plugins/*` module despite `"sideEffects": ["./src/*.js"]`.
+Reopen: reports show a mainstream bundler tree-shaking bare `@native-dates/plugins/*` imports despite `"sideEffects": ["./src/*.js"]`.
 
 ## D5: `DateRange` includes its end date while `DateTimeRange` and `TimeRange` are half-open (2026-11-12)
 
-In everyday English, SQL `BETWEEN`, and date pickers, "Monday to Friday" means 5 days rather than 4, so half-open `DateRange` bounds would cause off-by-one end dates. Timestamps and clock times use `[start, end)` so adjacent slots (`09:00` to `10:00`, `10:00` to `11:00`) share `10:00` without overlap or a 1 ms gap, and `TimeRange` treats `end < start` as crossing midnight (`22:00` to `06:00`) for overnight shifts.
+In plain language, SQL `BETWEEN`, and date pickers, "Monday to Friday" means five days rather than four. Timestamps and clock times use `[start, end)` instead so adjacent slots (`09:00` to `10:00`, `10:00` to `11:00`) share `10:00` with no overlap or 1 ms gap, and `TimeRange` treats `end < start` (`22:00` to `06:00`) as crossing midnight.
 
-Reopen: bug reports show callers frequently off by one day when converting between `DateRange` and `DateTimeRange`.
+Reopen: bug reports show frequent off-by-one errors when converting between inclusive `DateRange` and half-open `DateTimeRange` bounds.
 
-## D6: `.locale()` attaches a formatting locale to values without affecting equality or JSON (2026-11-14)
+## D6: `.locale()` attaches a locale to instances without affecting equality or JSON (2026-11-14)
 
-Process-wide `configure({ locale })` leaks across concurrent requests on Node servers, so instances carry an optional locale (+320 B Brotli) through method chains while keeping `equals()`, `compare()`, `toString()`, and `toJSON()` locale-independent. `.locale()` also accepts POSIX `'en_US'` tags and HTTP `Accept-Language` headers in core (+130 B) because `.locale()` has no `{ loose: true }` option.
+Process-wide `configure({ locale })` leaks across concurrent requests in server rendering, so instances carry an optional locale (+320 B Brotli) through chains while keeping `equals()`, `compare()`, `toString()`, and `toJSON()` locale-independent. `.locale()` also accepts POSIX `'en_US'` tags and raw HTTP `Accept-Language` headers in core (+130 B) because it has no `{ loose: true }` mode.
 
-Reopen: callers hit assertion bugs because two `.equals()` values in different locales have different `.text` own properties under deep-object equality.
+Reopen: users report deep-equality test failures (such as Vitest or Jest `toEqual()`) when comparing `.equals()` instances across locales because their `.text` own properties differ.
 
 ## D7: Default week boundaries follow the locale while `weekOfYear` stays ISO Monday (2026-11-14)
 
-Defaulting `startOf('week')`, `endOf('week')`, `range('week')`, and `weekdayNames()` to Monday produced the wrong calendar week out of the box in Sunday-start (`en-US`, `ja-JP`, `pt-BR`) and Saturday-start (`ar-EG`, `fa-IR`) locales (+70 B Brotli via `Intl.Locale.prototype.getWeekInfo`). `weekOfYear` and the `W` token keep ISO 8601 Monday numbering because business week numbers are an unlocalized standard.
+Defaulting `startOf('week')`, `endOf('week')`, `range('week')`, and `weekdayNames()` to Monday produced the wrong calendar week out of the box in Sunday-start (`en-US`, `ja-JP`, `pt-BR`) and Saturday-start (`ar-EG`, `fa-IR`) locales (+70 B Brotli via `Intl.Locale.prototype.getWeekInfo`). `weekOfYear` and the `W` token keep ISO 8601 Monday numbering because numbered business weeks follow an unlocalized standard.
 
-Reopen: server code accidentally partitions stored weekly aggregates differently across requests carrying different `.locale()` tags.
+Reopen: bug reports show `startOf('week')` shifting unexpectedly across host or instance locales when `weekStart` is unset, or users ask for localized week-of-year numbering alongside ISO `weekOfYear`.
 
 ## D8: Format tokens output ASCII digits and Gregorian years while presets localize the calendar (2026-11-14)
 
-Developers use `'YYYY-MM-DD'` for URLs, filenames, and API payloads that need ASCII digits and Gregorian years even when the active locale uses Arabic-Indic digits (`ar-EG`) or non-Gregorian calendars (`fa-IR`, `th-TH`). `MonthDay` and `YearMonth` also use Gregorian months because ISO anniversaries fall on different Persian or Islamic dates each year, and `YearMonth` `'short'` uses 4-digit years (`'11/2026'`) so `'11/26'` is not misread as November 26.
+Token patterns like `'YYYY-MM-DD'` build URLs, filenames, and API payloads that break if localized into Arabic-Indic digits (`ar-EG`) or non-Gregorian calendars (`fa-IR`, `th-TH`), while `Intl` presets (`'short'`, `'long'`) format for human display. `MonthDay` and `YearMonth` stay Gregorian for the same reason: an ISO month-day lands on different Persian or Islamic dates each year.
 
-Reopen: native speakers request an opt-in localized-numeral token mode or non-Gregorian partial dates.
+Reopen: speakers of non-Gregorian or non-ASCII-numeral locales ask for an opt-in localized token mode or non-Gregorian partial dates.
 
 ## D9: Core has zero runtime dependencies and trims forked `@semantic-ui/utils` helpers to used branches (2026-11-16)
 
-Depending on `@semantic-ui/utils` was tried and reverted because zero dependencies is a common requirement when picking a date library. Copying the shared helpers verbatim saved apps already bundling `@semantic-ui/utils` 61 B Brotli while costing standalone consumers 300 B from unused branches in `each()` and `createErrors` that bundlers could not tree-shake, so `src/helpers/utils.js` keeps only the branches `native-dates` uses.
+Depending on `@semantic-ui/utils` was tried and reverted because many developers filter out date libraries with runtime dependencies. Copying those helpers verbatim saved Semantic UI apps 61 B Brotli while costing standalone bundles 300 B from unused branches in `each()` and error formatting that minifiers could not strip, so `src/helpers/utils.js` keeps only the branches `native-dates` uses.
 
-Reopen: `@semantic-ui/utils` publishes tree-shakeable single-branch entrypoints with zero unreached bytes and consumers favor cross-package deduplication over zero dependencies.
+Reopen: `@semantic-ui/utils` ships tree-shakeable entrypoints with zero dead bytes and Semantic UI bundle savings outweigh zero-dependency installs.
 
 ## D10: Error explanations use inline `isDevelopment` checks, and `{ loose: true }` still throws on bad options (2026-11-16)
 
-Error calls pass `explanation: isDevelopment ? '...' : 0` inline at the callsite because minifiers cannot strip string literals passed unconditionally into a helper. When `{ loose: true }` is enabled, only malformed input data returns `null`, while invalid caller options (`unknownZone`, `unknownLocale`, `unknownFormat`) still throw.
+Error callsites guard `explanation: isDevelopment ? '...' : 0` inline because minifiers cannot strip diagnostic prose once it is passed unconditionally into `refuse()`. Under `{ loose: true }`, only unparseable date or time input returns `null`, while invalid options (`unknownZone`, `unknownLocale`, `unknownFormat`) still throw so typos in option bags do not fail silently.
 
-Reopen: callers building dynamic zone or format inputs from untrusted user text need a non-throwing validation helper.
+Reopen: users ask for a non-throwing way to validate untrusted zone or locale strings, or mainstream production builds fail to strip `isDevelopment` prose.
 
 ## D11: Custom `weekdayNames`, `ordinals`, and named `formats` live in `configure()` instead of locale plugins (2026-11-16)
 
-`dd` and `Do` are the only Moment/Day.js tokens with no `Intl` field. A `@native-dates/plugins/weekdays` plugin and hard-coded French `1er` rule were removed once `Intl`-derived defaults covered nearly all locales (+220 B for `weekdayNames`/`ordinals`, +70 B for `formats`), avoiding per-language tables in core and a plugin name suggesting weekdays required an extra import. `weekdayNames` keys days by name (`fri`, `sun`) rather than array index to avoid Sunday-0 vs. Monday-1 off-by-one bugs.
+`dd` and `Do` are the only Moment and Day.js tokens without a dedicated `Intl` field. A separate `@native-dates/plugins/weekdays` plugin and a hardcoded French `1er` rule were removed once `Intl`-derived defaults covered most languages (+220 B for `weekdayNames` and `ordinals`, +70 B for `formats`). That avoids shipping per-language tables in core and removes a plugin name that implied weekday support needed an extra import.
 
-Reopen: multiple downstream apps duplicate the same locale ordinal or `dd` overrides and warrant a shared community table.
+Reopen: recurring issues or PRs repeat the same language's `Do` ordinal or `dd` overrides, warranting an opt-in locale pack.
 
-## D12: Core parses unambiguous non-ISO inputs and refuses inputs with two readings (2026-11-16)
+## D12: Core accepts unambiguous non-ISO inputs and refuses inputs with two readings (2026-11-16)
 
-Year-first `'2026/1/5'`, leading epoch-ms numbers in `compare(Date.now(), dt)`, and fixed-ratio duration borrowing (`years(1).minus(months(1))` -> 11 months, `weeks(1).minus(days(1))` -> 6 days) each have a single valid interpretation (+230 B total). Core still refuses `'11/06/2026'` (ambiguous between US and European order), `days(1).minus(hours(1))` (differs by an hour from `.plus(days(1)).minus(hours(1))` across DST), and `compare(CalendarDate, DateTime)` (treating dates as midnight contradicts `isBefore()`, while tying across the day breaks `Array.prototype.sort`).
+Core accepts year-first `'2026/1/5'`, epoch-millisecond numbers in `compare(Date.now(), dt)`, and fixed-ratio duration borrowing such as `years(1).minus(months(1))` because each has only one valid reading (+230 B total). It refuses `'11/06/2026'` because day-month order is ambiguous, `days(1).minus(hours(1))` because a day is 23 or 25 hours across DST, and `compare(CalendarDate, DateTime)` because midnight coercion contradicts `isBefore()` while tying across a day breaks `Array.prototype.sort`.
 
-Reopen: a non-ISO form accepted in core misparses real input, or callers repeatedly hit one of the remaining refusals where an explicit option could disambiguate.
+Reopen: an accepted non-ISO form misreads real user input, or recurring issues hit one of these refusals where an explicit option could disambiguate it.
 
 ## D13: Unix timestamp properties include their unit (`epochSeconds`, `epochMilliseconds`, `epochNanoseconds`) with no bare `.epoch` (2026-11-17)
 
-Shells, Python, SQL, and JWT `exp`/`iat` claims count Unix time in seconds while `Date.now()` uses milliseconds, so an unqualified `.epoch` or `.timestamp` makes `claims.exp = dt.epoch` silently 1,000x too large. Requiring the unit in the property name gives up short round-tripping with `datetime(ms)` to prevent seconds-vs-milliseconds bugs at API boundaries.
+Shells, Python, SQL, and JWT `exp`/`iat` claims count Unix time in seconds while `Date.now()` uses milliseconds, so a bare `.epoch` or `.timestamp` makes `claims.exp = dt.epoch` silently 1,000x too large. Naming the unit on every property gives up a shorter round-trip with `datetime(ms)` to prevent seconds-vs-milliseconds bugs at API boundaries.
 
-Reopen: migration feedback shows omitting `.epoch` causes widespread friction without preventing real seconds-vs-milliseconds bugs.
+Reopen: migration feedback or user issues show omitting `.epoch` causing widespread friction.
 
 ## D14: Numeric day of the week is `dayOfWeek` (`1`-`7`) while token `d` keeps Moment's `0`-`6` (2026-11-17)
 
-Naming the `1`-`7` property `.weekday` made `sunday.weekday` return `7` while `sunday.isWeekday()` returned `false`, and collided with custom display names in `configure({ weekdayNames })`. Format token `d` keeps `0` = Sunday through `6` = Saturday to match Moment and Day.js alongside `E` for ISO `1`-`7`.
+Naming the ISO `1`-`7` property `.weekday` made `sunday.weekday` return `7` while `sunday.isWeekday()` returned `false`, and collided with display names in `configure({ weekdayNames })`. Format token `d` keeps Moment and Day.js's `0` (Sunday) through `6` (Saturday) for migration compatibility, with `E` covering ISO `1`-`7`.
 
-Reopen: callers hit bugs from `format('d')` returning `0` on Sunday while `.dayOfWeek` and `format('E')` return `7`.
+Reopen: bug reports show developers mixing up `format('d')` (`0` on Sunday) with `.dayOfWeek` and `format('E')` (`7` on Sunday).
 
 ## D15: `Duration` uses `balance()` without a `normalize()` alias, and `total(unit)` instead of `in(unit)` (2026-11-17)
 
-Blind naming reviewers guessed `normalize()` for cascading `90 minutes` into `1 hour 30 minutes` and preferred `hours(36).in('days')` for numeric conversion. Aliasing `normalize` to `balance` was rejected because Luxon's `Duration.prototype.normalize()` leaves `{ minutes: 90 }` unchanged instead of promoting into absent units, and `.in()` returns an object instance everywhere else (`datetime.in(zone)`, `monthDay.in(year)`, `range.in(zone)`).
+Blind naming reviews favored `normalize()` for cascading `90 minutes` into `1 hour 30 minutes` and `hours(36).in('days')` for numeric conversion. Both were rejected because Luxon's `Duration.prototype.normalize()` leaves `{ minutes: 90 }` unchanged instead of promoting into unset units, and `.in()` returns an instance everywhere else (`datetime.in(zone)`, `monthDay.in(year)`, `range.in(zone)`).
 
-Reopen: cold-reader studies or user issues show callers repeatedly reaching for `duration.in(unit)` or `duration.normalize()`.
+Reopen: cold-reader studies or user issues show developers repeatedly reaching for `duration.in(unit)` or `duration.normalize()`.
 
 ## D16: Ranges accept `.for()` for durations alongside `.to()`, and only `CalendarDate` has `.through()` (2026-11-17)
 
-Cold readers misread `start.to(3, 'days')` as a unit conversion and ranked `start.for(3, 'days')` first (+10 B), which also avoids inclusive-end off-by-one math on `CalendarDate`. `.to()` still accepts durations because restricting `.to()` to endpoints would make `time('9am').to(8, 'hours')` parse `8` as `08:00` and return a 23-hour range, while `.through()` is limited to `CalendarDate` because `DateTimeRange` and `TimeRange` exclude their end.
+Cold readers misread `start.to(3, 'days')` as a unit conversion and ranked `start.for(3, 'days')` first (+10 B). `.to()` still accepts durations because restricting it to endpoints would parse `time('9am').to(8, 'hours')` as `08:00` and produce a 23-hour overnight range, and `.through()` exists only on `CalendarDate` because `DateTimeRange` and `TimeRange` exclude their end.
 
-Reopen: callers pass endpoints to `.for()` expecting runtime rejection, or expect `.through()` on `DateTime` with inclusive end semantics.
+Reopen: users report confusion from `.for()` accepting endpoints as an alias of `.to()`, or ask for inclusive `.through()` on `DateTime`.
 
 ## D17: Adjacent unit boundaries use `startOfNext()` and `startOfPrevious()` instead of overloading `next()` and `previous()` (2026-11-19)
 
-Overloading `next('month')` conflicts with `DateTime.prototype.next('friday')`, which preserves the time of day (`09:30`) while a unit boundary resets to `00:00`, and callers split on whether `next('month')` means the 1st of next month or `plus(1, 'month')`. Numeric weekdays are rejected in `startOfNext()` so misplaced counts like `startOfNext(2, 'months')` cannot silently resolve `2` as Tuesday.
+Overloading `next('month')` conflicts with `DateTime.prototype.next('friday')`, which preserves the clock time (`09:30`) while a unit boundary resets to `00:00`, and readers split on whether `next('month')` means the 1st of next month or `plus(1, 'month')`. Numeric weekdays (`1`-`7`) are refused in `startOfNext()` so a misplaced count like `startOfNext(2, 'months')` cannot silently resolve `2` as Tuesday.
 
-Reopen: callers consistently try unit names in `next()` and `previous()`, or expect numeric weekdays in `startOfNext()`.
+Reopen: cold-reader studies or user issues show developers trying unit names in `next()` and `previous()`, or passing numeric weekdays to `startOfNext()`.
 
 ## D18: `native-dates/helpers/*` stays open for official plugins without semver guarantees (2026-11-20)
 
-Narrowing `"./helpers/*"` to the four files `@native-dates/plugins` currently imports would make internal helpers look like curated public API and force a core version bump whenever a future official plugin needs another helper. Omitting `"types"` on `"./helpers/*"` keeps those modules out of editor autocomplete while lockstep `@native-dates/plugins` releases coordinate internal changes.
+Listing individual helper subpaths in `package.json` `"exports"` would make internal modules look like curated public API and force a core release whenever `@native-dates/plugins` needs another helper. Leaving `"./helpers/*"` untyped keeps it out of TypeScript autocomplete while lockstep `@native-dates/plugins` versions coordinate internal changes.
 
-Reopen: third-party consumers couple to `native-dates/helpers/*` in production and break on minor releases.
+Reopen: external packages depend on `native-dates/helpers/*` directly and report breakage across minor releases.
+
+## D19: `isWeekend()` and `isWeekday()` follow the locale (2026-11-22)
+
+Hardcoding Saturday and Sunday (`dayOfWeek >= 6`, as in Moment, Day.js, and date-fns) gets weekends wrong in Friday-Saturday (`ar-SA`, `he-IL`), Friday-only (`fa-IR`), and Sunday-only (`hi-IN`) locales even though `startOf('week')` already localizes via `Intl.Locale.prototype.getWeekInfo` (`D7`). The tradeoff is that `.locale()` changes `isWeekend()`, `isWeekday()`, and `DateRange.prototype.count('weekdays')`, so code needing fixed Saturday-Sunday rules has to check `dayOfWeek >= 6`.
+
+Reopen: bug reports show `.locale()` unexpectedly changing `isWeekend()`, `isWeekday()`, or `count('weekdays')`, or users ask for a `configure()` weekend override.
+
+## D20: Loose parsing follows the locale while `monthDay()` and `dayMonth()` keep function-name order (2026-11-22)
+
+Defaulting `dayFirst` to `false` parsed `'06/11/2026'` as June 11 even under `.locale('fr')`. Instead, `{ loose: true }` reads day-month order, month names, and AM/PM words from `Intl` for the active locale (or the host locale when unset), with `dayFirst` left `undefined` as an explicit override. `monthDay()` and `dayMonth()` keep the order stated in their names because applying locale order to `monthDay()` made `'7/9'` and `'7 / 9'` disagree under `'fr'`.
+
+Reopen: speakers report a locale's `Intl` short date order diverging from typed input, or unconfigured host locales cause inconsistent `{ loose: true }` results across environments.
+
+## D21: Time zone abbreviations inside `{ loose: true }` strings resolve like `{ zone }` rather than `Date.parse()` (2026-11-22)
+
+Leaving inline abbreviations to `Date.parse()` read `'CST'` as fixed `-06:00` everywhere, rejected `'KST'` and `'MSK'`, and treated `'EST'` in July as `-05:00` even when `{ zone: 'EST' }` observed `America/New_York` daylight time under `@native-dates/plugins/zones`. Resolving post-clock abbreviations through `zoneId(name, locale)` keeps inline strings consistent with `{ zone }` and `zoneAliases`, sets the instant without changing `.zone` (`D1`), and yields to an explicit numeric offset written beside it (`'+0800 CST'`).
+
+Reopen: users parsing RFC 2822 email or HTTP headers report bugs from `'EST'` or `'PST'` observing daylight time while `@native-dates/plugins/zones` is loaded.
+
+## D22: `@native-dates/plugins/zones` maps non-IANA city names and resolves shared abbreviations by locale (2026-11-22)
+
+Without built-in aliases, every localized app had to configure its own `zoneAliases` for major cities that IANA files under another name (`'Beijing'` -> `Asia/Shanghai`, `'Mumbai'` -> `Asia/Kolkata`) and for shared abbreviations like `'CST'` and `'IST'`. Shipping those tables adds ~0.9 kB Brotli to the plugin and resolves shared names against `Intl.Locale.prototype.getTimeZones()` for the active locale's country (falling back to the first listed zone). `IST` and `ACT` were also removed from the exported `timezones` defaults so they do not shadow locale lookup unless reassigned explicitly.
+
+Reopen: city requests keep expanding the alias table without a clear boundary, or users report locale-driven lookup misreading foreign-country abbreviations.

@@ -143,18 +143,19 @@ export class DateTime {
   isLeapYear(): boolean;
 
   /**
-   * Returns true when this moment falls on Saturday or Sunday in its time zone.
+   * Returns true when this moment falls on a weekend day of its active locale in its time zone: Saturday and
+   * Sunday in most, Friday and Saturday in `'ar-SA'`, and Friday alone in `'fa-IR'`.
    *
-   * @returns `true` on Saturday or Sunday
+   * @returns `true` on the locale's weekend days
    *
    * @see {@link https://nativedates.dev/api/date-time/#calendar-predicates Calendar predicates}
    */
   isWeekend(): boolean;
 
   /**
-   * Returns true when this moment falls on Monday through Friday in its time zone.
+   * Returns true when this moment falls outside the weekend of its active locale in its time zone.
    *
-   * @returns `true` on Monday through Friday
+   * @returns `true` on the locale's working days
    *
    * @see {@link https://nativedates.dev/api/date-time/#calendar-predicates Calendar predicates}
    */

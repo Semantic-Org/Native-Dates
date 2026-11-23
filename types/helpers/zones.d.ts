@@ -15,7 +15,7 @@ export type Zone = string;
  * BCP 47 locale tag such as `'en-US'` or `'de-DE'`, underscore tag, `Accept-Language` header,
  * or list of tags in order of preference such as `navigator.languages`.
  *
- * @see {@link https://nativedates.dev/guides/internationalization/ Internationalization}
+ * @see {@link https://nativedates.dev/guides/localization/ Localization}
  */
 export type Locale = string | readonly string[];
 
@@ -118,8 +118,8 @@ export interface ActiveSettings {
   locale: Locale | undefined;
   /** Active ISO week-start number (1–7), or `undefined` when following the locale. */
   weekStart: number | undefined;
-  /** Whether loose numeric dates default to day-first order (`false` unless set with `@native-dates/plugins/loose`). */
-  dayFirst: boolean;
+  /** Loose numeric date order set with `@native-dates/plugins/loose`, or `undefined` when following the locale. */
+  dayFirst: boolean | undefined;
   /** Active custom zone alias map registered via `@native-dates/plugins/zones`. */
   zoneAliases: Record<string, string>;
   /** Custom weekday label overrides, if configured. */

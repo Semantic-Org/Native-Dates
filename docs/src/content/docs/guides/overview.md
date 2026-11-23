@@ -31,14 +31,15 @@ JavaScript's built-in `Date` uses one object whether you mean a holiday, an open
 Measuring gaps, building ranges, and formatting with localized presets or token patterns all work out of the box:
 
 ```js
-import { date, datetime, monthDay, now, yearMonth } from 'native-dates';
+import { dateRange, datetime, monthDay, now, timeRange, yearMonth } from 'native-dates';
 
 const deadline = datetime('2027-01-01T00:00:00Z');
 now().until(deadline).format('long');
 
-const sprint = date('2026-11-02').for(2, 'weeks');
+const sprint = dateRange('2026-11-02', '2026-11-15');
+const shift = timeRange('9:00am', '5:00pm');
 sprint.contains('2026-11-10'); // true
-sprint.start.format('YYYY-MM-DD'); // '2026-11-02'
+shift.duration.hours; // 8
 
 const billing = yearMonth('2026-11');
 const birthday = monthDay('10/17');

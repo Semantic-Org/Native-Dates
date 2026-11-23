@@ -537,7 +537,7 @@ Relative day checks accept an optional time zone because which calendar day is t
 |---|---|---|
 | `isToday(zone?)`, `isTomorrow(zone?)`, `isYesterday(zone?)` | `boolean` | Whether this date matches today, tomorrow, or yesterday in the given or configured zone. |
 | `isPast(zone?)`, `isFuture(zone?)` | `boolean` | Whether this date is earlier or later than today in the given or configured zone. |
-| `isWeekday()`, `isWeekend()` | `boolean` | Monday through Friday vs. Saturday and Sunday. |
+| `isWeekday()`, `isWeekend()` | `boolean` | Working day vs. weekend day in the active locale, such as Saturday and Sunday in `en-US` or Friday and Saturday in `ar-SA`. |
 | `isLeapYear()` | `boolean` | Whether this date's year has 366 days. |
 
 ## Measuring spans
@@ -671,11 +671,11 @@ date('2026-11-18').range('week', 'monday').toString(); // '2026-11-16/2026-11-22
 :::
 
 :::entry
-### `points()` :kind[method]
+### `every()` :kind[method]
 
 ```js signature
-d.points(step, zone?): DateTime[]
-d.points(count, unit, zone?): DateTime[]
+d.every(step, zone?): DateTime[]
+d.every(count, unit, zone?): DateTime[]
 ```
 
 Walks through this calendar day by a positive step in the given or configured time zone, returning an array of [`DateTime`](/api/date-time/) moments starting at midnight. Daylight saving transitions produce 23 or 25 hourly points automatically.
@@ -703,7 +703,7 @@ description: Moments across this calendar day in `zone`.
 ```
 
 ```js
-const slots = date('2026-11-16').points(6, 'hours', 'UTC');
+const slots = date('2026-11-16').every(6, 'hours', 'UTC');
 
 slots.length; // 4
 slots[1].toString(); // '2026-11-16T06:00:00.000Z'

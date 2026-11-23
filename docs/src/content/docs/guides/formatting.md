@@ -1,7 +1,7 @@
 ---
 title: Formatting
-lede: Format dates, times, ranges, and durations with Intl presets, locale tags, token patterns, and relative phrases.
-updated: 2026-11-20
+lede: Format dates, times, and durations with localized presets, token patterns, or relative phrases.
+updated: 2026-11-22
 ---
 
 Native Dates uses the platform's built-in `Intl` formatters and caches them automatically. You get localized output across languages and regions without adding locale files to your bundle.
@@ -61,7 +61,7 @@ span.format('digital', 'en-US'); // '2:15:00'
 
 ## Locales and Intl options
 
-Set a default once with [`configure()`](/api/configure/), attach a language to a value with [`locale()`](/api/date-time/#locale), or pass a tag to a single format call. Read [Internationalization](/guides/internationalization/) for guidance on client apps versus multi-user servers:
+Set a default once with [`configure()`](/api/configure/), attach a language to a value with [`locale()`](/api/date-time/#locale), or pass a tag to a single format call. Read [Localization](/guides/localization/) for guidance on client apps versus multi-user servers:
 
 ```js
 import { configure, datetime } from 'native-dates';
@@ -124,7 +124,7 @@ Month and weekday names inside token patterns come from `Intl` in the active loc
 | `YY` | `'26'` | Two-digit year. |
 | `Q` | `'4'` | Calendar quarter from 1 through 4. |
 | `M`, `MM` | `'11'`, `'05'` | Month number, unpadded or zero-padded to two digits. |
-| `MMM`, `MMMM` | `'Nov'`, `'November'` | Localized Gregorian month name, inflected automatically right after a day token. |
+| `MMM`, `MMMM` | `'Nov'`, `'November'` | Localized Gregorian month name, inflected automatically after a day token even with literal text between them. |
 | `D`, `DD` | `'5'`, `'05'` | Day of the month, unpadded or zero-padded. |
 | `Do` | `'16th'` | Day of the month with English ordinals, the locale's day marker like `'6.'` or `'6日'`, or custom [`ordinals`](/api/configure/). |
 | `DDD`, `DDDD` | `'320'`, `'045'` | Day of the year, unpadded or zero-padded to three digits. |
@@ -145,7 +145,7 @@ Month and weekday names inside token patterns come from `Intl` in the active loc
 | `x` | `'1794850200000'` | Unix timestamp in milliseconds. |
 | `[text]` | `'[at]'` | Escaped literal text copied straight to the output. |
 
-Unrecognized letters outside square brackets throw an `unknownFormat` error so a misspelled preset fails right away instead of printing raw letters. Only `'T'` passes through unescaped for ISO timestamps.
+Unrecognized letters outside square brackets throw an `unknownFormat` error so a misspelled preset or unbracketed word fails right away instead of printing raw letters. Tokens glued to accented letters like `'às'` or mixed clock letters like `'HHhmm'` throw too, while bare T passes through unescaped for ISO timestamps.
 
 Asking for a field a type does not carry throws an `unsupportedToken` error instead of inventing midnight. Formatting clock tokens like `'HH:mm'` on a calendar date fails immediately.
 
@@ -164,7 +164,7 @@ weekdayNames('narrow', 'monday', 'en-US'); // ['Mo', 'Tu', 'We', ...]
 Register reusable format names in [`configure()`](/api/configure/) when your app uses the same date or time layout in multiple places. Each named format can be a token pattern or an `Intl` options object:
 
 ```js
-import { configure, date } from 'native-dates';
+import { configure, date, dateRange } from 'native-dates';
 
 configure({
   formats: {
@@ -175,7 +175,7 @@ configure({
 
 date('2026-11-06').format('invoice'); // '2026-11-06'
 date('2026-11-06').format('receipt'); // 'November 6, 2026'
-date('2026-11-06').to('2026-11-20').format('invoice'); // '2026-11-06 – 2026-11-20'
+dateRange('2026-11-06', '2026-11-20').format('invoice'); // '2026-11-06 – 2026-11-20'
 
 configure({ formats: null });
 ```
@@ -187,12 +187,14 @@ Named formats take precedence over built-in presets, so registering `'short'` ov
 Every [range](/api/ranges/) formats presets and options through `Intl`, collapsing shared month or year parts automatically. Passing a token pattern formats both endpoints separated by `' – '`:
 
 ```js
-import { date } from 'native-dates';
+import { dateRange, timeRange } from 'native-dates';
 
-const week = date('2026-09-01').to('2026-09-07');
+const week = dateRange('2026-09-01', '2026-09-07');
+const shift = timeRange('9:00am', '5:00pm');
 
 week.format('medium', 'en-US'); // 'Sep 1 – 7, 2026'
 week.format('YYYY-MM-DD'); // '2026-09-01 – 2026-09-07'
+shift.format('short', 'en-US'); // '9:00 AM – 5:00 PM'
 ```
 
 ## Relative phrases

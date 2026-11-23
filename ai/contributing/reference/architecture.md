@@ -43,7 +43,7 @@ Core holds what nearly every caller needs:
 - Natural-language arithmetic (`plus`/`minus`, with zero-cost `add`/`subtract` prototype aliases), rounding, weekday stepping (`next`/`previous`), comparisons, and `until`/`since`
 - `Intl` preset formatting (`short`, `medium`, `long`, `full`, `date`, `time`, `month`, `text`), `Intl` options bags, custom named formats via `configure({ formats })`, and token patterns (`YYYY-MM-DD HH:mm`) with `monthNames()` and `weekdayNames()`
 - Relative phrases (`fromNow()`, `from(other)`: `'3 hours ago'`, `'in 2 days'`, `'yesterday'`) via `Intl.RelativeTimeFormat`
-- Ranges from any point (`.to()`, `.for()`, `.through()`, `.range()`, `.points()`, `.split()`, `.splitBy()`) with `contains`/`includes`, `overlaps`, and `intersection`
+- Ranges from any point (`.to()`, `.for()`, `.through()`, `.range()`, `.every()`, `.split()`, `.splitBy()`) with `contains`/`includes`, `overlaps`, `intersection`, and `DateRange.count()`
 - Duration phrases (`'1h 30m'`, `'2 weeks and 3 days'`) and fractional unit spilling (`1.5 days` -> `1d 12h`)
 - Standard IANA zones, fixed offsets, `UTC`, per-value `.locale()`, `configure({ zone, locale, weekStart, formats, weekdayNames, ordinals })`, `compare`, `earliest`, `latest`, `dayOfWeek`, and `kindOf`
 
@@ -51,8 +51,8 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, `"sideE
 
 | Subpath | Adds | Mechanism |
 |---|---|---|
-| `@native-dates/plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), abbreviations (`'PT'`, `'CET'`), `configure({ zoneAliases })` | Registers fallback zone resolver in `helpers/zones.js` |
-| `@native-dates/plugins/loose` | `{ loose: true, dayFirst }` `Date.parse` fallback and `null` on unreadable input | Supplies the loose parser and `loosely` wrapper in `helpers/errors.js` across factories and ranges |
+| `@native-dates/plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), cities without an IANA zone of their own (`'Beijing'`, `'Mumbai'`), abbreviations (`'PT'`, `'CET'`) with shared ones read by the caller's locale (`'CST'`), `configure({ zoneAliases })` | Registers fallback zone resolver in `helpers/zones.js`, which passes it the active locale |
+| `@native-dates/plugins/loose` | `{ loose: true, dayFirst }` reading in the active locale's month names, AM/PM words, digits, and day-month order (from `Intl`), a `Date.parse` fallback for machine formats, and `null` on unreadable input | Supplies the full-date reader and the partial-date reader behind `parseLoose` and `parseLooseParts` in `helpers/errors.js` across factories and ranges |
 | `@native-dates/plugins/legacy-date` | `Date.prototype` read methods (`getFullYear`, `getUTC*`, `toISOString`, `toLocale*`) and `set*` refusals on `DateTime` | Attaches prototype methods onto `DateTime` (`.toJSDate()` stays in core) |
 
 ## Invariants

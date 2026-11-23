@@ -1,6 +1,6 @@
 ---
 title: Coming from Day.js
-lede: Replace dayjs() wrappers and plugin chains with dedicated date types, 1-indexed months, built-in ranges, and zero-setup time zones.
+lede: Replace dayjs() wrappers and plugin chains with dedicated date types and built-in time zones.
 updated: 2026-11-20
 ---
 
@@ -51,7 +51,7 @@ Day.js numbers months from 0 to 11 and starts weekdays on Sunday at 0. Here, `mo
 Day.js requires separate plugins before you can convert across cities, build durations, or check whether a date falls inside a window. Core includes IANA time zones, [durations](/api/duration/), and [ranges](/api/ranges/) with zero setup.
 
 ```js
-import { date, dateRange, datetime, duration, hours } from 'native-dates';
+import { dateRange, datetime, duration, hours } from 'native-dates';
 
 const standup = datetime('2026-11-16T09:30', 'America/Los_Angeles');
 const berlin = standup.in('Europe/Berlin'); // replaces .tz('Europe/Berlin')
@@ -59,7 +59,7 @@ const berlin = standup.in('Europe/Berlin'); // replaces .tz('Europe/Berlin')
 const span = duration('1h 30m').plus(hours(0.5));
 span.total('minutes'); // 120
 
-const november = date('2026-11-01').to('2026-11-30');
+const november = dateRange('2026-11-01', '2026-11-30');
 november.contains('2026-11-16'); // true
 dateRange('2026-11-01', '2026-11-15').overlaps(november); // true
 ```

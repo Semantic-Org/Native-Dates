@@ -1,6 +1,6 @@
 ---
 title: Installation
-lede: Install the core package, add a Temporal polyfill for Safari or older runtimes, and set app-wide defaults.
+lede: Install the core package, add a Temporal polyfill for older runtimes, and configure defaults.
 updated: 2026-11-16
 ---
 
@@ -88,4 +88,4 @@ configure({
 });
 ```
 
-Any individual value or call can still carry its own time zone, [`locale()`](/api/date-time/#locale), or week start when needed. Next, read [Internationalization](/guides/internationalization/) to choose how your app localizes dates across browsers and servers.
+Any individual value or call can still carry its own time zone, [`locale()`](/api/date-time/#locale), or week start when needed. Next, read [Localization](/guides/localization/) to choose how your app localizes dates across browsers and servers.

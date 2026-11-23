@@ -92,7 +92,7 @@ opens.until(lunch).format('long', 'en-US'); // '3 hours, 30 minutes'
 
 ## YearMonth
 
-Use [`YearMonth`](/api/year-month/) when a value has a year and a month with no day, such as a billing period, a card expiry, or a month input.
+Use [`YearMonth`](/guides/months-and-days/#billing-months-and-card-expiries) when a value has a year and a month with no day, such as a billing period, a card expiry, or a month input.
 
 ```js
 import { monthYear, yearMonth } from 'native-dates';
@@ -108,7 +108,7 @@ It counts in months and years, and `on()` picks any day inside that month as a c
 
 ## MonthDay
 
-Use [`MonthDay`](/api/month-day/) for a recurring date without a year, such as a birthday or an annual holiday.
+Use [`MonthDay`](/guides/months-and-days/#birthdays-and-annual-holidays) for a recurring date without a year, such as a birthday or an annual holiday.
 
 ```js
 import { monthDay } from 'native-dates';
@@ -123,11 +123,13 @@ February 29 lands on February 28 in non-leap years automatically when you call `
 
 ## Ranges
 
-Use [Ranges](/api/ranges/) for a span between two dates, times, or moments. Build one from any starting point with `for()` across a length or `to()` an endpoint:
+Use [Ranges](/guides/ranges/) for a span between two dates, times, or moments. Create one directly with `dateRange()`, `timeRange()`, or `datetimeRange()`:
 
 ```js
-const sprint = date('2026-11-02').for(2, 'weeks');
-const shift = time('9:00am').to('5:00pm');
+import { dateRange, timeRange } from 'native-dates';
+
+const sprint = dateRange('2026-11-02', '2026-11-15');
+const shift = timeRange('9:00am', '5:00pm');
 
 sprint.contains('2026-11-10'); // true
 shift.duration.hours; // 8
@@ -137,10 +139,11 @@ Date ranges include their final day, while moment and time ranges exclude their 
 
 ## Moving between them
 
-These types connect directly when you add or drop parts. Attach a time to a calendar date with `at()` to get a moment in a time zone:
+These types connect directly when you add or drop parts. Attach a time to a calendar date with `at()` to get a moment, or span from an existing point with `for()` or `to()`:
 
 ```js
 const reminder = today().plus(1, 'day').at('9:00am');
+const upcoming = today().for(2, 'weeks');
 ```
 
 Going the other way, read part properties directly off any moment or date, or call `as()` inside a method chain:

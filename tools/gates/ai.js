@@ -25,9 +25,14 @@ const markdownIn = (dir) =>
 const standardsDir = resolve(root, 'ai/contributing/standards');
 const workspaceDir = resolve(root, 'ai/workspace');
 const files = [
-  ...['AGENTS.md', 'CONTRIBUTING.md', 'README.md', 'docs/README.md', 'tools/ci/bundle/README.md'].map((file) =>
-    resolve(root, file)
-  ),
+  ...[
+    'AGENTS.md',
+    'CONTRIBUTING.md',
+    'README.md',
+    'docs/README.md',
+    'tools/ci/bench/README.md',
+    'tools/ci/bundle/README.md',
+  ].map((file) => resolve(root, file)),
   ...markdownIn(resolve(root, 'ai')).filter((file) =>
     file === resolve(standardsDir, 'README.md')
     || ![standardsDir, workspaceDir].some((dir) => file.startsWith(`${dir}/`))

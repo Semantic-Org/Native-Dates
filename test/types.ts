@@ -114,7 +114,7 @@ export const strictDate: CalendarDate = date('2026-09-06', { loose: false });
 export const strictSpan: DateRange = dateRange('2026-09-01', '2026-09-07', { loose: false });
 export const strictMonth: YearMonth = yearMonth('2026-09', { loose: false });
 export const strictMonthDay: MonthDay = monthDay('09-06', { loose: false });
-export const zoned: unknown = looseZoned('Sep 7 2026', zone);
+export const zoned: unknown = looseZoned('Sep 7 2026', { zone });
 
 // options in a variable widen loose to boolean and remain nullable
 const held = { loose: true, zone };
@@ -138,6 +138,18 @@ export const fromBrowser: CalendarDate = due.locale(languages);
 export const appWide: ActiveSettings = configure({ locale: languages });
 export const inFrench: string = due.format('long', ['fr-CH', 'fr']);
 export const fromHeader: string | readonly string[] | undefined = due.locale('fr-CH;q=0.8, de;q=0.9').locale();
+export const rangeDays: CalendarDate[] = dateRange('2026-05-01', '2 weeks').every('day');
+export const daySlots: DateTime[] = due.every(6, 'hours', 'UTC');
+export const totalDays: number = dateRange('2026-05-01', '2 weeks').count();
+export const workdays: number = dateRange('2026-05-01', '2 weeks').count('weekdays');
+export const mondays: number = dateRange('2026-05-01', '2 weeks').count('mondays');
+
+// @ts-expect-error points() was renamed to every()
+dateRange('2026-05-01', '2 weeks').points('day');
+// @ts-expect-error count() is only defined on DateRange
+datetimeRange('2026-05-01T09:00', '2h', 'UTC').count('days');
+// @ts-expect-error count() is only defined on DateRange
+timeRange('09:00', '17:00').count('days');
 
 // @ts-expect-error instance locale may be a string[] without toUpperCase()
 due.locale()?.toUpperCase();

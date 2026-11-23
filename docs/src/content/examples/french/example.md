@@ -7,7 +7,7 @@ try:
   - 'Set **Days** to **20** so the collapsed span crosses into June and expands from `15–19 mai 2026` to both month names.'
   - 'Pick another day in **Date** to watch lowercase weekdays flow directly into the day number with no comma.'
 related:
-  - { title: Internationalization, href: /guides/internationalization/ }
+  - { title: Localization, href: /guides/localization/ }
   - { title: DateTime, href: /api/date-time/ }
   - { title: Ranges, href: /api/ranges/ }
 ---

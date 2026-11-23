@@ -13,7 +13,7 @@ describe('configure()', () => {
   });
 
   it('returns default plugin settings when no plugins are imported', () => {
-    expect(configure()).toMatchObject({ dayFirst: false, zoneAliases: {} });
+    expect(configure()).toMatchObject({ dayFirst: undefined, zoneAliases: {} });
   });
 
   it('returns the updated settings snapshot after applying changes', () => {

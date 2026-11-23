@@ -1,6 +1,6 @@
 ---
 title: Date math
-lede: Add and subtract durations, snap to calendar boundaries, round clock times, and step across weekdays or ranges without mutating values.
+lede: Add durations, snap to calendar boundaries, and step across weekdays or ranges without mutating values.
 updated: 2026-11-20
 ---
 
@@ -151,12 +151,14 @@ standup.startOfNext('wednesday').text; // 'Nov 18, 2026, 12:00 AM EST'
 
 ## Building and stepping ranges
 
-Call `for()` with a length or `to()` with an end on any date, time, or moment to build a [range](/api/ranges/). Walk across its steps or divide it into smaller sub-ranges:
+Create a [range](/guides/ranges/) with `dateRange()` or chain `for()` and `to()` off an existing point. Walk across its steps or divide it into smaller sub-ranges:
 
 ```js
-const sprint = date('2026-11-02').for(2, 'weeks');
+import { dateRange } from 'native-dates';
+
+const sprint = dateRange('2026-11-02', '2 weeks');
 
 sprint.end.toString(); // '2026-11-15'
-sprint.points('week').map(String); // ['2026-11-02', '2026-11-09']
+sprint.every('week').map(String); // ['2026-11-02', '2026-11-09']
 sprint.split(1, 'week').length; // 2
 ```

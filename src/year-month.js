@@ -2,11 +2,20 @@ import { isObject, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
 import { isDevelopment } from './helpers/environment.js';
-import { guard, loosely, readAs, refuse, refuseType, requireLoose, unreadable } from './helpers/errors.js';
+import {
+  guard,
+  loosely,
+  parseLooseParts,
+  readAs,
+  refuse,
+  refuseType,
+  requireLoose,
+  unreadable,
+} from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_YEAR_MONTH } from './helpers/identity.js';
-import { monthNamed, opensOnDate, wholeParts } from './helpers/parts.js';
+import { opensOnDate, wholeParts } from './helpers/parts.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
   alias,
@@ -28,9 +37,8 @@ import { zoneId } from './helpers/zones.js';
   Arithmetic accepts only months, quarters, and years, and .on(day) clamps overflow days like 31 to the month's end
 */
 
-const noDay = /^([+-]\d{6}|\d{4})[-/.](\d{1,2})$/;
+const noDay = /^([+-]\d{6}|\d{4})[^\dA-Za-z:]{1,2}(\d{1,2})(?:[^\0-\u2fff]|\.)?$/;
 const monthFirst = /^(\d{1,2})\s*[-/.]\s*(\d{2}|\d{4})$/;
-const nameAndYear = /^(?:([\p{L}\p{M}]{3,})\.?,?\s+(?:de\s+)?(\d{4})|(\d{4})\s+([\p{L}\p{M}]{3,})\.?)$/iu;
 
 const presets = {
   // 4-digit year so '11/2026' isn't misread as Nov 26 alongside MonthDay
@@ -122,10 +130,9 @@ export class YearMonth {
       }
       // avoid Date.parse() on partial strings: V8 silently fills in a default day or year (2001)
       if (!opensOnDate(text)) {
-        const named = settings.loose ? nameAndYear.exec(text) : null;
-        const month = named && monthNamed(named[1] ?? named[4], settings.locale);
-        return month
-          ? YearMonth.#fromFields({ year: named[2] ?? named[3], month }, input)
+        const named = settings.loose && parseLooseParts(text, settings);
+        return named?.year
+          ? YearMonth.#fromFields({ year: named.year, month: named.month }, input)
           : refuse('invalidYearMonth', input, {
             explanation: isDevelopment
               ? "expected a year-month string like '2026-11' or '2026/11', or an ISO date like '2026-11-16'. Use `monthYear('11/26')` for month-first strings, or pass `{ loose: true }` with '@native-dates/plugins/loose' for month names like 'Nov 2026'"
@@ -141,7 +148,9 @@ export class YearMonth {
     }
     const plain = isPlainDate(input)
       ? input
-      : (input instanceof CalendarDate ? input : new CalendarDate(input, { zone: settings.zone })).toTemporal();
+      : (input instanceof CalendarDate
+        ? input
+        : new CalendarDate(input, { zone: settings.zone, locale: settings.locale })).toTemporal();
     return plain.withCalendar('iso8601').toPlainYearMonth();
   }
 

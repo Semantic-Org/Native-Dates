@@ -4,7 +4,7 @@ kind: function
 lede: Read an ISO year-month string, card expiry, numbers, or date into a YearMonth.
 import: import { yearMonth, monthYear } from 'native-dates'
 size: core
-updated: 2026-11-16
+updated: 2026-11-22
 ---
 
 ## Reading year-months
@@ -122,7 +122,7 @@ Months run from 1 for January through 12 for December across numbers, strings, a
 
 | Input | Example | How it reads |
 |---|---|---|
-| Year-first string | `'2026-11'`, `'2026/11'`, `'2026-5'` | Reads a 4-digit year and 1- or 2-digit month across `-`, `/`, or `.`, matching HTML month inputs. |
+| Year-first string | `'2026-11'`, `'2026/11'`, `'2026年11月'` | Reads a 4-digit year and 1- or 2-digit month across any non-Latin, non-colon separator. |
 | Card expiry string | `monthYear('11/26')`, `monthYear('11.2026')` | Reads month first across `/`, `-`, or `.` and expands 2-digit years with `YearMonth.century`. |
 | Two numbers | `yearMonth(2026, 11)`, `monthYear(11, 26)` | Takes whole numbers in year-then-month or month-then-year order. |
 | Fields object | `{ year: 2026, month: 11 }` | Reads 1-indexed calendar fields and rejects months outside 1 through 12. |

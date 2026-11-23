@@ -52,7 +52,12 @@ if (config) {
           ))}
         </ul>
       </div>
-      <a class="text-link" href={localePath(`/${config.exampleSlug}/`, locale)}>{config.linkLabel}</a>
+      <div class="locale-links">
+        {config.guideSlug && config.guideLabel && (
+          <a class="text-link" href={localePath(`/${config.guideSlug}/`, locale)}>{config.guideLabel}</a>
+        )}
+        <a class="text-link" href={localePath(`/${config.exampleSlug}/`, locale)}>{config.linkLabel}</a>
+      </div>
     </div>
   </section>
 )}

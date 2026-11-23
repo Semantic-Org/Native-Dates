@@ -5,6 +5,17 @@ import { PLUGINS } from './plugins.js';
 const named = (name) => ({ name, label: t(DEFAULT_LOCALE, name) });
 const titled = (name) => ({ name, title: t(DEFAULT_LOCALE, name) });
 
+const LANGUAGE_GUIDES = [
+  { locale: 'ja', title: 'Japanese', slug: 'guides/japanese' },
+  { locale: 'zh-CN', title: 'Chinese', slug: 'guides/chinese' },
+  { locale: 'ko', title: 'Korean', slug: 'guides/korean' },
+  { locale: 'ar', title: 'Arabic', slug: 'guides/arabic' },
+  { locale: 'ru', title: 'Russian', slug: 'guides/russian' },
+  { locale: 'es', title: 'Spanish', slug: 'guides/spanish' },
+  { locale: 'pt-BR', title: 'Portuguese', slug: 'guides/portuguese' },
+  { locale: 'fr', title: 'French', slug: 'guides/french' },
+];
+
 export const SECTIONS = [
   {
     key: 'guides',
@@ -15,7 +26,7 @@ export const SECTIONS = [
         items: [
           { title: 'Overview', slug: 'guides/overview' },
           { title: 'Installation', slug: 'guides/installation' },
-          { title: 'Internationalization', slug: 'guides/internationalization' },
+          { title: 'Localization', slug: 'guides/localization' },
         ],
       },
       {
@@ -25,6 +36,8 @@ export const SECTIONS = [
           { title: 'Time zones', slug: 'guides/time-zones' },
           { title: 'Date math', slug: 'guides/date-math' },
           { title: 'Durations', slug: 'guides/durations' },
+          { title: 'Ranges', slug: 'guides/ranges' },
+          { title: 'Months and days', slug: 'guides/months-and-days' },
           { title: 'Formatting', slug: 'guides/formatting' },
           { title: 'Parsing', slug: 'guides/parsing' },
           { title: 'Storing and sending', slug: 'guides/storing-and-sending' },
@@ -38,6 +51,10 @@ export const SECTIONS = [
           { title: 'Working with Temporal', slug: 'guides/temporal' },
           { title: 'Writing a plugin', slug: 'guides/writing-a-plugin' },
         ],
+      },
+      {
+        ...named('nav.group.handling'),
+        items: LANGUAGE_GUIDES,
       },
     ],
   },
@@ -69,8 +86,12 @@ export const SECTIONS = [
           { title: 'time()', slug: 'api/time-fn', symbol: true },
           { title: 'duration()', slug: 'api/duration-fn', symbol: true },
           { title: 'yearMonth()', slug: 'api/year-month-fn', symbol: true },
+          { title: 'monthYear()', slug: 'api/year-month-fn#monthyear', symbol: true },
           { title: 'monthDay()', slug: 'api/month-day-fn', symbol: true },
+          { title: 'dayMonth()', slug: 'api/month-day-fn#daymonth', symbol: true },
           { title: 'dateRange()', slug: 'api/range-fn', symbol: true },
+          { title: 'datetimeRange()', slug: 'api/range-fn#datetimerange', symbol: true },
+          { title: 'timeRange()', slug: 'api/range-fn#timerange', symbol: true },
           { title: 'monthNames()', slug: 'api/month-names', symbol: true },
           { title: 'weekdayNames()', slug: 'api/month-names#weekdaynames', symbol: true },
           { title: 'dayOfWeek()', slug: 'api/configure#dayofweek', symbol: true },
@@ -115,17 +136,17 @@ export const SECTIONS = [
         ],
       },
       {
-        ...named('nav.group.languages'),
+        ...named('nav.group.localization'),
         items: [
-          { title: 'Japanese', slug: 'examples/japanese' },
-          { title: 'Chinese', slug: 'examples/chinese' },
-          { title: 'Korean', slug: 'examples/korean' },
-          { title: 'Arabic', slug: 'examples/arabic' },
-          { title: 'Russian', slug: 'examples/russian' },
-          { title: 'Spanish', slug: 'examples/spanish' },
-          { title: 'Portuguese', slug: 'examples/portuguese' },
-          { title: 'French', slug: 'examples/french' },
-          { title: 'German', slug: 'examples/german' },
+          { ...titled('nav.lang.japanese'), slug: 'examples/japanese' },
+          { ...titled('nav.lang.chinese'), slug: 'examples/chinese' },
+          { ...titled('nav.lang.korean'), slug: 'examples/korean' },
+          { ...titled('nav.lang.arabic'), slug: 'examples/arabic' },
+          { ...titled('nav.lang.russian'), slug: 'examples/russian' },
+          { ...titled('nav.lang.spanish'), slug: 'examples/spanish' },
+          { ...titled('nav.lang.portuguese'), slug: 'examples/portuguese' },
+          { ...titled('nav.lang.french'), slug: 'examples/french' },
+          { ...titled('nav.lang.german'), slug: 'examples/german' },
         ],
       },
     ],
@@ -156,34 +177,62 @@ export const hrefFor = (slug, code) => {
   return `${localePath(`/${path}/`, code)}${hash ? `#${hash}` : ''}`;
 };
 
+// promote the active locale's own language guide into Start right after Localization,
+// removing it from the bottom Handling time in group so it only appears once in the sidebar
+function groupsFor(section, code) {
+  const ownGuide = section.key === 'guides' && LANGUAGE_GUIDES.find((it) => it.locale === code);
+  if (!ownGuide) {
+    return section.groups;
+  }
+  return section.groups.map((g) => {
+    if (g.name === 'nav.group.start') {
+      return { ...g, items: [...g.items, ownGuide] };
+    }
+    if (g.name === 'nav.group.handling') {
+      return { ...g, items: g.items.filter((it) => it.locale !== code) };
+    }
+    return g;
+  });
+}
+
 export function navFor(ids, currentId, { code = DEFAULT_LOCALE, titles = new Map() } = {}) {
   const exists = new Set(ids);
   const label = (it) => (it.name ? t(code, it.name) : it.label);
-  return SECTIONS.map((section) => ({
-    ...section,
-    label: label(section),
-    href: hrefFor(
-      section.groups.flatMap((g) => g.items).find((it) => exists.has(it.slug.split('#')[0]))?.slug ?? section.key,
-      code,
-    ),
-    groups: section.groups.map((g) => ({
-      ...g,
-      label: label(g),
-      items: g.items.map((it) => {
-        const page = it.slug.split('#')[0];
-        // anchor items keep their symbol title instead of inheriting the host page's title
-        const title = it.name ? t(code, it.name) : it.slug.includes('#') ? it.title : (titles.get(page) ?? it.title);
-        return { ...it, title, href: exists.has(page) ? hrefFor(it.slug, code) : null, current: it.slug === currentId };
-      }),
-    })),
-  }));
+  return SECTIONS.map((section) => {
+    const groups = groupsFor(section, code);
+    let marked = false;
+    return {
+      ...section,
+      label: label(section),
+      href: hrefFor(
+        groups.flatMap((g) => g.items).find((it) => exists.has(it.slug.split('#')[0]))?.slug ?? section.key,
+        code,
+      ),
+      groups: groups.map((g) => ({
+        ...g,
+        label: label(g),
+        items: g.items.map((it) => {
+          const page = it.slug.split('#')[0];
+          // anchor items keep their symbol title instead of inheriting the host page's title
+          const title = it.name ? t(code, it.name) : it.slug.includes('#') ? it.title : (titles.get(page) ?? it.title);
+          const current = !marked && it.slug === currentId;
+          if (current) {
+            marked = true;
+          }
+          return { ...it, title, href: exists.has(page) ? hrefFor(it.slug, code) : null, current };
+        }),
+      })),
+    };
+  });
 }
 
-export function pagerFor(ids, currentId) {
+export function pagerFor(ids, currentId, code = DEFAULT_LOCALE) {
   const exists = new Set(ids);
+  const seen = new Set();
   const section = SECTIONS.find((s) => s.key === currentId.split('/')[0]);
-  const pages = section.groups.flatMap((g) => g.items)
-    .filter((it) => !it.slug.includes('#') && exists.has(it.slug));
+  const pages = groupsFor(section, code)
+    .flatMap((g) => g.items)
+    .filter((it) => !it.slug.includes('#') && exists.has(it.slug) && !seen.has(it.slug) && seen.add(it.slug));
   const i = pages.findIndex((it) => it.slug === currentId);
   return { prev: pages[i - 1] ?? null, next: pages[i + 1] ?? null };
 }

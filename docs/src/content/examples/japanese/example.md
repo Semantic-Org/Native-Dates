@@ -7,7 +7,7 @@ try:
   - 'Pick **2026-05-01** to see the imperial calendar advance to `令和8年` while keeping unpadded month and day numbers.'
   - 'Edit the shift times across midnight and notice `timeRange()` keeps a pure clock span with Japan''s `～` wave-dash.'
 related:
-  - { title: Internationalization, href: /guides/internationalization/ }
+  - { title: Localization, href: /guides/localization/ }
   - { title: Formatting, href: /guides/formatting/ }
   - { title: Ranges, href: /api/ranges/ }
 ---

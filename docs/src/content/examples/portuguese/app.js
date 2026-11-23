@@ -5,7 +5,7 @@ import './sandbox.js';
 import '@native-dates/plugins/loose';
 import { configure, date } from 'native-dates';
 
-configure({ locale: 'pt-BR', dayFirst: true });
+configure({ locale: 'pt-BR' });
 
 const day = document.querySelector('#day');
 const clock = document.querySelector('#clock');

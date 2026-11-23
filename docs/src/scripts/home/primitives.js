@@ -10,6 +10,8 @@ const DATETIME_ZONES = {
   fr: ['Europe/Paris', '2026-11-16T08:30Z'],
 };
 
+const DAY_FIRST = new Set(['ar', 'ru', 'es', 'pt-BR', 'fr']);
+
 // components/home/Primitives.astro runs ours, temporal, and legacy at build time and fails if they disagree
 export function primitivesFor(locale = 'en') {
   const [zone, utc] = DATETIME_ZONES[locale] ?? DATETIME_ZONES.en;
@@ -58,7 +60,7 @@ export function primitivesFor(locale = 'en') {
     {
       id: 'monthDay',
       built: 'Temporal.PlainMonthDay',
-      ours: "monthDay('10/17')",
+      ours: DAY_FIRST.has(locale) ? "dayMonth('17/10')" : "monthDay('10/17')",
       temporal: 'Temporal.PlainMonthDay.from({ month: 10, day: 17 })',
       legacy: 'new Date(2000, 9, 17) // fake leap year',
       stored: 'Date',
@@ -66,10 +68,18 @@ export function primitivesFor(locale = 'en') {
     {
       id: 'range',
       built: '2 × Temporal.PlainDate',
-      ours: "date('2026-09-01').for(2, 'weeks')",
+      ours: "dateRange('2026-09-01', '2026-09-14')",
       temporal: "Temporal.PlainDate.from('2026-09-01')\nTemporal.PlainDate.from('2026-09-14')",
       legacy: '[new Date(2026, 8, 1), new Date(2026, 8, 14)] // 8 is September',
       stored: '2 × Date',
+    },
+    {
+      id: 'timeRange',
+      built: '2 × Temporal.PlainTime',
+      ours: "timeRange('9:00am', '5:00pm')",
+      temporal: "Temporal.PlainTime.from('09:00')\nTemporal.PlainTime.from('17:00')",
+      legacy: '[540, 1020] // minutes since midnight',
+      stored: '2 × number',
     },
   ];
 }

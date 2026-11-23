@@ -5,7 +5,7 @@ import './sandbox.js';
 import '@native-dates/plugins/loose';
 import { configure, date } from 'native-dates';
 
-configure({ locale: 'es', dayFirst: true });
+configure({ locale: 'es' });
 
 const day = document.querySelector('#day');
 const span = document.querySelector('#span');

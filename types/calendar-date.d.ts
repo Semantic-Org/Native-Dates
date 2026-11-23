@@ -93,18 +93,19 @@ export class CalendarDate {
   isLeapYear(): boolean;
 
   /**
-   * Returns true when this date falls on Saturday or Sunday.
+   * Returns true when this date falls on a weekend day of its active locale: Saturday and
+   * Sunday in most, Friday and Saturday in `'ar-SA'`, and Friday alone in `'fa-IR'`.
    *
-   * @returns `true` on Saturday or Sunday
+   * @returns `true` on the locale's weekend days
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#calendar-predicates Calendar predicates}
    */
   isWeekend(): boolean;
 
   /**
-   * Returns true when this date falls on Monday through Friday.
+   * Returns true when this date falls outside the weekend of its active locale.
    *
-   * @returns `true` on Monday through Friday
+   * @returns `true` on the locale's working days
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#calendar-predicates Calendar predicates}
    */
@@ -432,14 +433,14 @@ export class CalendarDate {
    *
    * @example
    * ```ts
-   * const slots = date('2026-11-16').points(6, 'hours', 'UTC');
+   * const slots = date('2026-11-16').every(6, 'hours', 'UTC');
    * slots.length; // 4
    * slots[1].toString(); // '2026-11-16T06:00:00.000Z'
    * ```
    *
-   * @see {@link https://nativedates.dev/api/calendar-date/#points points}
+   * @see {@link https://nativedates.dev/api/calendar-date/#every every}
    */
-  points(step: Unit | DurationInput, zone?: Zone): DateTime[];
+  every(step: Unit | DurationInput, zone?: Zone): DateTime[];
   /**
    * Walks across this calendar day by `count` of `unit` in the given or configured time zone.
    *
@@ -448,9 +449,9 @@ export class CalendarDate {
    * @param zone - Time zone for the day's boundaries, defaulting to the configured zone
    * @returns Ordered `DateTime` moments across this day in `zone`
    *
-   * @see {@link https://nativedates.dev/api/calendar-date/#points points}
+   * @see {@link https://nativedates.dev/api/calendar-date/#every every}
    */
-  points(count: number | string, unit: Unit, zone?: Zone): DateTime[];
+  every(count: number | string, unit: Unit, zone?: Zone): DateTime[];
 
   /**
    * Divides this calendar day into contiguous half-open `DateTimeRange` slices in `zone`.
@@ -914,7 +915,7 @@ export class CalendarDate {
  * Impossible dates such as February 30 throw a `RangeError`, and inputs without a day throw instead
  * of inventing the first of the month. Use `yearMonth()` for year-and-month values.
  *
- * @param input - Year-first date string (`'2026-11-16'`), fields object, `DateTime`, `Date`, or `Temporal` value
+ * @param input - Year-first date string (`'2026-11-16'`, `'2026/11/16'`, `'2026年11月16日'`), fields object, `DateTime`, `Date`, or `Temporal` value
  * @param options - Time zone (for timestamps) and locale options
  * @returns An immutable `CalendarDate`
  *

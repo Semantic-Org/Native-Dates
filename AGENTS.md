@@ -16,7 +16,7 @@ Read [`ai/contributing/curriculum.md`](ai/contributing/curriculum.md) before aut
 - **Structured errors:** Build every error via `refuse()` or `refuseType()` in `src/helpers/errors.js` (`dates refused [code] at`). Explanations are gated behind `isDevelopment` (`NODE_ENV !== 'production'`) so production builds omit diagnostic prose (`ai/contributing/standards/legibility/errors-and-logs.md`, checked by `npm run errors` and `npm run size`).
 - **Behavioral tests and environments:** Assert `error.code` and `error.at` rather than matching prose sentences (`ai/contributing/standards/legibility/tests-and-test-names.md`). Each package's tests live with it (`test/` for `native-dates` and `packages/<name>/test/` for the others) and import packages by their public names; repo and CI tooling tests live under `tools/`. Place pure Node tests in `test/` (core nouns at the top, cross-cutting suites in subfolders like `test/format/` and `test/helpers/`), DOM tests in `test/dom/`, and real Chromium Playwright tests in `test/browser/` (`vitest.config.js`).
 - **Category-grouped helpers:** Group free functions by domain in `src/helpers/` (`intl.js`, `zones.js`, `parse.js`, `format.js`, `errors.js`, `utils.js`, `environment.js`).
-- **Decision records:** Read [`ai/contributing/decisions/README.md`](ai/contributing/decisions/README.md) before recording a decision. Only log entries in `ai/contributing/decisions/package.md` (`D<n>`) or `ai/contributing/decisions/project.md` (`P<n>`) when choosing between competing mental models, rejecting a tempting alternative, or reverting a measured experiment (never for normal features, enhancements, or bug fixes), then run `npm run ai:index` to update `ai/contributing/decisions.md`.
+- **Decision records:** Check [`ai/contributing/decisions.md`](ai/contributing/decisions.md) for active decisions, and always read [`ai/contributing/decisions/README.md`](ai/contributing/decisions/README.md) in full before recording, editing, or reopening a decision (never record an entry from summary context alone).
 - **Scratch directory:** Put temporary plans and notes in git-ignored `ai/workspace/`.
 
 ## Undecided
@@ -36,6 +36,7 @@ Ask the maintainer rather than inventing conventions for:
 - `npm run ai`: Validate markdown links, `#anchors`, GFM tables, `ai/` paths, skill frontmatter, `decisions.md`, and `AGENTS.md` symlinks (`tools/gates/ai.js`)
 - `npm run ai:index`: Regenerate `ai/contributing/decisions.md` from `ai/contributing/decisions/package.md` (`tools/gates/decisions-index.js`)
 - `npm run size`: Measure minified and Brotli-11 sizes for `native-dates` and every plugin in `@native-dates/plugins`, and check `ai/contributing/budget.md` ([`tools/ci/bundle/README.md`](tools/ci/bundle/README.md))
+- `npm run bench`: Run headless Chrome benchmarks in `bench/` via `tachometer` ([`tools/ci/bench/README.md`](tools/ci/bench/README.md))
 - `npm run setup:demo`: Run `npx native-dates` from this checkout in a throwaway project, served by a registry on loopback (`tools/setup-demo.js`)
 - `npm run docs`: Start the Astro docs dev server (`docs/`, see [`docs/README.md`](docs/README.md))
 - `npm run format`: Format files with `dprint`
