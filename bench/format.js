@@ -56,7 +56,7 @@ const presetDays = Array.from(
     ),
 );
 
-const tokenInstants = Array.from({ length: 18_000 }, (_, index) =>
+const tokenInstants = Array.from({ length: 28_000 }, (_, index) =>
   datetime(1_735_000_000_222 + index * 2_718_281, {
     zone: index % 3 === 0 ? 'UTC' : index % 3 === 1 ? 'America/New_York' : 'Europe/Berlin',
     locale: index % 4 === 3 ? 'de-DE' : 'en-US',
@@ -104,8 +104,8 @@ export function formatPresetsAndBags24k() {
   }
 }
 
-// purpose: formats 36,000 distinct ASCII and localized word/ordinal token patterns across 3 zones and 2 locales
-export function formatToken36k() {
+// purpose: formats 56,000 distinct ASCII and localized word/ordinal token patterns across 3 zones and 2 locales
+export function formatToken56k() {
   for (let i = 0; i < tokenInstants.length; i++) {
     const point = tokenInstants[i];
     sink = point.format('YYYY-MM-DD HH:mm:ss');

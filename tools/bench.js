@@ -200,6 +200,10 @@ export async function runBenchmarks({
   if (sampleSize !== null) {
     sampling.sampleSize = sampleSize;
   }
+  // skip pairwise cross-op auto-sampling when running standalone or at a pinned sample count
+  if (!baseDir || sampleSize !== null) {
+    sampling.timeout = 0;
+  }
 
   ensureChromedriver(root);
 

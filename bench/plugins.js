@@ -101,8 +101,8 @@ const numericLooseCells = Array.from({ length: 1_000 }, (_, index) => {
   return [`${pad(day)}.${pad(month)}.${year} ${pad(hour)}:${minute}`, 'de', 'Europe/Berlin'];
 });
 
-// 1,000 distinct English Date.parse/RFC 2822 and French/Spanish localized month-name cells
-const namedLooseCells = Array.from({ length: 1_000 }, (_, index) => {
+// 1,200 distinct English Date.parse/RFC 2822 and French/Spanish localized month-name cells
+const namedLooseCells = Array.from({ length: 1_200 }, (_, index) => {
   if (index % 20 === 19) {
     return [unreadable[index % unreadable.length], 'fr', 'Europe/Paris'];
   }
@@ -131,7 +131,7 @@ const namedLooseCells = Array.from({ length: 1_000 }, (_, index) => {
   return [`${day} de ${spanishMonths[month]} de ${year} ${pad(hour)}:${minute}`, 'es', 'Europe/Madrid'];
 });
 
-const legacyRows = Array.from({ length: 500 }, (_, index) =>
+const legacyRows = Array.from({ length: 400 }, (_, index) =>
   datetime(1_740_000_000_333 + index * 7_654_321, {
     zone: index % 2 === 0 ? 'America/New_York' : 'Europe/Berlin',
     locale: index % 3 === 0 ? 'de-DE' : 'en-US',
@@ -167,8 +167,8 @@ export function importNumericLoose1k() {
   sink = out;
 }
 
-// purpose: imports 1,000 distinct English month-name/RFC 2822 and French/Spanish month-name timestamps (5% nulls)
-export function importNamedLoose1k() {
+// purpose: imports 1,200 distinct English month-name/RFC 2822 and French/Spanish month-name timestamps (5% nulls)
+export function importNamedLoose1200() {
   const out = new Array(namedLooseCells.length);
   for (let i = 0; i < namedLooseCells.length; i++) {
     const [text, locale, zone] = namedLooseCells[i];
@@ -177,8 +177,8 @@ export function importNamedLoose1k() {
   sink = out;
 }
 
-// purpose: formats 1,000 DateTime legacy-date shim calls via toLocaleDateString() and inline toLocaleTimeString()
-export function legacyLocaleStrings1k() {
+// purpose: formats 800 DateTime legacy-date shim calls via toLocaleDateString() and inline toLocaleTimeString()
+export function legacyLocaleStrings800() {
   for (let i = 0; i < legacyRows.length; i++) {
     sink = legacyRows[i].toLocaleDateString();
     sink = legacyRows[i].toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });

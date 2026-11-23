@@ -28,8 +28,8 @@ const dPairs = Array.from({ length: 4_000 }, (_, index) => {
   ];
 });
 
-// 450 distinct ISO leave intervals ('YYYY-MM-DD/YYYY-MM-DD') formatted and weekday-counted in en-US and ar-EG
-const leavePeriods = Array.from({ length: 450 }, (_, index) => {
+// 440 distinct ISO leave intervals ('YYYY-MM-DD/YYYY-MM-DD') formatted and weekday-counted in en-US and ar-EG
+const leavePeriods = Array.from({ length: 440 }, (_, index) => {
   const startMs = Date.UTC(2025, 0, 1) + index * 2 * 86_400_000;
   const endMs = startMs + ((index % 12) + 2) * 86_400_000;
   const s = new Date(startMs).toISOString().slice(0, 10);
@@ -37,12 +37,8 @@ const leavePeriods = Array.from({ length: 450 }, (_, index) => {
   return [`${s}/${e}`, index % 3 === 0 ? 'ar-EG' : 'en-US'];
 });
 
-const dstDayWindow = datetime('2026-03-08T08:00', 'America/New_York').to(
-  datetime('2026-03-08T18:00', 'America/New_York'),
-);
-
-// 1,500 store schedules as wire strings, one-third crossing midnight ('22:00' to '02:00')
-const storeHours = Array.from({ length: 1_500 }, (_, index) => {
+// 2,500 store schedules as wire strings, one-third crossing midnight ('22:00' to '02:00')
+const storeHours = Array.from({ length: 2_500 }, (_, index) => {
   const minute = pad((index * 15) % 60);
   if (index % 3 === 0) {
     const openHour = 18 + (index % 6);
@@ -65,10 +61,8 @@ for (let i = 0; i < 128; i++) {
   const leave = dateRange(period, { locale });
   leave.format('medium');
   leave.count('weekdays');
-  dstDayWindow.split(30, 'minutes');
   const [opens, closes] = storeHours[i];
   timeRange(opens, closes).contains(now('America/New_York').time);
-  timeRange('09:00', '17:00').every(15, 'minutes');
 }
 
 export let sink = 0;
@@ -87,30 +81,24 @@ export function overlapsAndContains16k() {
   sink = hits;
 }
 
-// purpose: parses 450 ISO leave ranges, formats medium labels, counts en-US/ar-EG weekdays, and splits DST slots
-export function leaveRangesAndSlots() {
+// purpose: parses 440 ISO DateRange intervals, formats medium range labels, and counts en-US/ar-EG weekdays
+export function formatAndCountLeave440() {
   let totalDays = 0;
   for (let i = 0; i < leavePeriods.length; i++) {
     const [period, locale] = leavePeriods[i];
     const leave = dateRange(period, { locale });
     totalDays += leave.format('medium').length + leave.count('weekdays');
   }
-  for (let i = 0; i < 15; i++) {
-    totalDays += dstDayWindow.split(30, 'minutes').length;
-  }
   sink = totalDays;
 }
 
-// purpose: filters 1,500 TimeRange store schedules (one-third overnight) against live now().time and steps 15m slots
-export function storeHoursOpenNow() {
+// purpose: filters 2,500 TimeRange store schedules (one-third overnight wrap-around) against live now().time
+export function storeHoursOpenNow2500() {
   const current = now('America/New_York').time;
   let openCount = 0;
   for (let i = 0; i < storeHours.length; i++) {
     const [opens, closes] = storeHours[i];
     if (timeRange(opens, closes).contains(current)) { openCount++; }
-  }
-  for (let day = 0; day < 6; day++) {
-    openCount += timeRange('09:00', '17:00').every(15, 'minutes').length;
   }
   sink = openCount;
 }
