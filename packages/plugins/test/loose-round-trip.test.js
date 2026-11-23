@@ -12,17 +12,27 @@ const locales = Intl.DateTimeFormat.supportedLocalesOf(
 );
 
 // a day above 12, a day and month that can swap, midnight, an evening, and noon
-const moments = ['2026-11-16T14:30', '2026-03-01T09:05', '2026-07-04T00:00', '2026-08-23T21:10', '2026-01-09T12:00'];
+const moments = [
+  '2026-11-16T14:30:15',
+  '2026-03-01T09:05:40',
+  '2026-07-04T00:00:00',
+  '2026-08-23T21:10:05',
+  '2026-01-09T12:00:30',
+];
 
-const digitsIn = (part) => part?.value.match(/\p{Nd}/gu)?.length;
+// how much of a moment each time style writes: the date, the minutes, or the seconds
+const written = { none: 10, short: 16, medium: 19 };
 
-// a two-digit year drops its century, and a clock is read as hours and two-digit minutes joined by ':', '.', or 'h'
-const isWritten = (parts) => {
+// a two-digit year drops its century, and a clock is hours with two-digit minutes and seconds joined by ':', '.', or 'h'
+const isRoundTrip = (parts) => {
   const types = parts.map((part) => part.type);
-  const joiner = parts[types.indexOf('hour') + 1]?.value.trim();
-  return digitsIn(parts.find((part) => part.type === 'year')) > 3
-    && (!types.includes('hour')
-      || (digitsIn(parts[types.indexOf('minute')]) === 2 && [':', '.', 'h'].includes(joiner)));
+  const digitsIn = (part) => part.value.match(/\p{Nd}/gu).length;
+  const isJoined = (type, joiners) => {
+    const at = types.indexOf(type);
+    return at < 0 || (digitsIn(parts[at]) === 2 && joiners.includes(parts[at - 1].value.trim()));
+  };
+  return digitsIn(parts[types.indexOf('year')]) > 3 && isJoined('minute', [':', '.', 'h'])
+    && isJoined('second', [':', '.']);
 };
 
 describe('{ loose: true } reading what Intl prints in each locale', () => {
@@ -31,22 +41,20 @@ describe('{ loose: true } reading what Intl prints in each locale', () => {
     for (const moment of moments) {
       const epoch = Temporal.PlainDateTime.from(moment).toZonedDateTime('UTC').epochMilliseconds;
       for (const dateStyle of ['short', 'medium', 'long', 'full']) {
-        for (const timeStyle of [undefined, 'short']) {
+        for (const timeStyle of ['none', 'short', 'medium']) {
           const format = new Intl.DateTimeFormat(locale, {
             dateStyle,
-            timeStyle,
+            timeStyle: timeStyle === 'none' ? undefined : timeStyle,
             timeZone: 'UTC',
             calendar: 'gregory',
           });
-          if (!isWritten(format.formatToParts(epoch))) {
+          if (!isRoundTrip(format.formatToParts(epoch))) {
             continue;
           }
           const text = format.format(epoch);
           const options = { loose: true, locale, zone: 'UTC' };
-          const read = timeStyle
-            ? datetime(text, options)?.toString().slice(0, 16)
-            : date(text, options)?.toString();
-          if (read !== (timeStyle ? moment : moment.slice(0, 10))) {
+          const read = timeStyle === 'none' ? date(text, options) : datetime(text, options);
+          if (read?.toString().slice(0, written[timeStyle]) !== moment.slice(0, written[timeStyle])) {
             misread.push(`${text} -> ${read}`);
           }
         }

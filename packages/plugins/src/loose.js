@@ -39,6 +39,10 @@ const monthsFrom = (table, locale, written = []) =>
     // '11月' and 'tháng 11' are numbers rather than names
     .filter(({ name }) => /\p{L}/u.test(name) && !/\p{N}/u.test(name))
     .map(({ name, month }) => ({ name: wordsOf(name, locale), month }))
+    // the tables and a full date mostly spell a month the same way
+    .filter(({ name, month }, index, months) =>
+      index === months.findIndex((other) => other.name === name && other.month === month)
+    )
     .sort((first, second) => second.name.length - first.name.length);
 
 const localeData = cached((locale) => {
@@ -91,9 +95,8 @@ const localeData = cached((locale) => {
 const exactMonth = (words, months) => months.find(({ name }) => words.includes(name));
 // or a month name cut short ('sept', 'нояб', 'marr'), unless it opens more than one month ('jui', 'арван')
 const prefixMonth = (words, months) => {
-  const found = months.filter(({ name }) =>
-    words.split(' ').some((word) => word.length > 2 && name.startsWith(` ${word}`))
-  );
+  const cut = [...new Set(words.split(' '))].filter((word) => word.length > 2);
+  const found = months.filter(({ name }) => cut.some((word) => name.startsWith(` ${word}`)));
   return found.every(({ month }) => month === found[0].month) ? found[0] : undefined;
 };
 
@@ -106,7 +109,7 @@ const findMonth = (text, locale) => {
   // look past a weekday that opens the text, since it can spell a month ('mar, 16 jun', 'Dydd Mawrth')
   const weekday = weekdays.find((name) => words.startsWith(name));
   const afterWeekday = weekday ? words.slice(weekday.length - 1) : words;
-  for (const candidate of [afterWeekday, words]) {
+  for (const candidate of new Set([afterWeekday, words])) {
     // check exact localized names before English so official locale spellings win while 'Mar 17' stays March in Finnish
     const exactLocal = exactMonth(candidate, localizedMonths);
     const exactEng = exactMonth(candidate, englishMonths);
@@ -259,9 +262,10 @@ const isAfternoon = (before, after, locale, hour) => {
   }
   const wordsBefore = wordsOf(before.split(/\d/).pop(), locale);
   const wordsAfter = wordsOf(after.split(/\d/)[0], locale);
-  return localeData(locale).periods.find(({ name, isFirst }) =>
-    wordsAfter.startsWith(name) || ((isFirst || (hour > 0 && hour < 12)) && wordsBefore.endsWith(name))
-  )?.isAfternoon;
+  const { periods } = localeData(locale);
+  const period = periods.find(({ name }) => wordsAfter.startsWith(name))
+    ?? periods.find(({ name, isFirst }) => (isFirst || (hour > 0 && hour < 12)) && wordsBefore.endsWith(name));
+  return period?.isAfternoon;
 };
 
 const parseWithLocale = (text, settings) => {
@@ -321,9 +325,13 @@ export const looseZoned = (input, { zone, dayFirst, locale, timeOnly, disambigua
   const mode = checkedDisambiguation(disambiguation);
   let text = normalize(input.trim());
   const { periods, hasDottedClock } = localeData(settings.locale);
-  // Finnish and Danish write the clock with a dot ('klo 14.30'), which a date's own dots never match ('16.11.2026')
+  // Finnish and Danish write the clock with a dot ('klo 14.30'). A number never follows it, which a date's own
+  // dots do ('16.11.2026', '16.11. 2026'), and its seconds count only after a date ('16.11.2026 klo 14.30.15')
   if (hasDottedClock) {
-    text = text.replace(/(?<![\d.])(\d{1,2})\.(\d{2})(?!\.?\d)/g, '$1:$2');
+    text = text.replace(
+      /(?<![\d.])\d{1,2}\.\d{2}(?:(?<=\d\D+\d{1,2}\.\d{2})\.\d{2})?(?!\.?\s*\d)/g,
+      (clock) => clock.replaceAll('.', ':'),
+    );
   }
 
   // resolve the abbreviation as the zone argument would, since Date.parse reads 'CST' as -06:00 everywhere
