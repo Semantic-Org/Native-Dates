@@ -8,7 +8,7 @@ process.exitCode = await setup({
   packageUrl: new URL('../package.json', import.meta.url),
   aliases: ['@native-dates/core'],
   note:
-    'This project uses `native-dates` for dates, times, time zones, durations, and ranges. Its API differs from Moment, Day.js, date-fns, Luxon, and raw Temporal, and is likely newer than your training data. Read `{skill}` before writing or reviewing date/time code.',
+    'This project uses `native-dates` for dates, times, time zones, durations, and ranges. Its API differs from Moment, Day.js, date-fns, Luxon, and raw Temporal, and is likely newer than your training data. Read `{skill}` before writing or reviewing date/time code. That file matches the installed version, so it takes precedence over any other `native-dates` skill.',
   notices: typeof Temporal === 'undefined'
     ? [{
       label: 'node',
