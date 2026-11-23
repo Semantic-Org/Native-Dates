@@ -202,6 +202,106 @@ export function wireTheme() {
   label();
 }
 
+let variantUid = 0;
+
+function matchLocale(pres, lang) {
+  const want = (lang ?? '').toLowerCase();
+  if (!want) { return null; }
+  const base = want.split('-')[0];
+  const tagsOf = (pre) => (pre.dataset.locale ?? '').toLowerCase().trim().split(/\s+/).filter(Boolean);
+  return pres.find((p) => tagsOf(p).includes(want))
+    ?? pres.find((p) => tagsOf(p).some((tag) => tag.split('-')[0] === base))
+    ?? null;
+}
+
+export function wireVariants(root = document) {
+  const blocks = [...root.querySelectorAll('[data-variants]')];
+  if (!blocks.length) { return; }
+
+  const localeUpdaters = [];
+  blocks.forEach((block) => {
+    const pres = [...block.querySelectorAll('.swap > pre')];
+    const tablist = block.querySelector('[data-variant-tabs]');
+    if (!pres.length || !tablist) { return; }
+
+    const hasLocale = pres.some((p) => p.dataset.locale);
+    if (hasLocale) { tablist.setAttribute('aria-label', ui('language.label')); }
+
+    tablist.replaceChildren();
+    const tabs = pres.map((pre) => {
+      pre.id ||= `variant-${++variantUid}`;
+      const btn = document.createElement('button');
+      btn.className = 'code-tab';
+      btn.type = 'button';
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-controls', pre.id);
+      const tag = pre.dataset.locale?.trim().split(/\s+/)[0];
+      if (tag) { btn.lang = tag; }
+      btn.textContent = pre.dataset.label || tag || '';
+      tablist.append(btn);
+      return btn;
+    });
+
+    const reveal = (tab) => {
+      if (tablist.scrollWidth <= tablist.clientWidth) { return; }
+      const left = tab.offsetLeft;
+      const right = left + tab.offsetWidth;
+      if (left < tablist.scrollLeft) { tablist.scrollLeft = left; }
+      else if (right > tablist.scrollLeft + tablist.clientWidth) {
+        tablist.scrollLeft = right - tablist.clientWidth;
+      }
+    };
+
+    const show = (target, { scroll = false } = {}) => {
+      pres.forEach((pre, i) => {
+        const on = pre === target;
+        pre.hidden = !on;
+        tabs[i].setAttribute('aria-selected', String(on));
+        tabs[i].tabIndex = on ? 0 : -1;
+        if (on && scroll) { reveal(tabs[i]); }
+      });
+    };
+
+    if (hasLocale) {
+      localeUpdaters.push((lang) => {
+        const hit = matchLocale(pres, lang);
+        if (hit) { show(hit, { scroll: true }); }
+      });
+    }
+
+    tablist.addEventListener('click', (e) => {
+      const i = tabs.indexOf(e.target.closest('[role=tab]'));
+      if (i < 0) { return; }
+      const picked = pres[i];
+      show(picked, { scroll: true });
+      if (hasLocale && picked.dataset.locale) {
+        const tag = picked.dataset.locale.trim().split(/\s+/)[0];
+        localeUpdaters.forEach((update) => update(tag));
+      }
+    });
+
+    tablist.addEventListener('keydown', (e) => {
+      const i = tabs.indexOf(document.activeElement);
+      if (i < 0) { return; }
+      const moves = {
+        ArrowRight: (i + 1) % tabs.length,
+        ArrowLeft: (i - 1 + tabs.length) % tabs.length,
+        Home: 0,
+        End: tabs.length - 1,
+      };
+      if (!(e.key in moves)) { return; }
+      e.preventDefault();
+      const next = tabs[moves[e.key]];
+      next.focus();
+      next.click();
+    });
+
+    const initial = (hasLocale && matchLocale(pres, document.documentElement.lang)) || pres[0];
+    show(initial, { scroll: true });
+    block.dataset.hydrated = '';
+  });
+}
+
 export function init() {
   clockFavicon();
   wireMarkClock();
@@ -220,6 +320,7 @@ export function init() {
       location.assign(select.value);
     })
   );
+  wireVariants();
   highlightAll();
   highlightInline();
   highlightShell();

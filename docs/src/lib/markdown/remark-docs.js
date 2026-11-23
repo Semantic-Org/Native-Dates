@@ -6,7 +6,7 @@ import { parseMeta } from './shiki-meta.js';
 
 // custom markdown directives and fences used across docs pages:
 //   :::note|tip|warning|danger[Title], :::steps, :::entry, :::truth, and :kind[method]
-//   ```js title="app.js", ```js signature, ```params (YAML), and ```returns (YAML)
+//   ```js title="app.js", ```js locale="fr" label="Français", ```js signature, ```params (YAML), and ```returns (YAML)
 const ICONS = {
   note:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
@@ -63,10 +63,30 @@ function codeBlock(node) {
   return el('div', { className: ['code'] }, [...head, node]);
 }
 
+// group consecutive labeled or locale-tagged fences into one tabbed block sharing a .swap height container
+function variantsBlock(nodes) {
+  return el('div', { className: ['code'], dataVariants: '' }, [
+    el('div', { className: ['code-head'] }, [
+      el('div', { role: 'tablist', ariaLabel: 'Code examples', dataVariantTabs: '' }),
+      copyButton(),
+    ]),
+    el('div', { className: ['swap'] }, nodes),
+  ]);
+}
+
+const isVariant = (n) => n?.type === 'code' && /\b(?:label|locale)="/.test(n.meta ?? '');
+
 function transformChildren(parent) {
   if (!parent.children) { return; }
   const out = [];
-  for (const node of parent.children) {
+  for (let i = 0; i < parent.children.length; i++) {
+    const node = parent.children[i];
+    if (isVariant(node)) {
+      const group = [node];
+      while (isVariant(parent.children[i + 1])) { group.push(parent.children[++i]); }
+      out.push(variantsBlock(group));
+      continue;
+    }
     if (node.type === 'code') {
       if (node.lang === 'params') { out.push(paramsBlock(node.value)); }
       else if (node.lang === 'returns') { out.push(returnsBlock(node.value)); }
