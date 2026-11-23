@@ -1,8 +1,8 @@
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
-import { bounded, plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
+import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
 import { dayOfWeek, pad } from './units.js';
-import { each } from './utils.js';
+import { bounded, each } from './utils.js';
 import { locale as pickLocale, namedFormat, settings, weekStart } from './zones.js';
 
 // cleared by configure() when custom weekdayNames or ordinals change

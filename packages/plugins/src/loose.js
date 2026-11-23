@@ -1,8 +1,7 @@
 import { setLooseExtension } from 'native-dates/helpers/errors';
-import { cached } from 'native-dates/helpers/intl';
 import { names } from 'native-dates/helpers/tokens';
 import { isInstant, pad } from 'native-dates/helpers/units';
-import { each } from 'native-dates/helpers/utils';
+import { cached, each } from 'native-dates/helpers/utils';
 import {
   checkedDisambiguation,
   dayFirst as readsDayFirst,

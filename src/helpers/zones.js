@@ -1,8 +1,7 @@
-import { each, isPlainObject, isString } from './utils.js';
+import { bounded, each, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
-import { bounded } from './intl.js';
 import { nameCache, weekdayWidths } from './tokens.js';
 import { dayOfWeek } from './units.js';
 

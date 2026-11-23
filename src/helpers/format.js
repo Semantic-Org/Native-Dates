@@ -1,8 +1,8 @@
-import { each, isPlainObject, isString } from './utils.js';
+import { cached, each, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
-import { cached, plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
+import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
 import { locale as pickLocale, namedFormat } from './zones.js';
 
 const presets = {
@@ -93,7 +93,7 @@ each(['date', 'time'], (kind) => {
   });
 });
 
-// frozen so cached() in intl.js keys preset bags by reference instead of JSON.stringify
+// frozen so cached() in utils.js keys preset bags by reference instead of JSON.stringify
 each(presets, (kind) => {
   each(kind, (options) => {
     Object.freeze(options);
