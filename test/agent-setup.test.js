@@ -714,6 +714,28 @@ describe('npx native-dates', () => {
     expect(existsSync(join(dir, '.agents/skills/native-dates-plugins'))).toBe(false);
   });
 
+  // what pnpm leaves for a project that depends only on the scoped name: the alias is a link into its store,
+  // and the package sits beside the alias there. Windows cannot reach it by walking `..` through the link
+  it('finds the package beside a linked alias from where the alias really is', () => {
+    const dir = project({ 'package.json': '{ "name": "app", "dependencies": { "@native-dates/core": "*" } }' });
+    const store = join(dir, 'node_modules/.pnpm');
+    const core = join(store, '@native-dates+core@1.0.0/node_modules/@native-dates/core');
+    mkdirSync(core, { recursive: true });
+    cpSync(published, join(store, '@native-dates+core@1.0.0/node_modules/native-dates'), { recursive: true });
+    mkdirSync(join(dir, 'node_modules/@native-dates'), { recursive: true });
+    symlinkSync(core, join(dir, 'node_modules/@native-dates/core'));
+    const found = new Project({
+      root: dir,
+      packageDir: published,
+      name: 'native-dates',
+      version,
+      aliases: ['@native-dates/core'],
+      note: '',
+    }).aliasSibling;
+    expect(found).not.toContain('..');
+    expect(existsSync(join(dir, found, 'skills/native-dates/SKILL.md'))).toBe(true);
+  });
+
   it('refuses outside a project and on an unknown option without writing', () => {
     const empty = mkdtempSync(join(scratch, 'empty-'));
     expect(setup(empty, '--yes').status).toBe(1);

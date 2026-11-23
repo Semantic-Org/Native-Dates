@@ -11,7 +11,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { delimiter, dirname, join, relative } from 'node:path';
+import { delimiter, dirname, join, relative, sep } from 'node:path';
 
 const realPath = (path) => {
   try {
@@ -230,7 +230,22 @@ export class Project {
 
   // kept as written, never normalized, so the pnpm sibling path still walks through the alias's symlink
   get installPath() {
-    return this.installPaths.find((path) => existsSync(`${this.root}/${path}/package.json`));
+    return this.installPaths.find((path) => existsSync(`${this.root}/${path}/package.json`)) ?? this.aliasSibling;
+  }
+
+  // Windows folds `..` out of a path before it follows a link, so there the sibling of a linked alias is
+  // reached from where the alias really is. it is the last place looked, since a path through pnpm's store
+  // names a version and a link made to it breaks at the next upgrade
+  get aliasSibling() {
+    for (const folder of Project.above(this.root)) {
+      for (const alias of this.aliases) {
+        const real = realPath(join(folder, 'node_modules', alias));
+        const sibling = real && join(real, alias.replace(/[^/]+/g, '..'), this.name);
+        if (sibling && existsSync(join(sibling, 'package.json'))) {
+          return relative(this.root, sibling).split(sep).join('/');
+        }
+      }
+    }
   }
 
   // the version on disk, which is the library the project's code runs against
