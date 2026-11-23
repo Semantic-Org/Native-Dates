@@ -514,7 +514,7 @@ describe('npx native-dates', () => {
         });
       await expect.poll(() => output, { timeout: 10_000 }).toContain(copy.scopeQuestion);
       expect(output).not.toContain(copy.question);
-      // down and enter pick everywhere, whose preview names the repository the plugin comes from
+      // down and enter pick the global install, whose preview names the repository the plugin comes from
       await type('\x1b[B\r', 500);
       expect(output.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '')).toContain('Semantic-Org/Native-Dates');
       // esc steps back, up and enter pick this project, enter approves

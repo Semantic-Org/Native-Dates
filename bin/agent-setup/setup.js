@@ -40,7 +40,7 @@ export class Setup {
     detectedNone: 'no coding agents found',
     scopeQuestion: 'Install skills where?',
     scopeProject: 'This project',
-    scopeMachine: 'Everywhere on this machine',
+    scopeMachine: 'Globally',
     globalUnavailable:
       'no agent found that `--global` can install for. It supports {agents}. Run `npx {name}` to set up this project',
 
@@ -102,7 +102,7 @@ Set up coding agents for this project:
   note     add a skill pointer to AGENTS.md (and CLAUDE.md if present)
 
 Options (previews changes and prompts by default):
-  -g, --global    install skills for every project on this machine
+  -g, --global    install skills globally instead of in this project
   -y, --yes       apply without prompting (for agents and scripts)
   --no-install    skip installing or updating {name}
   --no-skills     skip linking skills
@@ -146,7 +146,7 @@ Options (previews changes and prompts by default):
     const found = this.project.agents;
     const asking = !this.given.has('yes');
     const live = asking && terminal.redraws;
-    // everywhere needs an agent that installs plugins from a command, so without one the flag is refused
+    // a global install needs an agent that installs plugins from a command, so without one the flag is refused
     // and the question is never asked, since writing project folders is not what the flag asks for
     this.offersMachine = this.project.pluginAgents.length > 0;
     if (this.given.has('global') && !this.offersMachine) {

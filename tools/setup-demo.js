@@ -11,7 +11,7 @@
 //
 // the agents are stand-ins that record what they are asked to run and install nothing. the command also runs with
 // a throwaway home and a path that holds only the stand-ins, node and the system folders, so choosing
-// "everywhere" here cannot reach a real agent or its configuration
+// a global install here cannot reach a real agent or its configuration
 
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
