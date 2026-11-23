@@ -88,11 +88,15 @@ jobs:
           if [ -z "$NUMBER" ] || [ "$NUMBER" = "null" ]; then
             NUMBER=$(gh pr list --repo "$REPO" --head "$HEAD_BRANCH" --state open --json number --jq '.[0].number // ""')
           fi
+          CREATED_AT=''
           if [ -n "$NUMBER" ]; then
-            HEAD=$(gh pr view "$NUMBER" --repo "$REPO" --json headRefOid --jq .headRefOid)
+            META=$(gh pr view "$NUMBER" --repo "$REPO" --json headRefOid,createdAt)
+            HEAD=$(echo "$META" | jq -r .headRefOid)
+            CREATED_AT=$(echo "$META" | jq -r .createdAt)
             if [ "$HEAD" != "$HEAD_SHA" ]; then echo "PR #$NUMBER is now at ${HEAD:0:7}, skipping stale report for ${HEAD_SHA:0:7}"; NUMBER=''; fi
           fi
           echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+          echo "created-at=$CREATED_AT" >> "$GITHUB_OUTPUT"
           echo "Resolved PR number: $NUMBER"
 
       - name: Fetch PR Iteration History
@@ -100,11 +104,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+          CREATED_AT: ${{ steps.pr.outputs.created-at }}
           RUN_ID: ${{ github.event.workflow_run.id }}
           REPO: ${{ github.repository }}
         run: |
           node tools/ci/bench/fetch-pr-history.js \
             --branch "$HEAD_BRANCH" \
+            --head-repo "$HEAD_REPO" \
+            --created-at "$CREATED_AT" \
+            --source "src/,packages/" \
             --repo "$REPO" \
             --current-run-id "$RUN_ID" \
             --out "$RUNNER_TEMP/pr-history.json"

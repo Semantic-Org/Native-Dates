@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { filterWorkflowRuns, matchesSourcePrefixes, parseSourcePrefixes } from './fetch-pr-history.js';
 import {
   buildReport,
   indexBenchFiles,
@@ -264,7 +265,7 @@ describe('buildReport() and renderComment()', () => {
 
       expect(report.history_summary).toEqual({ WIN: 1, 'TIED-PEAK': 0, REOPENED: 1, 'no-history': 0 });
       const reopened = report.metrics.find((metric) => metric.op === 'regressedFromPeak');
-      expect(reopened.bisect_candidates.map((entry) => entry.sha.slice(0, 7))).toEqual(['ddddddd']);
+      expect(reopened.bisect_candidates.map((entry) => entry.sha.slice(0, 7))).toEqual(['ddddddd', 'eeeeeee']);
       expect(reopened.rebased).toBe(true);
 
       const markdown = renderComment(report);
@@ -277,5 +278,115 @@ describe('buildReport() and renderComment()', () => {
     finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  it('links the current push under likely commits on an adjacent two-push regression', () => {
+    const dir = writeResultsDir({
+      'parse.json': [{ op: 'regressedOnPush2', pct: [12, 16], abs: [5, 7] }],
+    });
+    const prHistory = {
+      schema_version: 2,
+      commits: [
+        {
+          sha: 'aaaaaaa111111111111111111111111111111111',
+          msg: 'Feat: Push 1',
+          timestamp: '2026-11-23T10:00:00Z',
+          touches_source: true,
+          metrics: {
+            'parse/regressedOnPush2': {
+              ci: [40, 41],
+              mean_ms: 40.5,
+              percent_delta_ci: [-1, 1],
+              baseline_sha: '1'.repeat(40),
+            },
+          },
+        },
+      ],
+    };
+
+    try {
+      const report = buildReport({
+        results: readResults(dir),
+        prHistory,
+        head: { sha: 'bbbbbbb222222222222222222222222222222222', ref: 'feat/two-push', msg: 'Feat: Push 2' },
+        base: { sha: '1'.repeat(40), ref: 'main' },
+        repo: 'Semantic-Org/Native-Dates',
+      });
+      const metric = report.metrics[0];
+      expect(metric.history_status).toBe('REOPENED');
+      expect(metric.bisect_candidates.map((entry) => entry.sha.slice(0, 7))).toEqual(['bbbbbbb']);
+      expect(renderComment(report)).toContain('[`bbbbbbb`](https://github.com/Semantic-Org/Native-Dates/commit/');
+    }
+    finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('fetch-pr-history helpers', () => {
+  it('isolates PR runs by branch, fork repository, and PR creation timestamp', () => {
+    const runs = [
+      // current run should be excluded
+      {
+        id: 105,
+        event: 'pull_request',
+        conclusion: 'success',
+        head_branch: 'patch-1',
+        head_repository: { full_name: 'alice/Native-Dates' },
+        created_at: '2026-11-23T12:10:00Z',
+      },
+      // valid earlier push on the same PR
+      {
+        id: 104,
+        event: 'pull_request',
+        conclusion: 'success',
+        head_branch: 'patch-1',
+        head_repository: { full_name: 'alice/Native-Dates' },
+        created_at: '2026-11-23T12:01:00Z',
+      },
+      // cross-fork branch collision (bob/patch-1)
+      {
+        id: 103,
+        event: 'pull_request',
+        conclusion: 'success',
+        head_branch: 'patch-1',
+        head_repository: { full_name: 'bob/Native-Dates' },
+        created_at: '2026-11-23T12:02:00Z',
+      },
+      // reused branch name from an older closed PR on alice's fork
+      {
+        id: 102,
+        event: 'pull_request',
+        conclusion: 'success',
+        head_branch: 'patch-1',
+        head_repository: { full_name: 'alice/Native-Dates' },
+        created_at: '2026-10-01T09:00:00Z',
+      },
+      // failed run on the same PR
+      {
+        id: 101,
+        event: 'pull_request',
+        conclusion: 'failure',
+        head_branch: 'patch-1',
+        head_repository: { full_name: 'alice/Native-Dates' },
+        created_at: '2026-11-23T12:05:00Z',
+      },
+    ];
+
+    const matched = filterWorkflowRuns(runs, {
+      branch: 'patch-1',
+      headRepo: 'alice/Native-Dates',
+      createdAt: '2026-11-23T12:00:00Z',
+      currentRunId: '105',
+    });
+    expect(matched.map((run) => run.id)).toEqual([104]);
+  });
+
+  it('parses caller-supplied source prefixes without hardcoded directory assumptions', () => {
+    const prefixes = parseSourcePrefixes('src/, packages/ , ');
+    expect(prefixes).toEqual(['src/', 'packages/']);
+    expect(matchesSourcePrefixes(['docs/README.md', 'packages/plugins/src/loose.js'], prefixes)).toBe(true);
+    expect(matchesSourcePrefixes(['docs/README.md', '.github/workflows/bench.yml'], prefixes)).toBe(false);
+    expect(matchesSourcePrefixes(['anything.txt'], [])).toBe(true);
   });
 });

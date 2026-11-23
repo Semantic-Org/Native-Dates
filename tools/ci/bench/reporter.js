@@ -219,7 +219,7 @@ function classify([low, high], floor, ratio) {
   return ratio <= NOISE_RATIO_TOLERANCE ? 'noise-floor-limited' : 'unsure';
 }
 
-function computeHistoryStatus(metric, prHistory, floor, sampleSize) {
+function computeHistoryStatus(metric, prHistory, floor, sampleSize, head) {
   if (!prHistory || prHistory.commits.length === 0) { return null; }
 
   const entries = prHistory.commits.filter((commit) => {
@@ -255,6 +255,9 @@ function computeHistoryStatus(metric, prHistory, floor, sampleSize) {
     .slice(peakHistIdx + 1)
     .filter((commit) => commit.metrics?.[metric.id]?.percent_delta_ci && commit.touches_source !== false)
     .map((commit) => ({ sha: commit.sha, msg: commit.msg }));
+  if (head?.sha && head.sha !== peakEntry.sha && bisectCandidates.at(-1)?.sha !== head.sha) {
+    bisectCandidates.push({ sha: head.sha, msg: head.msg ?? '' });
+  }
 
   const rebased = Boolean(
     metric.baselineSha && peakMetric.baseline_sha && metric.baselineSha !== peakMetric.baseline_sha,
@@ -300,7 +303,7 @@ export function buildReport({
     const ratio = expectedPp > 0 ? widthPp / expectedPp : Infinity;
     const indexed = benchIndex.get(metric.id);
     const status = classify(metric.percentDelta, floor, ratio);
-    const historyStatus = status === 'unsure' ? null : computeHistoryStatus(metric, prHistory, floor, sampleSize);
+    const historyStatus = status === 'unsure' ? null : computeHistoryStatus(metric, prHistory, floor, sampleSize, head);
 
     return {
       id: metric.id,

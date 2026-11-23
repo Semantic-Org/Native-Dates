@@ -59,7 +59,8 @@ export function parseIsoDate15k() {
 - **Keep fixture setup outside exported functions** so tachometer measures only the target operation.
 - **`async` exports are supported** and timed until the returned promise resolves.
 - **Never await `requestAnimationFrame` inside a loop**, which quantizes each iteration to the 16.66 ms display clock and masks real CPU changes.
-- **Avoid cross-op state pollution.** Exported functions in the same file run sequentially in one page per sample. Keep `Intl` cache warmups in mind: place cold-cache or configuration-mutating operations in a separate `bench/<name>.js` file.
+- **Warm steady-state paths symmetrically at module scope.** Run a short (`128-512` iteration) module-level warmup on steady-state operations so lazy-vs-eager fixture constructor changes do not shift V8 inline-cache tiering into the timed loop on one side only.
+- **Avoid cross-op state pollution.** Exported functions in the same file run sequentially in source declaration order on a fresh page per sample. Place cold-cache operations first using disjoint locales/zones untouched by module warmup, or isolate configuration-mutating operations in their own `bench/<name>.js` file.
 - **Use realistic input shapes** rather than identical repeated strings that hit a single cache slot unrealistically (unless specifically benchmarking cached formatting).
 
 ---
