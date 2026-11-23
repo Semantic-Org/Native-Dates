@@ -452,7 +452,12 @@ export class DateTime {
   *******************************/
 
   until(other, name) {
-    const end = new DateTime(other, this.zone).toTemporal();
+    const rival = (other instanceof DateTime ? other : new DateTime(other, this.zone)).toTemporal();
+    const scale = name !== undefined && { hour: 36e11, minute: 6e10, second: 1e9, millisecond: 1e6 }[unit(name)];
+    if (scale) {
+      return Number(rival.epochNanoseconds - this.#zoned.epochNanoseconds) / scale;
+    }
+    const end = rival.withTimeZone(this.zone);
     const hours = Math.abs(end.epochMilliseconds - this.epochMilliseconds) / 36e5;
     // sub-day spans use exact elapsed hours so day-0 'compatible' resolution starting in a fall-back fold hour cannot add 1h or throw
     const subDay = hours < 26
@@ -482,7 +487,9 @@ export class DateTime {
   }
 
   from(other, locale = this.#locale) {
-    const reference = other === undefined ? Date.now() : new DateTime(other, this.zone).epochMilliseconds;
+    const reference = other === undefined
+      ? Date.now()
+      : (other instanceof DateTime ? other : new DateTime(other, this.zone)).epochMilliseconds;
     return relativeSeconds((this.epochMilliseconds - reference) / 1000, locale);
   }
 
