@@ -66,6 +66,8 @@ export class Setup {
     linked: 'linked {count} {noun}',
     copied: 'copied {count} {noun}',
     nouns: ['skill', 'skills'],
+    // the note's last sentence, written into the person's file only where the skill is the installed copy itself
+    noteInstalled: 'It matches the installed version and takes precedence over any other `{name}` skill.',
     noteCreated: 'created `{file}`',
     noteUpdated: 'updated `{file}`',
 
@@ -143,7 +145,7 @@ Options (previews changes and prompts by default):
     if (this.given.has('version')) { return this.print(version); }
     if (!existsSync(join(root, 'package.json'))) { return this.refuse('noProject', { folder: root }); }
 
-    this.project = new Project({ ...this, root });
+    this.project = new Project({ ...this, root, noteInstalled: this.words('noteInstalled') });
     const found = this.project.agents;
     const asking = !this.given.has('yes');
     const live = asking && terminal.redraws;

@@ -759,6 +759,21 @@ describe('npx native-dates', () => {
     expect(readFileSync(join(dir, 'AGENTS.md'), 'utf8')).toBe(note);
   });
 
+  it('says the skill matches the installed version only where the skill is the installed copy itself', () => {
+    const matches = fill(copy.noteInstalled, { name: 'native-dates' });
+    const linked = project();
+    setup(linked, '--yes');
+    expect(readFileSync(join(linked, 'AGENTS.md'), 'utf8')).toContain(matches);
+    expect(setup(linked)).toMatchObject({ status: 0, calls: '' });
+    // under Plug'n'Play the skill is a copy from this command's package, which nothing ties to what is installed
+    const copied = project({ ...dependsOn, '.pnp.cjs': '' });
+    setup(copied, '--yes');
+    const note = readFileSync(join(copied, 'AGENTS.md'), 'utf8');
+    expect(note).toContain('.agents/skills/native-dates/SKILL.md');
+    expect(note).not.toContain(matches);
+    expect(setup(copied)).toMatchObject({ status: 0, calls: '' });
+  });
+
   it('refuses outside a project and on an unknown option without writing', () => {
     const empty = mkdtempSync(join(scratch, 'empty-'));
     expect(setup(empty, '--yes').status).toBe(1);

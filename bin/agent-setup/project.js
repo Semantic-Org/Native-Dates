@@ -71,7 +71,7 @@ export class Project {
   static addCommands = { npm: 'install', pnpm: 'add', yarn: 'add', bun: 'add' };
 
   // root is the person's project, and packageDir the package this command shipped in
-  constructor({ root, packageDir, name, version, aliases = [], note, repo }) {
+  constructor({ root, packageDir, name, version, aliases = [], note, noteInstalled = '', repo }) {
     this.root = root;
     this.repo = repo;
     this.packageDir = packageDir;
@@ -81,6 +81,7 @@ export class Project {
     this.manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
     this.noteMarkers = [`<!-- ${name}:start -->`, `<!-- ${name}:end -->`];
     this.noteSentence = note;
+    this.noteInstalled = noteInstalled;
     // on disk as a direct dependency, nested under an alias, or as an alias's pnpm sibling,
     // here or above in the same repository, where a workspace hoists what its packages share
     const above = [...Array(Project.above(root).length).keys()].map((steps) => '../'.repeat(steps));
@@ -453,11 +454,21 @@ export class Project {
     return folder ? `${folder}/${this.name}/SKILL.md` : installed;
   }
 
+  // true when the skill at that path is the installed package's own file, reached by a link or directly,
+  // so it cannot describe another version than the one the project runs. a copy can
+  isInstalledCopy(path) {
+    const source = this.skillSource(this.name);
+    return Boolean(source) && realPath(`${this.root}/${path}`) === realPath(`${this.root}/${source}/SKILL.md`);
+  }
+
   // the note for a file, given what the file holds now
+  // it claims the skill matches the installed version only where that is certain
   noteFor(content) {
     const [start, end] = this.noteMarkers;
-    const sentence = this.noteSentence.replaceAll('{skill}', this.skillPath(content));
-    return [start, `## ${this.name}`, '', sentence, end].join('\n');
+    const path = this.skillPath(content);
+    const sentences = [this.noteSentence.replaceAll('{skill}', path)];
+    if (this.noteInstalled && this.isInstalledCopy(path)) { sentences.push(this.noteInstalled); }
+    return [start, `## ${this.name}`, '', sentences.join(' '), end].join('\n');
   }
 
   withNote(content) {
