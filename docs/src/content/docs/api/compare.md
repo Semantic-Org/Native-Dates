@@ -75,7 +75,7 @@ windows.sort(compare).map(String);
 :::
 
 :::note[Comparing moments across time zones]
-`compare()` orders `DateTime` values by their exact instant rather than their local clock digits. A 9:00 AM meeting in New York sorts before an 8:00 AM meeting on the same day in Los Angeles.
+`compare()` orders [`DateTime`](/api/date-time/) values by their exact instant rather than their local clock digits. A 9:00 AM meeting in New York sorts before an 8:00 AM meeting on the same day in Los Angeles.
 :::
 
 ## Picking boundary points
@@ -90,7 +90,7 @@ earliest(...points): DateTime | CalendarDate | Time | YearMonth
 earliest(points): DateTime | CalendarDate | Time | YearMonth
 ```
 
-Returns the earliest value from one or more arguments or a non-empty array of the same kind, converting raw dates or epoch millisecond inputs into a `DateTime`. Passing an empty array throws a `RangeError`.
+Returns the earliest value from one or more arguments or a non-empty array of the same kind, converting raw dates or epoch millisecond inputs into a [`DateTime`](/api/date-time/). Passing an empty array throws a `RangeError`.
 
 **Parameters**
 
@@ -143,7 +143,7 @@ type: DateTime | CalendarDate | Time | YearMonth
 description: The value that comes last. Equal moments keep the earlier item in the list.
 ```
 
-Combine `earliest()` and `latest()` to clamp a value between two bounds:
+Combine [`earliest()`](#earliest) and `latest()` to clamp a value between two bounds:
 
 ```js
 import { date, earliest, latest } from 'native-dates';

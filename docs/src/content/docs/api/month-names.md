@@ -18,7 +18,7 @@ Both helpers read from cached `Intl` tables in core and return a fresh array on 
 monthNames(style?, locale?): string[]
 ```
 
-Returns an array of 12 localized Gregorian month names from January through December. Defaults to full names in the configured locale.
+Returns an array of 12 localized Gregorian month names from January through December. Defaults to full names in the [configured locale](/api/configure/).
 
 **Parameters**
 
@@ -59,7 +59,7 @@ weekdayNames(style?, firstDay?, locale?): string[]
 
 Returns an array of 7 localized weekday labels rotated to begin on `firstDay`, the configured `weekStart` from [app settings](/api/configure/), or the active locale's first day of the week.
 
-Week boundaries in `startOf('week')` and week ranges follow the same first-day rule, so calendar headers always match week grids. Custom weekday labels set in [`configure()`](/api/configure/) apply here too.
+Week boundaries in [`startOf('week')`](/api/calendar-date/#startof) and week ranges follow the same first-day rule, so calendar headers always match week grids. Custom weekday labels set in [`configure()`](/api/configure/) apply here too.
 
 **Parameters**
 

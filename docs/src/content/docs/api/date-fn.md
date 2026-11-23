@@ -88,7 +88,7 @@ Months always run from 1 for January through 12 for December, unlike JavaScript'
 | ISO instant string | `'2026-11-17T02:00:00Z'` | Reads the calendar day of that moment in the given zone or configured default. |
 | Year, month, and day | `date(2026, 11, 16)` | Takes three whole numbers with `1` for January through `12` for December. |
 | Fields object | `{ year: 2026, month: 11, day: 16 }` | Reads 1-indexed calendar fields and rejects impossible dates. |
-| DateTime | `date(dt, 'Asia/Tokyo')` | Extracts the calendar date in the given zone, or in `dt.zone` when omitted. |
+| [DateTime](/api/date-time/) | `date(dt, 'Asia/Tokyo')` | Extracts the calendar date in the given zone, or in `dt.zone` when omitted. |
 | JavaScript Date | `date(jsDate, 'America/Los_Angeles')` | Reads the calendar day of that timestamp in the given zone or configured default. |
 | Temporal value | `Temporal.PlainDate`, `Temporal.Instant` | Reads plain dates in any calendar as the same ISO day and shifts instants into the target zone. |
 
@@ -98,7 +98,7 @@ An ISO string with a trailing `Z` or UTC offset names a moment that can fall on 
 
 ## Relative calendar days
 
-Today's date depends on where you stand on Earth. Each helper below accepts an optional time zone and falls back to your configured default.
+Today's date depends on where you stand on Earth. Each helper below accepts an optional time zone and falls back to your [configured default](/api/configure/).
 
 :::entry
 ### `today()` :kind[function]
@@ -144,7 +144,7 @@ datetime(moment, 'Asia/Tokyo').date.toString(); // '2026-11-17'
 tomorrow(zone?): CalendarDate
 ```
 
-Returns tomorrow's calendar date in the given time zone, one calendar day after `today(zone)`.
+Returns tomorrow's calendar date in the given time zone, one calendar day after [`today(zone)`](#today).
 
 **Parameters**
 
@@ -176,7 +176,7 @@ const londonTomorrow = tomorrow('Europe/London');
 yesterday(zone?): CalendarDate
 ```
 
-Returns yesterday's calendar date in the given time zone, one calendar day before `today(zone)`.
+Returns yesterday's calendar date in the given time zone, one calendar day before [`today(zone)`](#today).
 
 **Parameters**
 

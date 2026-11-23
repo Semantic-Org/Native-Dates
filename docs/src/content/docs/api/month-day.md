@@ -84,9 +84,9 @@ leapDay.in(2028).toString(); // '2028-02-29'
 md.next(day?): CalendarDate
 ```
 
-Returns the next occurrence after a reference date, defaulting to `today()`. When the reference date already falls on this month and day, the method advances to the following year.
+Returns the next occurrence after a reference date, defaulting to [`today()`](/api/date-fn/#today). When the reference date already falls on this month and day, the method advances to the following year.
 
-Calendar dates and moments also accept a month-day directly in `d.next(md)` and `dt.next(md)`.
+Calendar dates and moments also accept a month-day directly in [`d.next(md)`](/api/calendar-date/#next) and [`dt.next(md)`](/api/date-time/#next).
 
 **Parameters**
 
@@ -123,7 +123,7 @@ md.previous(day?): CalendarDate
 md.last(day?): CalendarDate
 ```
 
-Returns the most recent occurrence before a reference date, defaulting to `today()`. Calendar dates and moments also accept a month-day directly in `previous()`. It is also aliased as `last()`.
+Returns the most recent occurrence before a reference date, defaulting to [`today()`](/api/date-fn/#today). Calendar dates and moments also accept a month-day directly in `previous()`. It is also aliased as `last()`.
 
 **Parameters**
 
@@ -200,7 +200,7 @@ monthDay(10, 17).before('2026-10-01').toString(); // '2025-10-17'
 Because a month-day repeats every year rather than representing a single date, ordering methods like `isBefore()` do not apply.
 
 :::tip[Choosing equals or fallsOn]
-Use `fallsOn()` to check whether a calendar date is that year's observance, since February 29 resolves to February 28 in common years. Reserve `equals()` for checking whether two values have the exact same month and day numbers.
+Use [`fallsOn()`](#fallson) to check whether a calendar date is that year's observance, since February 29 resolves to February 28 in common years. Reserve [`equals()`](#equals) for checking whether two values have the exact same month and day numbers.
 :::
 
 :::entry
@@ -373,7 +373,7 @@ md.locale(): Locale | undefined
 md.locale(tag): MonthDay
 ```
 
-Reads the locale carried on this month-day, or returns a copy formatted in another locale across text previews, presets, and every date derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+Reads the locale carried on this month-day, or returns a copy formatted in another locale across text previews, presets, and every date derived from it. Passing an empty tag clears the carried locale, and [`lang()`](#lang) works as an alias.
 
 **Parameters**
 
@@ -460,5 +460,5 @@ Returns the underlying `Temporal.PlainMonthDay` instance.
 md.valueOf(): never
 ```
 
-Throws a `RangeError` so numeric operators never coerce a month-day to a number. Narrow unknown values with `isMonthDay()` or [`kindOf()`](/api/kind-of/).
+Throws a `RangeError` so numeric operators never coerce a month-day to a number. Narrow unknown values with [`isMonthDay()`](/api/kind-of/#ismonthday) or [`kindOf()`](/api/kind-of/).
 :::
