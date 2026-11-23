@@ -1,0 +1,160 @@
+name: Bench Report
+
+# aggregates parallel Bench cell artifacts and posts or updates the sticky PR comment from main.
+# Runs via workflow_run so untrusted PR code never executes with write permissions or bot secrets
+
+on:
+  workflow_run:
+    workflows: [Bench]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bench-report-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  report:
+    name: Post Bench Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      actions: read
+    steps:
+      - name: Check Bot Secrets
+        id: bot
+        env:
+          HAS_BOT: ${{ secrets.SEMANTIC_PERF_BOT_CLIENT_ID != '' && secrets.SEMANTIC_PERF_BOT_PRIVATE_KEY != '' }}
+        run: echo "has=$HAS_BOT" >> "$GITHUB_OUTPUT"
+      # fall back to github.token if the GitHub App is unconfigured or unreachable
+      - name: Create Bot Token
+        id: bot-token
+        if: steps.bot.outputs.has == 'true'
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.SEMANTIC_PERF_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.SEMANTIC_PERF_BOT_PRIVATE_KEY }}
+      - name: Choose Token
+        id: token
+        env:
+          BOT_TOKEN: ${{ steps.bot-token.outputs.token }}
+          BOT_SLUG: ${{ steps.bot-token.outputs.app-slug }}
+          WORKFLOW_TOKEN: ${{ github.token }}
+        run: |
+          echo "value=${BOT_TOKEN:-$WORKFLOW_TOKEN}" >> "$GITHUB_OUTPUT"
+          if [ -n "$BOT_TOKEN" ] && [ -n "$BOT_SLUG" ]; then echo "login=$BOT_SLUG[bot]" >> "$GITHUB_OUTPUT"; else echo "login=github-actions[bot]" >> "$GITHUB_OUTPUT"; fi
+
+      # reporter.js and fetch-pr-history.js use only Node built-ins so no npm install runs here
+      - name: Checkout Main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      # use github.token because the GitHub App only requests pull-requests permission, not actions:read
+      - name: Download Bench Results
+        id: results
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/bench"
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --pattern "bench-results-*" --dir "$RUNNER_TEMP/bench" || true
+          if [ -z "$(find "$RUNNER_TEMP/bench" -name '*.json' -print -quit)" ]; then
+            echo "report=false" >> "$GITHUB_OUTPUT"; echo "no benchmark artifacts uploaded, nothing to report"; exit 0
+          fi
+          echo "report=true" >> "$GITHUB_OUTPUT"
+
+      - name: Find Pull Request
+        id: pr
+        if: steps.results.outputs.report == 'true' && github.event.workflow_run.event == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          # fork PRs omit pull_requests in workflow_run payloads, so look up by head branch
+          if [ -z "$NUMBER" ] || [ "$NUMBER" = "null" ]; then
+            NUMBER=$(gh pr list --repo "$REPO" --head "$HEAD_BRANCH" --state open --json number --jq '.[0].number // ""')
+          fi
+          if [ -n "$NUMBER" ]; then
+            HEAD=$(gh pr view "$NUMBER" --repo "$REPO" --json headRefOid --jq .headRefOid)
+            if [ "$HEAD" != "$HEAD_SHA" ]; then echo "PR #$NUMBER is now at ${HEAD:0:7}, skipping stale report for ${HEAD_SHA:0:7}"; NUMBER=''; fi
+          fi
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Resolved PR number: $NUMBER"
+
+      - name: Fetch PR Iteration History
+        if: steps.results.outputs.report == 'true' && steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          REPO: ${{ github.repository }}
+        run: |
+          node tools/ci/bench/fetch-pr-history.js \
+            --branch "$HEAD_BRANCH" \
+            --repo "$REPO" \
+            --current-run-id "$RUN_ID" \
+            --out "$RUNNER_TEMP/pr-history.json"
+
+      - name: Render Bench Report
+        id: render
+        if: steps.results.outputs.report == 'true'
+        env:
+          DISPLAY_TITLE: ${{ github.event.workflow_run.display_title }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          REPORT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STARTED: ${{ github.event.workflow_run.created_at }}
+          ENDED: ${{ github.event.workflow_run.updated_at }}
+          REPO: ${{ github.repository }}
+        run: |
+          WALL_CLOCK=$(( $(date -d "$ENDED" +%s) - $(date -d "$STARTED" +%s) ))
+          node tools/ci/bench/reporter.js \
+            --results "$RUNNER_TEMP/bench" \
+            --repo-root . \
+            --pr-history "$RUNNER_TEMP/pr-history.json" \
+            --sha "$HEAD_SHA" \
+            --ref "$HEAD_BRANCH" \
+            --msg "$DISPLAY_TITLE" \
+            --repo "$REPO" \
+            --run-url "$RUN_URL" \
+            --run-id "$RUN_ID" \
+            --report-url "$REPORT_URL" \
+            --wall-clock "$WALL_CLOCK" \
+            --out bench-report
+          echo "post=$(jq -r .post bench-report/bench-report.json)" >> "$GITHUB_OUTPUT"
+          cat bench-report/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save Bench Report
+        uses: actions/upload-artifact@v7
+        if: steps.results.outputs.report == 'true'
+        with:
+          overwrite: true
+          name: bench-report
+          path: bench-report
+
+      - name: Post Comment
+        if: steps.results.outputs.report == 'true' && steps.render.outputs.post == 'true' && steps.pr.outputs.number != ''
+        uses: ./.github/actions/sticky-bot-comment
+        with:
+          token: ${{ steps.token.outputs.value }}
+          repo: ${{ github.repository }}
+          pr-number: ${{ steps.pr.outputs.number }}
+          bot-login: ${{ steps.token.outputs.login }}
+          body-file: bench-report/comment.md
+          marker: '<!-- bench-report -->'

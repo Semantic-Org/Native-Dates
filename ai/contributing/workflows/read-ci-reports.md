@@ -21,14 +21,14 @@ type: workflow
 
 ## Comment Summary
 
-| Property | Bundle Size (`bundle-size.yml`) | Bench (planned in `roadmap.md`) |
+| Property | Bundle Size (`bundle-size.yml`) | Bench (`bench.yml`) |
 |---|---|---|
 | Heading | `Bundle Size — ...` | `... on Bench` |
 | Metric | Brotli-11 bytes across `rowsFrom` in `tools/size.js` | Headless Chrome runtime via tachometer |
 | Variance | None (deterministic build) | Statistical (95% confidence interval) |
 | Actionable signal | Verdict heading, size tier, and `Changed` table | `Faster` and `Slower` tables |
 | Fails CI | Yes, when over ceiling/tier limit or leaking dev prose | Never |
-| Architecture doc | [`tools/ci/bundle/README.md`](../../../tools/ci/bundle/README.md) | [`extend-bench-suite.md`](extend-bench-suite.md) |
+| Architecture doc | [`tools/ci/bundle/README.md`](../../../tools/ci/bundle/README.md) | [`tools/ci/bench/README.md`](../../../tools/ci/bench/README.md) |
 
 ---
 

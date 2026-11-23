@@ -1,0 +1,163 @@
+name: Bench
+
+# benchmarks PR code against its base commit across parallel headless Chrome cells.
+# Runs bench/, tools/bench.js, and discovery strictly from base so a PR cannot alter its own benchmark harness.
+# See tools/ci/bench/README.md for details
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'src/**'
+      - 'packages/core/**'
+      - 'packages/plugins/src/**'
+      - 'packages/plugins/package.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.node-version'
+      - '.github/workflows/bench.yml'
+
+concurrency:
+  group: bench-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    name: Discover Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      suites: ${{ steps.discover.outputs.suites }}
+      has-suites: ${{ steps.discover.outputs.has-suites }}
+      base-sha: ${{ steps.base.outputs.sha }}
+    steps:
+      - name: Checkout Head
+        uses: actions/checkout@v7
+        with:
+          path: head
+          fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 1 }}
+      - name: Find Base
+        id: base
+        run: |
+          if [ "${{ github.event_name }}" = 'pull_request' ]; then
+            echo "sha=$(git -C head rev-parse HEAD^1)" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=$(git -C head rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Checkout Base
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.base.outputs.sha }}
+          path: base
+      - name: Check Base Harness
+        id: harness
+        run: |
+          if [ ! -f base/tools/ci/bench/discover.js ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "base branch predates tools/ci/bench, skipping until merged to main"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install Node.js
+        if: steps.harness.outputs.ready == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: head/.node-version
+          cache: npm
+          cache-dependency-path: head/package-lock.json
+      - name: Install Dependencies
+        if: steps.harness.outputs.ready == 'true'
+        run: |
+          (cd base && npm ci --ignore-scripts --no-audit --no-fund)
+          (cd head && npm ci --ignore-scripts --no-audit --no-fund)
+      - name: Select Suites
+        id: discover
+        env:
+          BASE_SHA: ${{ steps.base.outputs.sha }}
+          READY: ${{ steps.harness.outputs.ready }}
+        run: |
+          if [ "$READY" != 'true' ]; then
+            echo "suites=[]" >> "$GITHUB_OUTPUT"
+            echo "has-suites=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${{ github.event_name }}" = 'pull_request' ]; then
+            git -C head -c core.quotepath=false diff --name-only "$BASE_SHA" HEAD > "$RUNNER_TEMP/changed-files.txt"
+            node base/tools/ci/bench/discover.js --bench-dir base/bench --checkout head --changed "$RUNNER_TEMP/changed-files.txt"
+          else
+            node base/tools/ci/bench/discover.js --bench-dir base/bench --checkout head --all
+          fi
+
+  bench:
+    name: Bench (${{ matrix.suite }})
+    needs: discover
+    if: needs.discover.outputs.has-suites == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJson(needs.discover.outputs.suites) }}
+    steps:
+      - name: Checkout Head
+        uses: actions/checkout@v7
+        with:
+          path: head
+      - name: Checkout Base
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.discover.outputs.base-sha }}
+          path: base
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: head/.node-version
+          cache: npm
+          cache-dependency-path: head/package-lock.json
+      - name: Install Dependencies
+        run: |
+          (cd base && npm ci --ignore-scripts --no-audit --no-fund)
+          (cd head && npm ci --ignore-scripts --no-audit --no-fund)
+      - name: Run Benchmark Suite
+        env:
+          SUITE: ${{ matrix.suite }}
+          BASE_SHA: ${{ needs.discover.outputs.base-sha }}
+        run: |
+          node base/tools/bench.js \
+            --head head \
+            --base base \
+            --bench-dir base/bench \
+            --suite "$SUITE" \
+            --base-sha "$BASE_SHA" \
+            --json "$RUNNER_TEMP/bench-results"
+      - name: Write Cell Summary
+        if: ${{ !cancelled() }}
+        env:
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BASE_SHA: ${{ needs.discover.outputs.base-sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref || 'main' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -f "$RUNNER_TEMP/bench-results/${{ matrix.suite }}.json" ]; then
+            node base/tools/ci/bench/reporter.js \
+              --results "$RUNNER_TEMP/bench-results" \
+              --repo-root base \
+              --sha "$SHA" \
+              --base-sha "$BASE_SHA" \
+              --base-ref "$BASE_REF" \
+              --repo "$GITHUB_REPOSITORY" \
+              --run-url "$RUN_URL" \
+              --run-id "$GITHUB_RUN_ID" \
+              --out "$RUNNER_TEMP/cell-report"
+            cat "$RUNNER_TEMP/cell-report/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Save Suite Results
+        uses: actions/upload-artifact@v7
+        with:
+          name: bench-results-${{ matrix.suite }}
+          path: ${{ runner.temp }}/bench-results
+          if-no-files-found: error
