@@ -41,16 +41,15 @@ export class Setup {
     scopeQuestion: 'Install skills where?',
     scopeProject: 'This project',
     scopeMachine: 'Globally',
-    globalUnavailable:
-      'no agent found that `--global` can install for. It supports {agents}. Run `npx {name}` to set up this project',
+    globalUnavailable: 'no supported agent found for `--global` ({agents}). Run `npx {name}` to set up this project',
 
     install: '`{command}`',
     plugin: '`{command}`',
-    pluginDone: 'installed the {agent} plugin',
-    doubled: '`{path}` is in this project too. {agent} will load the skill twice',
-    doubledLabel: 'twice',
+    pluginDone: 'installed {agent} plugin',
+    doubled: '`{path}` is also in this project. {agent} will load it twice',
+    doubledLabel: 'overlap',
     claudeUpdates:
-      'Claude Code updates the plugin with `claude plugin update {name}@{name}`. Turn on auto-update in `/plugin`',
+      'update Claude Code plugin: `claude plugin update {name}@{name}` (or enable auto-update in `/plugin`)',
     update: '`{command}`. {from} -> {to}',
     updateName: 'update {from} -> {to}',
     skills: '`{folder}`. {readers}',
@@ -98,14 +97,14 @@ export class Setup {
 
 Set up coding agents for this project:
   install  install {name} or update an older version
-  skills   link skills into .agents/skills and .claude/skills, or with --global install each agent's plugin
+  skills   link .agents/skills and .claude/skills, or install plugins (--global)
   note     add a skill pointer to AGENTS.md (and CLAUDE.md if present)
 
 Options (previews changes and prompts by default):
   -g, --global    install skills globally instead of in this project
   -y, --yes       apply without prompting (for agents and scripts)
   --no-install    skip installing or updating {name}
-  --no-skills     skip linking skills
+  --no-skills     skip installing skills
   --no-note       skip editing AGENTS.md and CLAUDE.md
   -v, --version   show version
   -h, --help      show help`,
