@@ -43,6 +43,7 @@
     "size": "node tools/gates/budget.js",
     "types": "tsc --noEmit && tsc --noEmit --module preserve --moduleResolution bundler",
     "check": "npm test && npm run ai && npm run size",
+    "bench": "node tools/bench.js",
     "format": "npx dprint fmt",
     "prepare": "simple-git-hooks",
     "setup": "npx simple-git-hooks"
@@ -56,6 +57,7 @@
     "jsdom": "^31.0.1",
     "playwright": "^1.65.1",
     "simple-git-hooks": "^2.14.0",
+    "tachometer": "^0.7.2",
     "typescript": "^6.0.3",
     "vitest": "^5.1.1",
     "yaml": "^2.9.1"

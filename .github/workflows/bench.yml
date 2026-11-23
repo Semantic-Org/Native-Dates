@@ -1,0 +1,111 @@
+name: Bench
+
+# runs bench/ against PR code and its base in headless Chrome with read-only permissions, while bench-report.yml posts the PR comment
+
+on:
+  # runs only when a PR touches code the benchmarks load or the versions they run on.
+  # bench/ and tools/ always come from the base branch, so editing them does not change a PR's own run
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'src/**'
+      - 'packages/plugins/src/**'
+      - 'packages/plugins/package.json'
+      - 'package.json'
+      - '.github/workflows/bench.yml'
+      - 'package-lock.json'
+      - '.node-version'
+
+concurrency:
+  group: bench-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    name: Measure Bench
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TITLE: ${{ github.event.pull_request.title }}
+    steps:
+      # compare the PR merge commit against its first parent on the base branch to isolate PR changes
+      - name: Checkout Head
+        uses: actions/checkout@v7
+        with:
+          path: head
+          fetch-depth: 2
+      - name: Find Base
+        id: base
+        run: echo "sha=$(git -C head rev-parse HEAD^1)" >> "$GITHUB_OUTPUT"
+      - name: Checkout Base
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.base.outputs.sha }}
+          path: base
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: head/.node-version
+      - name: Install Dependencies
+        run: |
+          (cd base && npm ci --ignore-scripts --no-audit --no-fund)
+          (cd head && npm ci --ignore-scripts --no-audit --no-fund)
+      # run bench/ and its tools from the base branch so a PR cannot edit the benchmarks that measure it
+      - name: Use Main's Tools
+        id: tools
+        run: |
+          if [ -f base/tools/ci/bench/reporter.js ]; then
+            echo "dir=base" >> "$GITHUB_OUTPUT"
+            echo "measuring with base branch tools"
+          else
+            echo "dir=head" >> "$GITHUB_OUTPUT"
+            echo "base branch predates tools/ci/bench, falling back to head tools"
+          fi
+      # tachometer installs the newest chromedriver on its own unless one matching the runner's Chrome is present
+      - name: Install Matching Chromedriver
+        env:
+          TOOLS: ${{ steps.tools.outputs.dir }}
+        run: |
+          version=$(google-chrome --version | grep -oP '\d+' | head -1)
+          (cd "$TOOLS" && npm install "chromedriver@$version" --no-save --no-audit --no-fund)
+      - name: Record Commits
+        env:
+          BASE_SHA: ${{ steps.base.outputs.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/bench"
+          jq -n --arg head "$(git -C head rev-parse HEAD)" --arg base "$BASE_SHA" --arg ref "$BASE_REF" \
+            '{ head: { sha: $head }, base: { sha: $base, ref: $ref } }' > "$RUNNER_TEMP/bench/changed.json"
+      - name: Run Benchmarks
+        env:
+          TOOLS: ${{ steps.tools.outputs.dir }}
+        run: node "$TOOLS/tools/bench.js" --head head --base base --json "$RUNNER_TEMP/bench"
+      - name: Write Bench Report
+        env:
+          TOOLS: ${{ steps.tools.outputs.dir }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          REF: ${{ github.head_ref }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          node "$TOOLS/tools/ci/bench/reporter.js" --results "$RUNNER_TEMP/bench" --bench "$TOOLS/bench" \
+            --source-sha "$(git -C "$TOOLS" rev-parse HEAD)" --sha "$SHA" --ref "$REF" --msg "$TITLE" --pr "$PR" \
+            --repo "$GITHUB_REPOSITORY" --run-url "$RUN_URL" --run-id "$GITHUB_RUN_ID" --report-url "$RUN_URL" --out "$RUNNER_TEMP/report"
+          cat "$RUNNER_TEMP/report/comment.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Save Bench Results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: bench-results
+          path: ${{ runner.temp }}/bench
+          if-no-files-found: error
+      - name: Save Bench Report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: bench-report
+          path: ${{ runner.temp }}/report
+          if-no-files-found: warn
