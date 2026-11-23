@@ -7,7 +7,7 @@ import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } 
 import { temporalDurationFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
-import { yearFirst } from './helpers/parts.js';
+import { opensOnDate, yearFirst } from './helpers/parts.js';
 import { relativeSeconds } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
@@ -32,7 +32,7 @@ import {
   withParts,
   zoneOptions,
 } from './helpers/units.js';
-import { checkedDisambiguation, isWeekend, weekStart, zoneId } from './helpers/zones.js';
+import { cachedText, checkedDisambiguation, isWeekend, weekStart, zoneId } from './helpers/zones.js';
 import { MonthDay } from './month-day.js';
 import { DateTimeRange } from './range.js';
 import { Time } from './time.js';
@@ -147,6 +147,12 @@ export class DateTime {
 
   static #parse(text, settings, timeZone, disambiguation) {
     const trimmed = yearFirst(text.trim());
+    if (settings.loose && !opensOnDate(trimmed)) {
+      const zoned = parseLoose(trimmed, settings);
+      if (zoned) {
+        return zoned;
+      }
+    }
     try {
       return guard(
         () => {
@@ -173,10 +179,8 @@ export class DateTime {
       );
     }
     catch (error) {
-      if (!settings.loose || error.code !== 'invalidDateTime') {
-        throw error;
-      }
-      const zoned = parseLoose(trimmed, settings);
+      const zoned = settings.loose && opensOnDate(trimmed) && error.code === 'invalidDateTime'
+        && parseLoose(trimmed, settings);
       if (!zoned) {
         throw error;
       }
@@ -448,8 +452,13 @@ export class DateTime {
   *******************************/
 
   until(other, name) {
-    const end = new DateTime(other, this.zone);
-    const span = anchored(this.#zoned.until(end.toTemporal(), { largestUnit: 'day' }), this.#zoned, this.#locale);
+    const end = new DateTime(other, this.zone).toTemporal();
+    // sub-day spans starting in a fall-back fold hour use exact elapsed hours so day-0 'compatible' resolution does not add 1h
+    let diff = this.#zoned.until(end, { largestUnit: 'day' });
+    if (!diff.days) {
+      diff = this.#zoned.until(end, { largestUnit: 'hour' });
+    }
+    const span = anchored(diff, this.#zoned, this.#locale);
     return name === undefined ? span : span.total(name);
   }
 
@@ -462,7 +471,7 @@ export class DateTime {
   *******************************/
 
   get text() {
-    return this.format(textFormat);
+    return cachedText(this, textFormat);
   }
 
   format(spec, locale = this.#locale) {

@@ -18,7 +18,7 @@ import {
   weekdayNamed,
   zoneOptions,
 } from './helpers/units.js';
-import { weekendDays } from './helpers/zones.js';
+import { cachedText, weekendDays } from './helpers/zones.js';
 import { Time } from './time.js';
 
 /*
@@ -86,7 +86,7 @@ class Range {
   // mask bracketed '[America/New_York]' zones before splitting on '/', checking spaced ' - ' / ' to ' first
   // so '2026/11/06 - 2026/11/10' stays intact and falling back to '-' / '–' only for plain time ranges
   static #splitInterval(text, kind) {
-    const blanked = text.replace(/\[[^\]]*\]/g, (zone) => ' '.repeat(zone.length));
+    const blanked = text.replace(/\[[^[\]]*\]/g, (zone) => ' '.repeat(zone.length));
     const separator = blanked.match(/\s(?:-|–|to)\s/) ?? blanked.match('/')
       ?? (kind === 'time' ? blanked.match(/[-–]/) : null);
     return separator
@@ -196,12 +196,15 @@ class Range {
     if (this.#inclusive()) {
       return !this.start.isAfter(rival.end) && !rival.start.isAfter(this.end);
     }
+    let hits;
     if (this.kind === 'time') {
       const [start, end] = Range.#spanOf(this);
-      const hits = Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart < end && start < rivalEnd);
-      return hits && !this.isEmpty() && !rival.isEmpty();
+      hits = Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart < end && start < rivalEnd);
     }
-    return this.start.isBefore(rival.end) && rival.start.isBefore(this.end) && !this.isEmpty() && !rival.isEmpty();
+    else {
+      hits = this.start.isBefore(rival.end) && rival.start.isBefore(this.end);
+    }
+    return hits && !this.isEmpty() && !rival.isEmpty();
   }
 
   #make(kind, start, end) {
@@ -344,7 +347,7 @@ class Range {
   }
 
   get text() {
-    return this.kind === 'datetime' ? this.format(textFormat) : this.format();
+    return cachedText(this, this.kind === 'datetime' ? textFormat : undefined);
   }
 
   format(spec, locale = this.start.locale()) {

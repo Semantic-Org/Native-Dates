@@ -35,7 +35,7 @@ import {
   withParts,
   zoneOptions,
 } from './helpers/units.js';
-import { checkedDisambiguation, isWeekend, weekStart, zoneId } from './helpers/zones.js';
+import { cachedText, checkedDisambiguation, isWeekend, weekStart, zoneId } from './helpers/zones.js';
 import { MonthDay } from './month-day.js';
 import { DateRange } from './range.js';
 import { Time } from './time.js';
@@ -434,7 +434,7 @@ export class CalendarDate {
   *******************************/
 
   get text() {
-    return this.format();
+    return cachedText(this);
   }
 
   format(spec, locale = this.#locale) {

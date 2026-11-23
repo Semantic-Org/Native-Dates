@@ -15,7 +15,7 @@ import {
 import { IS_DURATION } from './helpers/identity.js';
 import { durationFormat, unitFormat } from './helpers/intl.js';
 import { alias, inspect, isCount, isTemporalDuration, unit } from './helpers/units.js';
-import { checkedLocale, locale as pickLocale } from './helpers/zones.js';
+import { cachedText, checkedLocale, locale as pickLocale } from './helpers/zones.js';
 
 /*
   a span of calendar and clock units (Temporal.Duration).
@@ -297,7 +297,7 @@ export class Duration {
 
   // keep calendar fields as written, balance clock overflow up to hours, and hide sub-second fields when >= 1s is set
   get text() {
-    return this.format('long');
+    return cachedText(this, 'long');
   }
 
   format(style = 'long', locale = this.#locale) {

@@ -44,26 +44,18 @@ export const createErrors = ({ namespace, ErrorClass }) => {
 };
 
 // cap memoized maps and Intl formatter tries so untrusted Accept-Language headers cannot grow heap without limit
-export const bounded = (limit = 500) => {
-  const map = new Map();
-  return {
-    get: (key) => map.get(key),
-    has: (key) => map.has(key),
-    set(key, value) {
-      if (map.size >= limit && !map.has(key)) {
-        map.delete(map.keys().next().value);
-      }
-      map.set(key, value);
-      return value;
-    },
-    clear: () => map.clear(),
-  };
+export const remember = (map, key, value, limit = 500) => {
+  if (map.size >= limit && !map.has(key)) {
+    map.delete(map.keys().next().value);
+  }
+  map.set(key, value);
+  return value;
 };
 
 // memoize Intl formatters in a fixed-arity Map trie (~100x faster than constructing per call).
 // Frozen preset bags key by reference, while caller objects serialize in case they are mutated
 export const cached = (make) => {
-  const root = bounded();
+  const root = new Map();
   return (...args) => {
     let level = root;
     const last = args.length - 1;
@@ -76,8 +68,7 @@ export const cached = (make) => {
         : arg;
       let next = level.get(key);
       if (next === undefined) {
-        next = index === last ? make(...args) : bounded();
-        level.set(key, next);
+        next = remember(level, key, index === last ? make(...args) : new Map());
       }
       level = next;
     }

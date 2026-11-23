@@ -57,7 +57,7 @@ export const fieldsOf = (temporal) => {
   return fields;
 };
 
-const quantity = /([-+]?)(\d+(?:\.\d+)?)\s*([a-zµ]+)/gi;
+const quantity = /(?<![\d.])([-+]?)(\d+(?:\.\d+)?)(?![\d.])\s*([a-zµ]+)/gi;
 
 const parseWords = (text) => {
   const phrase = text.trim().replace(/,|\band\b/gi, ' ');

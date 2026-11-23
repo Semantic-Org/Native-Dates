@@ -26,7 +26,7 @@ import {
   singularKeys,
   zoneOptions,
 } from './helpers/units.js';
-import { zoneId } from './helpers/zones.js';
+import { cachedText, zoneId } from './helpers/zones.js';
 
 /*
   a recurring month and day with no year (Temporal.PlainMonthDay), such as a birthday or annual holiday.
@@ -115,13 +115,13 @@ export class MonthDay {
     if (isPlainObject(input)) {
       const fields = singularKeys(input);
       if (!('year' in fields)) {
-        return MonthDay.#fromParts(fields, JSON.stringify(input));
+        return MonthDay.#fromParts(fields, input);
       }
     }
     return MonthDay.#dayOf(input, settings).toPlainMonthDay();
   }
 
-  static #fromParts(parts, at = JSON.stringify(parts), explanation) {
+  static #fromParts(parts, at = parts, explanation) {
     return guard(
       () => Temporal.PlainMonthDay.from(wholeParts(parts, ['month', 'day']), { overflow: 'reject' }),
       'invalidMonthDay',
@@ -268,7 +268,7 @@ export class MonthDay {
   }
 
   get text() {
-    return this.format();
+    return cachedText(this);
   }
 
   format(spec, locale = this.#locale) {

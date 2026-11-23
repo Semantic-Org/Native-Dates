@@ -1,11 +1,18 @@
-import { bounded, each, isPlainObject, isString } from './utils.js';
+import { each, isPlainObject, isString, remember } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
 import { nameCache, weekdayWidths } from './tokens.js';
 import { dayOfWeek } from './units.js';
 
-// process-wide defaults mutated by configure()
+let textCache = new WeakMap();
+export const cachedText = (self, spec) => {
+  let value = textCache.get(self);
+  if (value === undefined) {
+    textCache.set(self, value = self.format(spec));
+  }
+  return value;
+};
 export const settings = {
   zone: undefined,
   locale: undefined,
@@ -16,7 +23,7 @@ export const settings = {
   ordinals: undefined,
   formats: undefined,
 };
-const resolved = bounded();
+const resolved = new Map();
 
 export const canonicalZone = (id) => {
   try {
@@ -62,8 +69,7 @@ export const zoneId = (id, tag) => {
         : 0,
     });
   }
-  resolved.set(key, found);
-  return found;
+  return remember(resolved, key, found);
 };
 
 export const configure = (options) => {
@@ -143,6 +149,7 @@ export const configure = (options) => {
     requireLoose('dayFirst');
     settings.dayFirst = dayFirst === null ? undefined : !!dayFirst;
   }
+  textCache = new WeakMap();
   return { ...settings, zoneAliases: { ...settings.zoneAliases } };
 };
 
@@ -167,7 +174,7 @@ const canonicalTag = (name) => {
 
 // accept BCP 47 tags, POSIX 'en_US' tags, tag arrays, Intl.Locale instances, and raw HTTP Accept-Language headers
 const validObjects = new WeakSet();
-const knownLocales = bounded();
+const knownLocales = new Map();
 export const checkedLocale = (tag) => {
   if (!tag || (isString(tag) && !tag.trim())) {
     return undefined;
@@ -201,7 +208,8 @@ export const checkedLocale = (tag) => {
       tag,
       explanation,
     );
-    knownLocales.set(
+    remember(
+      knownLocales,
       tag,
       kept ? (tags.length > 1 ? (validObjects.add(tags), Object.freeze(tags)) : tags[0]) : tag.trim(),
     );
@@ -229,14 +237,12 @@ export const intlLocale = (activeLocale) =>
     Intl.DateTimeFormat.supportedLocalesOf(activeLocale)[0] ?? new Intl.DateTimeFormat().resolvedOptions().locale,
   );
 
-const weekInfos = bounded();
+const weekInfos = new Map();
 const weekInfo = (tag) => {
   const activeLocale = locale(tag);
   const key = String(activeLocale);
-  if (!weekInfos.has(key)) {
-    weekInfos.set(key, intlLocale(activeLocale).getWeekInfo?.() ?? { firstDay: 1, weekend: [6, 7] });
-  }
-  return weekInfos.get(key);
+  return weekInfos.get(key)
+    ?? remember(weekInfos, key, intlLocale(activeLocale).getWeekInfo?.() ?? { firstDay: 1, weekend: [6, 7] });
 };
 
 export const weekStart = (override, tag) =>

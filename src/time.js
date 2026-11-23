@@ -29,7 +29,7 @@ import {
   withParts,
   zoneOptions,
 } from './helpers/units.js';
-import { checkedDisambiguation, zoneId } from './helpers/zones.js';
+import { cachedText, checkedDisambiguation, zoneId } from './helpers/zones.js';
 import { TimeRange } from './range.js';
 
 /*
@@ -361,7 +361,7 @@ export class Time {
   *******************************/
 
   get text() {
-    return this.format();
+    return cachedText(this);
   }
 
   format(spec, locale = this.#locale) {

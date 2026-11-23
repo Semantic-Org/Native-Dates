@@ -136,21 +136,7 @@ const partFormatters = /* @__PURE__ */ cached((locale, options) => {
 
 export const partFormatter = (options, locale) => partFormatters(pickLocale(locale), options);
 
-const parts = [
-  'weekday',
-  'era',
-  'year',
-  'month',
-  'day',
-  'timeStyle',
-  'hour',
-  'minute',
-  'second',
-  'fractionalSecondDigits',
-  'dayPeriod',
-  'timeZone',
-  'timeZoneName',
-];
+const allParts = [...dateParts, ...timeParts, ...zoneParts];
 
 export const partOptions = (named, names, styles) => {
   const spec = namedFormat(named);
@@ -165,7 +151,7 @@ export const partOptions = (named, names, styles) => {
     return styles[bag.dateStyle];
   }
   const options = { ...bag };
-  each(parts, (part) => {
+  each(allParts, (part) => {
     if (!names.includes(part)) {
       delete options[part];
     }

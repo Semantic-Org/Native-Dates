@@ -7,14 +7,14 @@ export const zonedDateTimeFormat = cached((locale, options, zone) =>
   guard(
     () => new Intl.DateTimeFormat(locale, { ...options, timeZone: options.timeZone ?? zone }),
     'unknownFormat',
-    JSON.stringify(options),
+    options,
   )
 );
 export const plainDateTimeFormat = cached((locale, options) =>
   guard(
     () => new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }),
     'unknownFormat',
-    JSON.stringify(options),
+    options,
   )
 );
 export const durationFormat = cached((locale, style, hoursDisplay) =>

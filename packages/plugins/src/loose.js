@@ -25,7 +25,9 @@ const digitValue = (digit) => {
 
 // NFKC narrows fullwidth forms, and Arabic dates carry direction marks between their parts
 const normalize = (text) =>
-  text.normalize('NFKC').replace(/[\u200e\u200f\u061c]/g, '').replace(/(?![0-9])\p{Nd}/gu, digitValue);
+  /[^\x20-\x7e]/.test(text)
+    ? text.normalize('NFKC').replace(/[\u200e\u200f\u061c]/g, '').replace(/(?![0-9])\p{Nd}/gu, digitValue)
+    : text;
 
 // lowercase words between single spaces, so ' mar ' is found in ' mar 17 ' and not in ' martes '
 const wordsOf = (text, locale) => ` ${(text.toLocaleLowerCase(locale).match(/[\p{L}\p{M}]+/gu) ?? []).join(' ')} `;
@@ -182,7 +184,8 @@ const parseWithEngine = (text, settings) => {
   if (month ? nums.length !== 2 : nums.length !== 3) {
     return undefined;
   }
-  const [epoch, written] = [Date.parse(text), parseUtcWall(withoutComments)];
+  const written = parseUtcWall(withoutComments);
+  const epoch = unzoned === text ? written : Date.parse(text);
   if (Number.isNaN(epoch) || Number.isNaN(written)) {
     return undefined;
   }

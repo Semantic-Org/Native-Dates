@@ -1417,10 +1417,16 @@ describe('DateTime.until() and since()', () => {
     expect(sundayInUtc.since(saturday).toString()).toBe('PT23H');
   });
 
-  it('round-trips start.plus(start.until(end)) back to end', () => {
+  it('round-trips start.plus(start.until(end)) back to end and measures exact hours from a fall-back fold hour', () => {
     const start = datetime('2026-01-31T09:00', 'America/New_York');
     const end = datetime('2027-03-01T10:30', 'America/New_York');
     expect(start.plus(start.until(end)).toString()).toBe(end.toString());
+
+    const foldStart = datetime('2026-10-25T01:30:00Z', 'Europe/Berlin');
+    const shiftEnd = datetime('2026-10-25T09:30:00Z', 'Europe/Berlin');
+    expect(foldStart.until(shiftEnd, 'hours')).toBe(8);
+    expect(foldStart.until(shiftEnd).toString()).toBe('PT8H');
+    expect(foldStart.plus(foldStart.until(shiftEnd)).toString()).toBe(shiftEnd.toString());
   });
 
   it('throws a TypeError with missingDateTime for null or undefined targets', () => {

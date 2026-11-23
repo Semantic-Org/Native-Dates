@@ -30,7 +30,7 @@ import {
   units,
   withParts,
 } from './helpers/units.js';
-import { zoneId } from './helpers/zones.js';
+import { cachedText, zoneId } from './helpers/zones.js';
 
 /*
   a calendar year and month with no day (Temporal.PlainYearMonth), such as a billing period or card expiry.
@@ -304,7 +304,7 @@ export class YearMonth {
   }
 
   get text() {
-    return this.format();
+    return cachedText(this);
   }
 
   format(spec, locale = this.#locale) {

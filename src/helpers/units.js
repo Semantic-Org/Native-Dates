@@ -132,7 +132,7 @@ export const isUnzoned = (value) => isDate(value) || isInstant(value) || isStrin
 // true only when text includes both a clock time and an offset or bracketed zone, pinning an exact instant
 export const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;
 export const hasOffset = /(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$/;
-export const hasZoneName = /\[[^\]]+\]$/;
+export const hasZoneName = /\[[^[\]]+\]$/;
 export const namesInstant = (text) => {
   const trimmed = text.trim();
   return hasTime.test(trimmed) && (hasOffset.test(trimmed) || hasZoneName.test(trimmed));
