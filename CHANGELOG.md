@@ -1,13 +1,15 @@
 # Changelog
 
-All notable releases of `native-dates`, `@native-dates/core`, `@native-dates/plugins`, and `@native-dates/polyfill` are published in lockstep.
+Note: `native-dates`, `@native-dates/core`, `@native-dates/plugins`, and `@native-dates/polyfill` are published in lockstep as the same version.
 
 ## v1.0.0 (2026-11-23)
 
-Initial stable release of `native-dates`: immutable dates, times, time zones, durations, year-months, month-days, and ranges built directly on `Temporal` and `Intl` with zero runtime dependencies.
+This is the initial release of `native-dates`.
+
+This library is intended to beat all popular open source JS date libraries in performance and legibility while relying on `Temporal` and `Intl` to do the heavy lifting--all without any runtime dependencies.
 
 ### Packages
 
-- `native-dates` (and scoped alias `@native-dates/core`) — core classes (`DateTime`, `CalendarDate`, `Time`, `Duration`, `YearMonth`, `MonthDay`, `DateRange`, `DateTimeRange`, `TimeRange`), natural-language phrases, `Intl` formatting, relative time, `Accept-Language` locale handling, and the `npx native-dates` agent setup CLI
-- `@native-dates/plugins` — opt-in subpath plugins for city and abbreviation time zones (`zones`), lenient localized parsing (`loose`), and legacy `Date` getters (`legacy-date`)
-- `@native-dates/polyfill` — conditional `temporal-polyfill` loader for Safari and Node 24–25
+- `native-dates` (alias `@native-dates/core`): provides (`DateTime`, `CalendarDate`, `Time`, `Duration`, `YearMonth`, `MonthDay`, `DateRange`, `DateTimeRange`, `TimeRange`) primitives for use when managing time
+- `@native-dates/plugins` — plugins for the optional parts you might not need, zone/city aliases (`zones`), parsing a variety of stringified versions of dates (`loose`), and legacy `Date` getters (`legacy-date`)
+- `@native-dates/polyfill` — conditional `temporal-polyfill` loader for Safari and Node 24–25 with 0 bytes shipped if not needed
