@@ -97,7 +97,7 @@ export const cleanSkills = (packageDir = root) => {
 };
 
 // the marketplace file the repository publishes, which points each agent at the npm release of this version
-// it is committed, so a version bump shows up as a change to it the next time the package is packed
+// it is committed and packing never rewrites it. after a version bump, `node tools/skills.js stamp` does
 export const marketplaceFrom = ({ name, version, description, author }) => ({
   name,
   owner: { name: author },
@@ -115,7 +115,7 @@ const stamped = (source, version) =>
 
 const marketplacePath = resolve(root, '.claude-plugin/marketplace.json');
 
-// writes the committed marketplace file from package.json. a version bump shows as a change to it, and
+// writes the committed marketplace file from package.json, run by hand after a version bump
 // the tests fail while the two disagree
 export function stampMarketplace() {
   const manifest = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
