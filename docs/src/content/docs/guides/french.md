@@ -31,7 +31,7 @@ rdv.format('short', 'fr-CH'); // '01.11.26 14:30'
 rdv.format('L', 'fr-CH'); // '01.11.2026'
 ```
 
-Canadian French starts weeks on Sunday, and `startOf('week')` and `weekdayNames()` follow that rule automatically. Pin Monday when database reports require ISO weeks:
+Canadian French starts weeks on Sunday, and [`startOf('week')`](/api/calendar-date/#startof) and [`weekdayNames()`](/api/month-names/#weekdaynames) follow that rule automatically. Pin Monday when database reports require ISO weeks:
 
 ```js
 import { date, weekdayNames } from 'native-dates';
@@ -46,7 +46,7 @@ mercredi.locale('fr-CA').startOf('week', 'monday').toString(); // '2026-11-16'
 
 ## French typography and format tokens
 
-Wrap literal letters in brackets inside patterns like `'HH[h]mm'`. Writing `'HHhmm'` without brackets throws `unknownFormat`, while a standalone accented *à* passes through unescaped:
+Wrap literal letters in brackets inside patterns like `'HH[h]mm'`. Writing `'HHhmm'` without brackets throws [`unknownFormat`](/api/errors/#units-zones-and-formats), while a standalone accented *à* passes through unescaped:
 
 ```js
 import { datetime } from 'native-dates';
@@ -57,7 +57,7 @@ depart.format('HH[h]mm'); // '14h30'
 depart.format('[le] dddd D MMMM à HH[h]mm'); // 'le dimanche 1 novembre à 14h30'
 ```
 
-French writes *1er* on the first of the month and plain numbers on every other day. Register an `ordinals` rule on `'fr'`, and regional tags inherit it automatically:
+French writes *1er* on the first of the month and plain numbers on every other day. Register an [`ordinals`](/api/configure/) rule on `'fr'`, and regional tags inherit it automatically:
 
 ```js
 import { configure, date } from 'native-dates';
@@ -103,7 +103,7 @@ datetime('lundi 16 novembre 2026 à 14h30', {
 })?.hour; // 14
 ```
 
-Partial dates match French month names and accented abbreviations in loose mode. `dayMonth()` and `duration()` work in core without plugins:
+Partial dates match French month names and accented abbreviations in loose mode. [`dayMonth()`](/api/month-day-fn/#daymonth) and [`duration()`](/api/duration-fn/) work in core without plugins:
 
 ```js
 import { dayMonth, duration, monthDay, yearMonth } from 'native-dates';
@@ -118,7 +118,7 @@ duration('2h 30m').toString(); // 'PT2H30M'
 
 North America shifts clocks two to three weeks before Europe in spring and a week later in autumn, narrowing the Paris-to-Montreal gap from six hours to five.
 
-Morocco also returns to UTC+0 during Ramadan, so convert moments with `in()` rather than subtracting fixed hours:
+Morocco also returns to UTC+0 during Ramadan, so convert moments with [`in()`](/api/date-time/#in) rather than subtracting fixed hours:
 
 ```js
 import { date } from 'native-dates';
@@ -144,7 +144,7 @@ datetime('2026-11-16T09:30', 'HNE').zone; // 'America/Toronto'
 
 ## Relative dates and non-breaking spaces
 
-Calendar dates use *avant-hier* for two days ago and *après-demain* for two days ahead, while `DateTime` counts exact units so late-night hours never read as yesterday.
+Calendar dates use *avant-hier* for two days ago and *après-demain* for two days ahead, while [`DateTime`](/api/date-time/) counts exact units so late-night hours never read as yesterday.
 
 In test assertions, expect the curly apostrophe in *aujourd’hui* and narrow or standard non-breaking spaces inside short durations:
 

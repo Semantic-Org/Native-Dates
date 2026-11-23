@@ -29,7 +29,7 @@ reiwa.format('long'); // '令和8年11月16日'
 reiwa.format('YYYY年M月D日'); // '2026年11月16日'
 ```
 
-`YearMonth` has no day and formats with the era active on day 1. For mid-month transitions like January 1989 from Showa 64 to Heisei 1, pick a day with `on()` first:
+[`YearMonth`](/api/year-month/) has no day and formats with the era active on day 1. For mid-month transitions like January 1989 from Showa 64 to Heisei 1, pick a day with [`on()`](/api/year-month/#on) first:
 
 ```js
 import { yearMonth } from 'native-dates';
@@ -99,7 +99,7 @@ time('午後2:30', { loose: true, locale: 'ja' })?.toString(); // '14:30:00'
 monthDay('11月16日', { loose: true })?.toString(); // '11-16'
 ```
 
-Era strings like `'令和8年11月16日'` still need structured input. When a form collects era and year separately, pass a Japanese `Temporal.PlainDate` straight to `date()` without converting calendars first:
+Era strings like `'令和8年11月16日'` still need structured input. When a form collects era and year separately, pass a Japanese `Temporal.PlainDate` straight to [`date()`](/api/date-fn/) without converting calendars first:
 
 ```js
 const reiwaInput = Temporal.PlainDate.from({
@@ -144,7 +144,7 @@ weekdayNames('short', 'monday', 'ja-JP');
 
 ## Ranges and relative expressions
 
-Range presets join slash dates or kanji times with a fullwidth tilde. Pass a token template to `format()` when both ends need kanji dates and weekdays:
+Range presets join slash dates or kanji times with a fullwidth tilde. Pass a token template to [`format()`](/api/ranges/#format) when both ends need kanji dates and weekdays:
 
 ```js
 import { dateRange, timeRange } from 'native-dates';
@@ -156,7 +156,7 @@ span.format('M月D日(ddd)'); // '11月16日(月) – 11月20日(金)'
 timeRange('09:00', '17:30').format('short', 'ja-JP'); // '9時00分～17時30分'
 ```
 
-`CalendarDate` returns natural words out to *一昨日* for two days ago and *明後日* for two days ahead. `DateTime` always outputs counted units so hour differences never misread as calendar days:
+[`CalendarDate`](/api/calendar-date/) returns natural words out to *一昨日* for two days ago and *明後日* for two days ahead. [`DateTime`](/api/date-time/) always outputs counted units so hour differences never misread as calendar days:
 
 ```js
 import { date, datetime, duration } from 'native-dates';

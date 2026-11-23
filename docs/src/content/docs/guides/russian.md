@@ -66,7 +66,7 @@ date('2026-11-16').format('ddd, Do MMMM', 'ru'); // 'Пн, 16-е ноября'
 
 ## Duration plurals and relative dates
 
-Russian counts units with three forms across 1 and 21, 2 to 4, and 5 to 20. Formatting a `Duration` selects each form automatically:
+Russian counts units with three forms across 1 and 21, 2 to 4, and 5 to 20. Formatting a [`Duration`](/api/duration/) selects each form automatically:
 
 ```js
 import { days, duration } from 'native-dates';
@@ -79,9 +79,9 @@ duration({ days: 2, hours: 5, minutes: 21 }).format('long', 'ru');
 // '2 дня 5 часов 21 минута'
 ```
 
-On `DateTime`, `from()` counts elapsed hours and minutes so 22 hours before midnight still stays numeric.
+On [`DateTime`](/api/date-time/), [`from()`](/api/date-time/#from) counts elapsed hours and minutes so 22 hours before midnight still stays numeric.
 
-On `CalendarDate`, it compares calendar days and returns natural Russian words out to *позавчера* for two days ago and *послезавтра* for two days ahead:
+On [`CalendarDate`](/api/calendar-date/), it compares calendar days and returns natural Russian words out to *позавчера* for two days ago and *послезавтра* for two days ahead:
 
 ```js
 import { date, datetime } from 'native-dates';

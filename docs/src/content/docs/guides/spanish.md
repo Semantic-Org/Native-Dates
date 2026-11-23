@@ -33,7 +33,7 @@ First day of the week also splits across the Spanish-speaking world. The generic
 | `'es-CO'`, `'es-PE'` | `7`, `5:30 p. m.` | Sunday week start, numeric medium dates in Colombia, and *setiembre* in Peru. |
 | `'es-PR'` | `7`, `5:30 p. m.` | Sunday week start and US month/day/year numeric order. |
 
-Pin Monday with `startOf('week', 'monday')` when keying weekly database reports so Madrid and Mexico City land in the same bucket:
+Pin Monday with [`startOf('week', 'monday')`](/api/calendar-date/#startof) when keying weekly database reports so Madrid and Mexico City land in the same bucket:
 
 ```js
 import { date } from 'native-dates';
@@ -47,7 +47,7 @@ wed.locale('es-MX').startOf('week', 'monday').toString(); // '2026-11-16'
 
 ## Prepositions, lowercase names, and weekdays
 
-Long Spanish dates join parts with *de*, *del*, and *a las*. Wrap literal connectors in square brackets inside token patterns so bare letters do not throw `unknownFormat`:
+Long Spanish dates join parts with *de*, *del*, and *a las*. Wrap literal connectors in square brackets inside token patterns so bare letters do not throw [`unknownFormat`](/api/errors/#units-zones-and-formats):
 
 ```js
 import { datetime } from 'native-dates';
@@ -91,7 +91,7 @@ date('16-09-2026', { loose: true, locale: 'es-CL' })?.toString(); // '2026-09-16
 date('06/11/2026', { loose: true, locale: 'es-PR' })?.toString(); // '2026-06-11'
 ```
 
-Full worded dates, connecting words, leading weekdays, Peruvian *setiembre*, and spaced 12-hour times also parse in loose mode, while numeric `dayMonth()` works in core without plugins:
+Full worded dates, connecting words, leading weekdays, Peruvian *setiembre*, and spaced 12-hour times also parse in loose mode, while numeric [`dayMonth()`](/api/month-day-fn/#daymonth) works in core without plugins:
 
 ```js
 date('16 de noviembre de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-11-16'
@@ -130,7 +130,7 @@ datetime('2026-07-15T12:00', 'San Juan').zone; // 'America/Argentina/San_Juan'
 datetime('2026-07-15T12:00', { zone: 'San Juan', locale: 'es-PR' }).zone; // 'America/Puerto_Rico'
 ```
 
-Chile and Cuba start daylight saving at midnight, jumping straight from 00:00 to 01:00. Calling `at('00:00', zone)` or `startOf('day')` lands cleanly on 01:00 of that same date:
+Chile and Cuba start daylight saving at midnight, jumping straight from 00:00 to 01:00. Calling [`at('00:00', zone)`](/api/calendar-date/#at) or `startOf('day')` lands cleanly on 01:00 of that same date:
 
 ```js
 import { date } from 'native-dates';
@@ -143,7 +143,7 @@ spring.hoursInDay; // 23
 
 ## Relative time
 
-Spanish names five consecutive days from *anteayer* for two days ago through *pasado mañana* for two days ahead. `CalendarDate` returns those day words, while `DateTime` counts elapsed hours:
+Spanish names five consecutive days from *anteayer* for two days ago through *pasado mañana* for two days ahead. [`CalendarDate`](/api/calendar-date/) returns those day words, while [`DateTime`](/api/date-time/) counts elapsed hours:
 
 ```js
 import { date, datetime, today } from 'native-dates';
@@ -156,4 +156,4 @@ datetime('2026-11-14T12:00Z').from('2026-11-16T12:00Z', 'es'); // 'hace 2 días'
 date('2026-11-18').from(today('America/Bogota'), 'es-CO');
 ```
 
-On shared servers, pass `today(zone)` instead of `fromNow()` so midnight rollovers between *hoy* and *mañana* follow the user's local zone.
+On shared servers, pass [`today(zone)`](/api/date-fn/#today) instead of [`fromNow()`](/api/calendar-date/#fromnow) so midnight rollovers between *hoy* and *mañana* follow the user's local zone.

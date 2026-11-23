@@ -9,9 +9,9 @@ Native Dates formats through the JavaScript engine's built-in `Intl` data. Every
 Where you set the locale depends on your runtime. Choose the scope that matches how your app runs:
 
 - **Runtime default** when a browser app follows the reader's system settings with zero setup
-- **App-wide `configure()`** when a client app has its own language switcher or fixed locale
-- **Value-level `locale()`** when a server formats per request or a chain carries its own language
-- **One-off `format()`** when a single label needs another calendar or regional dialect
+- **App-wide [`configure()`](/api/configure/)** when a client app has its own language switcher or fixed locale
+- **Value-level [`locale()`](/api/date-time/#locale)** when a server formats per request or a chain carries its own language
+- **One-off [`format()`](/api/date-time/#format)** when a single label needs another calendar or regional dialect
 
 ## Zero setup in the browser
 
@@ -50,7 +50,7 @@ Pass `locale: null` to restore the runtime's default locale.
 
 ## Carrying a locale on a value
 
-Call [`locale()`](/api/date-time/#locale) on any value to return a copy written in that language, or pass `{ locale }` to a factory. `lang()` works as an alias when you prefer the shorter word.
+Call [`locale()`](/api/date-time/#locale) on any value to return a copy written in that language, or pass `{ locale }` to a factory. [`lang()`](/api/date-time/#lang) works as an alias when you prefer the shorter word.
 
 Everything derived from that value keeps the same locale. Arithmetic, time zone shifts, date and time extracts, ranges, and measured durations all inherit it:
 
@@ -95,7 +95,7 @@ datetime('2026-05-15T14:30:00Z').locale('fr-CH;q=0.8, de;q=0.9, es;q=0').locale(
 Global configuration updates shared state across the entire JavaScript process. On a multi-user server, another request can overwrite a `configure()` call across an async boundary. Attach `locale()` to the value instead.
 :::
 
-An instance locale controls localized text, week boundaries, and weekend days. Exact comparisons, sorting, `equals()`, and ISO serialization with `toString()` ignore it:
+An instance locale controls localized text, week boundaries, and weekend days. Exact comparisons, sorting, [`equals()`](/api/date-time/#equals), and ISO serialization with [`toString()`](/api/date-time/#tostring) ignore it:
 
 ```js
 import { date } from 'native-dates';
@@ -114,7 +114,7 @@ When a method combines two values with different locales, the value the method w
 
 Week boundaries and weekday headers follow the active locale automatically. The runtime reports Sunday in the United States, Japan, Korea, and Brazil, Saturday in Egypt, and Monday across most of Europe and China.
 
-Because `startOf('week')`, `range('week')`, and [`weekdayNames()`](/api/month-names/#weekdaynames) share the same first-day rule, calendar headers always line up with week grids:
+Because [`startOf('week')`](/api/calendar-date/#startof), [`range('week')`](/api/calendar-date/#range), and [`weekdayNames()`](/api/month-names/#weekdaynames) share the same first-day rule, calendar headers always line up with week grids:
 
 ```js
 import { date, weekdayNames } from 'native-dates';
@@ -146,7 +146,7 @@ function weekKey(day) {
 
 ISO week numbers from `weekOfYear` always count weeks from Monday, and `dayOfWeek` follows the same Monday-first numbering.
 
-Weekend checks follow the active locale too. `isWeekend()` and `isWeekday()` treat Friday and Saturday as the weekend in Saudi Arabia and Egypt, and Friday alone in Iran. India uses Sunday alone, while most other locales use Saturday and Sunday:
+Weekend checks follow the active locale too. [`isWeekend()`](/api/calendar-date/#calendar-predicates) and [`isWeekday()`](/api/calendar-date/#calendar-predicates) treat Friday and Saturday as the weekend in Saudi Arabia and Egypt, and Friday alone in Iran. India uses Sunday alone, while most other locales use Saturday and Sunday:
 
 ```js
 const friday = date('2026-11-20');

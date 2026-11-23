@@ -12,7 +12,7 @@ In Day.js, both a birthday and an API timestamp go through `dayjs()`.
 
 Here, calendar days use [`date()`](/api/date-fn/) or [`today()`](/api/date-fn/#today), while [billing months](/api/year-month-fn/) and [recurring birthdays](/api/month-day-fn/) have dedicated partial-date factories in core.
 
-Real moments in time use [`datetime()`](/api/datetime-fn/) or `now()`:
+Real moments in time use [`datetime()`](/api/datetime-fn/) or [`now()`](/api/datetime-fn/#now):
 
 ```js
 import { date, datetime, monthDay, now, today, yearMonth } from 'native-dates';
@@ -68,7 +68,7 @@ Instead of passing bracket inclusivity strings to `isBetween()`, date ranges inc
 
 ## Presets and token patterns
 
-Core supports `Intl` presets, Day.js localized format names, and custom [token patterns](/guides/formatting/#token-patterns) directly on `format()` with zero locale files or plugins:
+Core supports `Intl` presets, Day.js localized format names, and custom [token patterns](/guides/formatting/#token-patterns) directly on [`format()`](/api/date-time/#format) with zero locale files or plugins:
 
 ```js
 import { datetime } from 'native-dates';

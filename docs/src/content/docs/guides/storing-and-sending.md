@@ -119,4 +119,4 @@ const params = new URLSearchParams({ from: due.toString() });
 params.toString(); // 'from=2026-11-16'
 ```
 
-Reading date inputs with `date()` also avoids the classic `new Date('2026-11-16')` bug, where UTC midnight shifts back a day in Western Hemisphere zones.
+Reading date inputs with [`date()`](/api/date-fn/) also avoids the classic `new Date('2026-11-16')` bug, where UTC midnight shifts back a day in Western Hemisphere zones.
