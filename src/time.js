@@ -307,7 +307,9 @@ export class Time {
   }
 
   #compare(other) {
-    return Temporal.PlainTime.compare(this.#plain, new Time(other).toTemporal());
+    const rival = other?.[IS_TIME] ? other : new Time(other);
+    return this.hour - rival.hour || this.minute - rival.minute || this.second - rival.second
+      || Temporal.PlainTime.compare(this.#plain, rival.toTemporal());
   }
 
   isBefore(other) {

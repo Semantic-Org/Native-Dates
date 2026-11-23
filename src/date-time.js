@@ -406,8 +406,9 @@ export class DateTime {
 
   // compare exact instants across zones, parsing raw wall-clock inputs in this.zone
   #compare(other) {
-    const rival = other instanceof DateTime ? other : new DateTime(other, this.zone);
-    return Temporal.ZonedDateTime.compare(this.#zoned, rival.toTemporal());
+    const rival = other?.[IS_DATE_TIME] ? other : new DateTime(other, this.zone);
+    return this.epochMilliseconds - rival.epochMilliseconds
+      || Temporal.ZonedDateTime.compare(this.#zoned, rival.toTemporal());
   }
 
   isBefore(other) {

@@ -161,30 +161,28 @@ class Range {
   *******************************/
 
   contains(value) {
-    if (value instanceof Range) {
+    if (value?.[IS_RANGE]) {
       const rival = this.#make(this.kind, value);
-      let holds;
+      if (this.isEmpty() || rival.isEmpty()) {
+        return false;
+      }
       if (this.kind === 'time') {
         const [start, end] = Range.#spanOf(this);
-        holds = Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart >= start && rivalEnd <= end);
+        return Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart >= start && rivalEnd <= end);
       }
-      else {
-        holds = !rival.start.isBefore(this.start) && !rival.end.isAfter(this.end);
-      }
-      return holds && !this.isEmpty() && !rival.isEmpty();
+      return !rival.start.isBefore(this.start) && !rival.end.isAfter(this.end);
     }
     return this.#holds(value);
   }
 
   #holds(value) {
-    const at = Range.#read(this.kind, value, this.start);
     if (this.#wraps()) {
-      return !at.isBefore(this.start) || at.isBefore(this.end);
+      return !this.start.isAfter(value) || this.end.isAfter(value);
     }
-    if (at.isBefore(this.start)) {
+    if (this.start.isAfter(value)) {
       return false;
     }
-    return this.#inclusive() ? !at.isAfter(this.end) : at.isBefore(this.end);
+    return this.#inclusive() ? !this.end.isBefore(value) : this.end.isAfter(value);
   }
 
   #inclusive() {
@@ -196,19 +194,20 @@ class Range {
     if (this.#inclusive()) {
       return !this.start.isAfter(rival.end) && !rival.start.isAfter(this.end);
     }
-    let hits;
+    if (this.isEmpty() || rival.isEmpty()) {
+      return false;
+    }
     if (this.kind === 'time') {
       const [start, end] = Range.#spanOf(this);
-      hits = Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart < end && start < rivalEnd);
+      return Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart < end && start < rivalEnd);
     }
-    else {
-      hits = this.start.isBefore(rival.end) && rival.start.isBefore(this.end);
-    }
-    return hits && !this.isEmpty() && !rival.isEmpty();
+    return this.start.isBefore(rival.end) && rival.start.isBefore(this.end);
   }
 
   #make(kind, start, end) {
-    return new byKind[kind](start, end, { zone: this.start.zone, locale: this.start.locale() });
+    return !end && start?.[IS_RANGE] && start.kind === kind
+      ? start
+      : new byKind[kind](start, end, { zone: this.start.zone, locale: this.start.locale() });
   }
 
   equals(other) {
