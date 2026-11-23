@@ -10,8 +10,6 @@ Reopen: direct GitHub installs (`npx skills add`, `gh skill install`) become wor
 
 ## P2: `@native-dates/core` references `native-dates` skills instead of shipping copies (2026-11-21)
 
-*70% confident*
-
 Shipping duplicate `skills/` in both tarballs breaks projects that depend on both packages: `skills experimental_sync` drops conflicting names altogether, `pnpm` installs each skill twice under `pnpm-<package>-<skill>`, and TanStack Intent lists four skills for every `@native-dates/core` project. Declaring `"skills": ["npm:native-dates"]` in `@native-dates/core` fixes `skills experimental_sync` without duplication, and Intent already discovers skills through the `native-dates` dependency. The tradeoff is that `pnpm` only scans `skills/` in direct dependencies, so pnpm users who install only `@native-dates/core` do not get skills automatically.
 
 Reopen: pnpm users of `@native-dates/core` report missing skills, or pnpm adds support for a `package.json` skills pointer or transitive skill discovery.
