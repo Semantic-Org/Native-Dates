@@ -1,0 +1,35 @@
+---
+import LocaleNotice from '../components/LocaleNotice.astro';
+import DocsChrome from '../layouts/DocsChrome.astro';
+import { changelogData } from '../lib/changelog.js';
+import { DEFAULT_LOCALE, englishIn, t } from '../lib/i18n.js';
+import { inline } from '../lib/markdown/inline.js';
+import { CHANGELOG_URL, REPO_URL } from '../lib/versions.js';
+
+const locale = Astro.currentLocale;
+const translated = locale === DEFAULT_LOCALE;
+const english = translated ? {} : englishIn(locale);
+const { title, lede, html, toc } = changelogData();
+---
+<DocsChrome title={`${title} · native-dates`} description={lede || t(locale, 'changelog.lede')} currentId="changelog" toc={toc}>
+  <main class="doc" id="content" data-pagefind-body {...english}>
+    <span hidden data-pagefind-meta={`title:${title}`}></span>
+    <span hidden data-pagefind-meta={`section:${t(locale, 'version.changelog')}`}></span>
+    <span hidden data-pagefind-meta={`crumb:${t(locale, 'version.changelog')}`}></span>
+
+    <LocaleNotice translated={translated} />
+    <h1>{title}</h1>
+    {lede && <p class="doc-lede" set:html={inline(lede)} />}
+
+    <div class="doc-meta" data-pagefind-ignore>
+      <a class="meta-badge" href={CHANGELOG_URL} target="_blank" rel="noopener">{t(locale, 'changelog.releases')}</a>
+      <a class="meta-badge" href="/changelog.md" target="_blank">CHANGELOG.md</a>
+    </div>
+
+    <Fragment set:html={html} />
+
+    <div class="doc-foot" data-pagefind-ignore>
+      <a href={`${REPO_URL}/blob/main/CHANGELOG.md`} target="_blank" rel="noopener">{t(locale, 'changelog.github')}</a>
+    </div>
+  </main>
+</DocsChrome>

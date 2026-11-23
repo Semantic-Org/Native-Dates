@@ -12,6 +12,7 @@ on:
       - 'src/**'
       - 'packages/**'
       - 'ai/skills/**'
+      - 'CHANGELOG.md'
       - 'tools/size.js'
       - 'package.json'
       - 'package-lock.json'

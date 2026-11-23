@@ -28,6 +28,8 @@ export async function GET({ site }) {
     return lines.length ? `## ${section.label}\n\n${lines.join('\n')}` : '';
   }).filter(Boolean);
 
+  const changelogSection = [`## Releases\n\n- [Changelog](${url('/changelog.md')}): Release notes for native-dates, @native-dates/core, @native-dates/plugins, and @native-dates/polyfill.`];
+
   const body = `# native-dates
 
 > A readable, immutable date and time library built on the browser's Temporal and Intl APIs with zero dependencies. Core includes zoned datetimes, calendar dates, times, durations, year-months, month-days, ranges, formatting, and relative time. Opt-in subpath plugins add city and abbreviation zones, loose parsing, and legacy Date methods.
@@ -36,7 +38,7 @@ Every page below is also served as markdown at its path plus \`.md\`. The full d
     url('/llms-full.txt')
   }
 
-${[...skillSection, ...docSections].join('\n\n')}
+${[...skillSection, ...docSections, ...changelogSection].join('\n\n')}
 `;
   return new Response(body, { headers: { 'content-type': 'text/plain; charset=utf-8' } });
 }

@@ -18,6 +18,10 @@ export const PACKAGES = [
 ];
 
 const SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
+const REPO_URL = 'https://github.com/Semantic-Org/Native-Dates';
+const SHIPPED_PATH_RE = /^(src\/|types\/|bin\/|packages\/|ai\/skills\/)/;
+const CHANGELOG_HEADING_RE = (version) =>
+  new RegExp(`^## v${version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\b|\\s|$)`, 'm');
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const writeJson = (path, value) => writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
@@ -173,6 +177,14 @@ export function checkLockstep(dir = root) {
         findings.push(`package-lock.json: packages['${label}'] version is '${entry.version}', expected '${version}'`);
       }
     }
+  }
+
+  const changelogPath = resolve(dir, 'CHANGELOG.md');
+  if (!existsSync(changelogPath)) {
+    findings.push('CHANGELOG.md: missing file');
+  }
+  else if (parseSemver(version) && !CHANGELOG_HEADING_RE(version).test(readFileSync(changelogPath, 'utf8'))) {
+    findings.push(`CHANGELOG.md: missing '## v${version}' entry (run \`npm run release:notes -- --write\`)`);
   }
 
   return { version, findings };
@@ -349,6 +361,113 @@ export function checkRegistryState({
   return { user, plan, findings };
 }
 
+export function generateNotes({
+  dir = root,
+  version,
+  fromTag,
+  date = new Date().toISOString().slice(0, 10),
+  exec = defaultExec,
+} = {}) {
+  let baseTag = fromTag;
+  if (!baseTag) {
+    const desc = exec('git', ['describe', '--tags', '--abbrev=0'], dir);
+    if (desc.status === 0 && desc.stdout) {
+      baseTag = desc.stdout;
+    }
+  }
+  const range = baseTag ? `${baseTag}..HEAD` : 'HEAD';
+  const log = exec('git', ['log', '--first-parent', range, '--format=%H\t%s'], dir);
+  if (log.status !== 0) {
+    throw new Error(`git log failed: ${log.stderr}`);
+  }
+
+  const sections = {
+    'Breaking Changes': [],
+    Features: [],
+    Performance: [],
+    'Bug Fixes': [],
+    'Agent Skills': [],
+  };
+
+  for (const line of log.stdout ? log.stdout.split('\n') : []) {
+    const tab = line.indexOf('\t');
+    if (tab === -1) { continue; }
+    const sha = line.slice(0, tab);
+    const subject = line.slice(tab + 1);
+    const filesRes = exec('git', ['diff-tree', '--no-commit-id', '--name-only', '-r', sha], dir);
+    if (filesRes.status !== 0) { continue; }
+    const shipped = (filesRes.stdout ? filesRes.stdout.split('\n') : []).filter((f) => SHIPPED_PATH_RE.test(f));
+    if (!shipped.length) { continue; }
+
+    const match = subject.match(/^([A-Za-z/]+):\s+(.+?)(?:\s+\(#(\d+)\))?$/);
+    if (!match) { continue; }
+    const cats = match[1].split('/');
+    const desc = match[2];
+    const pr = match[3] ? ` ([#${match[3]}](${REPO_URL}/pull/${match[3]}))` : '';
+
+    const scopes = [];
+    if (shipped.some((f) => /^(src|types)\//.test(f))) { scopes.push('core'); }
+    if (shipped.some((f) => f.startsWith('packages/plugins/'))) { scopes.push('plugins'); }
+    if (shipped.some((f) => f.startsWith('packages/polyfill/'))) { scopes.push('polyfill'); }
+    if (shipped.some((f) => f.startsWith('bin/'))) { scopes.push('cli'); }
+    if (shipped.some((f) => f.startsWith('ai/skills/')) && !scopes.length) { scopes.push('skills'); }
+    const badge = scopes.length && !(scopes.length === 1 && scopes[0] === 'core')
+      ? `**${scopes.join(', ')}:** `
+      : '';
+    const entry = `- ${badge}${desc}${pr}`;
+
+    if (cats.includes('BREAKING')) { sections['Breaking Changes'].push(entry); }
+    else if (cats.includes('Feat')) { sections.Features.push(entry); }
+    else if (cats.includes('Perf')) { sections.Performance.push(entry); }
+    else if (cats.includes('Bug')) { sections['Bug Fixes'].push(entry); }
+    else if (cats.includes('Docs') && scopes.length === 1 && scopes[0] === 'skills') {
+      sections['Agent Skills'].push(entry);
+    }
+  }
+
+  const body = Object.entries(sections)
+    .filter(([, items]) => items.length > 0)
+    .map(([heading, items]) => `### ${heading}\n\n${items.join('\n')}`)
+    .join('\n\n');
+
+  const markdown = body
+    ? `## v${version} (${date})\n\n${body}\n`
+    : `## v${version} (${date})\n\nMaintenance release.\n`;
+  return { version, fromTag: baseTag ?? null, markdown };
+}
+
+export function prependChangelog(section, { dir = root, version, dryRun = false } = {}) {
+  const path = resolve(dir, 'CHANGELOG.md');
+  const existing = existsSync(path) ? readFileSync(path, 'utf8') : '# Changelog\n\n';
+  if (version && CHANGELOG_HEADING_RE(version).test(existing)) {
+    throw new Error(`CHANGELOG.md already contains an entry for v${version}`);
+  }
+  const cleanSection = `${section.trimEnd()}\n`;
+  const firstRelease = existing.search(/^## v/m);
+  const updated = firstRelease === -1
+    ? `${existing.trimEnd()}\n\n${cleanSection}`
+    : `${existing.slice(0, firstRelease)}${cleanSection}\n${existing.slice(firstRelease)}`;
+  if (!dryRun) { writeFileSync(path, updated); }
+  return updated;
+}
+
+export function extractChangelogSection(version, { dir = root } = {}) {
+  const path = resolve(dir, 'CHANGELOG.md');
+  if (!existsSync(path)) {
+    throw new Error('CHANGELOG.md does not exist');
+  }
+  const content = readFileSync(path, 'utf8');
+  const match = CHANGELOG_HEADING_RE(version).exec(content);
+  if (!match) {
+    throw new Error(`CHANGELOG.md has no '## v${version}' section`);
+  }
+  const start = match.index;
+  const rest = content.slice(start + match[0].length);
+  const next = rest.search(/\n## v/);
+  const slice = next === -1 ? content.slice(start) : content.slice(start, start + match[0].length + next);
+  return `${slice.trim()}\n`;
+}
+
 export function parseArgs(argv) {
   const positional = [];
   const flags = {};
@@ -365,7 +484,7 @@ export function parseArgs(argv) {
     else {
       const key = token.slice(2);
       const next = argv[i + 1];
-      if ((key === 'otp' || key === 'tag') && next && !next.startsWith('--')) {
+      if ((key === 'otp' || key === 'tag' || key === 'from') && next && !next.startsWith('--')) {
         flags[key] = next;
         i++;
       }
@@ -523,7 +642,9 @@ async function runPublish(flags) {
     console.log(`\nPublished all ${toPublish.length} packages at ${version}.`);
     console.log('Next step: create the release tag and GitHub Release:');
     console.log(`  git tag -a v${version} -m "v${version}" && git push origin v${version}`);
-    console.log(`  gh release create v${version} --title "v${version}" --generate-notes`);
+    console.log(
+      `  npm run release:notes -- --extract | gh release create v${version} --title "v${version}" --notes-file -`,
+    );
   }
 }
 
@@ -552,6 +673,30 @@ async function main() {
     return;
   }
 
+  if (command === 'notes') {
+    const { version } = readJson(resolve(root, 'package.json'));
+    if (flags.extract) {
+      process.stdout.write(extractChangelogSection(version, { dir: root }));
+      return;
+    }
+    const { fromTag, markdown } = generateNotes({
+      dir: root,
+      version,
+      fromTag: typeof flags.from === 'string' ? flags.from : undefined,
+    });
+    if (flags.write) {
+      prependChangelog(markdown, { dir: root, version, dryRun: Boolean(flags['dry-run']) });
+      console.log(
+        `${flags['dry-run'] ? '[dry-run] Would prepend' : 'Prepended'} v${version} notes${
+          fromTag ? ` (since ${fromTag})` : ''
+        } into CHANGELOG.md`,
+      );
+      return;
+    }
+    process.stdout.write(markdown);
+    return;
+  }
+
   if (command === 'bump') {
     const [target] = rest;
     if (!target) {
@@ -567,10 +712,14 @@ async function main() {
     }
     if (!dryRun) {
       const verified = checkLockstep(root);
-      if (verified.findings.length) {
-        printFindings('post-bump check', verified.findings);
+      const nonChangelog = verified.findings.filter((f) => !f.startsWith('CHANGELOG.md:'));
+      if (nonChangelog.length) {
+        printFindings('post-bump check', nonChangelog);
         process.exitCode = 1;
+        return;
       }
+      console.log('Next step: generate and review changelog notes:');
+      console.log('  npm run release:notes -- --write');
     }
     return;
   }
@@ -580,9 +729,10 @@ async function main() {
     return;
   }
 
-  console.error('usage: node tools/release.js <check|bump|publish> [options]');
+  console.error('usage: node tools/release.js <check|bump|notes|publish> [options]');
   console.error('  check   [--strict] [--allow-dirty] [--allow-branch] [--offline]');
   console.error('  bump    <patch|minor|major|x.y.z> [--dry-run]');
+  console.error('  notes   [--write] [--extract] [--from=<tag>] [--dry-run]');
   console.error('  publish [--dry-run] [--otp=123456] [--tag=latest] [--resume] [--skip-checks]');
   process.exitCode = 1;
 }

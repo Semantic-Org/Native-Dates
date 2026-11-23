@@ -8,10 +8,13 @@ import {
   checkLockstep,
   checkRegistryState,
   compareSemver,
+  extractChangelogSection,
+  generateNotes,
   nextVersion,
   PACKAGES,
   parseArgs,
   parseSemver,
+  prependChangelog,
 } from './release.js';
 import { marketplaceFrom } from './skills.js';
 
@@ -64,6 +67,7 @@ const makeRepo = (version = '1.0.0') => {
       'packages/polyfill': { name: '@native-dates/polyfill', version },
     },
   });
+  writeFileSync(resolve(dir, 'CHANGELOG.md'), `# Changelog\n\n## v${version} (2026-11-23)\n\nInitial release.\n`);
   return dir;
 };
 
@@ -129,6 +133,7 @@ describe('checkLockstep', () => {
       version: '0.9.0',
       packages: { '': { name: 'native-dates', version: '0.9.0' } },
     });
+    writeFileSync(resolve(dir, 'CHANGELOG.md'), '# Changelog\n\n## v0.9.0 (2026-11-01)\n\nOld.\n');
 
     const { findings } = checkLockstep(dir);
     expect(findings.some((f) => f.includes('packages/core/package.json: version'))).toBe(true);
@@ -138,6 +143,7 @@ describe('checkLockstep', () => {
     expect(findings.some((f) => f.includes('marketplace.json'))).toBe(true);
     expect(findings.some((f) => f.includes('docs/package.json'))).toBe(true);
     expect(findings.some((f) => f.includes('package-lock.json: top-level version'))).toBe(true);
+    expect(findings.some((f) => f.includes("CHANGELOG.md: missing '## v1.0.0'"))).toBe(true);
   });
 });
 
@@ -259,5 +265,55 @@ describe('parseArgs', () => {
       rest: [],
       flags: { 'dry-run': true, otp: '123456', tag: 'next' },
     });
+  });
+});
+
+describe('changelog notes', () => {
+  it('filters to shipped package paths, scopes non-core changes, and links PRs', () => {
+    const commits = [
+      'aaa\tPerf: Speed Up ISO Parsing (#84)',
+      'bbb\tBug: Loose Parsing of Locale Dates (#75)',
+      'ccc\tFeat: Add Homepage Globe (#55)',
+      'ddd\tDocs: Tighten Core Skill (#82)',
+    ].join('\n');
+    const filesBySha = {
+      aaa: 'src/date-time.js\nsrc/helpers/parse.js',
+      bbb: 'packages/plugins/src/loose.js\ndocs/src/content/docs/plugins/loose.md',
+      ccc: 'docs/src/views/Home.astro',
+      ddd: 'ai/skills/native-dates.md',
+    };
+    const fakeExec = (cmd, args) => {
+      if (args[0] === 'describe') { return { status: 0, stdout: 'v1.0.0', stderr: '' }; }
+      if (args[0] === 'log') { return { status: 0, stdout: commits, stderr: '' }; }
+      if (args[0] === 'diff-tree') { return { status: 0, stdout: filesBySha[args.at(-1)] ?? '', stderr: '' }; }
+      return { status: 0, stdout: '', stderr: '' };
+    };
+    const { fromTag, markdown } = generateNotes({ version: '1.0.1', date: '2026-11-30', exec: fakeExec });
+    expect(fromTag).toBe('v1.0.0');
+    expect(markdown).toContain('## v1.0.1 (2026-11-30)');
+    expect(markdown).toContain(
+      '### Performance\n\n- Speed Up ISO Parsing ([#84](https://github.com/Semantic-Org/Native-Dates/pull/84))',
+    );
+    expect(markdown).toContain(
+      '### Bug Fixes\n\n- **plugins:** Loose Parsing of Locale Dates ([#75](https://github.com/Semantic-Org/Native-Dates/pull/75))',
+    );
+    expect(markdown).toContain(
+      '### Agent Skills\n\n- **skills:** Tighten Core Skill ([#82](https://github.com/Semantic-Org/Native-Dates/pull/82))',
+    );
+    expect(markdown).not.toContain('Homepage Globe');
+  });
+
+  it('prepends new sections above prior releases, refuses duplicates, and extracts sections', () => {
+    const dir = makeRepo('1.0.0');
+    const section = '## v1.0.1 (2026-11-30)\n\n### Bug Fixes\n\n- Fix DST edge case\n';
+    prependChangelog(section, { dir, version: '1.0.1' });
+
+    const content = readFileSync(resolve(dir, 'CHANGELOG.md'), 'utf8');
+    expect(content.indexOf('## v1.0.1')).toBeLessThan(content.indexOf('## v1.0.0'));
+    expect(() => prependChangelog(section, { dir, version: '1.0.1' })).toThrow(/already contains/);
+
+    const extracted = extractChangelogSection('1.0.1', { dir });
+    expect(extracted).toBe('## v1.0.1 (2026-11-30)\n\n### Bug Fixes\n\n- Fix DST edge case\n');
+    expect(extractChangelogSection('1.0.0', { dir })).toContain('Initial release.');
   });
 });

@@ -16,7 +16,7 @@ const ids = [
 ];
 const nav = navFor(ids, currentId, { code: locale, titles: await titlesIn(locale) });
 const sectionKey = currentId.split('/')[0];
-const section = nav.find((s) => s.key === sectionKey);
+const section = nav.find((s) => s.key === sectionKey) ?? nav[0];
 ---
 <Base title={title} description={description} writtenIn={writtenIn} translatedIn={translatedIn} bodyAttrs={{ 'data-section': sectionKey }}>
   <DocsTopbar nav={nav} sectionKey={sectionKey} />
