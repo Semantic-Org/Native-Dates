@@ -1,7 +1,7 @@
 ---
 title: Installation
 lede: Install the core package, add a Temporal polyfill for older runtimes, and configure defaults.
-updated: 2026-11-16
+updated: 2026-11-23
 ---
 
 Native Dates ships as a small ES module package with TypeScript types included and zero runtime dependencies.
@@ -27,6 +27,16 @@ standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
 const billing = yearMonth('2026-11');
 const birthday = monthDay('10/17');
 ```
+
+## Setup for coding agents
+
+If you work with a coding agent, run the interactive setup command to install the package and link its agent skills:
+
+```bash
+npx native-dates@latest
+```
+
+The package ships skills covering core usage and plugins, also served at [`/skills/native-dates.md`](/skills/native-dates.md) and [`/skills/native-dates-plugins.md`](/skills/native-dates-plugins.md).
 
 ## Runtime support and polyfilling
 

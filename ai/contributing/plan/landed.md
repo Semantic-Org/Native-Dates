@@ -4,6 +4,8 @@ Completed roadmap items, newest first. When a planned feature in [`roadmap.md`](
 
 | Date | Milestone | Summary | Brotli delta |
 |---|---|---|---|
+| 2026-11-23 | Agent install | Interactive `npx native-dates` setup CLI in `bin/`, pack-time `skills/` and plugin manifests, and `/.well-known/agent-skills/index.json` | 0 B |
+| 2026-11-23 | Benchmark suite | Parallel headless-Chrome runner (`tools/bench.js`), 27-operation suite in `bench/`, and PR reporter (`tools/ci/bench/`) | 0 B |
 | 2026-11-20 | Agent skills | Skills in [`ai/skills/`](../../skills/native-dates.md) published with the npm package and served at `/skills/<name>.md`, `/llms.txt`, and `/llms-full.txt` | 0 B |
 | 2026-11-20 | North star | Project goals and design principles in [`north-star.md`](../north-star.md) | 0 B |
 | 2026-11-19 | Test suite | Unit and Chromium Playwright test suites across core, plugins, and polyfill | 0 B |

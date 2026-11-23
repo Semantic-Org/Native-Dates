@@ -1,6 +1,6 @@
 name: Test
 
-# runs unit, DOM, and browser tests, checks bundle sizes and formatting, and builds docs
+# runs unit, DOM, and browser tests, checks types, errors, comments, bundle sizes, and formatting, and builds docs
 on:
   workflow_dispatch:
   pull_request:
@@ -35,6 +35,9 @@ jobs:
 
       - name: Run tests and the size report
         run: npm run check
+
+      - name: Check types, errors, and comments
+        run: npm run types && npm run errors && npm run comments
 
       - name: Check formatting
         run: npx dprint check

@@ -1,6 +1,6 @@
 # Architecture: Core, Plugins, Polyfill, and Skills
 
-> status: active (2026-11-21). Core (`native-dates`), `@native-dates/core`, `@native-dates/plugins`, `@native-dates/polyfill`, `ai/skills/`, and `docs/` are live. Automated browser benchmarks in `bench/` and documentation translations are tracked in [`plan/roadmap.md`](../plan/roadmap.md).
+> status: active (2026-11-23). Core (`native-dates`), `@native-dates/core`, `@native-dates/plugins`, `@native-dates/polyfill`, `ai/skills/`, `bench/`, and `docs/` are live. Documentation translations are tracked in [`plan/roadmap.md`](../plan/roadmap.md).
 
 ## Workspace Packages and Directories
 
@@ -14,8 +14,9 @@
 | `packages/core/` | `@native-dates/core` | Thin scoped re-export of `native-dates`, with a `"skills"` field pointing agent tooling at the skills `native-dates` ships and a `bin.js` that hands `npx native-dates` to the same setup command |
 | `packages/plugins/` | `@native-dates/plugins` | Opt-in side-effect plugins (`zones`, `loose`, `legacy-date`) in `src/`, with module-augmentation declarations in `types/` |
 | `packages/polyfill/` | `@native-dates/polyfill` | Conditional `temporal-polyfill` loader that dynamically imports the polyfill only when `globalThis.Temporal` is absent |
+| `bench/` | private | Tachometer browser benchmark suites measuring parsing, arithmetic, formatting, calendar, duration, range, plugin, and startup workloads |
 | `docs/` | private | Astro documentation site (`nativedates.dev`, see [`docs/README.md`](../../../docs/README.md)) |
-| `tools/` | private | Static gates (`gates/{ai,budget,prose,errors,comments}.js`), CI bundle size reporter (`ci/bundle/`), git hooks (`hooks/`), `size.js`, and the skill packer `skills.js` |
+| `tools/` | private | Static gates (`gates/{ai,budget,prose,errors,comments}.js`), CI reporters (`ci/bundle/`, `ci/bench/`), git hooks (`hooks/`), `size.js`, `bench.js`, and the skill packer `skills.js` |
 
 How `src/` is laid out and how a class is structured follow [`folders-and-filenames.md`](../standards/legibility/folders-and-filenames.md), [`code-structures.md`](../standards/legibility/code-structures.md), and [`coding-standards.md`](../standards/coding-standards.md).
 
