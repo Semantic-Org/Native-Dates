@@ -1,5 +1,5 @@
 import '@native-dates/plugins/loose';
-import { date, datetime } from 'native-dates';
+import { date, datetime, time } from 'native-dates';
 import { describe, expect, it } from 'vitest';
 
 // language tags asked of Intl, kept to the ones this runtime carries data for
@@ -23,16 +23,19 @@ const moments = [
 // how much of a moment each time style writes: the date, the minutes, or the seconds
 const written = { none: 10, short: 16, medium: 19 };
 
-// a two-digit year drops its century, and a clock is hours with two-digit minutes and seconds joined by ':', '.', or 'h'
+// a two-digit year drops its century, a clock is hours with two-digit minutes and seconds joined by ':', '.', or 'h',
+// and a day period stands next to its clock with no word between them
 const isRoundTrip = (parts) => {
   const types = parts.map((part) => part.type);
-  const digitsIn = (part) => part.value.match(/\p{Nd}/gu).length;
-  const isJoined = (type, joiners) => {
-    const at = types.indexOf(type);
-    return at < 0 || (digitsIn(parts[at]) === 2 && joiners.includes(parts[at - 1].value.trim()));
-  };
-  return digitsIn(parts[types.indexOf('year')]) > 3 && isJoined('minute', [':', '.', 'h'])
-    && isJoined('second', [':', '.']);
+  const digitsIn = (type) => parts[types.indexOf(type)].value.match(/\p{Nd}/gu).length;
+  const isJoined = (type, joiners) =>
+    !types.includes(type) || (digitsIn(type) === 2 && joiners.includes(parts[types.indexOf(type) - 1].value.trim()));
+  const period = types.indexOf('dayPeriod');
+  const gap = parts[period + (period < types.indexOf('hour') ? 1 : -1)];
+  return (!types.includes('year') || digitsIn('year') > 3)
+    && isJoined('minute', [':', '.', 'h'])
+    && isJoined('second', [':', '.'])
+    && (period < 0 || !/\p{L}/u.test(gap.value));
 };
 
 describe('{ loose: true } reading what Intl prints in each locale', () => {
@@ -58,6 +61,29 @@ describe('{ loose: true } reading what Intl prints in each locale', () => {
             misread.push(`${text} -> ${read}`);
           }
         }
+      }
+    }
+    expect(misread).toEqual([]);
+  });
+
+  it.each(locales)('reads %s clocks that name a part of the day for every hour', (locale) => {
+    const format = new Intl.DateTimeFormat(locale, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      dayPeriod: 'short',
+      timeZone: 'UTC',
+    });
+    const misread = [];
+    for (let hour = 0; hour < 24; hour++) {
+      const epoch = Date.UTC(2026, 10, 16, hour, 30);
+      if (!isRoundTrip(format.formatToParts(epoch))) {
+        continue;
+      }
+      const text = format.format(epoch);
+      const read = time(text, { loose: true, locale });
+      if (read?.toString().slice(0, 5) !== `${String(hour).padStart(2, '0')}:30`) {
+        misread.push(`${text} -> ${read}`);
       }
     }
     expect(misread).toEqual([]);

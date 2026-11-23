@@ -59,30 +59,38 @@ const localeData = cached((locale) => {
       return before.match(/[\p{L}\p{M}]*$/u)[0] + parts[at].value + after.match(/^[\p{L}\p{M}]*/u)[0];
     });
   });
-  // every day-period word printed across a day, on a 12-hour clock and on the locale's own ('오후', '凌晨', '晚上')
+  // every day-period word printed across a day with the hours it covers: on the locale's own clock, on a
+  // 12-hour clock, and as its words for a part of the day ('오후', '凌晨', 'in the evening')
   const periods = [];
-  let hasDottedClock = false;
-  each([{ timeStyle: 'short' }, { hour: 'numeric', hour12: true }], (options) => {
+  const twelveHour = { hour: 'numeric', minute: '2-digit', hour12: true };
+  each([{ timeStyle: 'short' }, twelveHour, { ...twelveHour, dayPeriod: 'short' }], (options) => {
     const format = formatOf(options);
     for (let hour = 0; hour < 24; hour++) {
-      const parts = format.formatToParts(hour * 36e5);
-      const types = parts.map((part) => part.type);
-      const at = types.indexOf('dayPeriod');
-      const name = at >= 0 && wordsOf(parts[at].value, locale);
-      hasDottedClock ||= parts[types.indexOf('hour') + 1]?.value === '.';
-      if (name && !periods.some((period) => period.name === name)) {
-        periods.push({ name, isAfternoon: hour > 11, isFirst: at < types.indexOf('hour') });
+      // half past, since the stroke of noon and of midnight can carry a word of their own
+      const word = format.formatToParts(hour * 36e5 + 18e5).find((part) => part.type === 'dayPeriod');
+      const name = word && wordsOf(normalize(word.value), locale);
+      const period = periods.find((known) => known.name === name);
+      if (period) {
+        period.hours.push(hour);
+      }
+      else if (name) {
+        periods.push({ name, hours: [hour], isPart: !!options.dayPeriod });
       }
     }
   });
+  // the literals a locale writes around its clock: Finnish joins hours and minutes with a dot ('14.30'), and
+  // Welsh puts 'am' (at) between a date and its clock
+  const clock = partsOf({ dateStyle: 'long', timeStyle: 'short' });
+  const hourAt = clock.findIndex((part) => part.type === 'hour');
   return {
     englishMonths: monthsFrom(english, locale),
     localizedMonths: monthsFrom(localized, locale, written),
     weekdays: [...localized.dddd, ...localized.ddd, ...english.dddd, ...english.ddd].map((name) =>
       wordsOf(name, locale)
     ),
-    periods,
-    hasDottedClock,
+    periods: periods.sort((first, second) => second.name.length - first.name.length),
+    hasDottedClock: clock[hourAt + 1].value === '.',
+    connector: wordsOf(clock.findLast((part, at) => at < hourAt && part.type !== 'dayPeriod')?.value ?? '', locale),
     order: partsOf({ dateStyle: 'short' })
       .map((part) => part.type)
       .filter((type) => type === 'year' || type === 'month' || type === 'day'),
@@ -252,20 +260,25 @@ const parseWithEngine = (text, settings) => {
   return unzoned === text ? read.toPlainDateTime() : Temporal.Instant.fromEpochMilliseconds(epoch);
 };
 
-// only a whole word next to the clock counts, with no number between them. German 'am 16.11.2026 14:30' keeps
-// its preposition, and Arabic 'اليوم' (today) is not read as its last letter 'م' (PM). A word before the clock
-// counts where the locale writes it there or the hour is 1 to 11, so Welsh 'am 14:30' (at 14:30) is not AM
-const isAfternoon = (before, after, locale, hour) => {
+const morning = Array.from({ length: 12 }, (_, hour) => hour);
+const afternoon = morning.map((hour) => hour + 12);
+
+// the hours a day-period word beside the clock covers. Only a whole word next to the clock counts, with no number
+// between them: German 'am 16.11.2026 14:30' keeps its preposition, and Arabic 'اليوم' (today) is not read as its
+// last letter 'م' (PM). The word a locale writes between a date and its clock is not a period (Welsh 'am 14:30'),
+// and a part of the day only sets a 12-hour clock ('14:30 nachmittags' stays 14:30)
+const periodHours = (before, after, locale, hour) => {
   const english = meridiem.exec(after)?.[1];
   if (english) {
-    return english === 'p';
+    return english === 'p' ? afternoon : morning;
   }
+  const { periods, connector } = localeData(locale);
   const wordsBefore = wordsOf(before.split(/\d/).pop(), locale);
   const wordsAfter = wordsOf(after.split(/\d/)[0], locale);
-  const { periods } = localeData(locale);
-  const period = periods.find(({ name }) => wordsAfter.startsWith(name))
-    ?? periods.find(({ name, isFirst }) => (isFirst || (hour > 0 && hour < 12)) && wordsBefore.endsWith(name));
-  return period?.isAfternoon;
+  const known = periods.filter(({ isPart }) => !isPart || (hour > 0 && hour < 13));
+  const period = known.find(({ name }) => wordsAfter.startsWith(name))
+    ?? known.find(({ name }) => wordsBefore.endsWith(name) && !connector.endsWith(name));
+  return period?.hours;
 };
 
 const parseWithLocale = (text, settings) => {
@@ -292,12 +305,13 @@ const parseWithLocale = (text, settings) => {
     }
     const [, hourText, minute, second = '00', fraction = '0'] = clock;
     let hour = +hourText;
-    const afternoon = isAfternoon(before, after, locale, hour);
-    if (afternoon !== undefined) {
+    const hours = periodHours(before, after, locale, hour);
+    if (hours) {
       if (hour < 1 || hour > 12) {
         return undefined;
       }
-      hour = (hour % 12) + (afternoon ? 12 : 0);
+      // Korean '밤' (night) covers both sides of midnight, so the clock picks which of its hours is meant
+      hour = hours.find((covered) => covered % 12 === hour % 12) ?? (hour % 12) + (hours[0] > 11 ? 12 : 0);
     }
     return date.toPlainDateTime(`${pad(hour)}:${minute}:${second}.${fraction}`);
   }
