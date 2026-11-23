@@ -50,7 +50,7 @@ Place a time of day onto a calendar date, or replace individual clock fields.
 t.on(date, zone?): DateTime
 ```
 
-Combines this time of day with a calendar date in a time zone and returns a [`DateTime`](/api/date-time/). Mirrors calling [`at()`](/api/calendar-date/#at) on a `CalendarDate`.
+Combines this time of day with a calendar date in a time zone and returns a [`DateTime`](/api/date-time/). Mirrors calling [`at()`](/api/calendar-date/#at) on a [`CalendarDate`](/api/calendar-date/).
 
 **Parameters**
 
@@ -120,7 +120,7 @@ reminder.set({ hour: 17, minute: 0 }).toString(); // '17:00:00'
 Add or subtract clock units, snap to unit boundaries, or round to a step increment. Calendar units such as days and weeks throw a `RangeError` because a time of day has no date.
 
 :::note[Wrapping around midnight]
-Clock arithmetic wraps around the 24-hour day like a clock face, so adding 2 hours to 23:00 returns 01:00. Combine the time with a date using `on()` first when crossing midnight should advance the calendar day.
+Clock arithmetic wraps around the 24-hour day like a clock face, so adding 2 hours to 23:00 returns 01:00. Combine the time with a date using [`on()`](#on) first when crossing midnight should advance the calendar day.
 :::
 
 :::entry
@@ -543,7 +543,7 @@ t.for(length): TimeRange
 t.for(count, unit): TimeRange
 ```
 
-Creates a half-open [`TimeRange`](/api/ranges/) from this time until the target time or elapsed duration. An end earlier than the start wraps overnight across midnight. Use `for()` to pass an explicit duration length (refusing endpoints and unitless numbers).
+Creates a half-open [`TimeRange`](/api/ranges/#timerange) from this time until the target time or elapsed duration. An end earlier than the start wraps overnight across midnight. Use `for()` to pass an explicit duration length (refusing endpoints and unitless numbers).
 
 **Parameters**
 
@@ -622,7 +622,7 @@ t.locale(): Locale | undefined
 t.locale(tag): Time
 ```
 
-Reads the locale carried on this time, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+Reads the locale carried on this time, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and [`lang()`](#lang) works as an alias.
 
 **Parameters**
 

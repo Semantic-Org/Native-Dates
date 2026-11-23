@@ -126,7 +126,7 @@ Numeric strings without a year are never handed to the native `Date` parser. Tha
 
 | Input | Example | How it reads |
 |---|---|---|
-| ISO month-day string | `'10-17'`, `'--10-17'` | Reads two-digit month and day month-first under both `monthDay()` and `dayMonth()`. |
+| ISO month-day string | `'10-17'`, `'--10-17'` | Reads two-digit month and day month-first under both [`monthDay()`](#monthday) and [`dayMonth()`](#daymonth). |
 | Numeric pair string | `'10/17'`, `'17.10'`, `'5-6'` | Reads across `/`, `.`, or `-`, month-first in `monthDay()` and day-first in `dayMonth()`. |
 | Two numbers | `monthDay(10, 17)`, `dayMonth(17, 10)` | Takes whole numbers in month-then-day or day-then-month order. |
 | Fields object | `{ month: 10, day: 17 }` | Reads 1-indexed fields and rejects impossible pairs such as April 31. |

@@ -39,15 +39,15 @@ Properties read the ISO year, month, and surrounding calendar bounds.
 | `year`, `month` | `number` | Calendar year and 1-indexed month from 1 through 12. |
 | `quarter` | `number` | Calendar quarter from 1 through 4. |
 | `daysInMonth`, `daysInYear` | `number` | Days in this month from 28 to 31, and days in this year as 365 or 366. |
-| `start`, `end` | `CalendarDate` | First and last calendar day of this month. |
-| `YearMonth.century` | `number` | Base century added to two-digit years in `monthYear()`, defaulting to `2000`. |
+| `start`, `end` | [`CalendarDate`](/api/calendar-date/) | First and last calendar day of this month. |
+| `YearMonth.century` | `number` | Base century added to two-digit years in [`monthYear()`](/api/year-month-fn/#monthyear), defaulting to `2000`. |
 
 ## Arithmetic and fields
 
 Step forward or backward by months, quarters, or years, replace fields, or pick a specific day of the month.
 
 :::note[Month and year units only]
-Units smaller than a month throw a `RangeError` because a year-month carries no day. Call `on()` to pick a day first when you need week or day math.
+Units smaller than a month throw a `RangeError` because a year-month carries no day. Call [`on()`](#on) to pick a day first when you need week or day math.
 :::
 
 :::entry
@@ -449,7 +449,7 @@ ym.locale(): Locale | undefined
 ym.locale(tag): YearMonth
 ```
 
-Reads the locale carried on this month, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+Reads the locale carried on this month, or returns a copy formatted in another locale across text previews, presets, and every value derived from it. Passing an empty tag clears the carried locale, and [`lang()`](#lang) works as an alias.
 
 **Parameters**
 
@@ -536,5 +536,5 @@ Returns the underlying `Temporal.PlainYearMonth` instance.
 ym.valueOf(): never
 ```
 
-Throws a `RangeError` so numeric operators never coerce a year-month to a number. Narrow unknown values with `isYearMonth()` or [`kindOf()`](/api/kind-of/).
+Throws a `RangeError` so numeric operators never coerce a year-month to a number. Narrow unknown values with [`isYearMonth()`](/api/kind-of/#isyearmonth) or [`kindOf()`](/api/kind-of/).
 :::

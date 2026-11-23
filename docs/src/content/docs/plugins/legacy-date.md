@@ -61,7 +61,7 @@ Legacy string methods match native output while defaulting locale formatting to 
 | Method | Return | Behavior on DateTime |
 |---|---|---|
 | `toISOString()` | `string` | UTC timestamp at millisecond precision, even when the instance carries finer sub-millisecond digits. |
-| `toLocaleString(locales?, options?)` | `string` | Date and time formatted in `dt.zone` and `dt.locale()` unless overridden. |
+| `toLocaleString(locales?, options?)` | `string` | Date and time formatted in `dt.zone` and [`dt.locale()`](/api/date-time/#locale) unless overridden. |
 | `toLocaleDateString(locales?, options?)` | `string` | Date portion formatted in `dt.zone` and `dt.locale()` unless overridden. |
 | `toLocaleTimeString(locales?, options?)` | `string` | Time portion formatted in `dt.zone` and `dt.locale()` unless overridden. |
 
@@ -80,9 +80,9 @@ Instances are immutable, so every mutating setter throws an error and directs ca
 
 | Group | Blocked methods | Immutable replacement |
 |---|---|---|
-| Epoch | `setTime()` | Pass epoch milliseconds to `datetime()`. |
-| Local fields | `setFullYear()`, `setMonth()`, `setDate()`, `setHours()`, `setMinutes()`, `setSeconds()`, `setMilliseconds()` | Replace fields in `dt.zone` with `dt.set()`. |
-| UTC fields | `setUTCFullYear()`, `setUTCMonth()`, `setUTCDate()`, `setUTCHours()`, `setUTCMinutes()`, `setUTCSeconds()`, `setUTCMilliseconds()` | Switch to UTC first with `dt.in('UTC').set()`. |
+| Epoch | `setTime()` | Pass epoch milliseconds to [`datetime()`](/api/datetime-fn/). |
+| Local fields | `setFullYear()`, `setMonth()`, `setDate()`, `setHours()`, `setMinutes()`, `setSeconds()`, `setMilliseconds()` | Replace fields in `dt.zone` with [`dt.set()`](/api/date-time/#set). |
+| UTC fields | `setUTCFullYear()`, `setUTCMonth()`, `setUTCDate()`, `setUTCHours()`, `setUTCMinutes()`, `setUTCSeconds()`, `setUTCMilliseconds()` | Switch to UTC first with [`dt.in('UTC').set()`](/api/date-time/#in). |
 
 ```js
 const reminder = datetime('2026-09-06T14:30Z');

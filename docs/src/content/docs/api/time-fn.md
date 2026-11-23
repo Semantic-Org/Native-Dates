@@ -99,7 +99,7 @@ Twelve-hour strings accept hours from 1 through 12 followed by AM or PM. Midnigh
 | ISO instant string | `'2026-11-16T17:30:00Z'` | Reads the local clock of that moment in the given zone or configured default. |
 | Clock numbers | `time(9)`, `time(9, 30)`, `time(17, 30, 15)` | Takes whole numbers for hour, optional minute, and optional second. |
 | Fields object | `{ hour: 9, minute: 30, millisecond: 250 }` | Reads singular or plural clock fields and rejects out-of-range numbers. |
-| DateTime or Temporal | `time(dt, 'Asia/Tokyo')`, `Temporal.PlainTime` | Extracts the time of day, shifting instants into the given zone when provided. |
+| [DateTime](/api/date-time/) or Temporal | `time(dt, 'Asia/Tokyo')`, `Temporal.PlainTime` | Extracts the time of day, shifting instants into the given zone when provided. |
 | JavaScript Date | `time(jsDate, 'America/New_York')` | Reads the clock time of that instant in the given zone or configured default. |
 
 :::tip[Reading the current time of day]
