@@ -1,6 +1,6 @@
 # Changelog
 
-Note: `native-dates`, `@native-dates/core`, `@native-dates/plugins`, and `@native-dates/polyfill` are published in lockstep as the same version.
+Note: To simplify versioning all subpackages like the polyfill and plugins are published in lockstep with `native-dates`.
 
 ## v1.0.0 (2026-11-23)
 
