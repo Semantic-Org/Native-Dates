@@ -7,11 +7,12 @@ import {
   readdirSync,
   readFileSync,
   realpathSync,
+  rmSync,
   symlinkSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { delimiter, dirname, join, relative, sep } from 'node:path';
+import { delimiter, dirname, join, relative, resolve, sep } from 'node:path';
 
 const realPath = (path) => {
   try {
@@ -377,18 +378,26 @@ export class Project {
   }
 
   // links to the installed copy, and copies where there is none to link to or the system refuses links
-  // a stale copy is written over and never removed, so a file someone added beside the skill stays
+  // a file someone added beside a stale copy is never removed
   placeSkill({ folder, skill }) {
     const path = join(this.root, folder, skill);
     const source = this.skillSource(skill);
-    if (this.skillState(folder, skill) === 'broken') { unlinkSync(path); }
+    const state = this.skillState(folder, skill);
+    if (state === 'broken') { unlinkSync(path); }
+    // a stale copy holding nothing but the skill gives way to a link, which follows the installed copy
+    // from then on. one with a file beside it is written over in place
+    if (state === 'stale' && source && readdirSync(path).join() === 'SKILL.md') { rmSync(path, { recursive: true }); }
     mkdirSync(dirname(path), { recursive: true });
     if (source) {
       // the way back to the project is measured from where the folder really is, since a skills folder
-      // that is itself a link somewhere else would send a path measured from its name to nowhere
+      // that is itself a link somewhere else would send a path measured from its name to nowhere.
+      // Windows resolves a junction from the folder's name whatever it is given, so there the whole path is named
       const [parent, root] = [realPath(dirname(path)), realPath(this.root)];
+      const target = process.platform === 'win32'
+        ? resolve(root, source)
+        : `${relative(parent, root) || '.'}/${source}`;
       try {
-        symlinkSync(`${relative(parent, root) || '.'}/${source}`, path, 'junction');
+        symlinkSync(target, path, 'junction');
         return 'linked';
       }
       catch {
@@ -433,14 +442,15 @@ export class Project {
     return separate ? ['AGENTS.md', 'CLAUDE.md'] : ['AGENTS.md'];
   }
 
-  // the entry skill at a path that exists: the skills folder a file's note already names while that still
-  // holds it, so a note does not change when another folder is filled later, else the first folder holding
-  // it, else the installed package's own copy
+  // the entry skill at a path that exists: the place a file's note already names while that still holds
+  // it, so a note does not change when another folder is filled later, else the first skills folder
+  // holding it, else the installed package's own copy
   skillPath(content = '') {
+    const installed = `${this.installPath ?? `node_modules/${this.name}`}/skills/${this.name}/SKILL.md`;
+    if (content.includes(installed) && existsSync(`${this.root}/${installed}`)) { return installed; }
     const ready = Project.skillFolders.filter((folder) => this.skillState(folder, this.name) === 'ready');
     const folder = ready.find((folder) => content.includes(`${folder}/${this.name}/SKILL.md`)) ?? ready[0];
-    const home = folder ?? `${this.installPath ?? `node_modules/${this.name}`}/skills`;
-    return `${home}/${this.name}/SKILL.md`;
+    return folder ? `${folder}/${this.name}/SKILL.md` : installed;
   }
 
   // the note for a file, given what the file holds now

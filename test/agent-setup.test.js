@@ -736,6 +736,29 @@ describe('npx native-dates', () => {
     expect(existsSync(join(dir, found, 'skills/native-dates/SKILL.md'))).toBe(true);
   });
 
+  it('replaces its own stale copy with a link once there is an installed copy to follow', () => {
+    const dir = project();
+    setup(dir, '--yes', '--no-install');
+    const folder = join(dir, '.agents/skills/native-dates');
+    expect(lstatSync(folder).isSymbolicLink()).toBe(false);
+    const copied = join(folder, 'SKILL.md');
+    writeFileSync(copied, readFileSync(copied, 'utf8').replace(`version: "${version}"`, 'version: "0.0.1"'));
+    installed(dir, version);
+    expect(setup(dir, '--yes').status).toBe(0);
+    expect(lstatSync(folder).isSymbolicLink()).toBe(true);
+  });
+
+  it('is set up after one run when a folder is filled in a project whose note names the installed copy', () => {
+    const dir = project();
+    setupWith({ agents: ['claude'] }, dir, '--yes', '--global');
+    const note = readFileSync(join(dir, 'AGENTS.md'), 'utf8');
+    expect(note).toContain('node_modules/native-dates/skills/native-dates/SKILL.md');
+    expect(setupWith({ agents: ['claude'] }, dir, '--yes').status).toBe(0);
+    expect(existsSync(join(dir, '.claude/skills/native-dates/SKILL.md'))).toBe(true);
+    expect(setupWith({ agents: ['claude'] }, dir)).toMatchObject({ status: 0, calls: '' });
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf8')).toBe(note);
+  });
+
   it('refuses outside a project and on an unknown option without writing', () => {
     const empty = mkdtempSync(join(scratch, 'empty-'));
     expect(setup(empty, '--yes').status).toBe(1);
