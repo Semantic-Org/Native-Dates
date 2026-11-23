@@ -385,14 +385,12 @@ export class CalendarDate {
   *******************************/
 
   until(other, name) {
-    const end = other instanceof CalendarDate ? other : new CalendarDate(other);
-    // Date.UTC covers years 100..275760 without two-digit 1900 mapping or Temporal Duration allocation
-    if (name !== undefined && unit(name) === 'day' && this.year > 99 && end.year > 99) {
-      const utc = (d) => Date.UTC(d.year, d.month - 1, d.day);
-      return (utc(end) - utc(this)) / 864e5;
-    }
-    const span = anchored(this.#plain.until(end.toTemporal(), { largestUnit: 'day' }), this.#plain, this.#locale);
-    return name === undefined ? span : span.total(name);
+    const raw = this.#plain.until((other?.[IS_CALENDAR_DATE] ? other : new CalendarDate(other)).toTemporal());
+    return name === undefined
+      ? anchored(raw, this.#plain, this.#locale)
+      : unit(name) === 'day'
+      ? raw.days
+      : anchored(raw, this.#plain, this.#locale).total(name);
   }
 
   since(other, name) {
