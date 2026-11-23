@@ -1,4 +1,4 @@
-// runs `npx native-dates` as a person would meet it, without publishing: packs this checkout, serves the tarballs
+// runs `npx native-dates@latest` as a person would meet it, without publishing: packs this checkout, serves the tarballs
 // from a registry on loopback, and starts npx in a throwaway project with an empty npm cache
 //   npm run setup:demo              # a new empty project in the temp folder
 //   npm run setup:demo -- --yes     # anything after -- goes to the command
@@ -82,9 +82,10 @@ server.listen(0, '127.0.0.1', () => {
     writeFileSync(join(project, 'package.json'), '{\n  "name": "demo-app",\n  "private": true\n}\n');
   }
   // an earlier install: this checkout's package under another version, without its skills or bin for one that predates them
-  // the newest command is then asked for by name, since npx would otherwise run the copy already in the project
+  // the newest command is asked for by name, as the homepage line does, since npx would otherwise run a copy
+  // already in the project
   const state = process.env.DEMO_DIR ? undefined : process.env.DEMO_INSTALLED;
-  const command = state ? 'native-dates@latest' : 'native-dates';
+  const command = 'native-dates@latest';
   if (state) {
     const { file, manifest } = tarballs.find((tarball) => tarball.manifest.name === 'native-dates');
     const [major, minor, patch] = manifest.version.split('.').map(Number);

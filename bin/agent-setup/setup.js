@@ -41,7 +41,8 @@ export class Setup {
     scopeQuestion: 'Install skills where?',
     scopeProject: 'This project',
     scopeMachine: 'Globally',
-    globalUnavailable: 'no supported agent found for `--global` ({agents}). Run `npx {name}` to set up this project',
+    globalUnavailable:
+      'no supported agent found for `--global` ({agents}). Run `npx {name}@latest` to set up this project',
 
     install: '`{command}`',
     plugin: '`{command}`',
@@ -79,22 +80,22 @@ export class Setup {
     cancelled: 'cancelled',
     typedQuestion: 'Apply changes? (Y/n) ',
     declined: 'no changes made',
-    needsYes: 'no changes made. Run `npx {name} {flags}` to apply',
+    needsYes: 'no changes made. Run `npx {name}@latest {flags}` to apply',
 
     ready: 'ready. Agents can now find {skills}',
-    notReady: 'setup incomplete. Update `{name}` to {version} and re-run `npx {name}`',
+    notReady: 'setup incomplete. Update `{name}` to {version} and re-run `npx {name}@latest`',
     newer: '`{name}@{installed}`. Newer than CLI ({version})',
     docs: 'docs: {homepage}',
-    again: 'skip prompts next time: `npx {name} {flags}`',
+    again: 'skip prompts next time: `npx {name}@latest {flags}`',
     kept: '`{path}`. Already exists with different contents',
     stepFailed: '{step} step failed. No further changes made. {reason}',
     pluginFailed:
-      '`{command}` failed. No further changes made. Fix the {manager} error below, then re-run `npx {name}`',
+      '`{command}` failed. No further changes made. Fix the {manager} error below, then re-run `npx {name}@latest`',
     failed:
-      '`{command}` failed. No further changes made. Fix the {manager} error below or install `{name}` manually, then re-run `npx {name}`',
-    noProject: 'no `package.json` in {folder}. Run `npx {name}` from your project root',
-    unknownOption: 'unknown option `{option}`. Run `npx {name} --help` for usage',
-    usage: `Usage: npx {name} [options]
+      '`{command}` failed. No further changes made. Fix the {manager} error below or install `{name}` manually, then re-run `npx {name}@latest`',
+    noProject: 'no `package.json` in {folder}. Run `npx {name}@latest` from your project root',
+    unknownOption: 'unknown option `{option}`. Run `npx {name}@latest --help` for usage',
+    usage: `Usage: npx {name}@latest [options]
 
 Set up coding agents for this project:
   install  install {name} or update an older version
