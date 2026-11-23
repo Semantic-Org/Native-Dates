@@ -11,28 +11,26 @@ import { inspectSuite, listSuites } from '../../bench.js';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 const GLOBAL_TRIGGERS = [
-  'src/',
-  'packages/core/',
   'package.json',
   'package-lock.json',
   '.node-version',
   '.github/workflows/bench.yml',
 ];
 
-const touchesGlobalTrigger = (file) =>
-  GLOBAL_TRIGGERS.some((trigger) => (trigger.endsWith('/') ? file.startsWith(trigger) : file === trigger));
-
 export function selectSuites({ suites, inputsBySuite, changedFiles = [], all = false }) {
   if (all) { return [...suites]; }
   if (changedFiles.length === 0) { return []; }
-  if (changedFiles.some(touchesGlobalTrigger)) { return [...suites]; }
+  if (changedFiles.some((file) => GLOBAL_TRIGGERS.includes(file))) { return [...suites]; }
 
-  const pluginManifestChanged = changedFiles.includes('packages/plugins/package.json');
+  const changedSet = new Set(changedFiles);
+  const changedManifestDirs = changedFiles
+    .filter((file) => file.endsWith('/package.json'))
+    .map((file) => file.slice(0, -'package.json'.length));
+
   return suites.filter((suite) => {
     const inputs = inputsBySuite[suite] ?? [];
-    if (inputs.some((input) => changedFiles.includes(input))) { return true; }
-    if (pluginManifestChanged && inputs.some((input) => input.startsWith('packages/plugins/'))) { return true; }
-    return false;
+    if (inputs.some((input) => changedSet.has(input))) { return true; }
+    return changedManifestDirs.some((dir) => inputs.some((input) => input.startsWith(dir)));
   });
 }
 

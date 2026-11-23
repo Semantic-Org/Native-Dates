@@ -16,7 +16,9 @@ function commitTouchesSource(repo, sha) {
   try {
     const raw = runGh(['api', `repos/${repo}/commits/${sha}`, '--jq', '.files[].filename']);
     const files = raw.split('\n').filter(Boolean);
-    return files.some((file) => file.startsWith('src/') || file.startsWith('packages/'));
+    return files.some(
+      (file) => file.startsWith('src/') || file.startsWith('packages/') || file.startsWith('integrations/'),
+    );
   }
   catch {
     return true;

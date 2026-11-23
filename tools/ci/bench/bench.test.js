@@ -74,6 +74,26 @@ describe('bench/ configuration and suites', () => {
       rmSync(altCheckout, { recursive: true, force: true });
     }
   });
+
+  it('preserves source declaration order rather than alphabetical order for cold-first operations', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'bench-order-'));
+    try {
+      const suiteFile = join(tempDir, 'order.js');
+      writeFileSync(
+        suiteFile,
+        [
+          "import { date } from 'native-dates';",
+          'export function uncachedFirst() { return date("2026-01-01"); }',
+          'export function cachedSecond() { return date("2026-01-01"); }',
+        ].join('\n'),
+      );
+      const info = await inspectSuite(suiteFile, root, { benchDir: tempDir });
+      expect(info.exports).toEqual(['uncachedFirst', 'cachedSecond']);
+    }
+    finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('selectSuites() and bench.yml path triggers', () => {
@@ -84,11 +104,10 @@ describe('selectSuites() and bench.yml path triggers', () => {
     plugins: ['src/index.js', 'packages/plugins/src/zones.js'],
   };
 
-  it('selects all suites on core, manifest, lockfile, or workflow changes', () => {
+  it('selects all suites on shared inputs, root manifest, lockfile, or workflow changes', () => {
     for (
       const file of [
-        'src/calendar-date.js',
-        'packages/core/index.js',
+        'src/index.js',
         'package.json',
         'package-lock.json',
         '.node-version',
@@ -97,9 +116,10 @@ describe('selectSuites() and bench.yml path triggers', () => {
     ) {
       expect(selectSuites({ suites, inputsBySuite, changedFiles: [file] }), file).toEqual(suites);
     }
+    expect(selectSuites({ suites, inputsBySuite, changedFiles: ['src/calendar-date.js'] })).toEqual(['parse']);
   });
 
-  it('selects only plugin-importing suites when a PR touches only packages/plugins/**', () => {
+  it('selects only matching suites when a PR touches subpackage sources or manifests', () => {
     expect(
       selectSuites({ suites, inputsBySuite, changedFiles: ['packages/plugins/src/zones.js'] }),
     ).toEqual(['plugins']);

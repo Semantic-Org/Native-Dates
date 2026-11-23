@@ -6,7 +6,7 @@ Every pull request that modifies `native-dates`, `@native-dates/core`, `@native-
 
 1. **[`bench.yml`](../../../.github/workflows/bench.yml)** runs with `contents: read` permission only.
    - **Discover Benchmarks** checks out both the PR merge commit (`head`) and its first parent on the base branch (`base`), then runs [`discover.js`](discover.js) from `base` against `base/bench/*.js`.
-   - Core or manifest changes select every `bench/<suite>.js` file. Plugin-only PRs (`packages/plugins/**`) inspect each suite's `esbuild` input graph and select only the suites that import the changed plugin.
+   - Root manifest, lockfile, Node version, and workflow changes select every `bench/<suite>.js` file. Source and workspace manifest edits inspect each suite's `esbuild` input graph and select only the suites whose bundle reaches the changed files.
    - **Bench (`<suite>`)** fans out one parallel GitHub Actions runner per selected `bench/<suite>.js` file. Both `this-change` (`head`) and `tip-of-tree` (`base`) bundle against `base/bench/<suite>.js` using [`tools/bench.js`](../../bench.js) from `base`, so a PR cannot alter its own benchmarks, discovery rules, or sampling thresholds.
 2. **[`bench-report.yml`](../../../.github/workflows/bench-report.yml)** runs via `workflow_run` from `main` once `Bench` finishes.
    - Downloads all `bench-results-*` cell artifacts, reconstructs prior PR-branch runs with [`fetch-pr-history.js`](fetch-pr-history.js), and renders `comment.md`, `summary.md`, and `bench-report.json` via [`reporter.js`](reporter.js).

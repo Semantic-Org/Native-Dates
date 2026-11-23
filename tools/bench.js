@@ -59,13 +59,13 @@ export async function inspectSuite(suiteFile, checkoutDir = root, { benchDir = d
     plugins: [resolveFromCheckout(resolvedCheckout)],
     logLevel: 'silent',
   });
-  // exclude module-scope sink bindings by reading exported function names from bench source or exports
-  const allExports = Object.values(result.metafile.outputs)[0]?.exports ?? [];
+  // preserve declaration order from bench source while confirming esbuild exported each function
+  const exported = new Set(Object.values(result.metafile.outputs)[0]?.exports ?? []);
   const source = readFileSync(suiteFile, 'utf8');
-  const fnNames = new Set(
-    [...source.matchAll(/export\s+(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/g)].map(([, name]) => name),
-  );
-  const exports = allExports.filter((name) => fnNames.has(name));
+  const declared = [
+    ...new Set([...source.matchAll(/export\s+(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/g)].map(([, name]) => name)),
+  ];
+  const exports = declared.filter((name) => exported.has(name));
   if (!exports.length) {
     throw new Error(`${suiteFile} must export at least one benchmark function`);
   }
@@ -152,6 +152,7 @@ function ensureChromedriver(repoRoot) {
     const version = JSON.parse(readFileSync(pkgPath, 'utf8')).version ?? '';
     if (version.startsWith(`${major}.`)) { return; }
   }
+  console.log(`Installing chromedriver@${major} in node_modules/tachometer to match local Chrome ${major}...`);
   execFileSync('npm', ['install', `chromedriver@${major}`, '--no-save', '--no-audit', '--no-fund'], {
     cwd: tachometerDir,
     stdio: 'inherit',
