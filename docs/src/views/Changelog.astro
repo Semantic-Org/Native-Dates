@@ -9,7 +9,7 @@ import { CHANGELOG_URL, REPO_URL } from '../lib/versions.js';
 const locale = Astro.currentLocale;
 const translated = locale === DEFAULT_LOCALE;
 const english = translated ? {} : englishIn(locale);
-const { title, lede, html, toc } = changelogData();
+const { title, lede, html, toc } = changelogData(locale);
 ---
 <DocsChrome title={`${title} · native-dates`} description={lede || t(locale, 'changelog.lede')} currentId="changelog" toc={toc}>
   <main class="doc" id="content" data-pagefind-body {...english}>

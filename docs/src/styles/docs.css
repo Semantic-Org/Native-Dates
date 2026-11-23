@@ -175,6 +175,12 @@
   position: relative; margin: 56px 0 0; scroll-margin-top: var(--anchor-offset);
   font-size: var(--fs-2xl); line-height: var(--lh-2xl); letter-spacing: -0.5px; font-weight: 620;
 }
+.doc > .release-date {
+  margin: 4px 0 0;
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+}
 .doc-meta + h2, .doc-meta + section > h2 { margin-top: 40px; }
 .doc h2 + p, .doc h3 + p { margin-top: 10px; }
 .doc h3 {

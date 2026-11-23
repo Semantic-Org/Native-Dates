@@ -2,8 +2,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { date } from 'native-dates';
+
+import { DEFAULT_LOCALE } from './i18n.js';
 import { esc } from './markdown/inline.js';
 import { PACKAGE_DIR } from './sizes.js';
+
+const RELEASE_HEADING_RE = /^(.+?)\s+\((\d{4}-\d{2}-\d{2})\)$/;
 
 const slugify = (text) =>
   text
@@ -20,7 +25,7 @@ const renderInline = (text = '') =>
       return `<a href="${href}"${attrs}>${label}</a>`;
     });
 
-export function changelogData(dir = PACKAGE_DIR) {
+export function changelogData(locale = DEFAULT_LOCALE, dir = PACKAGE_DIR) {
   const raw = readFileSync(resolve(dir, 'CHANGELOG.md'), 'utf8');
   const lines = raw.split(/\r?\n/);
   const toc = [];
@@ -63,10 +68,17 @@ export function changelogData(dir = PACKAGE_DIR) {
       flushPara();
       flushList();
       seenRelease = true;
-      const text = line.slice(3).trim();
+      const rawHeading = line.slice(3).trim();
+      const match = rawHeading.match(RELEASE_HEADING_RE);
+      const text = match ? match[1].trim() : rawHeading;
+      const isoDate = match ? match[2] : null;
       const slug = slugify(text);
       toc.push({ depth: 2, slug, text, symbol: false });
       blocks.push(`<h2 id="${slug}">${renderInline(text)}</h2>`);
+      if (isoDate) {
+        const formatted = date(isoDate).locale(locale).format('long');
+        blocks.push(`<p class="release-date"><time datetime="${isoDate}">${esc(formatted)}</time></p>`);
+      }
       continue;
     }
     if (line.startsWith('### ')) {
