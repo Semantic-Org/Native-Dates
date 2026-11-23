@@ -1,4 +1,4 @@
-import { createErrors } from './utils.js';
+import { createErrors, isPlainObject } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 
@@ -14,7 +14,9 @@ export const guard = (attempt, code, at, explanation) => {
     if (error?.code) {
       throw error;
     }
-    return refuse(code, at, { explanation: explanation || error.message.replace(/^Temporal error: /, '') });
+    return refuse(code, isPlainObject(at) ? JSON.stringify(at) : String(at), {
+      explanation: explanation || error.message.replace(/^Temporal error: /, ''),
+    });
   }
 };
 

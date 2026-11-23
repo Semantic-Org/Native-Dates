@@ -141,7 +141,7 @@ export class YearMonth {
     if (isPlainObject(input)) {
       const fields = singularKeys(input);
       if (!('day' in fields)) {
-        return YearMonth.#fromFields(fields, JSON.stringify(input));
+        return YearMonth.#fromFields(fields, input);
       }
     }
     const plain = isPlainDate(input)
@@ -152,7 +152,7 @@ export class YearMonth {
     return plain.withCalendar('iso8601').toPlainYearMonth();
   }
 
-  static #fromFields(fields, at = JSON.stringify(fields)) {
+  static #fromFields(fields, at = fields) {
     return guard(
       () => Temporal.PlainYearMonth.from(wholeParts(fields, ['year', 'month']), { overflow: 'reject' }),
       'invalidYearMonth',
@@ -224,7 +224,7 @@ export class YearMonth {
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
     YearMonth.#refuseSmaller(smaller.find((part) => part in changes));
-    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)));
+    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', changes));
   }
 
   on(day) {

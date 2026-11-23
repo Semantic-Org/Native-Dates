@@ -3,20 +3,9 @@ import { each, isNumber, isPlainObject, isString } from './utils.js';
 import { isDevelopment } from './environment.js';
 import { guard, refuse, refuseType } from './errors.js';
 import { IS_DURATION } from './identity.js';
-import { isDigits, isTemporalDuration, plural, unit } from './units.js';
+import { isDigits, isTemporalDuration, plural, unit, units } from './units.js';
 
-export const fieldNames = [
-  'years',
-  'months',
-  'weeks',
-  'days',
-  'hours',
-  'minutes',
-  'seconds',
-  'milliseconds',
-  'microseconds',
-  'nanoseconds',
-];
+export const fieldNames = units.map(plural);
 
 // cascade fractional units downward (1.5 days -> 1d 12h). Months vary in length so they are omitted
 // and rejected below, and toFixed(9) strips IEEE-754 float residue so 0.1h doesn't leak stray nanoseconds
@@ -204,22 +193,10 @@ export const addFields = (a, b, sign, anchor) => {
 };
 
 // Temporal.Duration.from({}) throws RangeError, so construct a zero duration directly when empty
-export const temporalDurationOf = (fields) => {
-  if (!Object.keys(fields).length) {
-    return new Temporal.Duration();
-  }
-  try {
-    return Temporal.Duration.from(fields);
-  }
-  catch (error) {
-    if (error?.code) {
-      throw error;
-    }
-    return refuse('invalidDuration', JSON.stringify(fields), {
-      explanation: error.message.replace(/^Temporal error: /, ''),
-    });
-  }
-};
+export const temporalDurationOf = (fields) =>
+  Object.keys(fields).length
+    ? guard(() => Temporal.Duration.from(fields), 'invalidDuration', fields)
+    : new Temporal.Duration();
 
 export const temporalDurationFrom = (input, name) => temporalDurationOf(fieldsFrom(input, name));
 

@@ -103,7 +103,7 @@ export class DateTime {
       return guard(
         () => input.toTemporal().toZonedDateTime({ timeZone }),
         'invalidDateTime',
-        String(input),
+        input,
       );
     }
     if (isDate(input) || isNumber(input)) {
@@ -126,16 +126,16 @@ export class DateTime {
       return input.toZonedDateTimeISO(timeZone);
     }
     if (isPlainDateTime(input)) {
-      return guard(() => input.toZonedDateTime(timeZone, { disambiguation }), 'invalidDateTime', String(input));
+      return guard(() => input.toZonedDateTime(timeZone, { disambiguation }), 'invalidDateTime', input);
     }
     if (isPlainDate(input)) {
-      return guard(() => input.toZonedDateTime({ timeZone }), 'invalidDateTime', String(input));
+      return guard(() => input.toZonedDateTime({ timeZone }), 'invalidDateTime', input);
     }
     if (isPlainObject(input)) {
       return guard(
         () => Temporal.ZonedDateTime.from({ ...singularKeys(input), timeZone }, { overflow: 'reject', disambiguation }),
         'invalidDateTime',
-        JSON.stringify(input),
+        input,
       );
     }
     return refuseType('invalidDateTime', String(input), {
@@ -283,7 +283,7 @@ export class DateTime {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return this.#next(guard(() => withParts(this.#zoned, changes), 'cannotSet', JSON.stringify(changes)));
+    return this.#next(guard(() => withParts(this.#zoned, changes), 'cannotSet', changes));
   }
 
   at(when, options) {

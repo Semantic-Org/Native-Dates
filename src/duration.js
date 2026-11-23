@@ -152,14 +152,14 @@ export class Duration {
         });
       }
       return this.#next(
-        guard(() => Duration.#fixed(this).round({ largestUnit: into }), 'cannotBalance', String(this)),
+        guard(() => Duration.#fixed(this).round({ largestUnit: into }), 'cannotBalance', this),
       );
     }
     return this.#next(
       guard(
         () => this.#temporal.round({ largestUnit: unit(largest ?? 'day'), relativeTo: this.#anchor }),
         'cannotBalance',
-        String(this),
+        this,
       ),
       this.#anchor,
     );
@@ -171,7 +171,7 @@ export class Duration {
       guard(
         () => Duration.#fixed(this).round({ smallestUnit: target, relativeTo: this.#anchor }),
         'cannotRound',
-        String(this),
+        this,
       ),
       this.#anchor,
     );

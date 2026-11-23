@@ -79,7 +79,7 @@ export const units = [
   'microsecond',
   'nanosecond',
 ];
-export const timeUnits = ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'];
+export const timeUnits = units.slice(4);
 
 export const isDigits = (value) => isString(value) && /^\s*[-+]?\d+(?:\.\d+)?\s*$/.test(value);
 

@@ -24,7 +24,6 @@ import {
   namesInstant,
   singularKeys,
   stepOf,
-  timeUnits,
   unit,
   wholeNumbers,
   withParts,
@@ -62,11 +61,7 @@ export class Time {
         second === undefined ? second : Number(second),
       ];
     }
-    const settings = isPlainObject(minuteOrOptions)
-      ? minuteOrOptions
-      : isString(minuteOrOptions)
-      ? { zone: minuteOrOptions }
-      : {};
+    const settings = zoneOptions(isNumber(minuteOrOptions) ? undefined : minuteOrOptions);
     this.#locale = localeOf(settings, input);
     this.#plain =
       isPlainTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
@@ -144,7 +139,7 @@ export class Time {
       return guard(
         () => Temporal.PlainTime.from(singularKeys(input), { overflow: 'reject' }),
         'invalidTime',
-        JSON.stringify(input),
+        input,
       );
     }
     return refuseType('invalidTime', String(input), {
@@ -251,12 +246,12 @@ export class Time {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)));
+    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', changes));
   }
 
   startOf(name) {
     return this.#next(
-      guard(() => this.#plain.round({ smallestUnit: unit(name), roundingMode: 'floor' }), 'cannotRound', String(name)),
+      guard(() => this.#plain.round({ smallestUnit: unit(name), roundingMode: 'floor' }), 'cannotRound', name),
     );
   }
 

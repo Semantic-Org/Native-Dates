@@ -95,29 +95,17 @@ class Range {
   }
 
   // coerce endpoints in start's zone and locale so both ends share one frame of reference
-  static #read(kind, value, start, { zone, loose, dayFirst, locale, disambiguation } = {}) {
-    const activeLocale = locale ?? start?.locale();
-    const readOptions = activeLocale === undefined ? {} : { locale: activeLocale };
-    const targetZone = kind === 'datetime' ? (start?.zone ?? zone) : zone;
-    if (targetZone !== undefined) {
-      readOptions.zone = targetZone;
-    }
-    if (loose) {
-      readOptions.loose = true;
-    }
-    if (dayFirst !== undefined) {
-      readOptions.dayFirst = dayFirst;
-    }
-    if (disambiguation !== undefined) {
-      readOptions.disambiguation = disambiguation;
-    }
-    if (kind === 'date') {
-      return new CalendarDate(value, readOptions);
-    }
-    if (kind === 'datetime') {
-      return new DateTime(value, readOptions);
-    }
-    return new Time(value, readOptions);
+  static #read(kind, value, start, options = {}) {
+    const readOptions = {
+      ...options,
+      locale: options.locale ?? start?.locale(),
+      zone: kind === 'datetime' ? (start?.zone ?? options.zone) : options.zone,
+    };
+    return kind === 'date'
+      ? new CalendarDate(value, readOptions)
+      : kind === 'datetime'
+      ? new DateTime(value, readOptions)
+      : new Time(value, readOptions);
   }
 
   // endpoints can also be durations (e.g. start.for('2h')), subtracting 1 day on inclusive DateRanges

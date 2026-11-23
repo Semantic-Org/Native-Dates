@@ -156,7 +156,7 @@ export class CalendarDate {
       return guard(
         () => Temporal.PlainDate.from(singularKeys(input), { overflow: 'reject' }),
         'invalidDate',
-        JSON.stringify(input),
+        input,
       );
     }
     return refuseType('invalidDate', String(input), {
@@ -256,7 +256,7 @@ export class CalendarDate {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)));
+    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', changes));
   }
 
   startOf(name, firstDay) {
