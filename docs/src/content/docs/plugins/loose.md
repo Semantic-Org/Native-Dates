@@ -49,7 +49,7 @@ datetime('16.11.2026 klo 14.30', {
 
 Year-first locales like Korean read two-digit years at the start, so `'26. 5. 5.'` reads as May 5, 2026 in Korean. Connecting words, ordinals, and leading weekday names are skipped across full dates and partial dates alike.
 
-Dotted clocks like `'14.30'` parse only in locales whose clock uses a dot, such as Finnish and Danish, and return `null` elsewhere. Dotted seconds are not read.
+Dotted clocks like `'14.30'` parse only in locales whose clock uses a dot, such as Finnish and Danish, and return `null` elsewhere. Dotted seconds parse after a date, while standalone three-part dotted strings stay dates.
 
 Day-period words match whatever `Intl` prints for the active locale, such as Traditional Chinese *晚上* or Malay *PTG*. Words a locale's default clock omits do not shift the hour. Before the clock, a period word counts where the locale places it there or when the hour is 1 to 11.
 
