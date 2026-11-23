@@ -39,7 +39,7 @@ const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const pack = (...args) =>
   execFileSync(npm, ['pack', '--silent', '--pack-destination', scratch, ...args], {
     cwd: root,
-    env: { ...process.env, SKIP_SIMPLE_GIT_HOOKS: '1' },
+    env: { ...process.env, SKIP_INSTALL_SIMPLE_GIT_HOOKS: '1' },
     shell: process.platform === 'win32',
   });
 pack();

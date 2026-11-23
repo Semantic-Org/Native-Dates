@@ -136,7 +136,6 @@ export function packSkills(packageDir = root) {
   for (const [path, shape] of Object.entries(manifests)) {
     writeFileSync(resolve(packageDir, path), json(shape({ name: packageName, version, description })));
   }
-  if (packageDir === root) { stampMarketplace(); }
 }
 
 // quiet on success so `npm pack --json` stays parseable

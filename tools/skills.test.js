@@ -85,9 +85,10 @@ describe('skills in ai/skills', () => {
       cwd: root,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, SKIP_SIMPLE_GIT_HOOKS: '1' },
+      env: { ...process.env, SKIP_INSTALL_SIMPLE_GIT_HOOKS: '1' },
     });
-    const [{ files }] = JSON.parse(printed);
+    // prepare's own lines come first on the same stream, so the report is read from where it opens
+    const [{ files }] = JSON.parse(printed.slice(printed.search(/^\[$/m)));
     const shipped = files.map(({ path }) => path).filter((path) => /skills\//.test(path));
     expect(shipped.sort()).toEqual(skillsFrom().map(({ name }) => `skills/${name}/SKILL.md`).sort());
     expect(existsSync(resolve(root, 'skills'))).toBe(false);
