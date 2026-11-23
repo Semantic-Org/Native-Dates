@@ -55,7 +55,7 @@ export const zoneId = (id, tag) => {
         : 0,
     });
   }
-  const activeLocale = zoneExtension && locale(tag);
+  const activeLocale = (zoneExtension || tag !== undefined) && locale(tag);
   const key = zoneExtension ? `${id}|${activeLocale ?? ''}` : id;
   return resolved.get(key)
     ?? remember(
@@ -173,6 +173,7 @@ const canonicalTag = (name) => {
 };
 
 // accept BCP 47 tags, POSIX 'en_US' tags, tag arrays, Intl.Locale instances, and raw HTTP Accept-Language headers
+const validObjects = new WeakSet();
 const knownLocales = new Map();
 export const checkedLocale = (tag) => {
   if (knownLocales.has(tag)) {
@@ -180,6 +181,9 @@ export const checkedLocale = (tag) => {
   }
   if (!tag || (isString(tag) && !tag.trim())) {
     return undefined;
+  }
+  if (validObjects.has(tag)) {
+    return tag;
   }
   const kept = isString(tag) && /[_,;*]/.test(tag)
     && tag.replace(/_/g, '-').split(',')
@@ -201,12 +205,13 @@ export const checkedLocale = (tag) => {
       ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
       : 0,
   );
-  const found = !isString(tag)
-    ? tag
-    : kept
-    ? (tags.length > 1 ? remember(knownLocales, tags, Object.freeze(tags)) : tags[0])
-    : tag.trim();
-  return remember(knownLocales, tag, found);
+  return !isString(tag)
+    ? (validObjects.add(tag), tag)
+    : remember(
+      knownLocales,
+      tag,
+      kept ? (tags.length > 1 ? (validObjects.add(tags), Object.freeze(tags)) : tags[0]) : tag.trim(),
+    );
 };
 
 // checked before built-in presets so apps can redefine names like 'short'
