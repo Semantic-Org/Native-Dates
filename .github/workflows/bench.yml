@@ -53,24 +53,13 @@ jobs:
         with:
           ref: ${{ steps.base.outputs.sha }}
           path: base
-      - name: Check Base Harness
-        id: harness
-        run: |
-          if [ ! -f base/tools/ci/bench/discover.js ]; then
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "base branch predates tools/ci/bench, skipping until merged to main"
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          fi
       - name: Install Node.js
-        if: steps.harness.outputs.ready == 'true'
         uses: actions/setup-node@v7
         with:
           node-version-file: head/.node-version
           cache: npm
           cache-dependency-path: head/package-lock.json
       - name: Install Dependencies
-        if: steps.harness.outputs.ready == 'true'
         run: |
           (cd base && npm ci --ignore-scripts --no-audit --no-fund)
           (cd head && npm ci --ignore-scripts --no-audit --no-fund)
@@ -78,13 +67,7 @@ jobs:
         id: discover
         env:
           BASE_SHA: ${{ steps.base.outputs.sha }}
-          READY: ${{ steps.harness.outputs.ready }}
         run: |
-          if [ "$READY" != 'true' ]; then
-            echo "suites=[]" >> "$GITHUB_OUTPUT"
-            echo "has-suites=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
           if [ "${{ github.event_name }}" = 'pull_request' ]; then
             git -C head -c core.quotepath=false diff --name-only "$BASE_SHA" HEAD > "$RUNNER_TEMP/changed-files.txt"
             node base/tools/ci/bench/discover.js --bench-dir base/bench --checkout head --changed "$RUNNER_TEMP/changed-files.txt"

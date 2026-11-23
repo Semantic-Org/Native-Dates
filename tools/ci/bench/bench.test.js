@@ -55,7 +55,7 @@ describe('bench/ configuration and suites', () => {
       );
       writeFileSync(
         join(altCheckout, 'src/index.js'),
-        `export const date = () => 'SENTINEL_FROM_ALT_CHECKOUT';\n`,
+        `export const date = () => 'SENTINEL_FROM_ALT_CHECKOUT';\nexport const datetime = date;\n`,
       );
       mkdirSync(join(altCheckout, 'node_modules'), { recursive: true });
       symlinkSync(altCheckout, join(altCheckout, 'node_modules/native-dates'));
@@ -145,6 +145,12 @@ describe('selectSuites() and bench.yml path triggers', () => {
   it('discovers live suites in bench/ against changed files', async () => {
     const all = await discoverSuites({ benchDir, checkoutDir: root, all: true });
     expect(all).toEqual(listSuites(benchDir));
+    const pluginOnly = await discoverSuites({
+      benchDir,
+      checkoutDir: root,
+      changedFiles: ['packages/plugins/src/loose.js'],
+    });
+    expect(pluginOnly).toEqual(['plugins']);
     const none = await discoverSuites({ benchDir, checkoutDir: root, changedFiles: ['README.md'] });
     expect(none).toEqual([]);
   });
