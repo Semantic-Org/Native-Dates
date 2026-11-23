@@ -34,7 +34,7 @@ now().zone; // 'Europe/Berlin'
 
 ## Viewing the same moment elsewhere
 
-Call `in()` to view the same moment in another city. Local calendar and clock properties update to match the target zone, while the underlying timestamp stays identical:
+Call [`in()`](/api/date-time/#in) to view the same moment in another city. Local calendar and clock properties update to match the target zone, while the underlying timestamp stays identical:
 
 ```js
 import { date } from 'native-dates';
@@ -68,7 +68,7 @@ Keeping the real IANA zone matters as soon as you add days or months across a da
 A fixed offset never shifts with the seasons, whereas an IANA zone knows every local transition rule.
 
 :::note[Working in UTC]
-Pass `'UTC'` as the zone when you want properties and calendar math evaluated in UTC. Serialization methods like `toString()` always write UTC strings regardless of the viewing zone. See [Storing and sending](/guides/storing-and-sending/).
+Pass `'UTC'` as the zone when you want properties and calendar math evaluated in UTC. Serialization methods like [`toString()`](/api/date-time/#tostring) always write UTC strings regardless of the viewing zone. See [Storing and sending](/guides/storing-and-sending/).
 :::
 
 ## Daylight saving transitions
@@ -96,7 +96,7 @@ const skipped = datetime('2026-03-08T02:30', 'America/New_York');
 skipped.text; // 'Mar 8, 2026, 3:30 AM EDT'
 ```
 
-When scheduling or auditing requires a different rule across spring-forward gaps or fall-back folds, pass `disambiguation` (`'compatible'`, `'earlier'`, `'later'`, or `'reject'`) to `datetime()`, `date.at()`, `dt.at()`, or `time.on()`:
+When scheduling or auditing requires a different rule across spring-forward gaps or fall-back folds, pass `disambiguation` (`'compatible'`, `'earlier'`, `'later'`, or `'reject'`) to [`datetime()`](/api/datetime-fn/), `date.at()`, `dt.at()`, or `time.on()`:
 
 ```js
 datetime('2026-11-01T01:30', { zone: 'America/New_York', disambiguation: 'later' }).offset; // '-05:00'

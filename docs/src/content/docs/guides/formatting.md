@@ -8,7 +8,7 @@ Native Dates uses the platform's built-in `Intl` formatters and caches them auto
 
 ## Quick output with text and presets
 
-Every instance has a `.text` property formatted in your active locale, which is handy for templates, logs, and console debugging. Calling `format()` with no arguments uses each type's default preset:
+Every instance has a `.text` property formatted in your active locale, which is handy for templates, logs, and console debugging. Calling [`format()`](/api/date-time/#format) with no arguments uses each type's default preset:
 
 ```js
 import { date, datetime, duration, time } from 'native-dates';
@@ -27,12 +27,12 @@ Pass a preset name to `format()` to choose how much detail to display:
 | Preset | Example | Supported types and output |
 |---|---|---|
 | `'short'` | `'5/4/26, 9:30 AM'` | Numeric date or short clock across dates, times, partial dates, and durations. |
-| `'medium'` | `'May 4, 2026, 9:30 AM'` | Abbreviated month on dates and moments, or clock with seconds on `Time`. |
-| `'long'` | `'May 4, 2026 at 9:30 AM'` | Full month name, clock with seconds on `Time`, or spelled-out units on `Duration`. |
+| `'medium'` | `'May 4, 2026, 9:30 AM'` | Abbreviated month on dates and moments, or clock with seconds on [`Time`](/api/time/). |
+| `'long'` | `'May 4, 2026 at 9:30 AM'` | Full month name, clock with seconds on `Time`, or spelled-out units on [`Duration`](/api/duration/). |
 | `'full'` | `'Monday, May 4, 2026 at 9:30 AM'` | Full weekday and month on dates and moments, or full month on partial dates. |
-| `'date'` | `'May 4, 2026'` | Date portion on `DateTime` and `CalendarDate`. |
+| `'date'` | `'May 4, 2026'` | Date portion on [`DateTime`](/api/date-time/) and [`CalendarDate`](/api/calendar-date/). |
 | `'time'` | `'9:30 AM'` | Short clock time on `DateTime` and `Time`. |
-| `'month'` | `'May 2026'` | Full month name and year on `DateTime`, `CalendarDate`, and `YearMonth`. |
+| `'month'` | `'May 2026'` | Full month name and year on `DateTime`, `CalendarDate`, and [`YearMonth`](/api/year-month/). |
 | `'text'` | `'May 4, 2026, 9:30 AM PDT'` | Date, time, and short zone name on `DateTime`, or each type's own fields elsewhere. |
 
 Core also accepts the localized preset names used in Moment and Day.js:
@@ -97,7 +97,7 @@ days(2).format('long', 'ar'); // 'يومان'
 ```
 
 :::tip[Human display vs wire strings]
-Reserve `format()` for text shown to people. When storing values or sending them over the network, call `toString()` or serialize to JSON so payloads stay in stable ISO 8601 format. See [Storing and sending](/guides/storing-and-sending/).
+Reserve `format()` for text shown to people. When storing values or sending them over the network, call [`toString()`](/api/date-time/#tostring) or serialize to JSON so payloads stay in stable ISO 8601 format. See [Storing and sending](/guides/storing-and-sending/).
 :::
 
 ## Token patterns
@@ -145,9 +145,9 @@ Month and weekday names inside token patterns come from `Intl` in the active loc
 | `x` | `'1794850200000'` | Unix timestamp in milliseconds. |
 | `[text]` | `'[at]'` | Escaped literal text copied straight to the output. |
 
-Unrecognized letters outside square brackets throw an `unknownFormat` error so a misspelled preset or unbracketed word fails right away instead of printing raw letters. Tokens glued to accented letters like `'às'` or mixed clock letters like `'HHhmm'` throw too, while bare T passes through unescaped for ISO timestamps.
+Unrecognized letters outside square brackets throw an [`unknownFormat`](/api/errors/#units-zones-and-formats) error so a misspelled preset or unbracketed word fails right away instead of printing raw letters. Tokens glued to accented letters like `'às'` or mixed clock letters like `'HHhmm'` throw too, while bare T passes through unescaped for ISO timestamps.
 
-Asking for a field a type does not carry throws an `unsupportedToken` error instead of inventing midnight. Formatting clock tokens like `'HH:mm'` on a calendar date fails immediately.
+Asking for a field a type does not carry throws an [`unsupportedToken`](/api/errors/#units-zones-and-formats) error instead of inventing midnight. Formatting clock tokens like `'HH:mm'` on a calendar date fails immediately.
 
 Core also exports [`monthNames()`](/api/month-names/) and its weekday counterpart for building localized calendar headers and month dropdowns:
 
@@ -199,7 +199,7 @@ shift.format('short', 'en-US'); // '9:00 AM – 5:00 PM'
 
 ## Relative phrases
 
-Moments and calendar dates include [`from()`](/api/date-time/#from) and [`fromNow()`](/api/date-time/#fromnow) directly in core, with `formatRelative()` as an alias. Phrases are localized automatically through the runtime's relative time formatter:
+Moments and calendar dates include [`from()`](/api/date-time/#from) and [`fromNow()`](/api/date-time/#fromnow) directly in core, with [`formatRelative()`](/api/date-time/#formatrelative) as an alias. Phrases are localized automatically through the runtime's relative time formatter:
 
 ```js
 import { date, datetime, now, today } from 'native-dates';

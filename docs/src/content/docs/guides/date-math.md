@@ -8,7 +8,7 @@ Every date, time, and moment in Native Dates is immutable. Methods that shift or
 
 ## Adding and subtracting
 
-Call `plus()` or `minus()` to move forward or backward in time:
+Call [`plus()`](/api/date-time/#plus) or [`minus()`](/api/date-time/#minus) to move forward or backward in time:
 
 ```js
 import { date } from 'native-dates';
@@ -20,7 +20,7 @@ created.toString(); // '2026-11-16'
 due.toString(); // '2026-11-30'
 ```
 
-Both methods accept a count and unit, a readable phrase, a fields object, or a [`Duration`](/api/duration/) instance. Standard `add()` and `subtract()` names work as aliases too:
+Both methods accept a count and unit, a readable phrase, a fields object, or a [`Duration`](/api/duration/) instance. Standard [`add()`](/api/date-time/#plus) and [`subtract()`](/api/date-time/#minus) names work as aliases too:
 
 ```js
 import { datetime, hours } from 'native-dates';
@@ -34,7 +34,7 @@ kickoff.minus(hours(3));
 ```
 
 :::tip[Units must match the type]
-A calendar date rejects clock units like hours because it has no time of day. A clock time rejects calendar units like days because it wraps at midnight. Combine them with `at()` first when your math crosses both.
+A calendar date rejects clock units like hours because it has no time of day. A clock time rejects calendar units like days because it wraps at midnight. Combine them with [`at()`](/api/calendar-date/#at) first when your math crosses both.
 :::
 
 ## Month ends and daylight saving
@@ -63,7 +63,7 @@ See [Time zones](/guides/time-zones/) for a closer look at spring-forward and fa
 
 ## Snapping to unit boundaries
 
-Call `startOf()` and `endOf()` to snap to the start or end of a year, quarter, month, week, day, or clock unit.
+Call [`startOf()`](/api/date-time/#startof) and [`endOf()`](/api/date-time/#endof) to snap to the start or end of a year, quarter, month, week, day, or clock unit.
 
 On a calendar date, the end of a month is its final day. On a moment, the end of a unit is its final millisecond:
 
@@ -88,7 +88,7 @@ wednesday.locale('de-DE').startOf('week').toString(); // '2026-11-16'
 wednesday.startOf('week', 'monday').toString(); // '2026-11-16'
 ```
 
-Call `startOfNext()` or `startOfPrevious()` to reach the start of the unit after or before the current one. Both always step into the adjacent unit, so calling `startOfNext('month')` on December 1 returns January 1:
+Call [`startOfNext()`](/api/date-time/#startofnext) or [`startOfPrevious()`](/api/date-time/#startofprevious) to reach the start of the unit after or before the current one. Both always step into the adjacent unit, so calling `startOfNext('month')` on December 1 returns January 1:
 
 ```js
 const invoiced = date('2026-11-16');
@@ -100,7 +100,7 @@ invoiced.startOfPrevious('month').toString(); // '2026-10-01'
 
 ## Rounding clock times
 
-Call `round()` on a moment or time to snap to the nearest unit or a step increment, or round in one direction:
+Call [`round()`](/api/date-time/#round) on a moment or time to snap to the nearest unit or a step increment, or round in one direction:
 
 ```js
 import { time } from 'native-dates';
@@ -117,7 +117,7 @@ Step increments such as 5, 10, 15, or 30 minutes must divide evenly into the nex
 
 ## Stepping by weekday or recurring date
 
-Call `next()` or `previous()` on a date or moment to step to an upcoming or recent weekday. If it already falls on that weekday, it moves a full seven days:
+Call [`next()`](/api/calendar-date/#next) or [`previous()`](/api/calendar-date/#previous) on a date or moment to step to an upcoming or recent weekday. If it already falls on that weekday, it moves a full seven days:
 
 ```js
 import { date } from 'native-dates';
@@ -151,7 +151,7 @@ standup.startOfNext('wednesday').text; // 'Nov 18, 2026, 12:00 AM EST'
 
 ## Building and stepping ranges
 
-Create a [range](/guides/ranges/) with `dateRange()` or chain `for()` and `to()` off an existing point. Walk across its steps or divide it into smaller sub-ranges:
+Create a [range](/guides/ranges/) with [`dateRange()`](/api/range-fn/#daterange) or chain [`for()`](/api/ranges/#to) and [`to()`](/api/ranges/#to) off an existing point. Walk across its steps or divide it into smaller sub-ranges:
 
 ```js
 import { dateRange } from 'native-dates';

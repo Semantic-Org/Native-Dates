@@ -45,7 +45,7 @@ eid.format('long', 'ar-SA-u-ca-islamic-umalqura'); // '١ شوال ١٤٤٧ هـ
 eid.format('D MMMM YYYY', 'ar-SA-u-ca-islamic-umalqura'); // '20 مارس 2026'
 ```
 
-Token patterns and partial dates stay Gregorian because one solar month spans two Hijri months. Anchor a specific day with `on()` first:
+Token patterns and partial dates stay Gregorian because one solar month spans two Hijri months. Anchor a specific day with [`on()`](/api/year-month/#on) first:
 
 ```js
 import { yearMonth } from 'native-dates';
@@ -94,7 +94,7 @@ wed.locale('ar-AE').startOf('week').toString(); // '2026-11-16'
 weekdayNames('narrow', undefined, 'ar-EG')[0]; // 'س'
 ```
 
-`isWeekend()` and `isWeekday()` follow the active locale too. In Friday–Saturday markets such as Saudi Arabia and Egypt, Friday is a weekend and Sunday is a workday:
+[`isWeekend()`](/api/calendar-date/#calendar-predicates) and [`isWeekday()`](/api/calendar-date/#calendar-predicates) follow the active locale too. In Friday–Saturday markets such as Saudi Arabia and Egypt, Friday is a weekend and Sunday is a workday:
 
 ```js
 const fri = date('2026-11-20').locale('ar-SA');
@@ -107,7 +107,7 @@ sun.isWeekday(); // true
 
 ## Six-form plurals and RTL text
 
-Arabic uses six plural forms across zero, one, two like *يومان*, 3–10, 11–99, and hundreds. `Duration` and `from()` select each form automatically, alongside *بعد الغد* for two days ahead on calendar dates:
+Arabic uses six plural forms across zero, one, two like *يومان*, 3–10, 11–99, and hundreds. [`Duration`](/api/duration/) and [`from()`](/api/date-time/#from) select each form automatically, alongside *بعد الغد* for two days ahead on calendar dates:
 
 ```js
 import { datetime, days } from 'native-dates';

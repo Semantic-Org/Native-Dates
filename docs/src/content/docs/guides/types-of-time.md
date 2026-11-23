@@ -8,18 +8,18 @@ JavaScript's built-in `Date` uses one object for everything, whether you mean so
 
 Each concept gets its own type so you only work with the parts you actually have:
 
-- **`CalendarDate`** for a day on the calendar, like May 10, 2026
-- **`Time`** for a time of day, like 9:30 AM
-- **`DateTime`** for a specific moment in a time zone
-- **`Duration`** for a length of time, like 2 hours or 3 weeks
-- **`YearMonth`** and **`MonthDay`** for a month without a day, or a recurring day without a year
-- **Ranges** for a span between two dates, times, or moments
+- **[`CalendarDate`](/api/calendar-date/)** for a day on the calendar, like May 10, 2026
+- **[`Time`](/api/time/)** for a time of day, like 9:30 AM
+- **[`DateTime`](/api/date-time/)** for a specific moment in a time zone
+- **[`Duration`](/api/duration/)** for a length of time, like 2 hours or 3 weeks
+- **[`YearMonth`](/api/year-month/)** and **[`MonthDay`](/api/month-day/)** for a month without a day, or a recurring day without a year
+- **[Ranges](/api/ranges/)** for a span between two dates, times, or moments
 
 ## CalendarDate
 
 Use [`CalendarDate`](/api/calendar-date/) when something happens on a day rather than at a specific second: birthdays, due dates, holidays, or values from a date picker.
 
-Create one with `today()` or `date()`:
+Create one with [`today()`](/api/date-fn/#today) or [`date()`](/api/date-fn/):
 
 ```js
 import { date, today } from 'native-dates';
@@ -53,7 +53,7 @@ Adding hours past midnight wraps around the 24-hour clock cleanly, since there i
 
 Use [`DateTime`](/api/date-time/) when something happens at a real point in time: a meeting, a flight departure, or a timestamp from your database.
 
-Create one with `now()` or `datetime()`, or attach a time to a calendar date:
+Create one with [`now()`](/api/datetime-fn/#now) or [`datetime()`](/api/datetime-fn/), or attach a time to a calendar date:
 
 ```js
 import { date, datetime, now } from 'native-dates';
@@ -63,7 +63,7 @@ const created = datetime('2026-11-16T17:30:00Z');
 const standup = date('2026-11-16').at('9:30am', 'America/Los_Angeles');
 ```
 
-Each moment knows both when something happens and which time zone you're viewing it in. Call `in()` to see that same moment in another city:
+Each moment knows both when something happens and which time zone you're viewing it in. Call [`in()`](/api/date-time/#in) to see that same moment in another city:
 
 ```js
 standup.in('Europe/Berlin').format('time', 'en-US'); // '6:30 PM'
@@ -71,7 +71,7 @@ standup.in('Europe/Berlin').format('time', 'en-US'); // '6:30 PM'
 
 ## Duration
 
-Use [`Duration`](/api/duration/) for how long something lasts. Create one with unit helpers like `hours()` or pass a phrase to `duration()`:
+Use [`Duration`](/api/duration/) for how long something lasts. Create one with unit helpers like [`hours()`](/api/duration-fn/#hours) or pass a phrase to [`duration()`](/api/duration-fn/):
 
 ```js
 import { days, duration, hours } from 'native-dates';
@@ -104,7 +104,7 @@ billing.daysInMonth; // 30
 billing.on(15); // CalendarDate for 2026-11-15
 ```
 
-It counts in months and years, and `on()` picks any day inside that month as a calendar date.
+It counts in months and years, and [`on()`](/api/year-month/#on) picks any day inside that month as a calendar date.
 
 ## MonthDay
 
@@ -119,11 +119,11 @@ birthday.in(2026); // CalendarDate for 2026-10-17
 birthday.fallsOn('2026-10-17'); // true
 ```
 
-February 29 lands on February 28 in non-leap years automatically when you call `fallsOn()` or `in()`.
+February 29 lands on February 28 in non-leap years automatically when you call [`fallsOn()`](/api/month-day/#fallson) or [`in()`](/api/month-day/#in).
 
 ## Ranges
 
-Use [Ranges](/guides/ranges/) for a span between two dates, times, or moments. Create one directly with `dateRange()`, `timeRange()`, or `datetimeRange()`:
+Use [Ranges](/guides/ranges/) for a span between two dates, times, or moments. Create one directly with [`dateRange()`](/api/range-fn/#daterange), [`timeRange()`](/api/range-fn/#timerange), or [`datetimeRange()`](/api/range-fn/#datetimerange):
 
 ```js
 import { dateRange, timeRange } from 'native-dates';
@@ -139,14 +139,14 @@ Date ranges include their final day, while moment and time ranges exclude their 
 
 ## Moving between them
 
-These types connect directly when you add or drop parts. Attach a time to a calendar date with `at()` to get a moment, or span from an existing point with `for()` or `to()`:
+These types connect directly when you add or drop parts. Attach a time to a calendar date with [`at()`](/api/calendar-date/#at) to get a moment, or span from an existing point with [`for()`](/api/ranges/#to) or [`to()`](/api/ranges/#to):
 
 ```js
 const reminder = today().plus(1, 'day').at('9:00am');
 const upcoming = today().for(2, 'weeks');
 ```
 
-Going the other way, read part properties directly off any moment or date, or call `as()` inside a method chain:
+Going the other way, read part properties directly off any moment or date, or call [`as()`](/api/date-time/#as) inside a method chain:
 
 ```js
 reminder.date; // CalendarDate for tomorrow

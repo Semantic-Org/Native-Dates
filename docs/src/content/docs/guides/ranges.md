@@ -19,7 +19,7 @@ const hours = timeRange('9am - 5pm');
 const meeting = datetimeRange('2026-09-01T09:00', '90m', 'America/New_York');
 ```
 
-When you already hold a typed date, time, or moment, chain `for()`, `to()`, or `range()` off it directly:
+When you already hold a typed date, time, or moment, chain [`for()`](/api/ranges/#to), [`to()`](/api/ranges/#to), or [`range()`](/api/ranges/#range) off it directly:
 
 ```js
 import { today } from 'native-dates';
@@ -53,7 +53,7 @@ nightShift.duration.hours; // 8
 
 ## Containment and overlap
 
-Check whether a point or sub-range falls inside a span with `contains()`, or test two ranges against each other with `overlaps()` and `intersection()`:
+Check whether a point or sub-range falls inside a span with [`contains()`](/api/ranges/#contains), or test two ranges against each other with [`overlaps()`](/api/ranges/#overlaps) and [`intersection()`](/api/ranges/#intersection):
 
 ```js
 import { dateRange } from 'native-dates';
@@ -70,7 +70,7 @@ booking.intersection(holiday).toString(); // '2026-11-15/2026-11-18'
 
 ## Walking, counting, and splitting spans
 
-Call `every()` to step across a range and collect each date, time, or moment along the way. On a date range, call `count()` to count days, weekdays, weekends, or a specific weekday directly:
+Call [`every()`](/api/ranges/#every) to step across a range and collect each date, time, or moment along the way. On a date range, call [`count()`](/api/ranges/#count) to count days, weekdays, weekends, or a specific weekday directly:
 
 ```js
 import { dateRange } from 'native-dates';
@@ -83,7 +83,7 @@ sprint.count('weekdays'); // 10
 sprint.count('mondays'); // 2
 ```
 
-Call `split()` when you want sub-ranges instead of individual points, such as dividing a shift into booking slots or a sprint into weekly buckets:
+Call [`split()`](/api/ranges/#split) when you want sub-ranges instead of individual points, such as dividing a shift into booking slots or a sprint into weekly buckets:
 
 ```js
 import { timeRange } from 'native-dates';
@@ -109,7 +109,7 @@ week.format('YYYY-MM-DD'); // '2026-09-01 – 2026-09-07'
 timeRange('9:00am', '5:00pm').format('short', 'en-US'); // '9:00 AM – 5:00 PM'
 ```
 
-Every range exposes its length on `.duration` and writes an ISO 8601 interval string with `toString()`. Passing that string back to the same factory restores the range:
+Every range exposes its length on `.duration` and writes an ISO 8601 interval string with [`toString()`](/api/ranges/#tostring). Passing that string back to the same factory restores the range:
 
 ```js
 const raw = week.toString(); // '2026-09-01/2026-09-07'
