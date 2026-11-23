@@ -15,9 +15,12 @@ on:
       - '.github/workflows/bench.yml'
       - 'package-lock.json'
       - '.node-version'
+  # sizes ops before they land: measures the chosen branch against itself with that branch's own bench/ and tools/.
+  # it records no commits, so bench-report.yml posts nothing and the report is the run summary
+  workflow_dispatch:
 
 concurrency:
-  group: bench-${{ github.head_ref || github.ref_name }}
+  group: bench-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -39,7 +42,10 @@ jobs:
           fetch-depth: 2
       - name: Find Base
         id: base
-        run: echo "sha=$(git -C head rev-parse HEAD^1)" >> "$GITHUB_OUTPUT"
+        env:
+          # a manual run has no pull request to compare, so it measures the branch against itself
+          PARENT: ${{ github.event_name == 'pull_request' && 'HEAD^1' || 'HEAD' }}
+        run: echo "sha=$(git -C head rev-parse "$PARENT")" >> "$GITHUB_OUTPUT"
       - name: Checkout Base
         uses: actions/checkout@v7
         with:
@@ -72,6 +78,7 @@ jobs:
           version=$(google-chrome --version | grep -oP '\d+' | head -1)
           (cd "$TOOLS" && npm install "chromedriver@$version" --no-save --no-audit --no-fund)
       - name: Record Commits
+        if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ steps.base.outputs.sha }}
           BASE_REF: ${{ github.event.pull_request.base.ref }}
@@ -83,7 +90,9 @@ jobs:
         env:
           TOOLS: ${{ steps.tools.outputs.dir }}
         run: node "$TOOLS/tools/bench.js" --head head --base base --json "$RUNNER_TEMP/bench"
+      # also after a failed run, so a part-run's summary lists the ops that never reported
       - name: Write Bench Report
+        if: ${{ !cancelled() && steps.tools.outputs.dir != '' }}
         env:
           TOOLS: ${{ steps.tools.outputs.dir }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

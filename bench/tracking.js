@@ -65,7 +65,7 @@ const entries = Array.from({ length: 1000 }, (_, index) => {
 
 configure(team);
 
-// purpose: a live "open for" column over a page of 50 tickets, re-rendered on 5 one-second ticks
+// purpose: a live "open for" column over 50 tickets, re-rendered on 5 one-second ticks, first on its page so it carries the cold start
 export function elapsedColumn50x5() {
   const queue = tickets.map((ticket) => ({ ...ticket, openedAt: datetime(ticket.openedAt) }));
   return ticks.map((now) => {

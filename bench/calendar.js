@@ -100,7 +100,7 @@ const recurring = {
 
 configure({ zone: app.zone, locale: app.locale });
 
-// purpose: flips through a year of months in a date picker, each a 42-day grid marking weekends, today and a selected week
+// purpose: flips a date picker through 12 months of 42 marked days, first on its page so it carries the cold start
 export function monthGrid12() {
   const selection = date(picker.selection[0]).to(picker.selection[1]);
   const months = [];
@@ -124,7 +124,7 @@ export function monthGrid12() {
 }
 
 // purpose: lists two weeks of open 30-minute slots on a booking page, dropping any slot an existing booking overlaps
-export function freeSlots() {
+export function freeSlots2w() {
   const bookings = booking.bookings.map(([start, minutes]) => datetime(start).for(minutes, 'minutes'));
   const days = date(booking.firstDay).for(2, 'weeks').every('day').filter((day) => day.isWeekday());
   return days.flatMap((day) =>
@@ -134,8 +134,8 @@ export function freeSlots() {
   );
 }
 
-// purpose: re-renders the docs meeting planner as its time field is scrubbed across tomorrow, showing six cities' local times
-export function meetingPlanner() {
+// purpose: re-renders the docs meeting planner 288 times as its time field is scrubbed across a day, showing six cities' local times
+export function meetingPlanner288() {
   return planner.times.map((value) => {
     const meeting = tomorrow().at(value);
     return {
@@ -150,7 +150,7 @@ export function meetingPlanner() {
 }
 
 // purpose: expands a team's 20 weekly, fortnightly and monthly series across 2026 and both clock changes
-export function recurringYear() {
+export function recurringYear20() {
   return recurring.series.flatMap(([start, step]) =>
     datetime(start).for(1, 'year').every(step).map((point) => point.toJSON())
   );
@@ -212,7 +212,7 @@ const expected = {
     });
   },
 
-  freeSlots() {
+  freeSlots2w() {
     const { weekend } = week();
     const taken = booking.bookings.map(([start, minutes]) => [wall(start), wall(start).add({ minutes })]);
     const slots = [];
@@ -233,7 +233,7 @@ const expected = {
     return slots;
   },
 
-  meetingPlanner() {
+  meetingPlanner288() {
     const day = todayIn().add({ days: 1 });
     return planner.times.map((value) => {
       const meeting = at(day, value);
@@ -253,7 +253,7 @@ const expected = {
   },
 
   // each point steps from the start, so a series on the 31st lands on every month's last day
-  recurringYear: () =>
+  recurringYear20: () =>
     recurring.series.flatMap(([text, step]) => {
       const start = wall(text);
       const end = start.add({ years: 1 });
@@ -275,7 +275,7 @@ const expected = {
 
 export const checks = {
   monthGrid12: (months) => checkAnswer('calendar monthGrid12', months, expected.monthGrid12()),
-  freeSlots: (slots) => checkAnswer('calendar freeSlots', slots, expected.freeSlots()),
-  meetingPlanner: (renders) => checkAnswer('calendar meetingPlanner', renders, expected.meetingPlanner()),
-  recurringYear: (points) => checkAnswer('calendar recurringYear', points, expected.recurringYear()),
+  freeSlots2w: (slots) => checkAnswer('calendar freeSlots2w', slots, expected.freeSlots2w()),
+  meetingPlanner288: (renders) => checkAnswer('calendar meetingPlanner288', renders, expected.meetingPlanner288()),
+  recurringYear20: (points) => checkAnswer('calendar recurringYear20', points, expected.recurringYear20()),
 };

@@ -27,11 +27,12 @@ const pair = (op, [low, high], { meanMs = 50, samples } = {}) => {
   return [side('this-change', [null, difference]), side('tip-of-tree', [difference, null])];
 };
 // tachometer indexes differences by position, so each file here holds one op
-const measured = (ops, changed = {}) => ({
+const measured = (ops, changed = {}, run = {}) => ({
   files: Object.fromEntries(
     Object.entries(ops).map(([name, benchmarks]) => [name.split(' ')[0], { benchmarks }]),
   ),
   changed,
+  run,
 });
 const build = (ops, rest = {}) =>
   buildReport({ measurements: measured(ops), sampling, repo: REPO, sourceSha: SHA, ...rest });
@@ -42,11 +43,19 @@ describe('readResults(), readSampling(), and readOps()', () => {
     const report = buildReport({ measurements: readResults(fixture), sampling });
     expect(report.rows).toHaveLength(1);
     const [row] = report.rows;
-    expect(row).toMatchObject({ file: 'probe', op: 'probe10k', samples: 430, status: 'too fast' });
+    expect(row).toMatchObject({ file: 'probe', op: 'probe10k', samples: 430, status: 'inconclusive' });
     expect(row.change[0]).toBeCloseTo(-1.56, 1);
     expect(row.change[1]).toBeCloseTo(2.32, 1);
     expect(row.meanMs).toBeCloseTo(53.2, 0);
-    expect(report.summary).toEqual({ faster: 0, slower: 0, unchanged: 0, inconclusive: 0, 'too fast': 1 });
+    expect(report.summary).toEqual({
+      faster: 0,
+      slower: 0,
+      unchanged: 0,
+      inconclusive: 1,
+      'too fast': 0,
+      changed: 0,
+      missing: 0,
+    });
   });
 
   it('reads changed.json apart from the measurements and defaults it to {} when absent', () => {
@@ -58,6 +67,17 @@ describe('readResults(), readSampling(), and readOps()', () => {
     rmSync(dir, { recursive: true, force: true });
     expect(Object.keys(results.files)).toEqual(['parse']);
     expect(results.changed.base.ref).toBe('main');
+  });
+
+  it('reads the runner record in run.json apart from the measurements and defaults it to {} when absent', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'bench-results-'));
+    writeFileSync(join(dir, 'parse.json'), JSON.stringify({ benchmarks: pair('parse10k', [-1, 1]) }));
+    expect(readResults(dir).run).toEqual({});
+    writeFileSync(join(dir, 'run.json'), JSON.stringify({ ops: { parse: ['parse10k'] }, answers: {}, bytes: null }));
+    const results = readResults(dir);
+    rmSync(dir, { recursive: true, force: true });
+    expect(Object.keys(results.files)).toEqual(['parse']);
+    expect(results.run.ops).toEqual({ parse: ['parse10k'] });
   });
 
   it('reads the resolution floor from the percent entry of autoSampleConditions', () => {
@@ -105,7 +125,7 @@ describe('buildReport() op status', () => {
     expect(statusOf([-9, 1])).not.toBe('faster');
   });
 
-  it('splits an interval that crosses the floor by how wide the op duration lets it be', () => {
+  it('splits an interval that crosses the floor by whether runner jitter alone is as wide as the floor', () => {
     // 2 ms of jitter on a 4 ms op expects about ±20%, and on a 100 ms op about ±0.8%
     const short = build({ 'parse once': pair('once', [-12, 14], { meanMs: 4 }) }).rows[0];
     expect(short.status).toBe('too fast');
@@ -113,6 +133,13 @@ describe('buildReport() op status', () => {
     const long = build({ 'parse parse20k': pair('parse20k', [-1, 5], { meanMs: 100 }) }).rows[0];
     expect(long.status).toBe('inconclusive');
     expect(long.expected).toBeLessThan(1);
+  });
+
+  it('calls a long op with a wide interval inconclusive however noisy its own samples are', () => {
+    const noisy = Array.from({ length: 50 }, (_, index) => 200 + (index % 2 ? 20 : -20));
+    const row = build({ 'parse parse40k': pair('parse40k', [-6, 9], { meanMs: 200, samples: noisy }) }).rows[0];
+    expect(row.spreadMs).toBeGreaterThan(19);
+    expect(row.status).toBe('inconclusive');
   });
 
   it('estimates expected noise from an op own samples once it has at least 20', () => {
@@ -143,6 +170,58 @@ describe('buildReport() state', () => {
     expect(Object.entries(states).map(([state, ops]) => build(ops).state === state)).toEqual([true, true, true, true]);
     expect(build(states.regression).title).toBe('❌ Regression on Bench');
     expect(build(states.unchanged).title).toBe('⚪ No meaningful change on Bench');
+  });
+
+  it('names a faster run a trade when the change ships more bytes and an improvement when it does not', () => {
+    const stateWith = (bytes) =>
+      buildReport({ measurements: measured(states.improvement, {}, { bytes }), sampling }).state;
+    expect(stateWith({ head: 14_120, base: 14_063 })).toBe('trade');
+    expect(stateWith({ head: 14_063, base: 14_063 })).toBe('improvement');
+    expect(stateWith({ head: 14_000, base: 14_063 })).toBe('improvement');
+    expect(stateWith(null)).toBe('improvement');
+    const slower = buildReport({
+      measurements: measured(states.regression, {}, { bytes: { head: 14_120, base: 14_063 } }),
+      sampling,
+    });
+    expect(slower.state).toBe('regression');
+  });
+
+  it('reports an op the runner left untimed for a changed answer ahead of any timing', () => {
+    const report = buildReport({
+      measurements: measured(states.improvement, {}, {
+        ops: { parse: ['parse10k'], format: ['format5k'] },
+        answers: { format: ['format5k'] },
+      }),
+      sampling,
+    });
+    expect(report.state).toBe('changed');
+    expect(report.title).toBe('✏️ Answer changed on Bench');
+    expect(report.answers.map(({ file, op }) => `${file} ${op}`)).toEqual(['format format5k']);
+    expect(report.missing).toEqual([]);
+    expect(report.summary).toMatchObject({ faster: 1, changed: 1, missing: 0 });
+  });
+
+  it('reports a planned op with no result as missing and the run as incomplete', () => {
+    const report = buildReport({
+      measurements: measured(states.improvement, {}, {
+        ops: { parse: ['parse10k'], records: ['openTable1k', 'sortByDue1k'] },
+        answers: { records: ['sortByDue1k'] },
+      }),
+      sampling,
+    });
+    expect(report.state).toBe('incomplete');
+    expect(report.title).toBe('⚠️ Incomplete run on Bench');
+    expect(report.missing.map(({ file, op }) => `${file} ${op}`)).toEqual(['records openTable1k']);
+  });
+
+  it('reports every planned op as missing instead of throwing when no file produced a result', () => {
+    const report = buildReport({
+      measurements: measured({}, {}, { ops: { parse: ['parse10k'], format: ['format5k'] } }),
+      sampling,
+    });
+    expect(report.rows).toEqual([]);
+    expect(report.state).toBe('incomplete');
+    expect(report.summary.missing).toBe(2);
   });
 
   it('takes the base commit from changed.json and the head commit from the caller', () => {
@@ -185,6 +264,72 @@ describe('renderComment()', () => {
     expect(markdown).toContain('#### Too fast to measure precisely (1)');
     expect(markdown).toContain('| `time · once` | -12.0% to +14.0% | 4 ms | ±19.6% |');
     expect(markdown).not.toContain('#### Inconclusive');
+  });
+
+  it('shows the time of an unchanged op beside its interval', () => {
+    const markdown = renderComment(build(mixed, { ops }));
+    expect(markdown).toContain('| Op | Interval | Time |');
+    expect(markdown).toContain('| `range · every2k` | -1.0% to +1.0% | 50 ms |');
+  });
+
+  it('lists missing and changed-answer ops with their counts and omits both when there are none', () => {
+    const report = buildReport({
+      measurements: measured(mixed, {}, {
+        ops: { parse: ['parse10k'], records: ['openTable1k'], format: ['format5k', 'tokens1k'] },
+        answers: { format: ['tokens1k'] },
+      }),
+      sampling,
+      ops,
+      repo: REPO,
+      sourceSha: SHA,
+    });
+    const markdown = renderComment(report);
+    expect(markdown.split('\n')[2]).toBe(
+      '✅ 1 faster · ❌ 1 slower · 🔍 1 unsure · ⚪ 1 no change · ✏️ 1 answer changed · ⚠️ 1 not measured',
+    );
+    expect(markdown).toContain('#### ⚠️ Not measured (1)');
+    expect(markdown).toContain('- `records · openTable1k`');
+    expect(markdown).toContain('#### ✏️ Answer changed (1)');
+    expect(markdown).toContain('- `format · tokens1k`');
+    expect(markdown.indexOf('Not measured')).toBeLessThan(markdown.indexOf('#### ✅ Faster'));
+    const plain = renderComment(build(mixed, { ops }));
+    expect(plain).not.toMatch(/Not measured|Answer changed/);
+  });
+
+  it('keeps record names that are not identifiers out of the comment', () => {
+    const report = buildReport({
+      measurements: measured(mixed, {}, {
+        ops: { parse: ['parse10k', '<img src=x>'], '[x](y)': ['op'] },
+        answers: { format: ['](javascript:x)'], parse: 'parse10k' },
+      }),
+      sampling,
+    });
+    expect(report.missing).toEqual([]);
+    expect(report.answers).toEqual([]);
+    expect(renderComment(report)).not.toMatch(/<img|\[x\]|javascript/);
+  });
+
+  it('states the bytes the change ships against the base when the runner measured them', () => {
+    const withBytes = (bytes) => renderComment(buildReport({ measurements: measured(mixed, {}, { bytes }), sampling }));
+    expect(withBytes({ head: 14_120, base: 14_063 })).toContain(
+      '`native-dates (full)` ships 14,120 B, 57 B more than the base',
+    );
+    expect(withBytes({ head: 14_000, base: 14_063 })).toContain('ships 14,000 B, 63 B less than the base');
+    expect(withBytes({ head: 14_063, base: 14_063 })).toContain('ships 14,063 B, the same as the base');
+    expect(withBytes({ head: '<b>', base: 14_063 })).not.toContain('native-dates (full)');
+    expect(renderComment(build(mixed))).not.toContain('native-dates (full)');
+  });
+
+  it('names the commit the report is about ahead of the base commit', () => {
+    const markdown = renderComment(buildReport({
+      measurements: measured(mixed, { base: { sha: SHA, ref: 'main' } }),
+      sampling,
+      head: { sha: 'c'.repeat(40) },
+      repo: REPO,
+    }));
+    expect(markdown).toContain(
+      `this change at [\`ccccccc\`](https://github.com/${REPO}/commit/${'c'.repeat(40)}) · base main at`,
+    );
   });
 
   it('links an op to its export at the bench source commit and lists its purpose in the glossary', () => {

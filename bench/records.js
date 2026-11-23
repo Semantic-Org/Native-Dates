@@ -52,7 +52,7 @@ const feed = distinctInstants(random, 10_000, Date.UTC(2026, 7, 25), viewer.now)
 let table = [];
 let events = [];
 
-// purpose: opens a page of 1,000 orders from JSON and shows when each was placed and its due date
+// purpose: opens a page of 1,000 orders from JSON with placed time and due date, first on its page so it carries the cold start
 export function openTable1k() {
   table = orders.map((order) => ({
     ...order,

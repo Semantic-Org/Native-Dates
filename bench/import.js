@@ -95,18 +95,18 @@ const uploads = {
 const importColumn = ({ locale, zone, cells }) =>
   cells.map((cell) => datetime(cell, { loose: true, locale, zone })?.toJSON() ?? null);
 
-// purpose: stores a column of 1,000 typed date-times written like "Sep 6, 2026 2:30 PM" (en-US, 5% unreadable)
-export function importEnglish1k() {
+// purpose: stores 1,000 typed date-times like "Sep 6, 2026 2:30 PM" (en-US, 5% unreadable), first on its page so it carries the cold start
+export function englishColumn1k() {
   return importColumn(uploads.english);
 }
 
-// purpose: stores a column of 1,000 typed date-times written like "06.09.2026 14:30" (de, 5% unreadable)
-export function importGerman1k() {
+// purpose: stores 1,000 typed date-times like "06.09.2026 14:30" (de, 5% unreadable)
+export function germanColumn1k() {
   return importColumn(uploads.german);
 }
 
-// purpose: stores a column of 1,000 typed date-times written like "6 septembre 2026 14:30" (fr, 5% unreadable)
-export function importFrench1k() {
+// purpose: stores 1,000 typed date-times like "6 septembre 2026 14:30" (fr, 5% unreadable)
+export function frenchColumn1k() {
   return importColumn(uploads.french);
 }
 
@@ -134,7 +134,7 @@ const checkColumn = (op, upload, stored) => {
 };
 
 export const checks = {
-  importEnglish1k: (stored) => checkColumn('import importEnglish1k', uploads.english, stored),
-  importGerman1k: (stored) => checkColumn('import importGerman1k', uploads.german, stored),
-  importFrench1k: (stored) => checkColumn('import importFrench1k', uploads.french, stored),
+  englishColumn1k: (stored) => checkColumn('import englishColumn1k', uploads.english, stored),
+  germanColumn1k: (stored) => checkColumn('import germanColumn1k', uploads.german, stored),
+  frenchColumn1k: (stored) => checkColumn('import frenchColumn1k', uploads.french, stored),
 };

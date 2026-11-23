@@ -18,13 +18,15 @@ const BASE = 'tip-of-tree';
 // scheduling jitter per sample on shared GitHub runners, assumed until an op has enough samples to show its own
 const JITTER_MS = 2;
 const MIN_SAMPLES_FOR_SPREAD = 20;
-// an unsure interval within this multiple of its expected noise is as narrow as the op's duration allows
-const NOISE_TOLERANCE = 2;
 // z for a 95% confidence interval
 const Z = 1.96;
 
+// the first two outrank any timing: a run with ops missing, and an answer a reviewer has yet to rule on
 const STATES = {
+  incomplete: { icon: '⚠️', title: 'Incomplete run' },
+  changed: { icon: '✏️', title: 'Answer changed' },
   improvement: { icon: '✅', title: 'Improvement' },
+  trade: { icon: '🟡', title: 'Faster for more bytes' },
   regression: { icon: '❌', title: 'Regression' },
   mixed: { icon: '🟡', title: 'Mixed' },
   unchanged: { icon: '⚪', title: 'No meaningful change' },
@@ -39,12 +41,17 @@ const PURPOSE = /^\s*\/\/\s*purpose:\s*(.*?)\s*$/;
           Measurements
 *******************************/
 
+// the workflow's commit record and the runner's own record sit beside the tachometer files
+const RECORDS = ['changed.json', 'run.json'];
+
 export function readResults(dir) {
   const read = (name) => JSON.parse(readFileSync(resolve(dir, name), 'utf8'));
-  const names = readdirSync(dir).filter((name) => name.endsWith('.json') && name !== 'changed.json').sort();
+  const record = (name) => (existsSync(resolve(dir, name)) ? read(name) : {});
+  const names = readdirSync(dir).filter((name) => name.endsWith('.json') && !RECORDS.includes(name)).sort();
   return {
     files: Object.fromEntries(names.map((name) => [basename(name, '.json'), read(name)])),
-    changed: existsSync(resolve(dir, 'changed.json')) ? read('changed.json') : {},
+    changed: record('changed.json'),
+    run: record('run.json'),
   };
 }
 
@@ -81,11 +88,13 @@ function spreadOf(samples) {
   return Math.sqrt(samples.reduce((sum, sample) => sum + (sample - mean) ** 2, 0) / (samples.length - 1));
 }
 
-function statusOf([low, high], { floor, expected }) {
+// an interval that crosses the floor is too fast when runner jitter alone is as wide as the floor at this
+// duration and sample count, and inconclusive when the op is long enough that the floor is within reach
+function statusOf([low, high], { floor, jitter }) {
   if (high < -floor) { return 'faster'; }
   if (low > floor) { return 'slower'; }
   if (low > -floor && high < floor) { return 'unchanged'; }
-  return (high - low) / 2 <= NOISE_TOLERANCE * expected ? 'too fast' : 'inconclusive';
+  return jitter >= floor ? 'too fast' : 'inconclusive';
 }
 
 function rowsOf(files, { sampling, ops }) {
@@ -102,11 +111,12 @@ function rowsOf(files, { sampling, ops }) {
       const samples = result.samples?.length || sampling.sampleSize;
       const spreadMs = spreadOf(result.samples);
       // half-width of the 95% interval on a difference of two means, as a percent of the op's duration
-      const expected = Z * Math.sqrt(2 / samples) * spreadMs / meanMs * 100;
+      const noise = (spread) => Z * Math.sqrt(2 / samples) * spread / meanMs * 100;
+      const expected = noise(spreadMs);
       rows.push({
         file,
         op,
-        status: statusOf(change, { floor: sampling.floor, expected }),
+        status: statusOf(change, { floor: sampling.floor, jitter: noise(JITTER_MS) }),
         change,
         changeMs: interval(difference.absolute),
         headMs: interval(result.mean),
@@ -126,25 +136,47 @@ function rowsOf(files, { sampling, ops }) {
              Build
 *******************************/
 
+// ops named in the runner's record as `{ file: [op] }`, each with its place in bench/ when known
+const namedOps = (byFile, ops) =>
+  Object.entries(byFile ?? {}).flatMap(([file, names]) =>
+    (Array.isArray(names) ? names : [])
+      .filter((op) => SAFE_NAME.test(file) && SAFE_NAME.test(op))
+      .map((op) => ({ file, op, source: ops[`${file} ${op}`] ?? null }))
+  );
+
 export function buildReport({ measurements, sampling, ops = {}, head = {}, run = {}, repo = '', sourceSha = '' }) {
-  const { files, changed } = measurements;
+  const { files, changed = {}, run: runner = {} } = measurements;
   const rows = rowsOf(files, { sampling, ops });
-  if (!rows.length) { throw new Error('no op was measured on both this-change and tip-of-tree'); }
-  const count = (status) => rows.filter((row) => row.status === status).length;
+  // left untimed by the runner because the answer on the change differs from the base's
+  const answers = namedOps(runner.answers, ops);
+  // planned by the runner and never reported, as when a file fails part-way and later files do not run
+  const reported = new Set([...rows, ...answers].map(({ file, op }) => `${file} ${op}`));
+  const missing = namedOps(runner.ops, ops).filter(({ file, op }) => !reported.has(`${file} ${op}`));
+  if (!rows.length && !answers.length && !missing.length) {
+    throw new Error('no op was measured on both this-change and tip-of-tree');
+  }
+  const bytes = Number.isFinite(runner.bytes?.head) && Number.isFinite(runner.bytes?.base)
+    ? { head: runner.bytes.head, base: runner.bytes.base, change: runner.bytes.head - runner.bytes.base }
+    : null;
+  const tally = (status) => rows.filter((row) => row.status === status).length;
   const summary = {
-    faster: count('faster'),
-    slower: count('slower'),
-    unchanged: count('unchanged'),
-    inconclusive: count('inconclusive'),
-    'too fast': count('too fast'),
+    faster: tally('faster'),
+    slower: tally('slower'),
+    unchanged: tally('unchanged'),
+    inconclusive: tally('inconclusive'),
+    'too fast': tally('too fast'),
+    changed: answers.length,
+    missing: missing.length,
   };
-  const state = summary.faster && summary.slower
+  // a time win that ships more bytes is a trade, as most pages show too few dates to feel the time
+  const timing = summary.faster && summary.slower
     ? 'mixed'
     : summary.slower
     ? 'regression'
     : summary.faster
-    ? 'improvement'
+    ? (bytes?.change > 0 ? 'trade' : 'improvement')
     : 'unchanged';
+  const state = missing.length ? 'incomplete' : answers.length ? 'changed' : timing;
   return {
     state,
     title: `${STATES[state].icon} ${STATES[state].title} on Bench`,
@@ -155,7 +187,10 @@ export function buildReport({ measurements, sampling, ops = {}, head = {}, run =
     run: { url: run.url ?? '', id: run.id ?? '', reportUrl: run.reportUrl ?? '' },
     repo,
     sourceSha,
+    bytes,
     rows,
+    answers,
+    missing,
   };
 }
 
@@ -194,8 +229,24 @@ function renderUnchanged(lines, rows, report) {
     '<details>',
     `<summary>⚪ No change (${rows.length})</summary>`,
     '',
-    ...table('| Op | Interval |', rows.map((row) => `| ${nameOf(row, report)} | ${intervalCell(row)} |`)),
+    ...table(
+      '| Op | Interval | Time |',
+      rows.map((row) => `| ${nameOf(row, report)} | ${intervalCell(row)} | ${row.meanMs.toFixed(0)} ms |`),
+    ),
     '</details>',
+    '',
+  );
+}
+
+// ops with no timing to show, each a line under a sentence saying why
+function renderUntimed(lines, title, why, entries, report) {
+  if (!entries.length) { return; }
+  lines.push(
+    `#### ${title} (${entries.length})`,
+    '',
+    why,
+    '',
+    ...entries.map((entry) => `- ${nameOf(entry, report)}`),
     '',
   );
 }
@@ -221,12 +272,12 @@ function renderUnsure(lines, inconclusive, tooFast, report) {
     '',
     ...group(
       'Inconclusive',
-      `The interval crossed ±${floor}% and is wider than an op this long usually produces. More samples may settle these.`,
+      `The interval crossed ±${floor}% on an op long enough to measure. The change may sit on the floor, or the run was noisy.`,
       inconclusive,
     ),
     ...group(
       'Too fast to measure precisely',
-      `The interval crossed ±${floor}% and is as narrow as an op this short allows. Larger changes still show up.`,
+      `The interval crossed ±${floor}% and runner jitter alone is that wide on an op this short. Larger changes still show up.`,
       tooFast,
     ),
     '</details>',
@@ -235,9 +286,10 @@ function renderUnsure(lines, inconclusive, tooFast, report) {
 }
 
 function renderGlossary(lines, report) {
-  const rows = report.rows.filter((row) => row.source?.purpose).sort((a, b) =>
-    `${a.file} ${a.op}` < `${b.file} ${b.op}` ? -1 : 1
-  );
+  const rows = [...report.rows, ...report.answers, ...report.missing].filter((row) => row.source?.purpose).sort((
+    a,
+    b,
+  ) => `${a.file} ${a.op}` < `${b.file} ${b.op}` ? -1 : 1);
   if (!rows.length) { return; }
   lines.push(
     '<details>',
@@ -253,8 +305,10 @@ function renderGlossary(lines, report) {
 }
 
 function footerOf(report) {
-  const { sampling, base, repo, run } = report;
+  const { sampling, head, base, repo, run } = report;
   return [
+    // a comment left standing after a later push fails has to show which commit it is about
+    ...(head.sha ? [`this change at ${commitLink(head.sha, repo)}`] : []),
     base.sha ? `base ${escapeText(base.ref)} at ${commitLink(base.sha, repo)}` : `base ${escapeText(base.ref)}`,
     `Sample size: ${sampling.sampleSize}`,
     `Resolution floor: ±${sampling.floor}%`,
@@ -264,16 +318,43 @@ function footerOf(report) {
   ].join(' · ');
 }
 
+const bytesLine = ({ head, change }) =>
+  change === 0
+    ? `\`native-dates (full)\` ships ${grouped(head)} B, the same as the base`
+    : `\`native-dates (full)\` ships ${grouped(head)} B, ${grouped(Math.abs(change))} B ${
+      change > 0 ? 'more' : 'less'
+    } than the base`;
+
 export function renderComment(report) {
   const { summary } = report;
   const lines = [
     `### ${report.title}`,
     '',
-    `✅ ${summary.faster} faster · ❌ ${summary.slower} slower · 🔍 ${
-      summary.inconclusive + summary['too fast']
-    } unsure · ⚪ ${summary.unchanged} no change`,
+    [
+      `✅ ${summary.faster} faster`,
+      `❌ ${summary.slower} slower`,
+      `🔍 ${summary.inconclusive + summary['too fast']} unsure`,
+      `⚪ ${summary.unchanged} no change`,
+      ...(summary.changed ? [`✏️ ${summary.changed} answer changed`] : []),
+      ...(summary.missing ? [`⚠️ ${summary.missing} not measured`] : []),
+    ].join(' · '),
     '',
+    ...(report.bytes ? [bytesLine(report.bytes), ''] : []),
   ];
+  renderUntimed(
+    lines,
+    '⚠️ Not measured',
+    'The run planned these ops and no result came back for them, so this report says nothing about them.',
+    report.missing,
+    report,
+  );
+  renderUntimed(
+    lines,
+    '✏️ Answer changed',
+    'On this change these ops answer differently than on the base, or fail to run, so they were not timed. The Bench job log shows each difference.',
+    report.answers,
+    report,
+  );
   renderConfident(lines, '✅ Faster', rowsWith(report, 'faster'), report);
   renderConfident(lines, '❌ Slower', rowsWith(report, 'slower'), report);
   renderUnchanged(lines, rowsWith(report, 'unchanged'), report);
@@ -288,6 +369,7 @@ export function renderComment(report) {
 *******************************/
 
 const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+const grouped = (number) => number.toLocaleString('en-US');
 const percent = (number, digits = 1) => `${number > 0 ? '+' : ''}${number.toFixed(digits)}%`;
 const isSha = (value) => /^[0-9a-f]{7,64}$/i.test(String(value ?? ''));
 const commitLink = (sha, at) =>
@@ -348,6 +430,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   console.log(
     `${report.state}: ${summary.faster} faster, ${summary.slower} slower, ${
       summary.inconclusive + summary['too fast']
-    } unsure, ${summary.unchanged} no change`,
+    } unsure, ${summary.unchanged} no change, ${summary.changed} answer changed, ${summary.missing} not measured`,
   );
 }
