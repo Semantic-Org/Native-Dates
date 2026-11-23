@@ -135,19 +135,30 @@ export class Terminal {
 
   // a sentence in the organisation's voice: code and tokens stand out, and everything after the first sentence
   // recedes. colour marks code here, so its backticks are dropped. without colour they stay and do that job
-  say(text, { level = 'info', faded = false } = {}) {
+  // faded is a whole sentence that recedes, lit keeps its code at full colour, and flat is one grey with
+  // nothing standing out, for a line that is switched off
+  say(text, { level = 'info', faded = false, lit = false, flat = false } = {}) {
     if (!this.colors) { return text; }
-    const boundary = faded ? -1 : text.indexOf('. ');
+    const boundary = faded || flat ? -1 : text.indexOf('. ');
     const clause = (part, recedes) => {
-      const role = (name) => (recedes ? `faded${name === 'prose' ? '' : name[0].toUpperCase() + name.slice(1)}` : name);
+      const role = (name) => {
+        if (flat) { return 'faded'; }
+        return recedes && !(lit && name === 'code') ? `faded${name[0].toUpperCase()}${name.slice(1)}` : name;
+      };
       const prose = this.ink(level, recedes ? 'faded' : 'prose');
       return prose + part.replace(Terminal.tokens, (match, code) => {
         const shown = code?.startsWith('`') ? code.slice(1, -1) : match;
         return `${this.ink(level, role(code ? 'code' : 'token'))}${shown}${prose}`;
       }) + '\x1b[0m';
     };
-    if (faded || boundary === -1) { return clause(text, faded); }
+    if (boundary === -1) { return clause(text, faded || flat); }
     return `${clause(text.slice(0, boundary + 1), false)} ${clause(text.slice(boundary + 2), true)}`;
+  }
+
+  // marks a name as code inside a sentence headed for say: backticks where colour will replace them,
+  // and the bare name where it will not, so a plain line is not littered with them
+  code(text) {
+    return this.colors ? `\`${text}\`` : text;
   }
 
   // the one line a person has to act on
@@ -178,7 +189,7 @@ export class Terminal {
     const room = fit ? (this.output.columns || columns) - mark.length - labelWidth - tail.length - 8 : Infinity;
     const cut = text.length > room ? `${text.slice(0, Math.max(0, room - 1))}…` : text;
     const level = { fail: 'error', warn: 'warn' }[state] ?? 'info';
-    const sentence = this.say(this.closed(cut), { level, faded: state === 'unchecked' });
+    const sentence = this.say(this.closed(cut), { level, flat: state === 'unchecked' });
     const name = this.say(label.padEnd(labelWidth), { faded: state === 'unchecked' });
     return `  ${this.mark(state, mark)} ${name} ${sentence}${tail && ` ${this.say(tail, { faded: true })}`}`;
   }
@@ -350,7 +361,8 @@ export class Terminal {
     return answer;
   }
 
-  // one live question with several answers: rows are { label, text, name, on }, switched with space
+  // one live question with several answers: rows are { label, text, name, on }, switched with space,
+  // and a row's choice is the sentence to show here when it says more than its text
   // answers true once something is selected and confirmed, false when the person stops with Ctrl+C,
   // and null when esc steps back, leaving the block for the question before it to redraw
   // above is the record of that question, kept at the top of the block
@@ -361,9 +373,9 @@ export class Terminal {
       this.draw([
         ...above,
         `  ${this.mark('ask')} ${this.strong(question)}`,
-        ...rows.map(({ label, text, on }, index) => {
+        ...rows.map(({ label, text, choice = text, on }, index) => {
           const pointer = index === at ? this.mark('cursor') : ' '.repeat(this.marks.cursor.length);
-          return `  ${pointer} ${this.row(on ? 'checked' : 'unchecked', label, text, { fit: true }).trimStart()}`;
+          return `  ${pointer} ${this.row(on ? 'checked' : 'unchecked', label, choice, { fit: true }).trimStart()}`;
         }),
         `  ${warning ? this.say(warning, { level: 'warn' }) : this.hint(...keys)}`,
       ]);

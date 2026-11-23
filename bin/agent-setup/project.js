@@ -30,11 +30,8 @@ const realPath = (path) => {
 */
 
 export class Project {
-  // where agents look for skills, and who reads each folder
-  static skillFolders = {
-    '.agents/skills': 'Codex, Cursor, Copilot, etc.',
-    '.claude/skills': 'Claude Code, Cursor, Copilot, etc.',
-  };
+  // the folders agents read skills from in a project, in the order they are filled
+  static skillFolders = ['.agents/skills', '.claude/skills'];
 
   // the coding agents this command knows, each a setting a library can add to or change
   // * bin - the binary on the path that shows the agent is installed
@@ -122,10 +119,20 @@ export class Project {
   }
 
   // the skill folders to fill for a scope
+  // who a folder is for. found is the found agents that read it, less those that get a plugin under scope
+  // 'machine'. every is each agent that reads it, found ones first, for choosing a folder nothing was found for
+  readers(folder, scope = 'project') {
+    const reads = (agent) => Project.agents[agent].folders.includes(folder);
+    const plugged = scope === 'machine' ? this.pluginAgents : [];
+    const found = this.agents.filter((agent) => reads(agent) && !plugged.includes(agent));
+    const others = Object.keys(Project.agents).filter((agent) => reads(agent) && !found.includes(agent));
+    return { found, every: [...found, ...others] };
+  }
+
   // 'project' is every folder, and 'machine' only what the found agents without a plugin need,
   // each in the first folder it reads that no plugin agent reads too, so a skill loads twice only when it must
   foldersFor(scope) {
-    if (scope !== 'machine') { return Object.keys(Project.skillFolders); }
+    if (scope !== 'machine') { return Project.skillFolders; }
     const taken = this.pluginAgents.flatMap((agent) => Project.agents[agent].folders);
     const others = this.agents.filter((agent) => !this.pluginAgents.includes(agent));
     return [
@@ -154,13 +161,18 @@ export class Project {
         plan: ['plugin', { agent, command: this.pluginCommands(agent).join(' && ') }],
         apply: () => this.installPlugin(agent),
       })),
-      ...folders.map((folder) => ({
-        step: 'skills',
-        folder,
-        selected: !this.agents.length || reads(folder),
-        plan: ['skills', { folder, readers: Project.skillFolders[folder] }],
-        apply: () => this.placeSkills(folder),
-      })),
+      ...folders.map((folder) => {
+        const { found, every } = this.readers(folder, scope);
+        return {
+          step: 'skills',
+          folder,
+          selected: !this.agents.length || reads(folder),
+          // the preview names who needs the folder here, and the checklist everyone who reads it
+          plan: ['skills', { folder, readers: found.length ? found : every }],
+          choice: ['skills', { folder, readers: every }],
+          apply: () => this.placeSkills(folder),
+        };
+      }),
       ...this.pendingNotes.map((file) => ({
         step: 'note',
         plan: [existsSync(join(this.root, file)) ? 'note' : 'noteNew', { file }],
@@ -312,7 +324,7 @@ export class Project {
   }
 
   skillsIn(...states) {
-    return Object.keys(Project.skillFolders).flatMap((folder) =>
+    return Project.skillFolders.flatMap((folder) =>
       this.skills.filter((skill) => states.includes(this.skillState(folder, skill))).map((skill) => ({ folder, skill }))
     );
   }
@@ -379,7 +391,7 @@ export class Project {
 
   // the entry skill at a path that exists: a skills folder holding it, else the installed package's own copy
   get skillPath() {
-    const folder = Object.keys(Project.skillFolders).find((folder) => this.skillState(folder, this.name) === 'ready');
+    const folder = Project.skillFolders.find((folder) => this.skillState(folder, this.name) === 'ready');
     const home = folder ?? `${this.installPath ?? `node_modules/${this.name}`}/skills`;
     return `${home}/${this.name}/SKILL.md`;
   }

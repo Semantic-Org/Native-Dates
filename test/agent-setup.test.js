@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { fill, joinWords } from '../bin/agent-setup/helpers.js';
+import { Project } from '../bin/agent-setup/project.js';
 import { Setup } from '../bin/agent-setup/setup.js';
 import { packSkills } from '../tools/skills.js';
 
@@ -38,6 +39,7 @@ const nodeOnly = join(scratch, 'node');
 // a home for anything that looks for one, so nothing can reach a real agent's configuration
 const home = join(scratch, 'home');
 const scriptBin = ['/usr/bin/script', '/bin/script'].find((path) => existsSync(path));
+const sttyBin = ['/usr/bin/stty', '/bin/stty'].find((path) => existsSync(path));
 
 const environment = (agents = [], extra = {}) => ({
   PATH: [managers, ...agents.map((agent) => join(agentBins, agent)), nodeOnly].join(delimiter),
@@ -416,6 +418,37 @@ describe('npx native-dates', () => {
     expect(ran).toBe(install);
     expect(existsSync(join(dir, '.claude/skills/native-dates/SKILL.md'))).toBe(true);
     expect(existsSync(join(dir, '.agents'))).toBe(false);
+  });
+
+  // every agent the table says reads a folder, found ones first
+  const readersOf = (folder, found = []) => {
+    const reads = Object.keys(Project.agents).filter((agent) => Project.agents[agent].folders.includes(folder));
+    return joinWords([...found, ...reads.filter((agent) => !found.includes(agent))]);
+  };
+
+  it('names in the preview only the found agents that need a folder, and every reader when none is found', () => {
+    const one = setupWith({ agents: ['claude'] }, project()).output;
+    expect(one).toContain(fill(copy.skills, { folder: '.claude/skills', readers: 'Claude Code' }));
+    const none = setup(project()).output;
+    expect(none).toContain(fill(copy.skills, { folder: '.claude/skills', readers: readersOf('.claude/skills') }));
+    expect(none).toContain(fill(copy.skills, { folder: '.agents/skills', readers: readersOf('.agents/skills') }));
+  });
+
+  // enter takes this project, down and enter open the checklist, and enter confirms it as it stands
+  // the terminal is widened first, since a row in the checklist is cut to the width it reports
+  it.runIf(scriptBin && sttyBin)('names every agent that reads a folder in the checklist, found ones first', () => {
+    const command = `${sttyBin} cols 200; "${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+    const { stdout } = spawnSync(scriptBin, ['-qec', command, '/dev/null'], {
+      cwd: project(),
+      input: '\rj\r\r',
+      encoding: 'utf8',
+      timeout: 30_000,
+      env: environment(['claude'], { NO_COLOR: '1' }),
+    });
+    const every = readersOf('.claude/skills', ['Claude Code']);
+    expect(every).not.toBe('Claude Code');
+    expect(stdout).toContain(fill(copy.skills, { folder: '.claude/skills', readers: every }));
+    expect(stdout).toContain(fill(copy.skills, { folder: '.agents/skills', readers: readersOf('.agents/skills') }));
   });
 
   it('runs no agent and writes only in the project unless --global is given', () => {

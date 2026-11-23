@@ -153,10 +153,12 @@ Options (previews changes and prompts by default):
       const agents = Object.keys(Project.agents).filter((agent) => Project.agents[agent].plugin);
       return this.refuse('globalUnavailable', { agents: joinWords(agents) });
     }
-    const agents = this.words(found.length ? 'detected' : 'detectedNone', { agents: joinWords(found) });
+    const agents = this.words(found.length ? 'detected' : 'detectedNone', {
+      agents: found.map((agent) => terminal.code(agent)),
+    });
     terminal.line(`\n  ${terminal.badge()} ${terminal.say(version)}`);
     terminal.line(`  ${terminal.say(this.words('tagline'), { faded: true })}`);
-    terminal.line(`  ${terminal.say(agents, { faded: true })}\n`);
+    terminal.line(`  ${terminal.say(agents, { faded: true, lit: true })}\n`);
 
     // with nobody to pick, where the skills go comes from the flag, and what will change is printed once
     if (!live) {
@@ -198,6 +200,8 @@ Options (previews changes and prompts by default):
       name: item.agent ?? item.plan[1].folder ?? item.plan[1].file
         ?? (item.step === 'update' ? this.words('updateName', item.plan[1]) : item.step),
       text: this.words(...item.plan),
+      // the sentence shown while choosing, where it says more than the preview does
+      choice: this.words(...(item.choice ?? item.plan)),
       on: item.selected ?? true,
     }));
     this.kept = project.otherSkills.map((path) => terminal.row('warn', 'kept', this.words('kept', { path })));
@@ -407,7 +411,10 @@ Options (previews changes and prompts by default):
     const placed = ['linked', 'copied'].filter((how) => values[how]).map((how) =>
       fill(copy[how], { count: values[how], noun: values[how] === 1 ? one : many })
     );
-    return fill(copy[key], { name, version, homepage, placed: placed.join(' and '), ...values });
+    const listed = Object.entries(values).map((
+      [name, value],
+    ) => [name, Array.isArray(value) ? joinWords(value) : value]);
+    return fill(copy[key], { name, version, homepage, placed: placed.join(' and '), ...Object.fromEntries(listed) });
   }
 
   // a busy row counts its seconds and is cut to the width, since it is redrawn in place. a finished one prints whole
