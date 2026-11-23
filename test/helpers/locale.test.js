@@ -503,7 +503,10 @@ describe('locale precedence in formatting', () => {
     expect(d.locale()).toBeUndefined();
     expect(d.format('MMMM')).toBe('mai');
     const german = new Intl.Locale('de');
+    expect(date('2026-05-15', { locale: german }).format('MMMM')).toBe('Mai');
     expect(date('2026-05-15', { locale: german }).plus(1, 'day').format('MMMM')).toBe('Mai');
+    expect(date('2026-05-15').format('MMMM', german)).toBe('Mai');
+    expect(date('2026-05-15').format('long', german)).toContain('Mai');
     expect(duration(hours(2).locale('fr'), { locale: undefined }).locale()).toBe('fr');
   });
 });

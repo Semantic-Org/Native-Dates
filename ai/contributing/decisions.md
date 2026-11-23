@@ -8,10 +8,10 @@ Active package decisions grouped by area, newest first.
 
 ### Zones, Offsets, and Serialization
 
-- **D23:** Explicit standard and daylight abbreviations inside `{ loose: true }` strings keep fixed UTC offsets (2026-11-23) [L139-L143](decisions/package.md#d23-explicit-standard-and-daylight-abbreviations-inside--loose-true--strings-keep-fixed-utc-offsets-2026-11-23)
-  - Reopen: users report another regional standard/daylight pair hitting a seasonal shift inside inline log timestamps, or expect human-typed `'2:30 PM EST'` in summer to follow daylight time.
-- **D22:** `@native-dates/plugins/zones` maps non-IANA city names and resolves shared abbreviations by locale (2026-11-22) [L133-L137](decisions/package.md#d22-native-datespluginszones-maps-non-iana-city-names-and-resolves-shared-abbreviations-by-locale-2026-11-22)
+- **D22:** `@native-dates/plugins/zones` maps non-IANA city names and resolves shared abbreviations by locale (2026-11-22) [L131-L135](decisions/package.md#d22-native-datespluginszones-maps-non-iana-city-names-and-resolves-shared-abbreviations-by-locale-2026-11-22)
   - Reopen: city requests keep expanding the alias table without a clear boundary, or users report locale-driven lookup misreading foreign-country abbreviations.
+- **D21:** Time zone abbreviations inside `{ loose: true }` strings resolve like `{ zone }` rather than `Date.parse()` (2026-11-22) [L125-L129](decisions/package.md#d21-time-zone-abbreviations-inside--loose-true--strings-resolve-like--zone--rather-than-dateparse-2026-11-22)
+  - Reopen: users parsing RFC 2822 email or HTTP headers report bugs from `'EST'` or `'PST'` observing daylight time while `@native-dates/plugins/zones` is loaded.
 - **D2:** `DateTime` serializes to ISO 8601 UTC rather than Temporal's bracketed `[Zone]` string (2026-11-05) [L11-L15](decisions/package.md#d2-datetime-serializes-to-iso-8601-utc-rather-than-temporals-bracketed-zone-string-2026-11-05)
   - Reopen: RFC 9557 bracketed zone strings gain broad parser and database support and users ask to round-trip `.zone` through JSON.
 - **D1:** Trailing `Z` and numeric offsets in `datetime()` set the instant, not `.zone` (2026-11-05) [L5-L9](decisions/package.md#d1-trailing-z-and-numeric-offsets-in-datetime-set-the-instant-not-zone-2026-11-05)
@@ -58,7 +58,7 @@ Active package decisions grouped by area, newest first.
 
 ### Nouns, Instances, and Epoch
 
-- **D24:** Instances expose `.text` as a lazy prototype getter instead of an eager own property (2026-11-23) [L145-L149](decisions/package.md#d24-instances-expose-text-as-a-lazy-prototype-getter-instead-of-an-eager-own-property-2026-11-23)
+- **D23:** Instances expose `.text` as a lazy prototype getter instead of an eager own property (2026-11-23) [L137-L141](decisions/package.md#d23-instances-expose-text-as-a-lazy-prototype-getter-instead-of-an-eager-own-property-2026-11-23)
   - Reopen: browser developers report collapsed DevTools previews missing timezone or formatted text frequently enough to warrant a cheap non-`Intl` preview property.
 - **D13:** Unix timestamp properties include their unit (`epochSeconds`, `epochMilliseconds`, `epochNanoseconds`) with no bare `.epoch` (2026-11-17) [L77-L81](decisions/package.md#d13-unix-timestamp-properties-include-their-unit-epochseconds-epochmilliseconds-epochnanoseconds-with-no-bare-epoch-2026-11-17)
   - Reopen: migration feedback or user issues show omitting `.epoch` causing widespread friction.
@@ -83,7 +83,7 @@ Every package decision (`D1`..`Dn`) in file order.
 - **D2:** `DateTime` serializes to ISO 8601 UTC rather than Temporal's bracketed `[Zone]` string (2026-11-05) [L11-L15](decisions/package.md#d2-datetime-serializes-to-iso-8601-utc-rather-than-temporals-bracketed-zone-string-2026-11-05)
   - Reopen: RFC 9557 bracketed zone strings gain broad parser and database support and users ask to round-trip `.zone` through JSON.
 - **D3:** Instances freeze on construction with `text` as an eager own property (2026-11-05) [L17-L21](decisions/package.md#d3-instances-freeze-on-construction-with-text-as-an-eager-own-property-2026-11-05)
-  - Superseded by D24 (2026-11-23)
+  - Superseded by D23 (2026-11-23)
 - **D4:** Plugins attach on subpath import instead of requiring `use()` or `extend()` (2026-11-08) [L23-L27](decisions/package.md#d4-plugins-attach-on-subpath-import-instead-of-requiring-use-or-extend-2026-11-08)
   - Reopen: reports show a mainstream bundler tree-shaking bare `@native-dates/plugins/*` imports despite `"sideEffects": ["./src/*.js"]`.
 - **D5:** `DateRange` includes its end date while `DateTimeRange` and `TimeRange` are half-open (2026-11-12) [L29-L33](decisions/package.md#d5-daterange-includes-its-end-date-while-datetimerange-and-timerange-are-half-open-2026-11-12)
@@ -118,11 +118,9 @@ Every package decision (`D1`..`Dn`) in file order.
   - Reopen: bug reports show `.locale()` unexpectedly changing `isWeekend()`, `isWeekday()`, or `count('weekdays')`, or users ask for a `configure()` weekend override.
 - **D20:** Loose parsing follows the locale while `monthDay()` and `dayMonth()` keep function-name order (2026-11-22) [L119-L123](decisions/package.md#d20-loose-parsing-follows-the-locale-while-monthday-and-daymonth-keep-function-name-order-2026-11-22)
   - Reopen: speakers report a locale's `Intl` short date order diverging from typed input, or unconfigured host locales cause inconsistent `{ loose: true }` results across environments.
-- **D21:** Time zone abbreviations inside `{ loose: true }` strings resolve like `{ zone }` rather than `Date.parse()` (2026-11-22) [L125-L131](decisions/package.md#d21-time-zone-abbreviations-inside--loose-true--strings-resolve-like--zone--rather-than-dateparse-2026-11-22)
-  - Superseded by D23 (2026-11-23)
-- **D22:** `@native-dates/plugins/zones` maps non-IANA city names and resolves shared abbreviations by locale (2026-11-22) [L133-L137](decisions/package.md#d22-native-datespluginszones-maps-non-iana-city-names-and-resolves-shared-abbreviations-by-locale-2026-11-22)
+- **D21:** Time zone abbreviations inside `{ loose: true }` strings resolve like `{ zone }` rather than `Date.parse()` (2026-11-22) [L125-L129](decisions/package.md#d21-time-zone-abbreviations-inside--loose-true--strings-resolve-like--zone--rather-than-dateparse-2026-11-22)
+  - Reopen: users parsing RFC 2822 email or HTTP headers report bugs from `'EST'` or `'PST'` observing daylight time while `@native-dates/plugins/zones` is loaded.
+- **D22:** `@native-dates/plugins/zones` maps non-IANA city names and resolves shared abbreviations by locale (2026-11-22) [L131-L135](decisions/package.md#d22-native-datespluginszones-maps-non-iana-city-names-and-resolves-shared-abbreviations-by-locale-2026-11-22)
   - Reopen: city requests keep expanding the alias table without a clear boundary, or users report locale-driven lookup misreading foreign-country abbreviations.
-- **D23:** Explicit standard and daylight abbreviations inside `{ loose: true }` strings keep fixed UTC offsets (2026-11-23) [L139-L143](decisions/package.md#d23-explicit-standard-and-daylight-abbreviations-inside--loose-true--strings-keep-fixed-utc-offsets-2026-11-23)
-  - Reopen: users report another regional standard/daylight pair hitting a seasonal shift inside inline log timestamps, or expect human-typed `'2:30 PM EST'` in summer to follow daylight time.
-- **D24:** Instances expose `.text` as a lazy prototype getter instead of an eager own property (2026-11-23) [L145-L149](decisions/package.md#d24-instances-expose-text-as-a-lazy-prototype-getter-instead-of-an-eager-own-property-2026-11-23)
+- **D23:** Instances expose `.text` as a lazy prototype getter instead of an eager own property (2026-11-23) [L137-L141](decisions/package.md#d23-instances-expose-text-as-a-lazy-prototype-getter-instead-of-an-eager-own-property-2026-11-23)
   - Reopen: browser developers report collapsed DevTools previews missing timezone or formatted text frequently enough to warrant a cheap non-`Intl` preview property.

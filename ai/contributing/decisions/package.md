@@ -18,7 +18,7 @@ Reopen: RFC 9557 bracketed zone strings gain broad parser and database support a
 
 Putting `text` on the instance as its first own property shows the human-readable value inline in `console.log()` and DevTools instead of hiding it behind prototype getters. On `Duration`, eager `Intl.DurationFormat` formatting (~14 µs in Node) was accepted over a lazy getter so every class inspects the same way.
 
-Superseded by D24 (2026-11-23).
+Superseded by D23 (2026-11-23).
 
 ## D4: Plugins attach on subpath import instead of requiring `use()` or `extend()` (2026-11-08)
 
@@ -124,8 +124,6 @@ Reopen: speakers report a locale's `Intl` short date order diverging from typed 
 
 ## D21: Time zone abbreviations inside `{ loose: true }` strings resolve like `{ zone }` rather than `Date.parse()` (2026-11-22)
 
-Superseded by D23 (2026-11-23).
-
 Leaving inline abbreviations to `Date.parse()` read `'CST'` as fixed `-06:00` everywhere, rejected `'KST'` and `'MSK'`, and treated `'EST'` in July as `-05:00` even when `{ zone: 'EST' }` observed `America/New_York` daylight time under `@native-dates/plugins/zones`. Resolving post-clock abbreviations through `zoneId(name, locale)` keeps inline strings consistent with `{ zone }` and `zoneAliases`, sets the instant without changing `.zone` (`D1`), and yields to an explicit numeric offset written beside it (`'+0800 CST'`).
 
 Reopen: users parsing RFC 2822 email or HTTP headers report bugs from `'EST'` or `'PST'` observing daylight time while `@native-dates/plugins/zones` is loaded.
@@ -136,13 +134,7 @@ Without built-in aliases, every localized app had to configure its own `zoneAlia
 
 Reopen: city requests keep expanding the alias table without a clear boundary, or users report locale-driven lookup misreading foreign-country abbreviations.
 
-## D23: Explicit standard and daylight abbreviations inside `{ loose: true }` strings keep fixed UTC offsets (2026-11-23)
-
-Supersedes D21. Passing `'EST'`, `'CET'`, or `'AEST'` as an explicit `{ zone }` argument (`D22`) names a regional zone for ongoing calendar math, whereas an inline `'EST'`, `'EDT'`, `'CET'`, `'CEST'`, `'AEST'`, or `'AEDT'` inside a timestamp string (`'2026-07-04 14:30 EST'`, RFC 2822 headers, log lines) records the UTC offset active when the string was written. With `@native-dates/plugins/zones` loaded, `D21` shifted `'2026-07-04 14:30 EST'` and `'2026-07-15 14:30 CET'` by an hour into summer time. Explicit US, European, UK, Australian, and New Zealand standard and daylight codes (`EST`/`EDT`, `CDT`, `MST`/`MDT`, `PDT`, `AKST`/`AKDT`, `HST`, `WET`/`WEST`, `CET`/`CEST`, `EET`/`EEST`, `AWST`, `ACST`/`ACDT`, `AEST`/`AEDT`, `NZST`/`NZDT`, plus `CST`, `PST`, and `BST` when resolved to `America/Chicago`, `America/Los_Angeles`, or `Europe/London`) now keep their fixed UTC offsets inside `{ loose: true }` strings unless overridden in `zoneAliases`, while regional codes (`PT`, `ET`, `KST`, `MSK`, `'CST'` under `'zh-CN'`, and `'BST'` under `'bn'`) still resolve through `zoneId(name, locale)`.
-
-Reopen: users report another regional standard/daylight pair hitting a seasonal shift inside inline log timestamps, or expect human-typed `'2:30 PM EST'` in summer to follow daylight time.
-
-## D24: Instances expose `.text` as a lazy prototype getter instead of an eager own property (2026-11-23)
+## D23: Instances expose `.text` as a lazy prototype getter instead of an eager own property (2026-11-23)
 
 Supersedes D3. Formatting `.text` via `Intl` inside every constructor made `CalendarDate` ISO parsing ~2.5-2.9x slower on the benchmark suite (~1.8x slower on `DateTime.plus()` and ~20x slower on `Duration` construction), left `.text` stale after `configure({ locale })`, and caused `toEqual()` to disagree with `.equals()` across instance locales (`D6`). Moving `text` to a prototype getter removes constructor `Intl` work from arithmetic and parsing chains, keeps compact `util.inspect()` output in Node/Bun/Deno, and orders `DateTime` own fields as `month, day, year, hour, minute` first so browser DevTools' five-property preview still distinguishes same-day times.
 

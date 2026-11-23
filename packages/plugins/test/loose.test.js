@@ -1217,6 +1217,7 @@ describe('monthDay() and yearMonth() connecting words and unit labels with { loo
 describe('datetime() zone abbreviations in the input string with { loose: true }', () => {
   it('parses EST as the fixed -05:00 IANA zone and EDT through Date.parse', () => {
     expect(datetime('2026-01-15 09:30 EST', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-01-15T14:30:00.000Z');
+    expect(datetime('2026-07-04 14:30 EST', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-07-04T19:30:00.000Z');
     expect(datetime('2026-07-15 09:30 EDT', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-07-15T13:30:00.000Z');
   });
 

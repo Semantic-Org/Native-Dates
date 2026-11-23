@@ -6,7 +6,6 @@ import {
   checkedDisambiguation,
   dayFirst as readsDayFirst,
   locale as pickLocale,
-  settings as activeSettings,
   zoneId,
 } from 'native-dates/helpers/zones';
 
@@ -269,53 +268,9 @@ const parseWithLocale = (text, settings) => {
 const zoneAbbreviation =
   /(\d:\d{2}(?::\d{2}(?:\.\d+)?)?(?: ?[AaPp]\.?[Mm]\.?)?(?: [+-]\d{2}:?\d{2})?) (?![AP]M\b)(\p{Lu}{2}|(?:(?![a-z])[\p{L}\p{M}]){3,5})(?![\p{L}\p{M}+]|-\d)/u;
 
-// explicit standard and daylight abbreviations inside timestamp strings keep their fixed UTC offsets rather than
-// shifting across DST when @native-dates/plugins/zones maps bare 'EST', 'CET', or 'AEST' to regional IANA zones
-const fixedOffsets = {
-  EST: '-05:00',
-  EDT: '-04:00',
-  CDT: '-05:00',
-  MST: '-07:00',
-  MDT: '-06:00',
-  PDT: '-07:00',
-  AKST: '-09:00',
-  AKDT: '-08:00',
-  HST: '-10:00',
-  WET: '+00:00',
-  WEST: '+01:00',
-  CET: '+01:00',
-  CEST: '+02:00',
-  EET: '+02:00',
-  EEST: '+03:00',
-  AWST: '+08:00',
-  ACST: '+09:30',
-  ACDT: '+10:30',
-  AEST: '+10:00',
-  AEDT: '+11:00',
-  NZST: '+12:00',
-  NZDT: '+13:00',
-};
-
 const zoneNamed = (name, locale) => {
-  const upper = name.toUpperCase();
-  const hasCustomAlias = Object.keys(activeSettings.zoneAliases).some((key) => key.toUpperCase() === upper);
-  if (!hasCustomAlias && fixedOffsets[upper]) {
-    return fixedOffsets[upper];
-  }
   try {
-    const resolved = zoneId(name, locale);
-    if (!hasCustomAlias) {
-      if (upper === 'CST' && resolved === 'America/Chicago') {
-        return '-06:00';
-      }
-      if (upper === 'PST' && resolved === 'America/Los_Angeles') {
-        return '-08:00';
-      }
-      if (upper === 'BST' && resolved === 'Europe/London') {
-        return '+01:00';
-      }
-    }
-    return resolved;
+    return zoneId(name, locale);
   }
   catch {
     return undefined;
@@ -327,7 +282,7 @@ export const looseZoned = (input, { zone, dayFirst, locale, timeOnly, disambigua
   const mode = checkedDisambiguation(disambiguation);
   let text = normalize(input.trim());
 
-  // resolve the abbreviation after the clock while keeping explicit standard/daylight codes at their fixed offsets
+  // resolve the abbreviation as the zone argument would, since Date.parse reads 'CST' as -06:00 everywhere
   let writtenZone;
   let hasUnknownZone = false;
   const abbreviation = zoneAbbreviation.exec(text);

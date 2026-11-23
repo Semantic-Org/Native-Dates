@@ -39,20 +39,11 @@ describe('datetime() zone abbreviations in the input string with { loose: true }
     expect(read('2026-11-16 14:30 HQ')).toBe('2026-11-16T06:30:00.000Z');
   });
 
-  it('keeps fixed UTC offsets for explicit US/EU/UK/AU/NZ inline codes while bare zone arguments observe DST', () => {
-    expect(read('2026-07-04 14:30 EST')).toBe('2026-07-04T19:30:00.000Z');
-    expect(read('2026-07-04 14:30 EDT')).toBe('2026-07-04T18:30:00.000Z');
-    expect(read('2026-07-04 14:30 PST')).toBe('2026-07-04T22:30:00.000Z');
-    expect(read('2026-01-04 14:30 PDT')).toBe('2026-01-04T21:30:00.000Z');
-    expect(read('2026-07-15 14:30 CET')).toBe('2026-07-15T13:30:00.000Z');
-    expect(read('2026-07-15 14:30 CEST')).toBe('2026-07-15T12:30:00.000Z');
-    expect(read('2026-01-15 14:30 BST')).toBe('2026-01-15T13:30:00.000Z');
-    expect(read('2026-01-15 14:30 BST', { locale: 'bn' })).toBe('2026-01-15T08:30:00.000Z');
-    expect(read('2026-01-15 14:30 AEST')).toBe('2026-01-15T04:30:00.000Z');
-    expect(read('2026-07-15 14:30 AEDT')).toBe('2026-07-15T03:30:00.000Z');
-    expect(read('2026-01-15 14:30 NZST')).toBe('2026-01-15T02:30:00.000Z');
-    expect(read('2026-07-15 14:30 NZDT')).toBe('2026-07-15T01:30:00.000Z');
+  it('parses EST and CET in July as daylight time, matching the zone argument', () => {
+    expect(read('2026-07-04 14:30 EST')).toBe('2026-07-04T18:30:00.000Z');
     expect(datetime('2026-07-04 14:30', 'EST').toString()).toBe('2026-07-04T18:30:00.000Z');
+    expect(read('2026-07-15 14:30 CET')).toBe('2026-07-15T12:30:00.000Z');
+    expect(datetime('2026-07-15 14:30', 'CET').toString()).toBe('2026-07-15T12:30:00.000Z');
   });
 
   it('sets the instant from the abbreviation and keeps the zone option on the result', () => {
