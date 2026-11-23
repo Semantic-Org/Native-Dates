@@ -1,4 +1,4 @@
-import { each, isDate, isNumber, isPlainObject, isString } from './utils.js';
+import { each, isDate, isNumber, isObject, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { fail, refuse } from './errors.js';
@@ -188,11 +188,14 @@ export const localeOf = (options, input) => {
   if (isPlainObject(options) && Object.hasOwn(options, 'locale') && options.locale !== undefined) {
     return checkedLocale(options.locale);
   }
-  const carried = nouns.some((brand) => input?.[brand]) ? input.locale?.() : undefined;
+  const carried = isObject(input) && input.locale && nouns.some((brand) => input[brand]) ? input.locale() : undefined;
   return carried ? checkedLocale(carried) : undefined;
 };
 
-export const zoneOptions = (value) => (isPlainObject(value) ? value : { zone: value });
+const noOptions = Object.freeze({});
+export const zoneOptions = (
+  value,
+) => (value === undefined ? noOptions : isPlainObject(value) ? value : { zone: value });
 
 // disambiguate every('hour', zone) from every(30, 'minutes', zone)
 export const stepArguments = (step, [second, third]) =>

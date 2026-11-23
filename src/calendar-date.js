@@ -64,19 +64,14 @@ export class CalendarDate {
     if (isDigits(input) && isCount(monthOrOptions)) {
       [input, monthOrOptions, day] = [Number(input), Number(monthOrOptions), day === undefined ? day : Number(day)];
     }
-    const settings = isPlainObject(monthOrOptions)
-      ? monthOrOptions
-      : isString(monthOrOptions)
-      ? { zone: monthOrOptions }
-      : {};
+    const settings = zoneOptions(isNumber(monthOrOptions) ? undefined : monthOrOptions);
     this.#locale = localeOf(settings, input);
     // a Temporal value or '[u-ca=persian]' string in another calendar names the same day, read here as ISO
-    this.#plain = (
-      isPlainDate(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
-        ? input
-        : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings)
-    ).withCalendar('iso8601');
-    const plain = this.#plain;
+    const read = isPlainDate(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
+      ? input
+      : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings);
+    const plain = read.calendarId === 'iso8601' ? read : read.withCalendar('iso8601');
+    this.#plain = plain;
     this.month = plain.month;
     this.day = plain.day;
     this.year = plain.year;
@@ -191,7 +186,7 @@ export class CalendarDate {
   }
 
   #next(plain) {
-    return new CalendarDate(plain, { locale: this.#locale });
+    return new CalendarDate(plain, this.#locale ? { locale: this.#locale } : undefined);
   }
 
   /*******************************

@@ -61,13 +61,12 @@ export class DateTime {
   constructor(input, options) {
     const settings = zoneOptions(options);
     this.#locale = localeOf(settings, input);
-    this.#zoned = (
-      isZonedDateTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
-        && settings.disambiguation === undefined
-        ? input
-        : DateTime.#read(input, settings)
-    ).withCalendar('iso8601');
-    const zoned = this.#zoned;
+    const read = isZonedDateTime(input) && settings.zone === undefined && !settings.loose
+        && settings.dayFirst === undefined && settings.disambiguation === undefined
+      ? input
+      : DateTime.#read(input, settings);
+    const zoned = read.calendarId === 'iso8601' ? read : read.withCalendar('iso8601');
+    this.#zoned = zoned;
     // keep month, day, year, hour, minute in the first five own fields so browser DevTools previews distinguish same-day times
     this.month = zoned.month;
     this.day = zoned.day;
@@ -191,7 +190,7 @@ export class DateTime {
   }
 
   #next(zoned) {
-    return new DateTime(zoned, { locale: this.#locale });
+    return new DateTime(zoned, this.#locale ? { locale: this.#locale } : undefined);
   }
 
   /*******************************

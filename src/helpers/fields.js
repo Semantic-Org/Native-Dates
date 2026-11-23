@@ -204,10 +204,22 @@ export const addFields = (a, b, sign, anchor) => {
 };
 
 // Temporal.Duration.from({}) throws RangeError, so construct a zero duration directly when empty
-export const temporalDurationOf = (fields) =>
-  Object.keys(fields).length
-    ? guard(() => Temporal.Duration.from(fields), 'invalidDuration', JSON.stringify(fields))
-    : new Temporal.Duration();
+export const temporalDurationOf = (fields) => {
+  if (!Object.keys(fields).length) {
+    return new Temporal.Duration();
+  }
+  try {
+    return Temporal.Duration.from(fields);
+  }
+  catch (error) {
+    if (error?.code) {
+      throw error;
+    }
+    return refuse('invalidDuration', JSON.stringify(fields), {
+      explanation: error.message.replace(/^Temporal error: /, ''),
+    });
+  }
+};
 
 export const temporalDurationFrom = (input, name) => temporalDurationOf(fieldsFrom(input, name));
 
