@@ -33,8 +33,8 @@ const normalize = (text) =>
 const wordsOf = (text, locale) => ` ${(text.toLocaleLowerCase(locale).match(/[\p{L}\p{M}]+/gu) ?? []).join(' ')} `;
 
 // every spelling Intl has for the twelve months, longest first so 'تشرين الثاني' is found before 'تشرين'
-const monthsFrom = (table, locale) =>
-  [table.MMMM, table.besideDay.MMMM, table.MMM, table.besideDay.MMM]
+const monthsFrom = (table, locale, written = []) =>
+  [table.MMMM, table.besideDay.MMMM, table.MMM, table.besideDay.MMM, ...written]
     .flatMap((list) => list.map((name, index) => ({ name, month: index + 1 })))
     // '11月' and 'tháng 11' are numbers rather than names
     .filter(({ name }) => /\p{L}/u.test(name) && !/\p{N}/u.test(name))
@@ -43,14 +43,42 @@ const monthsFrom = (table, locale) =>
 
 const localeData = cached((locale) => {
   const [english, localized] = [names('en'), names(locale)];
-  const partsOf = (options) => new Intl.DateTimeFormat(locale, { ...options, calendar: 'gregory' }).formatToParts(0);
+  const formatOf = (options) => new Intl.DateTimeFormat(locale, { ...options, calendar: 'gregory', timeZone: 'UTC' });
+  const partsOf = (options) => formatOf(options).formatToParts(0);
+  // months as a full date writes them, with the letters a locale joins on ('בנובמבר', 'azaroaren', 'ژوئیهٔ')
+  const written = ['long', 'medium'].map((dateStyle) => {
+    const format = formatOf({ dateStyle });
+    return localized.MMMM.map((_, index) => {
+      const parts = format.formatToParts(Date.UTC(2024, index, 15));
+      const at = parts.findIndex((part) => part.type === 'month');
+      const [before, after] = [parts[at - 1]?.value ?? '', parts[at + 1]?.value ?? ''];
+      return before.match(/[\p{L}\p{M}]*$/u)[0] + parts[at].value + after.match(/^[\p{L}\p{M}]*/u)[0];
+    });
+  });
+  // every day-period word printed across a day, on a 12-hour clock and on the locale's own ('오후', '凌晨', '晚上')
+  const periods = [];
+  let hasDottedClock = false;
+  each([{ timeStyle: 'short' }, { hour: 'numeric', hour12: true }], (options) => {
+    const format = formatOf(options);
+    for (let hour = 0; hour < 24; hour++) {
+      const parts = format.formatToParts(hour * 36e5);
+      const types = parts.map((part) => part.type);
+      const at = types.indexOf('dayPeriod');
+      const name = at >= 0 && wordsOf(parts[at].value, locale);
+      hasDottedClock ||= parts[types.indexOf('hour') + 1]?.value === '.';
+      if (name && !periods.some((period) => period.name === name)) {
+        periods.push({ name, isAfternoon: hour > 11, isFirst: at < types.indexOf('hour') });
+      }
+    }
+  });
   return {
     englishMonths: monthsFrom(english, locale),
-    localizedMonths: monthsFrom(localized, locale),
+    localizedMonths: monthsFrom(localized, locale, written),
     weekdays: [...localized.dddd, ...localized.ddd, ...english.dddd, ...english.ddd].map((name) =>
       wordsOf(name, locale)
     ),
-    dayPeriods: localized.dayPeriods.map((name) => wordsOf(name, locale)),
+    periods,
+    hasDottedClock,
     order: partsOf({ dateStyle: 'short' })
       .map((part) => part.type)
       .filter((type) => type === 'year' || type === 'month' || type === 'day'),
@@ -61,9 +89,13 @@ const localeData = cached((locale) => {
 });
 
 const exactMonth = (words, months) => months.find(({ name }) => words.includes(name));
-// or a month name cut short ('sept', 'нояб', 'marr')
-const prefixMonth = (words, months) =>
-  months.find(({ name }) => words.split(' ').some((word) => word.length > 2 && name.startsWith(` ${word}`)));
+// or a month name cut short ('sept', 'нояб', 'marr'), unless it opens more than one month ('jui', 'арван')
+const prefixMonth = (words, months) => {
+  const found = months.filter(({ name }) =>
+    words.split(' ').some((word) => word.length > 2 && name.startsWith(` ${word}`))
+  );
+  return found.every(({ month }) => month === found[0].month) ? found[0] : undefined;
+};
 
 const findMonth = (text, locale) => {
   if (!/\p{L}/u.test(text)) {
@@ -164,7 +196,8 @@ const rolledForward = (text, read, wallClock) => {
 };
 
 const clockTime = /(\d{1,2})(?::| ?h ?)(\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?/;
-const meridiem = /^ ?([ap])\.? ?m\.?(?![\p{L}\p{M}])/u;
+// Telugu joins a word onto it ('2:30 PMకి'), so only a Latin letter after it makes it part of another word
+const meridiem = /^ ?([ap])\.? ?m\.?(?!\p{Script=Latin})/u;
 
 const validYearToken = (token, resolvedYear) =>
   token !== undefined
@@ -217,17 +250,18 @@ const parseWithEngine = (text, settings) => {
 };
 
 // only a whole word next to the clock counts, with no number between them. German 'am 16.11.2026 14:30' keeps
-// its preposition, and Arabic 'اليوم' (today) is not read as its last letter 'م' (PM)
-const isAfternoon = (before, after, locale) => {
+// its preposition, and Arabic 'اليوم' (today) is not read as its last letter 'م' (PM). A word before the clock
+// counts where the locale writes it there or the hour is 1 to 11, so Welsh 'am 14:30' (at 14:30) is not AM
+const isAfternoon = (before, after, locale, hour) => {
   const english = meridiem.exec(after)?.[1];
   if (english) {
     return english === 'p';
   }
-  const [am, pm] = localeData(locale).dayPeriods;
   const wordsBefore = wordsOf(before.split(/\d/).pop(), locale);
   const wordsAfter = wordsOf(after.split(/\d/)[0], locale);
-  const beside = (period) => wordsAfter.startsWith(period) || wordsBefore.endsWith(period);
-  return beside(pm) ? true : beside(am) ? false : undefined;
+  return localeData(locale).periods.find(({ name, isFirst }) =>
+    wordsAfter.startsWith(name) || ((isFirst || (hour > 0 && hour < 12)) && wordsBefore.endsWith(name))
+  )?.isAfternoon;
 };
 
 const parseWithLocale = (text, settings) => {
@@ -254,7 +288,7 @@ const parseWithLocale = (text, settings) => {
     }
     const [, hourText, minute, second = '00', fraction = '0'] = clock;
     let hour = +hourText;
-    const afternoon = isAfternoon(before, after, locale);
+    const afternoon = isAfternoon(before, after, locale, hour);
     if (afternoon !== undefined) {
       if (hour < 1 || hour > 12) {
         return undefined;
@@ -286,6 +320,11 @@ export const looseZoned = (input, { zone, dayFirst, locale, timeOnly, disambigua
   const settings = { locale: pickLocale(locale), dayFirst: readsDayFirst(dayFirst, locale), timeOnly };
   const mode = checkedDisambiguation(disambiguation);
   let text = normalize(input.trim());
+  const { periods, hasDottedClock } = localeData(settings.locale);
+  // Finnish and Danish write the clock with a dot ('klo 14.30'), which a date's own dots never match ('16.11.2026')
+  if (hasDottedClock) {
+    text = text.replace(/(?<![\d.])(\d{1,2})\.(\d{2})(?!\.?\d)/g, '$1:$2');
+  }
 
   // resolve the abbreviation as the zone argument would, since Date.parse reads 'CST' as -06:00 everywhere
   let writtenZone;
@@ -298,8 +337,11 @@ export const looseZoned = (input, { zone, dayFirst, locale, timeOnly, disambigua
       text = text.replace(matched, clock);
     }
     else {
-      // only a cased script has capitals, so Hindi 'बजे' or Japanese '会議室' after the clock is a word
-      hasUnknownZone = name === name.toUpperCase() && name !== name.toLowerCase();
+      // only a cased script has capitals, so Hindi 'बजे' or Japanese '会議室' after the clock is a word,
+      // and so is a day period written in capitals (Malay '2:30 PTG')
+      const word = wordsOf(name, settings.locale);
+      hasUnknownZone = name === name.toUpperCase() && name !== name.toLowerCase()
+        && !periods.some((period) => period.name === word);
     }
   }
 
