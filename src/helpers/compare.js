@@ -8,14 +8,11 @@ import { isDevelopment } from './environment.js';
 import { refuse, refuseType } from './errors.js';
 import {
   IS_CALENDAR_DATE,
-  IS_DATE_RANGE,
   IS_DATE_TIME,
-  IS_DATE_TIME_RANGE,
   IS_DURATION,
   IS_MONTH_DAY,
   IS_RANGE,
   IS_TIME,
-  IS_TIME_RANGE,
   IS_YEAR_MONTH,
 } from './identity.js';
 import { isInstant, isPlainDate, isPlainDateTime, isPlainTime, isZonedDateTime } from './units.js';
@@ -28,26 +25,20 @@ export const point = (input) => {
   if (input?.[IS_DATE_TIME] || input?.[IS_CALENDAR_DATE] || input?.[IS_TIME] || input?.[IS_YEAR_MONTH]) {
     return input;
   }
-  if (isString(input)) {
-    const text = input.trim();
-    if (looksLikeTime.test(text)) {
-      return new Time(text);
-    }
-    if (looksLikeDateTime.test(text)) {
-      return new DateTime(text);
-    }
-    return new CalendarDate(text);
+  if (isString(input) ? looksLikeTime.test(input.trim()) : isPlainTime(input)) {
+    return new Time(input);
   }
   // bare numbers default to epoch ms when first (compare(Date.now(), dt)), whereas asKindOf() below
   // coerces a trailing number to match the leading argument (compare(time('09:00'), 9))
-  if (isDate(input) || isNumber(input) || isZonedDateTime(input) || isInstant(input) || isPlainDateTime(input)) {
+  if (
+    isString(input)
+      ? looksLikeDateTime.test(input.trim())
+      : isDate(input) || isNumber(input) || isZonedDateTime(input) || isInstant(input) || isPlainDateTime(input)
+  ) {
     return new DateTime(input);
   }
-  if (isPlainDate(input)) {
+  if (isString(input) || isPlainDate(input)) {
     return new CalendarDate(input);
-  }
-  if (isPlainTime(input)) {
-    return new Time(input);
   }
   if (input instanceof Temporal.PlainYearMonth) {
     return new YearMonth(input);
@@ -75,14 +66,8 @@ export const kindOf = (value) => {
   if (value?.[IS_MONTH_DAY]) {
     return 'monthDay';
   }
-  if (value?.[IS_DATE_RANGE]) {
-    return 'dateRange';
-  }
-  if (value?.[IS_DATE_TIME_RANGE]) {
-    return 'datetimeRange';
-  }
-  if (value?.[IS_TIME_RANGE]) {
-    return 'timeRange';
+  if (value?.[IS_RANGE]) {
+    return `${value.kind}Range`;
   }
   if (value?.[IS_YEAR_MONTH]) {
     return 'yearMonth';
@@ -90,9 +75,7 @@ export const kindOf = (value) => {
   return undefined;
 };
 
-const sameKind = (left, right) => {
-  const leftKind = kindOf(left);
-  const rightKind = kindOf(right);
+const sameKind = (leftKind, rightKind) => {
   if (leftKind !== rightKind) {
     refuseType('conflictingKinds', `${leftKind} with ${rightKind}`, {
       explanation: isDevelopment
@@ -103,10 +86,12 @@ const sameKind = (left, right) => {
 };
 
 const asKindOf = (left, value) => {
-  if (kindOf(value) !== undefined) {
+  const rightKind = kindOf(value);
+  const kind = kindOf(left);
+  if (rightKind) {
+    sameKind(kind, rightKind);
     return value;
   }
-  const kind = kindOf(left);
   if (kind === 'datetime') {
     // parse wall-clock strings in left's zone rather than the default zone
     return new DateTime(value, left.zone);
@@ -121,33 +106,25 @@ export const compare = (a, b) => {
   if (a?.[IS_DURATION]) {
     return a.compare(b);
   }
-  // YearMonth.compare() coerces CalendarDate and DateTime, so reject other branded kinds here first
-  if (a?.[IS_YEAR_MONTH]) {
-    if (kindOf(b) !== undefined) {
-      sameKind(a, b);
-    }
-    return a.compare(b);
-  }
   if (a?.[IS_RANGE]) {
-    sameKind(a, b);
+    sameKind(kindOf(a), kindOf(b));
     return compare(a.start, b.start) || compare(a.end, b.end);
   }
   const left = point(a);
   const right = asKindOf(left, b);
-  sameKind(left, right);
   return left.isBefore(right) ? -1 : left.isAfter(right) ? 1 : 0;
 };
 
-const pick = (values, verb, wins) => {
+const pick = (values, verb, dir) => {
   const raw = values.length === 1 && isArray(values[0]) ? values[0] : values;
   if (!raw.length) {
     refuse('missingPoints', verb, { explanation: isDevelopment ? `\`${verb}()\` requires at least one value` : 0 });
   }
   const head = point(raw[0]);
   const points = raw.map((value, index) => (index === 0 ? head : asKindOf(head, value)));
-  return points.reduce((best, next) => (wins(compare(next, best)) ? next : best));
+  return points.reduce((best, next) => (compare(next, best) === dir ? next : best));
 };
 
-export const earliest = (...values) => pick(values, 'earliest', (order) => order < 0);
+export const earliest = (...values) => pick(values, 'earliest', -1);
 
-export const latest = (...values) => pick(values, 'latest', (order) => order > 0);
+export const latest = (...values) => pick(values, 'latest', 1);

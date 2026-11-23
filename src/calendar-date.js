@@ -347,7 +347,8 @@ export class CalendarDate {
   }
 
   #compare(other) {
-    return Temporal.PlainDate.compare(this.#plain, new CalendarDate(other).toTemporal());
+    const rival = other?.[IS_CALENDAR_DATE] ? other : new CalendarDate(other);
+    return this.year - rival.year || this.month - rival.month || this.day - rival.day;
   }
 
   isBefore(other) {

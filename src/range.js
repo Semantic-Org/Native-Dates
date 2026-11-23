@@ -28,6 +28,8 @@ import { Time } from './time.js';
   and TimeRange wraps across midnight when end < start
 */
 
+const dayLength = 86_400e9; // 24h in nanoseconds
+
 class Range {
   // brand range
   get [IS_RANGE]() {
@@ -36,13 +38,6 @@ class Range {
   static [Symbol.hasInstance](value) {
     return !!value?.[IS_RANGE];
   }
-
-  static factoryNames = { date: 'dateRange', datetime: 'datetimeRange', time: 'timeRange' };
-
-  // explicit strings so Node inspect output survives minifier class renaming
-  static classNames = { date: 'DateRange', datetime: 'DateTimeRange', time: 'TimeRange' };
-
-  static dayLength = 86_400e9; // 24h in nanoseconds
 
   // (start, end, zone), (start, end, { zone, loose }), or (interval, { zone, loose })
   constructor(start, end, options) {
@@ -54,7 +49,8 @@ class Range {
     const settings = zoneOptions(options);
     if (start instanceof Range && end === undefined) {
       if (start.kind !== kind) {
-        refuseType('conflictingRanges', `${Range.factoryNames[start.kind]} as ${Range.factoryNames[kind]}`, {
+        const [from, to] = [`${start.kind}Range`, `${kind}Range`];
+        refuseType('conflictingRanges', `${from} as ${to}`, {
           explanation: isDevelopment
             ? 'cannot pass one range type directly into another range factory. Convert a `DateRange` to a `DateTimeRange` with `.in(zone)`, or build a new range from converted `start` and `end` endpoints'
             : 0,
@@ -79,8 +75,9 @@ class Range {
 
   // distinguish trailing options in dateRange('a/b', opts) from a field-bag endpoint like { year, month, day }
   static isOptions(value) {
-    return isPlainObject(value) && Object.keys(value).length > 0
-      && Object.keys(value).every((key) => ['loose', 'zone', 'dayFirst', 'locale', 'disambiguation'].includes(key));
+    const keys = isPlainObject(value) && Object.keys(value);
+    return !!keys?.length
+      && keys.every((key) => ['loose', 'zone', 'dayFirst', 'locale', 'disambiguation'].includes(key));
   }
 
   // mask bracketed '[America/New_York]' zones before splitting on '/', checking spaced ' - ' / ' to ' first
@@ -161,7 +158,7 @@ class Range {
   *******************************/
 
   contains(value) {
-    if (value instanceof Range) {
+    if (value?.[IS_RANGE]) {
       const rival = this.#make(this.kind, value);
       let holds;
       if (this.kind === 'time') {
@@ -177,7 +174,7 @@ class Range {
   }
 
   #holds(value) {
-    const at = Range.#read(this.kind, value, this.start);
+    const at = value?.constructor === this.start.constructor ? value : Range.#read(this.kind, value, this.start);
     if (this.#wraps()) {
       return !at.isBefore(this.start) || at.isBefore(this.end);
     }
@@ -208,7 +205,9 @@ class Range {
   }
 
   #make(kind, start, end) {
-    return new byKind[kind](start, end, { zone: this.start.zone, locale: this.start.locale() });
+    return !end && start?.[IS_RANGE] && start.kind === kind
+      ? start
+      : new byKind[kind](start, end, { zone: this.start.zone, locale: this.start.locale() });
   }
 
   equals(other) {
@@ -256,7 +255,7 @@ class Range {
   static #spanOf(range) {
     const start = Range.#sinceMidnight(range.start);
     const end = Range.#sinceMidnight(range.end);
-    return [start, end < start ? end + Range.dayLength : end];
+    return [start, end < start ? end + dayLength : end];
   }
 
   static #sinceMidnight(time) {
@@ -265,11 +264,11 @@ class Range {
 
   static #besides(range) {
     const [start, end] = Range.#spanOf(range);
-    return [-Range.dayLength, 0, Range.dayLength].map((shift) => [start + shift, end + shift]);
+    return [-dayLength, 0, dayLength].map((shift) => [start + shift, end + shift]);
   }
 
   static #timeAt(nanoseconds) {
-    const day = Range.dayLength;
+    const day = dayLength;
     return new Time(new Temporal.PlainTime().add({ nanoseconds: ((nanoseconds % day) + day) % day }));
   }
 
@@ -314,10 +313,11 @@ class Range {
     const points = this.every(step, name);
     return points.map((start, i) => {
       const following = points[i + 1];
-      if (following === undefined) {
-        return this.#make(this.kind, start, this.end);
-      }
-      return this.#make(this.kind, start, this.#inclusive() ? following.minus(days(1)) : following);
+      return this.#make(
+        this.kind,
+        start,
+        following === undefined ? this.end : this.#inclusive() ? following.minus(days(1)) : following,
+      );
     });
   }
 
@@ -384,8 +384,11 @@ class Range {
     return hint === 'number' ? this.valueOf() : this.toString();
   }
 
+  // explicit strings so Node inspect output survives minifier class renaming
   [inspect]() {
-    return `${Range.classNames[this.kind]}(${this.start} ${this.#inclusive() ? 'through' : 'until'} ${this.end})`;
+    return `${this.kind === 'date' ? 'Date' : this.kind === 'datetime' ? 'DateTime' : 'Time'}Range(${this.start} ${
+      this.#inclusive() ? 'through' : 'until'
+    } ${this.end})`;
   }
 }
 
