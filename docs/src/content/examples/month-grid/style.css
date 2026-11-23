@@ -1,0 +1,12 @@
+body { margin: 0; padding: 20px 24px; font: 15px/1.55 system-ui, sans-serif; background: #0a0d14; color: #e8e8ea; }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+h1 { margin: 0; font-size: 20px; }
+.controls { display: flex; gap: 6px; }
+button { font: inherit; font-size: 13px; padding: 5px 10px; border-radius: 6px; border: 1px solid #2a2f3a; background: #141823; color: #e8e8ea; cursor: pointer; }
+button:hover { border-color: #464e62; }
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.head { margin-bottom: 6px; font-size: 12px; color: #7c7c84; }
+.days span { padding: 8px 0; border-radius: 6px; font-variant-numeric: tabular-nums; }
+.days .weekend { color: #9c9ca6; }
+.days .outside { color: #434857; }
+.days .today { background: #7447c8; color: #fff; font-weight: 600; }
