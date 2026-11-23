@@ -4,7 +4,7 @@ kind: plugin
 lede: Opt-in locale-aware parsing and `null` returns for untrusted text from forms, CSVs, and legacy feeds.
 import: import '@native-dates/plugins/loose'
 size: loose
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 ## Opt-in loose parsing
@@ -26,7 +26,7 @@ Strict parsing stays the default wherever you omit loose mode. Importing the plu
 
 ## Reading in the active locale
 
-Loose mode reads dates and clock times the way the active locale writes them. Month names, AM/PM words, and day-month order come from the runtime's `Intl` data, and digits from any script are folded automatically.
+Loose mode reads back the dates and clock times `Intl` prints for the active locale. Inflected month names, day-period words across the day, and numeric date order all follow the runtime. Digits from any script fold automatically.
 
 The active locale follows the same order as formatting: the locale option, then [`configure()`](/api/configure/), then the runtime default.
 
@@ -37,17 +37,21 @@ import { date, datetime, time } from 'native-dates';
 date('06/11/2026', { loose: true, locale: 'fr' })?.toString(); // '2026-11-06'
 date('06/11/2026', { loose: true, locale: 'en-US' })?.toString(); // '2026-06-11'
 date('16 de noviembre de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-11-16'
-date('1er mai 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-05-01'
+date('2026(e)ko azaroaren 16(a)', { loose: true, locale: 'eu' })?.toString(); // '2026-11-16'
 date('١٦‏/١١‏/٢٠٢٦', { loose: true, locale: 'ar-EG' })?.toString(); // '2026-11-16'
-time('오후 2:30', { loose: true, locale: 'ko' })?.toString(); // '14:30:00'
-datetime('16 de novembro de 2026 às 14:30', {
+time('晚上9:10', { loose: true, locale: 'zh-TW' })?.toString(); // '21:10:00'
+datetime('16.11.2026 klo 14.30', {
   loose: true,
-  locale: 'pt-BR',
-  zone: 'America/Sao_Paulo',
-})?.hour; // 14
+  locale: 'fi',
+  zone: 'UTC',
+})?.toString(); // '2026-11-16T14:30:00.000Z'
 ```
 
 Year-first locales like Korean read two-digit years at the start, so `'26. 5. 5.'` reads as May 5, 2026 in Korean. Connecting words, ordinals, and leading weekday names are skipped across full dates and partial dates alike.
+
+Dotted clocks like `'14.30'` parse only in locales whose clock uses a dot, such as Finnish and Danish, and return `null` elsewhere. Dotted seconds are not read.
+
+Day-period words match whatever `Intl` prints for the active locale, such as Traditional Chinese *晚上* or Malay *PTG*. Words a locale's default clock omits do not shift the hour. Before the clock, a period word counts where the locale places it there or when the hour is 1 to 11.
 
 ## Returning null on bad data
 
@@ -70,7 +74,11 @@ monthDay('1er mai', { loose: true, locale: 'fr' })?.toString(); // '05-01'
 dateRange('TBD', '2026-09-07', { loose: true }); // null
 ```
 
-A few inputs still return `null` in loose mode. Two-digit years beside a month name, hours past 12 beside PM, and bare clocks passed to `datetime()` are rejected. Unknown uppercase zone codes and bare hours like `'14h'` return null as well.
+Incomplete dates missing a year or day return `null` in date and datetime factories instead of inventing a default. Use a partial-date factory when only a month and year or month and day are present.
+
+Shortened month names must point to a single month. In French, *juil* parses as July while *jui* returns `null` because it opens both *juin* and *juillet*.
+
+Two-digit years beside a non-English month name, hours past 12 beside a day-period word, and bare clocks passed to `datetime()` are rejected. Unknown uppercase zone codes and bare hours like `'14h'` return null as well.
 
 :::note[Bad data returns null, bad options still throw]
 Loose mode only handles unreadable input data. Passing an unknown time zone like `'Mars/Olympus'` is a mistake in application code rather than user input, so it still throws immediately.
@@ -119,7 +127,7 @@ Pass `dayFirst: null` to `configure()` to follow the active locale again. Partia
 ### `datetime()` :kind[function]
 
 ```js signature
-datetime(input, { loose: true, zone?, locale?, dayFirst? }): DateTime | null
+datetime(input, { loose: true, zone?, locale?, dayFirst?, disambiguation? }): DateTime | null
 date(input, { loose: true, zone?, locale?, dayFirst? }): CalendarDate | null
 time(input, { loose: true, zone?, locale?, dayFirst? }): Time | null
 duration(input, { loose: true, locale? }): Duration | null
@@ -145,7 +153,11 @@ Extends every factory with locale-aware fallback parsing and `null` returns on u
   description: Time zone used to interpret local date-time strings or view instants.
 - name: locale
   type: Locale
-  description: BCP 47 locale tag carried on the value and used for month names, AM/PM words, and numeric date order.
+  description: BCP 47 locale tag carried on the value and used for month names, day-period words, clock style, and date order.
+- name: disambiguation
+  type: Disambiguation
+  default: "'compatible'"
+  description: "How to resolve DST gaps and folds on local date-time strings. `'reject'` returns `null` in loose mode."
 ```
 
 **Returns**
@@ -156,8 +168,9 @@ description: Parsed instance, or `null` when `input` cannot be read.
 ```
 
 ```js
-const parsed = date('2026-09', { loose: true });
-parsed?.toString(); // '2026-09-01'
+date('Sept 6, 2026', { loose: true })?.toString(); // '2026-09-06'
+date('2026-09', { loose: true }); // null
+yearMonth('2026-09', { loose: true })?.toString(); // '2026-09'
 ```
 :::
 

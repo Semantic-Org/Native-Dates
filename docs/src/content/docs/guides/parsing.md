@@ -1,7 +1,7 @@
 ---
 title: Parsing
 lede: Read ISO strings, durations, ranges, and loose user input without silent guesswork.
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 Core parses standard, unambiguous inputs directly into the type you ask for:
@@ -125,7 +125,7 @@ Passing an empty value to any factory throws instead of returning the current da
 
 ## User input with the loose plugin
 
-When parsing free-form text from user inputs, CSV exports, or RFC 2822 headers, import [`@native-dates/plugins/loose`](/plugins/loose/) and pass `{ loose: true }`. Loose mode reads dates and clock times the way the active locale writes them, including localized month names, AM/PM words, and non-ASCII digits.
+When parsing free-form text from user inputs, CSV exports, or RFC 2822 headers, import [`@native-dates/plugins/loose`](/plugins/loose/) and pass `{ loose: true }`. Loose mode reads dates and clock times the way the active locale writes them, including localized month names, day-period words, dotted clocks, and non-ASCII digits.
 
 ```js
 import '@native-dates/plugins/loose';
