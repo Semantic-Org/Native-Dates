@@ -67,8 +67,8 @@ export class YearMonth {
 
   // yearMonth(2026, 11), yearMonth(input, zone), or yearMonth(input, { zone, loose })
   constructor(input, monthOrOptions) {
-    this.#plain = YearMonth.#read(input, monthOrOptions);
     this.#locale = localeOf(monthOrOptions, input);
+    this.#plain = YearMonth.#read(input, monthOrOptions);
     this.text = undefined; // keep text first in console previews
     this.month = this.#plain.month;
     this.year = this.#plain.year;
@@ -227,7 +227,7 @@ export class YearMonth {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
     YearMonth.#refuseSmaller(smaller.find((part) => part in changes));
     return this.#next(
-      guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
+      guard(() => withParts(this.#plain, changes, ['year', 'month']), 'cannotSet', JSON.stringify(changes)),
     );
   }
 

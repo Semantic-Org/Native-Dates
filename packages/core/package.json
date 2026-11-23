@@ -4,6 +4,15 @@
   "description": "Scoped @native-dates/core alias for native-dates",
   "author": "Jack Lukic",
   "license": "ISC",
+  "homepage": "https://nativedates.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Semantic-Org/Native-Dates.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/Semantic-Org/Native-Dates/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "types": "./index.d.ts",

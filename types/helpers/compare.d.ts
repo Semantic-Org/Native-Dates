@@ -75,7 +75,8 @@ export function compare(a: YearMonth, b: YearMonthInput): -1 | 0 | 1;
  *
  * @see {@link https://nativedates.dev/api/compare/#earliest earliest}
  */
-export function earliest(...months: YearMonth[] | [YearMonth[]]): YearMonth;
+export function earliest(first: YearMonth, ...rest: YearMonthInput[]): YearMonth;
+export function earliest(months: readonly [YearMonth, ...YearMonthInput[]] | readonly YearMonth[]): YearMonth;
 /**
  * Returns the earliest point from one or more arguments or a non-empty array of the same kind.
  * Raw `Date` and epoch millisecond inputs return a `DateTime`. Throws a `RangeError` when given an empty list.
@@ -106,7 +107,8 @@ export function earliest<T extends Point>(
  *
  * @see {@link https://nativedates.dev/api/compare/#latest latest}
  */
-export function latest(...months: YearMonth[] | [YearMonth[]]): YearMonth;
+export function latest(first: YearMonth, ...rest: YearMonthInput[]): YearMonth;
+export function latest(months: readonly [YearMonth, ...YearMonthInput[]] | readonly YearMonth[]): YearMonth;
 /**
  * Returns the latest point from one or more arguments or a non-empty array of the same kind.
  * Raw `Date` and epoch millisecond inputs return a `DateTime`. Throws a `RangeError` when given an empty list.

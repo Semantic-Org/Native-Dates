@@ -549,9 +549,12 @@ describe('CalendarDate.set()', () => {
     expect(() => day.set('day', 1.5)).toThrowError(expect.objectContaining({ name: 'RangeError', code: 'cannotSet' }));
   });
 
-  it('throws unknownUnit for an unrecognized field key', () => {
+  it('throws unknownUnit for an unrecognized field key and cannotSet for clock fields in object form', () => {
     expect(() => day.set('fortnight', 1)).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: 'fortnight' }),
+    );
+    expect(() => day.set({ month: 2, hour: 12 })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'cannotSet', at: expect.stringContaining('hour') }),
     );
   });
 });

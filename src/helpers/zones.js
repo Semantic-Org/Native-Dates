@@ -2,6 +2,7 @@ import { each, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
+import { bounded } from './intl.js';
 import { nameCache, weekdayWidths } from './tokens.js';
 import { dayOfWeek } from './units.js';
 
@@ -16,7 +17,7 @@ export const settings = {
   ordinals: undefined,
   formats: undefined,
 };
-const resolved = new Map();
+const resolved = bounded();
 
 export const canonicalZone = (id) => {
   try {
@@ -146,32 +147,68 @@ export const configure = (options) => {
   return { ...settings, zoneAliases: { ...settings.zoneAliases } };
 };
 
+const disambiguations = ['compatible', 'earlier', 'later', 'reject'];
+export const checkedDisambiguation = (mode) =>
+  mode === undefined || disambiguations.includes(mode)
+    ? (mode ?? 'compatible')
+    : refuse('unknownDisambiguation', String(mode), {
+      explanation: isDevelopment
+        ? `expected a disambiguation mode in [${disambiguations.join(', ')}]`
+        : 0,
+    });
+
+const canonicalTag = (name) => {
+  try {
+    return Intl.getCanonicalLocales(name)[0];
+  }
+  catch {
+    return undefined;
+  }
+};
+
 // accept BCP 47 tags, POSIX 'en_US' tags, tag arrays, and raw HTTP Accept-Language headers
-const knownLocales = new Map();
+const knownLocales = bounded();
 export const checkedLocale = (tag) => {
+  if (tag === undefined || tag === null || (isString(tag) && !tag.trim())) {
+    return undefined;
+  }
   // bracket array keys so ['es', 'en'] doesn't collide with header string 'es,en'
   const key = isString(tag) ? tag : `[${tag}]`;
   if (!knownLocales.has(key)) {
-    // parse Accept-Language q-weights in descending order, dropping '*' wildcards and q=0 rejections
-    const tags = isString(tag) && /[_,;*]/.test(tag)
-      ? tag.replace(/_/g, '-').split(',')
-        .map((part) => part.trim().split(/\s*;\s*q=/))
-        .filter(([name, weight]) => name && name !== '*' && weight != 0)
-        .sort((a, b) => (b[1] ?? 1) - (a[1] ?? 1))
-        .map(([name]) => name)
-      : undefined;
-    guard(
-      () => Intl.getCanonicalLocales(tags ?? tag),
-      'unknownLocale',
-      String(tag),
-      isDevelopment
-        ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
-        : 0,
-    );
+    const explanation = isDevelopment
+      ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
+      : 0;
+    if (!isString(tag)) {
+      guard(() => Intl.getCanonicalLocales(tag), 'unknownLocale', String(tag), explanation);
+      return tag;
+    }
+    if (!/[;,*]/.test(tag)) {
+      const normalized = guard(
+        () => Intl.getCanonicalLocales(tag.trim().replace(/_/g, '-'))[0],
+        'unknownLocale',
+        tag,
+        explanation,
+      );
+      return knownLocales.set(key, normalized);
+    }
+    // parse RFC 9110 Accept-Language q-weights case-insensitively, dropping '*' wildcards, q=0, and malformed fallback tags
+    const entries = tag.split(',')
+      .map((part) => {
+        const [rawName, ...params] = part.trim().split(/\s*;\s*/);
+        const qParam = params.find((param) => /^q=/i.test(param));
+        const weight = qParam ? Number(qParam.slice(2)) : 1;
+        return [rawName.replace(/_/g, '-'), weight];
+      })
+      .filter(([name, weight]) => name && name !== '*' && weight > 0 && weight <= 1)
+      .sort((a, b) => b[1] - a[1]);
+    const valid = entries.map(([name]) => canonicalTag(name)).filter(Boolean);
+    if (entries.length && !valid.length) {
+      refuse('unknownLocale', tag, { explanation });
+    }
     // headers with no accepted language (like '*' or `es;q=0`) resolve to undefined
-    knownLocales.set(key, tags ? (tags.length > 1 ? Object.freeze(tags) : tags[0]) : tag);
+    knownLocales.set(key, valid.length > 1 ? Object.freeze(valid) : valid[0]);
   }
-  return isString(tag) ? knownLocales.get(key) : tag;
+  return knownLocales.get(key);
 };
 
 // checked before built-in presets so apps can redefine names like 'short'
@@ -180,7 +217,12 @@ export const namedFormat = (spec) => (isString(spec) && settings.formats?.[spec]
 // fall back to configured locale when an override header like '*' resolves to undefined
 export const locale = (override) =>
   override === undefined ? settings.locale : checkedLocale(override) ?? settings.locale;
-export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);
+export const dayFirst = (override, localeOverride) =>
+  override !== undefined
+    ? !!override
+    : (localeOverride !== undefined && checkedLocale(localeOverride) !== undefined)
+    ? undefined
+    : settings.dayFirst;
 
 // take the first tag Intl supports as it was written, so region and -u-fw- extensions survive where
 // DateTimeFormat would resolve 'en-CN' to 'en', and use the system locale when none is supported
@@ -189,7 +231,7 @@ export const intlLocale = (activeLocale) =>
     Intl.DateTimeFormat.supportedLocalesOf(activeLocale)[0] ?? new Intl.DateTimeFormat().resolvedOptions().locale,
   );
 
-const weekInfos = new Map();
+const weekInfos = bounded();
 const weekInfo = (tag) => {
   const activeLocale = locale(tag);
   const key = String(activeLocale);

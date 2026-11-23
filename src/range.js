@@ -82,7 +82,7 @@ class Range {
   // distinguish trailing options in dateRange('a/b', opts) from a field-bag endpoint like { year, month, day }
   static isOptions(value) {
     return isPlainObject(value) && Object.keys(value).length > 0
-      && Object.keys(value).every((key) => ['loose', 'zone', 'dayFirst', 'locale'].includes(key));
+      && Object.keys(value).every((key) => ['loose', 'zone', 'dayFirst', 'locale', 'disambiguation'].includes(key));
   }
 
   // mask bracketed '[America/New_York]' zones before splitting on '/', checking spaced ' - ' / ' to ' first
@@ -97,8 +97,9 @@ class Range {
   }
 
   // coerce endpoints in start's zone and locale so both ends share one frame of reference
-  static #read(kind, value, start, { zone, loose, dayFirst, locale } = {}) {
-    const readOptions = { locale: locale ?? start?.locale() };
+  static #read(kind, value, start, { zone, loose, dayFirst, locale, disambiguation } = {}) {
+    const activeLocale = locale ?? start?.locale();
+    const readOptions = activeLocale === undefined ? {} : { locale: activeLocale };
     const targetZone = kind === 'datetime' ? (start?.zone ?? zone) : zone;
     if (targetZone !== undefined) {
       readOptions.zone = targetZone;
@@ -108,6 +109,9 @@ class Range {
     }
     if (dayFirst !== undefined) {
       readOptions.dayFirst = dayFirst;
+    }
+    if (disambiguation !== undefined) {
+      readOptions.disambiguation = disambiguation;
     }
     if (kind === 'date') {
       return new CalendarDate(value, readOptions);
@@ -173,6 +177,9 @@ class Range {
   contains(value) {
     if (value instanceof Range) {
       const rival = this.#make(this.kind, value);
+      if (this.isEmpty() || rival.isEmpty()) {
+        return false;
+      }
       if (this.kind === 'time') {
         const [start, end] = Range.#spanOf(this);
         return Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart >= start && rivalEnd <= end);
@@ -199,6 +206,9 @@ class Range {
 
   overlaps(other) {
     const rival = this.#make(this.kind, other);
+    if (this.isEmpty() || rival.isEmpty()) {
+      return false;
+    }
     if (this.kind === 'time') {
       const [start, end] = Range.#spanOf(this);
       return Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart < end && start < rivalEnd);

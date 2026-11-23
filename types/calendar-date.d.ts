@@ -2,7 +2,15 @@ import type { DateTime, DateTimeFields } from './date-time.js';
 import type { Duration, DurationInput } from './duration.js';
 import type { FormatSpec } from './helpers/format.js';
 import { IS_CALENDAR_DATE } from './helpers/identity.js';
-import type { DateUnit, DayOfWeek, TemporalValue, Unit } from './helpers/units.js';
+import type {
+  DateUnit,
+  DayOfWeek,
+  TemporalInstant,
+  TemporalPlainDate,
+  TemporalPlainDateTime,
+  TemporalZonedDateTime,
+  Unit,
+} from './helpers/units.js';
 import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
 import type { MonthDay } from './month-day.js';
 import type { DateRange, DateTimeRange } from './range.js';
@@ -10,12 +18,21 @@ import type { TimeInput } from './time.js';
 import type { YearMonth } from './year-month.js';
 
 /**
- * Any input accepted by `date()`: a year-first date string such as `'2026-09-06'`, fields object,
- * calendar date, moment, native JavaScript date, or `Temporal` value.
+ * Any input accepted by `date()`: a year-first date string such as `'2026-09-06'`, calendar fields object,
+ * calendar date, moment, native JavaScript date, or `Temporal` date or instant value.
  *
  * @see {@link https://nativedates.dev/api/date-fn/#accepted-inputs Accepted inputs}
  */
-export type CalendarDateInput = CalendarDate | DateTime | Date | string | DateTimeFields | TemporalValue;
+export type CalendarDateInput =
+  | CalendarDate
+  | DateTime
+  | Date
+  | string
+  | Pick<DateTimeFields, 'year' | 'month' | 'day'>
+  | TemporalPlainDate
+  | TemporalPlainDateTime
+  | TemporalZonedDateTime
+  | TemporalInstant;
 
 /**
  * A calendar date with no time of day and no time zone, for birthdays, due dates, holidays,
@@ -195,7 +212,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#set set}
    */
-  set(unit: Unit, value: number): CalendarDate;
+  set(unit: DateUnit, value: number): CalendarDate;
 
   /**
    * Returns the first day of the calendar unit containing this date.
@@ -688,8 +705,8 @@ export class CalendarDate {
    * Omitting `time` defaults to midnight at the start of the day.
    *
    * @param time - Time string such as `'9:30am'`, `Time` instance, fields object, or `Date`
-   * @param zone - Time zone name or offset, defaulting to the configured zone
-   * @returns A new `DateTime` on this date at `time` in `zone`
+   * @param options - Time zone name or `ReadOptions` (including `zone`, `locale`, and `disambiguation`)
+   * @returns A new `DateTime` on this date at `time` in the resolved time zone
    *
    * @example
    * ```ts
@@ -698,7 +715,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#at at}
    */
-  at(time?: TimeInput, zone?: Zone): DateTime;
+  at(time?: TimeInput, options?: Zone | ReadOptions): DateTime;
 
   /**
    * Converts this date to a `DateTime` at the start of the day in `zone` inside a method chain.
@@ -897,7 +914,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#totemporal toTemporal}
    */
-  toTemporal(): TemporalValue;
+  toTemporal(): TemporalPlainDate;
 
   /**
    * Throws a `RangeError` so numeric operators never coerce a calendar date to milliseconds.

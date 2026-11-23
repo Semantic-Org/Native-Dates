@@ -1,12 +1,12 @@
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
-import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
+import { bounded, plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
 import { dayOfWeek, pad } from './units.js';
 import { each } from './utils.js';
 import { locale as pickLocale, namedFormat, settings, weekStart } from './zones.js';
 
 // cleared by configure() when custom weekdayNames or ordinals change
-export const nameCache = new Map();
+export const nameCache = bounded(100);
 
 export const weekdayWidths = { narrow: 'dd', short: 'ddd', long: 'dddd' };
 

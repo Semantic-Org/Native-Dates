@@ -1,5 +1,5 @@
 import { IS_DURATION } from './helpers/identity.js';
-import type { TemporalValue, Unit } from './helpers/units.js';
+import type { TemporalDuration, TemporalPlainDate, TemporalZonedDateTime, Unit } from './helpers/units.js';
 import type { Locale } from './helpers/zones.js';
 
 /**
@@ -37,7 +37,7 @@ export interface DurationFields {
  *
  * @see {@link https://nativedates.dev/api/duration-fn/#accepted-inputs Accepted inputs}
  */
-export type DurationInput = Duration | DurationFields | string | number | TemporalValue;
+export type DurationInput = Duration | DurationFields | string | number | TemporalDuration;
 
 /**
  * A length of time across calendar and clock units.
@@ -117,7 +117,7 @@ export class Duration {
   isNegative(): boolean;
 
   /** Starting point recorded by `until()` or `since()`, or `undefined` on standalone durations. */
-  readonly anchor: TemporalValue | undefined;
+  readonly anchor: TemporalZonedDateTime | TemporalPlainDate | undefined;
 
   /**
    * Returns a plain object containing only the nonzero plural unit fields on this duration.
@@ -422,7 +422,7 @@ export class Duration {
    *
    * @see {@link https://nativedates.dev/api/duration/#totemporal toTemporal}
    */
-  toTemporal(): TemporalValue;
+  toTemporal(): TemporalDuration;
 
   /**
    * Returns the total length in milliseconds. Unanchored month or year durations throw a `RangeError`.

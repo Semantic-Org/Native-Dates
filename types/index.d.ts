@@ -46,8 +46,22 @@ export type { DateTimeFields, DateTimeInput } from './date-time.js';
 export type { DurationFields, DurationInput } from './duration.js';
 export type { Point, Range, RangeMap } from './helpers/compare.js';
 export type { FormatSpec } from './helpers/format.js';
-export type { DateUnit, DayOfWeek, TemporalValue, Unit } from './helpers/units.js';
-export type { ActiveSettings, Locale, ReadOptions, Settings, Zone } from './helpers/zones.js';
+export type {
+  DateUnit,
+  DayOfWeek,
+  TemporalDuration,
+  TemporalInstant,
+  TemporalPlainDate,
+  TemporalPlainDateTime,
+  TemporalPlainMonthDay,
+  TemporalPlainTime,
+  TemporalPlainYearMonth,
+  TemporalValue,
+  TemporalZonedDateTime,
+  TimeUnit,
+  Unit,
+} from './helpers/units.js';
+export type { ActiveSettings, Disambiguation, Locale, ReadOptions, Settings, Zone } from './helpers/zones.js';
 export type { MonthDayFields, MonthDayFormat, MonthDayInput, MonthDayOptions } from './month-day.js';
-export type { TimeInput } from './time.js';
+export type { TimeFields, TimeInput } from './time.js';
 export type { YearMonthFields, YearMonthFormat, YearMonthInput } from './year-month.js';

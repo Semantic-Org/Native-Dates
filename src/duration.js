@@ -309,10 +309,10 @@ export class Duration {
     const fields = { ...written, ...Object.fromEntries(fieldNames.slice(4).map((field) => [field, clock[field]])) };
     const large = fieldNames.slice(0, subsecond).some((field) => fields[field]);
     // hoursDisplay: 'auto' omits zero hours so digital zero formats as '00:00'
-    const shown = { hours: 0 };
+    const shown = {};
     each(fieldNames, (field, index) => {
-      if (fields[field] && (!large || index < subsecond)) {
-        shown[field] = fields[field];
+      if (field === 'hours' || (fields[field] && (!large || index < subsecond))) {
+        shown[field] = fields[field] || 0;
       }
     });
     // Intl.DurationFormat omits zero fields by default (returning '' for { seconds: 0 } and throwing on {})
@@ -358,10 +358,10 @@ alias(Duration, { add: 'plus', subtract: 'minus', lang: 'locale', as: 'total' })
 export const duration = (input, unitOrOptions) => {
   const hasOptions = isPlainObject(unitOrOptions);
   const name = hasOptions ? undefined : unitOrOptions;
-  const locale = hasOptions ? unitOrOptions.locale : undefined;
+  const locale = hasOptions && unitOrOptions.locale !== undefined ? checkedLocale(unitOrOptions.locale) : undefined;
   const build = () =>
     input instanceof Duration && name === undefined
-      ? (locale === undefined ? input : input.locale(locale))
+      ? (hasOptions && Object.hasOwn(unitOrOptions, 'locale') ? input.locale(locale) : input)
       : new Duration(input, name, { locale });
   return hasOptions && unitOrOptions.loose ? loosely(build, unreadable.length) : build();
 };

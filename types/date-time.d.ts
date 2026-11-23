@@ -2,7 +2,14 @@ import type { CalendarDate } from './calendar-date.js';
 import type { Duration, DurationInput } from './duration.js';
 import type { FormatSpec } from './helpers/format.js';
 import { IS_DATE_TIME } from './helpers/identity.js';
-import type { DayOfWeek, TemporalValue, Unit } from './helpers/units.js';
+import type {
+  DayOfWeek,
+  TemporalInstant,
+  TemporalPlainDate,
+  TemporalPlainDateTime,
+  TemporalZonedDateTime,
+  Unit,
+} from './helpers/units.js';
 import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
 import type { MonthDay } from './month-day.js';
 import type { DateTimeRange } from './range.js';
@@ -41,7 +48,17 @@ export interface DateTimeFields {
  *
  * @see {@link https://nativedates.dev/api/datetime-fn/#accepted-inputs Accepted inputs}
  */
-export type DateTimeInput = DateTime | CalendarDate | Date | number | string | DateTimeFields | TemporalValue;
+export type DateTimeInput =
+  | DateTime
+  | CalendarDate
+  | Date
+  | number
+  | string
+  | DateTimeFields
+  | TemporalZonedDateTime
+  | TemporalInstant
+  | TemporalPlainDateTime
+  | TemporalPlainDate;
 
 /**
  * A specific moment in time viewed in a time zone, for timestamps, meetings, and deadlines.
@@ -325,6 +342,7 @@ export class DateTime {
    * Returns a new `DateTime` on the same local date and time zone with the time of day replaced.
    *
    * @param time - Time string such as `'5:00pm'`, `Time` instance, fields object, or `Date`
+   * @param options - Optional `disambiguation` rule for DST gaps and folds
    * @returns A new `DateTime` on the same date at `time`
    *
    * @example
@@ -335,7 +353,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#at at}
    */
-  at(time: TimeInput): DateTime;
+  at(time: TimeInput, options?: ReadOptions): DateTime;
 
   /**
    * Returns a new `DateTime` representing the exact same moment viewed in another time zone.
@@ -968,7 +986,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#totemporal toTemporal}
    */
-  toTemporal(): TemporalValue;
+  toTemporal(): TemporalZonedDateTime;
 
   /**
    * Returns epoch milliseconds so `DateTime` instances can be compared or subtracted with `<` and `-`.

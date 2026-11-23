@@ -418,11 +418,14 @@ describe('@native-dates/plugins/zones abbreviations used by several countries', 
     expect(yearMonth('2026-11-30T20:00:00Z', options).toString()).toBe('2026-12');
   });
 
-  it('resolves zoneAliases and timezones entries ahead of the locale', () => {
+  it('resolves zoneAliases and timezones entries ahead of the locale, invalidating cached lookups when timezones mutates', () => {
     configure({ zoneAliases: { CST: 'America/Havana' } });
     expect(zoneOf('CST', 'zh-CN')).toBe('America/Havana');
     configure({ zoneAliases: null });
+    expect(zoneOf('IST', 'en-IE')).toBe('Europe/Dublin');
     timezones.IST = 'Asia/Jerusalem';
     expect(zoneOf('IST', 'en-IE')).toBe('Asia/Jerusalem');
+    delete timezones.IST;
+    expect(zoneOf('IST', 'en-IE')).toBe('Europe/Dublin');
   });
 });

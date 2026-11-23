@@ -24,11 +24,13 @@ import {
   namesInstant,
   singularKeys,
   stepOf,
+  timeUnits,
   unit,
   wholeNumbers,
   withParts,
+  zoneOptions,
 } from './helpers/units.js';
-import { zoneId } from './helpers/zones.js';
+import { checkedDisambiguation, zoneId } from './helpers/zones.js';
 import { TimeRange } from './range.js';
 
 /*
@@ -84,6 +86,7 @@ export class Time {
     if (settings.zone !== undefined) {
       zoneId(settings.zone);
     }
+    checkedDisambiguation(settings.disambiguation);
     if (settings.loose || settings.dayFirst !== undefined) {
       requireLoose(settings.loose ? 'loose' : 'dayFirst');
     }
@@ -110,6 +113,9 @@ export class Time {
     }
     if (input instanceof Time) {
       return input.toTemporal();
+    }
+    if (isPlainTime(input)) {
+      return input;
     }
     // instants and zoned inputs resolve their wall-clock time in the requested (or default) zone
     if (
@@ -248,7 +254,7 @@ export class Time {
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
     return this.#next(
-      guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
+      guard(() => withParts(this.#plain, changes, timeUnits), 'cannotSet', JSON.stringify(changes)),
     );
   }
 
@@ -342,9 +348,13 @@ export class Time {
     return new Time(other, { locale: this.#locale }).until(this, name);
   }
 
-  on(day, zone) {
+  on(day, options) {
+    const settings = zoneOptions(options);
     // Date, Temporal.Instant, and instant strings carry no zone of their own, so resolve their date in `zone`
-    return new CalendarDate(day, { zone: isUnzoned(day) ? zone : undefined, locale: this.#locale }).at(this, zone);
+    return new CalendarDate(day, { zone: isUnzoned(day) ? settings.zone : undefined, locale: this.#locale }).at(
+      this,
+      settings,
+    );
   }
 
   as(kind) {

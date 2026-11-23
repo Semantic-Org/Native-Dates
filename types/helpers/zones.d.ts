@@ -20,6 +20,18 @@ export type Zone = string;
 export type Locale = string | readonly string[];
 
 /**
+ * Rule used when a local wall-clock time is skipped in a spring-forward gap or repeated in a fall-back fold.
+ *
+ * - `'compatible'` (default): advances past spring-forward gaps and picks the earlier pass on fall-back folds
+ * - `'earlier'`: steps back across spring-forward gaps and picks the first pass on folds
+ * - `'later'`: advances past spring-forward gaps and picks the second pass on folds
+ * - `'reject'`: throws a `RangeError` (`invalidDateTime`) when the local time is nonexistent or ambiguous
+ *
+ * @see {@link https://nativedates.dev/guides/time-zones/ Time zones}
+ */
+export type Disambiguation = 'compatible' | 'earlier' | 'later' | 'reject';
+
+/**
  * Options accepted as the second argument when reading values in factory functions.
  *
  * @see {@link https://nativedates.dev/guides/parsing/ Parsing}
@@ -36,6 +48,13 @@ export interface ReadOptions {
    * Defaults to the configured `locale`, or the runtime's default locale.
    */
   locale?: Locale;
+
+  /**
+   * How to resolve local wall-clock times across daylight-saving gaps and folds.
+   *
+   * @default 'compatible'
+   */
+  disambiguation?: Disambiguation;
 }
 
 /**

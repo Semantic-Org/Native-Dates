@@ -677,9 +677,43 @@ describe('DateTime.plus() and minus()', () => {
     expect(saturday.toString()).toBe('2026-03-07T14:00:00.000Z');
   });
 
-  it('advances wall-clock times that land inside a spring-forward DST gap', () => {
+  it('advances wall-clock times that land inside a spring-forward DST gap, and supports explicit disambiguation', () => {
     const earlySaturday = datetime('2026-03-07T02:30', 'America/New_York');
     expect(earlySaturday.plus(1, 'day')).toMatchObject({ day: 8, hour: 3, minute: 30 });
+
+    // spring-forward gap in New York on 2026-03-08 (02:00 jumps to 03:00)
+    expect(datetime('2026-03-08T02:30', { zone: 'America/New_York', disambiguation: 'earlier' })).toMatchObject({
+      hour: 1,
+      minute: 30,
+      offset: '-05:00',
+    });
+    expect(datetime('2026-03-08T02:30', { zone: 'America/New_York', disambiguation: 'later' })).toMatchObject({
+      hour: 3,
+      minute: 30,
+      offset: '-04:00',
+    });
+    expect(() => datetime('2026-03-08T02:30', { zone: 'America/New_York', disambiguation: 'reject' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime' }),
+    );
+    expect(() => date('2026-03-08').at('02:30', { zone: 'America/New_York', disambiguation: 'reject' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime' }),
+    );
+    expect(() => time('02:30').on('2026-03-08', { zone: 'America/New_York', disambiguation: 'reject' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime' }),
+    );
+
+    // fall-back fold in New York on 2026-11-01 (01:00..02:00 repeats from -04:00 to -05:00)
+    expect(datetime('2026-11-01T01:30', { zone: 'America/New_York', disambiguation: 'earlier' }).offset).toBe('-04:00');
+    expect(datetime('2026-11-01T01:30', { zone: 'America/New_York', disambiguation: 'later' }).offset).toBe('-05:00');
+    expect(datetime('2026-11-01T12:00', 'America/New_York').at('01:30', { disambiguation: 'later' }).offset).toBe(
+      '-05:00',
+    );
+    expect(() => datetime('2026-11-01T01:30', { zone: 'America/New_York', disambiguation: 'reject' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime' }),
+    );
+    expect(() => datetime('2026-11-01T12:00', { zone: 'America/New_York', disambiguation: 'bogus' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownDisambiguation', at: 'bogus' }),
+    );
   });
 
   it('throws a TypeError with invalidDuration for null or undefined amounts', () => {

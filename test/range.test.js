@@ -816,9 +816,26 @@ describe('Range intersection()', () => {
   });
 
   it.todo('preserves the receiver timezone on DateTimeRange.prototype.intersection()');
-  it.todo(
-    'returns an empty TimeRange rather than null from intersection() when an empty range lies inside another, matching overlaps()',
-  );
+
+  it('returns false from overlaps() and contains(), and null from intersection(), when either range is empty', () => {
+    const office = timeRange('09:00', '17:00');
+    const emptyTime = timeRange('12:00', '12:00');
+    expect(office.overlaps(emptyTime)).toBe(false);
+    expect(emptyTime.overlaps(office)).toBe(false);
+    expect(office.contains(emptyTime)).toBe(false);
+    expect(emptyTime.contains(emptyTime)).toBe(false);
+    expect(office.intersection(emptyTime)).toBeNull();
+    expect(emptyTime.intersection(office)).toBeNull();
+
+    const block = datetimeRange('2026-09-01T09:00Z', '2026-09-01T17:00Z');
+    const emptyMoment = datetimeRange('2026-09-01T12:00Z', '2026-09-01T12:00Z');
+    expect(block.overlaps(emptyMoment)).toBe(false);
+    expect(emptyMoment.overlaps(block)).toBe(false);
+    expect(block.contains(emptyMoment)).toBe(false);
+    expect(emptyMoment.contains(emptyMoment)).toBe(false);
+    expect(block.intersection(emptyMoment)).toBeNull();
+    expect(emptyMoment.intersection(block)).toBeNull();
+  });
 });
 
 describe('Range equals()', () => {

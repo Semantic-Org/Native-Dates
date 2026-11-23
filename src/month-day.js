@@ -63,8 +63,8 @@ export class MonthDay {
 
   // monthDay(10, 17), monthDay(input, zone), or monthDay(input, { zone, loose, dayFirst })
   constructor(input, dayOrOptions) {
-    this.#plain = MonthDay.#read(input, dayOrOptions);
     this.#locale = localeOf(dayOrOptions, input);
+    this.#plain = MonthDay.#read(input, dayOrOptions);
     this.text = undefined; // keep text first in console previews
     // PlainMonthDay omits .month because lunisolar month numbers shift with leap months, so read monthCode ('M10')
     this.month = Number(this.#plain.monthCode.slice(1));

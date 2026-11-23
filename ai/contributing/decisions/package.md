@@ -124,6 +124,8 @@ Reopen: speakers report a locale's `Intl` short date order diverging from typed 
 
 ## D21: Time zone abbreviations inside `{ loose: true }` strings resolve like `{ zone }` rather than `Date.parse()` (2026-11-22)
 
+Superseded by D23 (2026-11-23).
+
 Leaving inline abbreviations to `Date.parse()` read `'CST'` as fixed `-06:00` everywhere, rejected `'KST'` and `'MSK'`, and treated `'EST'` in July as `-05:00` even when `{ zone: 'EST' }` observed `America/New_York` daylight time under `@native-dates/plugins/zones`. Resolving post-clock abbreviations through `zoneId(name, locale)` keeps inline strings consistent with `{ zone }` and `zoneAliases`, sets the instant without changing `.zone` (`D1`), and yields to an explicit numeric offset written beside it (`'+0800 CST'`).
 
 Reopen: users parsing RFC 2822 email or HTTP headers report bugs from `'EST'` or `'PST'` observing daylight time while `@native-dates/plugins/zones` is loaded.
@@ -133,3 +135,9 @@ Reopen: users parsing RFC 2822 email or HTTP headers report bugs from `'EST'` or
 Without built-in aliases, every localized app had to configure its own `zoneAliases` for major cities that IANA files under another name (`'Beijing'` -> `Asia/Shanghai`, `'Mumbai'` -> `Asia/Kolkata`) and for shared abbreviations like `'CST'` and `'IST'`. Shipping those tables adds ~0.9 kB Brotli to the plugin and resolves shared names against `Intl.Locale.prototype.getTimeZones()` for the active locale's country (falling back to the first listed zone). `IST` and `ACT` were also removed from the exported `timezones` defaults so they do not shadow locale lookup unless reassigned explicitly.
 
 Reopen: city requests keep expanding the alias table without a clear boundary, or users report locale-driven lookup misreading foreign-country abbreviations.
+
+## D23: Explicit standard and daylight abbreviations inside `{ loose: true }` strings keep fixed UTC offsets (2026-11-23)
+
+Supersedes D21. Passing `'EST'` or `'PST'` as an explicit `{ zone }` argument (`D22`) names a regional zone for ongoing calendar math, whereas an inline `'EST'`, `'EDT'`, `'PST'`, or `'PDT'` inside a timestamp string (`'2026-07-04 14:30 EST'`, RFC 2822 headers, log lines) records the UTC offset active when the string was written. With `@native-dates/plugins/zones` loaded, `D21` shifted `'2026-07-04 14:30 EST'` by an hour from `-05:00` to `-04:00`. Explicit US standard and daylight codes (`EST`, `EDT`, `CDT`, `MST`, `MDT`, `PDT`, `AKST`, `AKDT`, `HST`, plus `CST` and `PST` when resolved to `America/Chicago` or `America/Los_Angeles`) now keep their fixed UTC offsets inside `{ loose: true }` strings unless overridden in `zoneAliases`, while regional codes (`PT`, `ET`, `CET`, `KST`, `MSK`, and `'CST'` under `'zh-CN'`) still resolve through `zoneId(name, locale)`.
+
+Reopen: non-North American standard/daylight pairs (such as `'AEST'`/`'AEDT'` or `'CET'`/`'CEST'`) hit the same DST shift in inline log timestamps and need fixed-offset entries too.

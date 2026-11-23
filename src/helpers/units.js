@@ -147,9 +147,12 @@ export const pad = (value, width = 2) => String(Math.abs(value)).padStart(width,
 // Temporal.PlainDate/PlainTime.from() silently truncates floats (9.5 -> 9) before range checking
 export const wholeNumbers = (values) => values.every((value) => !isNumber(value) || Number.isInteger(value));
 
-export const withParts = (temporal, changes) => {
+export const withParts = (temporal, changes, allowed) => {
   if (!wholeNumbers(Object.values(changes))) {
     fail(isDevelopment ? 'each value passed to `set()` must be a whole number' : '');
+  }
+  if (allowed && Object.keys(changes).some((key) => !allowed.includes(key))) {
+    fail(isDevelopment ? `only [${allowed.join(', ')}] can be set on this value` : '');
   }
   // validate passed fields against day 1 so explicit out-of-range values reject while an unchanged day clamps to month-end
   temporal.with({ day: 1, ...changes }, { overflow: 'reject' });
@@ -182,8 +185,11 @@ export const alias = (Class, names) => {
 // check brand before calling .locale() so plain field bags with a `locale` key aren't invoked as methods
 const nouns = [IS_DATE_TIME, IS_CALENDAR_DATE, IS_TIME, IS_DURATION, IS_MONTH_DAY, IS_YEAR_MONTH, IS_RANGE];
 export const localeOf = (options, input) => {
-  const tag = options?.locale ?? (nouns.some((brand) => input?.[brand]) ? input.locale?.() : undefined);
-  return tag ? checkedLocale(tag) : undefined;
+  if (isPlainObject(options) && Object.hasOwn(options, 'locale') && options.locale !== undefined) {
+    return checkedLocale(options.locale);
+  }
+  const carried = nouns.some((brand) => input?.[brand]) ? input.locale?.() : undefined;
+  return carried ? checkedLocale(carried) : undefined;
 };
 
 export const zoneOptions = (value) => (isPlainObject(value) ? value : { zone: value });

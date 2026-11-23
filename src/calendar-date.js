@@ -33,8 +33,9 @@ import {
   weekdayNamed,
   wholeNumbers,
   withParts,
+  zoneOptions,
 } from './helpers/units.js';
-import { isWeekend, weekStart, zoneId } from './helpers/zones.js';
+import { checkedDisambiguation, isWeekend, weekStart, zoneId } from './helpers/zones.js';
 import { MonthDay } from './month-day.js';
 import { DateRange } from './range.js';
 import { Time } from './time.js';
@@ -89,6 +90,7 @@ export class CalendarDate {
     if (settings.zone !== undefined) {
       zoneId(settings.zone);
     }
+    checkedDisambiguation(settings.disambiguation);
     if (settings.loose || settings.dayFirst !== undefined) {
       requireLoose(settings.loose ? 'loose' : 'dayFirst');
     }
@@ -121,6 +123,9 @@ export class CalendarDate {
     }
     if (input instanceof CalendarDate) {
       return input.toTemporal();
+    }
+    if (isPlainDate(input)) {
+      return input;
     }
     // instants and zoned inputs resolve their calendar day in the requested (or default) zone
     if (
@@ -259,7 +264,7 @@ export class CalendarDate {
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
     return this.#next(
-      guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
+      guard(() => withParts(this.#plain, changes, ['year', 'month', 'day']), 'cannotSet', JSON.stringify(changes)),
     );
   }
 
@@ -394,12 +399,22 @@ export class CalendarDate {
     return new CalendarDate(other, { locale: this.#locale }).until(this, name);
   }
 
-  at(when, zone) {
+  at(when, options) {
+    const settings = zoneOptions(options);
+    const disambiguation = checkedDisambiguation(settings.disambiguation);
     // Date, Temporal.Instant, and instant strings carry no zone of their own, while DateTime and ZonedDateTime keep their wall-clock time
-    const plainTime = new Time(when ?? '00:00', isUnzoned(when) ? { zone } : undefined).toTemporal();
-    return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone, this.#locale), plainTime }), {
-      locale: this.#locale,
-    });
+    const plainTime = new Time(when ?? '00:00', isUnzoned(when) ? { zone: settings.zone } : undefined).toTemporal();
+    return new DateTime(
+      guard(
+        () =>
+          this.#plain.toPlainDateTime(plainTime).toZonedDateTime(zoneId(settings.zone, this.#locale), {
+            disambiguation,
+          }),
+        'invalidDateTime',
+        `${this}T${plainTime}`,
+      ),
+      { locale: settings.locale ?? this.#locale },
+    );
   }
 
   get monthDay() {

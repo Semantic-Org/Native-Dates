@@ -27,12 +27,13 @@ import {
   quarterStart,
   singularKeys,
   stepOf,
+  timeUnits,
   unit,
   weekdayNamed,
   withParts,
   zoneOptions,
 } from './helpers/units.js';
-import { isWeekend, weekStart, zoneId } from './helpers/zones.js';
+import { checkedDisambiguation, isWeekend, weekStart, zoneId } from './helpers/zones.js';
 import { MonthDay } from './month-day.js';
 import { DateTimeRange } from './range.js';
 import { Time } from './time.js';
@@ -62,6 +63,7 @@ export class DateTime {
     this.#locale = localeOf(settings, input);
     this.#zoned = (
       isZonedDateTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
+        && settings.disambiguation === undefined
         ? input
         : DateTime.#read(input, settings)
     ).withCalendar('iso8601');
@@ -84,8 +86,9 @@ export class DateTime {
 
   static #read(input, settings) {
     const { zone, loose, dayFirst } = settings;
-    // validate zone up front so a bad zone throws even when loose: true returns null on bad input
+    // validate zone and disambiguation up front so bad options throw even when loose: true returns null on bad input
     const timeZone = zoneId(zone, settings.locale);
+    const disambiguation = checkedDisambiguation(settings.disambiguation);
     if (loose || dayFirst !== undefined) {
       requireLoose(loose ? 'loose' : 'dayFirst');
     }
@@ -100,7 +103,11 @@ export class DateTime {
       return zone === undefined ? input.toTemporal() : input.toTemporal().withTimeZone(timeZone);
     }
     if (input instanceof CalendarDate) {
-      return input.toTemporal().toZonedDateTime({ timeZone });
+      return guard(
+        () => input.toTemporal().toZonedDateTime({ timeZone, disambiguation }),
+        'invalidDateTime',
+        String(input),
+      );
     }
     if (isDate(input) || isNumber(input)) {
       const epoch = isNumber(input) ? input : input.getTime();
@@ -113,7 +120,7 @@ export class DateTime {
       return Temporal.Instant.fromEpochMilliseconds(Math.trunc(epoch)).toZonedDateTimeISO(timeZone);
     }
     if (isString(input)) {
-      return DateTime.#parse(input, settings, timeZone);
+      return DateTime.#parse(input, settings, timeZone, disambiguation);
     }
     if (isZonedDateTime(input)) {
       return zone === undefined ? input : input.withTimeZone(timeZone);
@@ -122,14 +129,14 @@ export class DateTime {
       return input.toZonedDateTimeISO(timeZone);
     }
     if (isPlainDateTime(input)) {
-      return input.toZonedDateTime(timeZone);
+      return guard(() => input.toZonedDateTime(timeZone, { disambiguation }), 'invalidDateTime', String(input));
     }
     if (isPlainDate(input)) {
-      return input.toZonedDateTime({ timeZone });
+      return guard(() => input.toZonedDateTime({ timeZone, disambiguation }), 'invalidDateTime', String(input));
     }
     if (isPlainObject(input)) {
       return guard(
-        () => Temporal.ZonedDateTime.from({ ...singularKeys(input), timeZone }, { overflow: 'reject' }),
+        () => Temporal.ZonedDateTime.from({ ...singularKeys(input), timeZone }, { overflow: 'reject', disambiguation }),
         'invalidDateTime',
         JSON.stringify(input),
       );
@@ -141,21 +148,21 @@ export class DateTime {
     });
   }
 
-  static #parse(text, settings, timeZone) {
+  static #parse(text, settings, timeZone, disambiguation) {
     const trimmed = yearFirst(text.trim());
     try {
       return guard(
         () => {
           if (hasZoneName.test(trimmed)) {
-            const zoned = Temporal.ZonedDateTime.from(trimmed);
+            const zoned = Temporal.ZonedDateTime.from(trimmed, { disambiguation });
             return settings.zone === undefined ? zoned : zoned.withTimeZone(timeZone);
           }
           if (hasTime.test(trimmed)) {
             return hasOffset.test(trimmed)
               ? Temporal.Instant.from(trimmed).toZonedDateTimeISO(timeZone)
-              : Temporal.PlainDateTime.from(trimmed).toZonedDateTime(timeZone);
+              : Temporal.PlainDateTime.from(trimmed).toZonedDateTime(timeZone, { disambiguation });
           }
-          return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone });
+          return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone, disambiguation });
         },
         'invalidDateTime',
         text,
@@ -280,12 +287,16 @@ export class DateTime {
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
     return this.#next(
-      guard(() => withParts(this.#zoned, changes), 'cannotSet', JSON.stringify(changes)),
+      guard(
+        () => withParts(this.#zoned, changes, ['year', 'month', 'day', ...timeUnits]),
+        'cannotSet',
+        JSON.stringify(changes),
+      ),
     );
   }
 
-  at(when) {
-    return this.date.at(when, this.zone);
+  at(when, options) {
+    return this.date.at(when, isPlainObject(options) ? { zone: this.zone, ...options } : this.zone);
   }
 
   in(zone) {
@@ -511,7 +522,7 @@ export const datetime = (input, options) => {
   const settings = zoneOptions(options);
   const build = () =>
     input instanceof DateTime && settings.zone === undefined && settings.dayFirst === undefined
-      && settings.locale === undefined
+      && settings.locale === undefined && settings.disambiguation === undefined
       ? input
       : new DateTime(input, settings);
   return settings.loose ? loosely(build) : build();
