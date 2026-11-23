@@ -497,11 +497,13 @@ describe('locale precedence in formatting', () => {
     expect(date('2026-05-15').locale('   ').locale()).toBeUndefined();
   });
 
-  it('treats { locale: false } as unset and preserves carried locale on duration(d, { locale: undefined })', () => {
+  it('treats { locale: false } as unset, accepts Intl.Locale instances, and preserves carried locale on duration(d, { locale: undefined })', () => {
     configure({ locale: 'fr' });
     const d = date('2026-05-15', { locale: false });
     expect(d.locale()).toBeUndefined();
     expect(d.format('MMMM')).toBe('mai');
+    const german = new Intl.Locale('de');
+    expect(date('2026-05-15', { locale: german }).plus(1, 'day').format('MMMM')).toBe('Mai');
     expect(duration(hours(2).locale('fr'), { locale: undefined }).locale()).toBe('fr');
   });
 });

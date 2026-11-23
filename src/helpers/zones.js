@@ -165,14 +165,14 @@ const canonicalTag = (name) => {
   }
 };
 
-// accept BCP 47 tags, POSIX 'en_US' tags, tag arrays, and raw HTTP Accept-Language headers
-const validArrays = new WeakSet();
+// accept BCP 47 tags, POSIX 'en_US' tags, tag arrays, Intl.Locale instances, and raw HTTP Accept-Language headers
+const validObjects = new WeakSet();
 const knownLocales = bounded();
 export const checkedLocale = (tag) => {
   if (!tag || (isString(tag) && !tag.trim())) {
     return undefined;
   }
-  if (validArrays.has(tag)) {
+  if (validObjects.has(tag)) {
     return tag;
   }
   const explanation = isDevelopment
@@ -180,12 +180,12 @@ export const checkedLocale = (tag) => {
     : 0;
   if (!isString(tag)) {
     guard(
-      () => (Array.isArray(tag) ? Intl.getCanonicalLocales(tag) : fail()),
+      () => (Array.isArray(tag) || tag instanceof Intl.Locale ? Intl.getCanonicalLocales(tag) : fail()),
       'unknownLocale',
-      String(tag),
+      tag,
       explanation,
     );
-    validArrays.add(tag);
+    validObjects.add(tag);
     return tag;
   }
   if (!knownLocales.has(tag)) {
@@ -203,7 +203,7 @@ export const checkedLocale = (tag) => {
     );
     knownLocales.set(
       tag,
-      kept ? (tags.length > 1 ? (validArrays.add(tags), Object.freeze(tags)) : tags[0]) : tag.trim(),
+      kept ? (tags.length > 1 ? (validObjects.add(tags), Object.freeze(tags)) : tags[0]) : tag.trim(),
     );
   }
   return knownLocales.get(tag);
