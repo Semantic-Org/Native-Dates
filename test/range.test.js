@@ -376,7 +376,12 @@ describe('Point to(), for(), and through()', () => {
     expect(time('9am').through).toBeUndefined();
   });
 
-  it.todo('rejects a bare number without a unit in point.for()');
+  it('treats a bare number in DateTime.prototype.for() and Time.prototype.for() as milliseconds rather than an endpoint', () => {
+    expect(datetime('2026-09-01T09:00', 'UTC').for(5_400_000).toString())
+      .toBe('2026-09-01T09:00:00.000Z/2026-09-01T10:30:00.000Z');
+    expect(time('9am').for(3_600_000).toString()).toBe('09:00:00/10:00:00');
+    expect(time('9am').for(2).toString()).toBe('09:00:00/09:00:00.002');
+  });
 });
 
 describe('CalendarDate.prototype.range() and DateTime.prototype.range()', () => {

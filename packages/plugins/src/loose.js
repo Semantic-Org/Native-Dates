@@ -241,8 +241,9 @@ const parseWithLocale = (text, settings) => {
         overflow: 'reject',
       });
     }
+    // 2000-01-01 has no DST transitions in any IANA zone, so dateless clock times never shift on spring-forward days
     else if (timeOnly && clock && !/\d/.test(before + after)) {
-      date = Temporal.Now.plainDateISO();
+      date = new Temporal.PlainDate(2000, 1, 1);
     }
     if (!date || !clock) {
       return date?.toPlainDateTime();

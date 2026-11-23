@@ -371,7 +371,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#to to}
    */
-  to(count: number, unit: Unit): DateRange;
+  to(count: number, unit: DateUnit): DateRange;
 
   /**
    * Creates an inclusive `DateRange` starting on this date and lasting for `length`.
@@ -402,7 +402,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#to to}
    */
-  for(count: number, unit: Unit): DateRange;
+  for(count: number, unit: DateUnit): DateRange;
 
   /**
    * Alias for `to()` emphasizing that a `DateRange` includes its final day.

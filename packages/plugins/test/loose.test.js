@@ -1160,6 +1160,20 @@ describe('time() and datetime() localized AM/PM with { loose: true, locale }', (
     expect(time('14h', { loose: true, locale: 'fr' })).toBeNull();
     expect(timeRange('22:00', '8h', { loose: true })?.toString()).toBe('22:00:00/06:00:00');
   });
+
+  it('keeps dateless wall-clock times unchanged in time() even when Temporal.Now is on a DST spring-forward day', () => {
+    const originalPlainDateISO = Temporal.Now.plainDateISO;
+    Temporal.Now.plainDateISO = () => Temporal.PlainDate.from('2026-03-08');
+    try {
+      expect(time('上午 2:30', { loose: true, locale: 'zh', zone: 'America/New_York' })?.toString()).toBe('02:30:00');
+      expect(
+        time('上午 2:30', { loose: true, locale: 'zh', zone: 'America/New_York', disambiguation: 'reject' })?.toString(),
+      ).toBe('02:30:00');
+    }
+    finally {
+      Temporal.Now.plainDateISO = originalPlainDateISO;
+    }
+  });
 });
 
 describe('monthDay() and yearMonth() connecting words and unit labels with { loose: true, locale }', () => {

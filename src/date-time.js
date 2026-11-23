@@ -384,6 +384,10 @@ export class DateTime {
     return new DateTimeRange(this, name === undefined ? end : duration(end, name));
   }
 
+  for(length, name) {
+    return this.to(duration(length, name));
+  }
+
   range(name, firstDay) {
     return new DateTimeRange(this.startOf(name, firstDay), this.#nextStart(name, firstDay));
   }
@@ -511,7 +515,7 @@ export class DateTime {
   }
 }
 
-alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative: 'from', for: 'to' });
+alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative: 'from' });
 
 export const datetime = (input, options) => {
   const settings = zoneOptions(options);

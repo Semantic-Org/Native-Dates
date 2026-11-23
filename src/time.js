@@ -294,6 +294,10 @@ export class Time {
     return new TimeRange(this, name === undefined ? end : duration(end, name));
   }
 
+  for(length, name) {
+    return this.to(duration(length, name));
+  }
+
   /*******************************
             Comparison
   *******************************/
@@ -397,7 +401,7 @@ export class Time {
   }
 }
 
-alias(Time, { add: 'plus', subtract: 'minus', lang: 'locale', for: 'to' });
+alias(Time, { add: 'plus', subtract: 'minus', lang: 'locale' });
 
 export const time = (input, minuteOrOptions, second) => {
   const build = () =>
