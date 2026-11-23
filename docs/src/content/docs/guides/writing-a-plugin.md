@@ -76,7 +76,7 @@ Callers activate a plugin with a bare import. List your entry files in `"sideEff
   },
   "sideEffects": ["./index.js"],
   "peerDependencies": {
-    "native-dates": "^0.0.6"
+    "native-dates": "^1.0.0"
   }
 }
 ```

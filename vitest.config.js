@@ -4,6 +4,7 @@ import { configDefaults, defineConfig } from 'vitest/config';
 const exclude = [
   ...configDefaults.exclude,
   '**/.claude/**',
+  'ai/workspace/**',
   'docs/**',
 ];
 

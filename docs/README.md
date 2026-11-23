@@ -23,7 +23,7 @@ GitHub Actions builds static output and deploys prebuilt artifacts to Vercel (`n
 
 | Trigger | Target environment |
 |---|---|
-| Push to `main` touching `docs/`, `src/`, or `packages/` | Staging: `staging.nativedates.dev` (`.github/workflows/staging-deploy.yml`) |
+| Push to `main` touching `docs/`, `src/`, `packages/`, `ai/skills/`, or `package.json` | Staging: `staging.nativedates.dev` (`.github/workflows/staging-deploy.yml`) |
 | `v*` git tag or manual `workflow_dispatch` | Production: `nativedates.dev` (`.github/workflows/release-deploy.yml`) |
 
 ## Authoring Pages
