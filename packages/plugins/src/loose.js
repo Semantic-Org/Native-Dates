@@ -310,8 +310,12 @@ const parseWithLocale = (text, settings) => {
       if (hour < 1 || hour > 12) {
         return undefined;
       }
-      // Korean '밤' (night) covers both sides of midnight, so the clock picks which of its hours is meant
-      hour = hours.find((covered) => covered % 12 === hour % 12) ?? (hour % 12) + (hours[0] > 11 ? 12 : 0);
+      // pick the AM or PM reading nearer the hours the word covers without crossing noon: Korean '밤' spans
+      // midnight, '2:30 at night' is 02:30, and Spanish '2:30 de la mañana' stays 02:30 rather than 14:30
+      const gap = (reading) =>
+        Math.min(...hours.map((covered) => Math.abs(reading - (covered < 12 ? covered : covered - 24))));
+      hour %= 12;
+      hour += gap(hour) > gap(hour - 12) ? 12 : 0;
     }
     return date.toPlainDateTime(`${pad(hour)}:${minute}:${second}.${fraction}`);
   }
