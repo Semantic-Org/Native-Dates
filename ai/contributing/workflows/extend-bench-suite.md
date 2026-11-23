@@ -64,6 +64,7 @@ export function parseIsoDate25k() {
 - **Never await `requestAnimationFrame` inside a loop**, which quantizes each iteration to the 16.66 ms display clock and masks real CPU changes.
 - **Warm steady-state paths symmetrically at module scope.** Run a short (`128-512` iteration) module-level warmup on steady-state operations so lazy-vs-eager fixture constructor changes do not shift V8 inline-cache tiering into the timed loop on one side only.
 - **Avoid cross-op state pollution.** Exported functions in the same file run sequentially in source declaration order on a fresh page per sample. Place cold-cache operations first using disjoint locales/zones untouched by module warmup (or dynamically `await import('native-dates')` inside an `async` export in [`bench/startup.js`](../../../bench/startup.js) to include module evaluation).
+- **Space unrelated ops in the same file >= 15-20% apart in duration.** Tachometer's `autoSampleConditions: ["2%"]` evaluates every pairwise difference in a suite file, including `opA` vs `opB` on the same side. Two operations sitting ~2-3% apart in baseline duration can straddle `+2%` against each other and burn the 3-minute auto-sample timeout.
 - **Write idiomatic callsites with distinct inputs.** Keep option literals inline inside loops (so per-call cache keying stays measured), keep live clock calls (`isToday()`, `fromNow()`, `isPast()`) where real code writes them, and generate non-repeating wire inputs rather than cycling a small set of strings.
 
 ---
