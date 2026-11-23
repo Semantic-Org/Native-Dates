@@ -69,10 +69,8 @@ export class YearMonth {
   constructor(input, monthOrOptions) {
     this.#locale = localeOf(monthOrOptions, input);
     this.#plain = YearMonth.#read(input, monthOrOptions);
-    this.text = undefined; // keep text first in console previews
     this.month = this.#plain.month;
     this.year = this.#plain.year;
-    this.text = this.format();
     Object.freeze(this);
   }
 
@@ -305,6 +303,10 @@ export class YearMonth {
 
   locale(...tag) {
     return tag.length ? new YearMonth(this.#plain, { locale: tag[0] }) : this.#locale;
+  }
+
+  get text() {
+    return this.format();
   }
 
   format(spec, locale = this.#locale) {

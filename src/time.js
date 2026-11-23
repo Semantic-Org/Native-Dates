@@ -72,13 +72,11 @@ export class Time {
       isPlainTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
         : Time.#read(input, isNumber(minuteOrOptions) ? minuteOrOptions : undefined, second, settings);
-    this.text = undefined; // keep text first in console previews
     const plain = this.#plain;
     this.hour = plain.hour;
     this.minute = plain.minute;
     this.second = plain.second;
     this.millisecond = plain.millisecond;
-    this.text = this.format();
     Object.freeze(this);
   }
 
@@ -364,6 +362,10 @@ export class Time {
   /*******************************
               Output
   *******************************/
+
+  get text() {
+    return this.format();
+  }
 
   format(spec, locale = this.#locale) {
     const options = intlOptions('time', spec);

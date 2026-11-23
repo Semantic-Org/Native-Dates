@@ -67,20 +67,19 @@ export class DateTime {
         ? input
         : DateTime.#read(input, settings)
     ).withCalendar('iso8601');
-    this.text = undefined; // keep text first in console previews
     const zoned = this.#zoned;
+    // keep month, day, year, hour, minute in the first five own fields so browser DevTools previews distinguish same-day times
     this.month = zoned.month;
     this.day = zoned.day;
     this.year = zoned.year;
-    this.dayOfWeek = zoned.dayOfWeek;
     this.hour = zoned.hour;
     this.minute = zoned.minute;
     this.second = zoned.second;
     this.millisecond = zoned.millisecond;
+    this.dayOfWeek = zoned.dayOfWeek;
     this.zone = zoned.timeZoneId;
     this.offset = zoned.offset;
     this.epochMilliseconds = zoned.epochMilliseconds;
-    this.text = this.format(textFormat);
     Object.freeze(this);
   }
 
@@ -465,6 +464,10 @@ export class DateTime {
   /*******************************
               Output
   *******************************/
+
+  get text() {
+    return this.format(textFormat);
+  }
 
   format(spec, locale = this.#locale) {
     const options = intlOptions('datetime', spec);

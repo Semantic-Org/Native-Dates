@@ -18,7 +18,7 @@ Reopen: RFC 9557 bracketed zone strings gain broad parser and database support a
 
 Putting `text` on the instance as its first own property shows the human-readable value inline in `console.log()` and DevTools instead of hiding it behind prototype getters. On `Duration`, eager `Intl.DurationFormat` formatting (~14 µs in Node) was accepted over a lazy getter so every class inspects the same way.
 
-Reopen: profiles in `bench/` or user performance reports show eager `text` formatting dominating hot arithmetic or `range.every()` loops.
+Superseded by D24 (2026-11-23).
 
 ## D4: Plugins attach on subpath import instead of requiring `use()` or `extend()` (2026-11-08)
 
@@ -141,3 +141,9 @@ Reopen: city requests keep expanding the alias table without a clear boundary, o
 Supersedes D21. Passing `'EST'` or `'PST'` as an explicit `{ zone }` argument (`D22`) names a regional zone for ongoing calendar math, whereas an inline `'EST'`, `'EDT'`, `'PST'`, or `'PDT'` inside a timestamp string (`'2026-07-04 14:30 EST'`, RFC 2822 headers, log lines) records the UTC offset active when the string was written. With `@native-dates/plugins/zones` loaded, `D21` shifted `'2026-07-04 14:30 EST'` by an hour from `-05:00` to `-04:00`. Explicit US standard and daylight codes (`EST`, `EDT`, `CDT`, `MST`, `MDT`, `PDT`, `AKST`, `AKDT`, `HST`, plus `CST` and `PST` when resolved to `America/Chicago` or `America/Los_Angeles`) now keep their fixed UTC offsets inside `{ loose: true }` strings unless overridden in `zoneAliases`, while regional codes (`PT`, `ET`, `CET`, `KST`, `MSK`, and `'CST'` under `'zh-CN'`) still resolve through `zoneId(name, locale)`.
 
 Reopen: non-North American standard/daylight pairs (such as `'AEST'`/`'AEDT'` or `'CET'`/`'CEST'`) hit the same DST shift in inline log timestamps and need fixed-offset entries too.
+
+## D24: Instances expose `.text` as a lazy prototype getter instead of an eager own property (2026-11-23)
+
+Supersedes D3. Formatting `.text` via `Intl` inside every constructor made `CalendarDate` and `DateTime` construction 4-6x slower than raw `Temporal`, left `.text` stale after `configure({ locale })`, caused `toEqual()` to disagree with `.equals()` across instance locales (`D6`), and forced `Duration` construction through `Intl.DurationFormat` even for arithmetic-only callers. Moving `text` to a prototype getter brings construction within ~4% of raw `Temporal`, keeps compact `util.inspect()` output in Node/Bun/Deno, and orders `DateTime` own fields as `month, day, year, hour, minute` first so browser DevTools' five-property preview still distinguishes same-day times.
+
+Reopen: browser developers report collapsed DevTools previews missing timezone or formatted text frequently enough to warrant a cheap non-`Intl` preview property.

@@ -65,11 +65,9 @@ export class MonthDay {
   constructor(input, dayOrOptions) {
     this.#locale = localeOf(dayOrOptions, input);
     this.#plain = MonthDay.#read(input, dayOrOptions);
-    this.text = undefined; // keep text first in console previews
     // PlainMonthDay omits .month because lunisolar month numbers shift with leap months, so read monthCode ('M10')
     this.month = Number(this.#plain.monthCode.slice(1));
     this.day = this.#plain.day;
-    this.text = this.format();
     Object.freeze(this);
   }
 
@@ -267,6 +265,10 @@ export class MonthDay {
 
   locale(...tag) {
     return tag.length ? new MonthDay(this.#plain, { locale: tag[0] }) : this.#locale;
+  }
+
+  get text() {
+    return this.format();
   }
 
   format(spec, locale = this.#locale) {

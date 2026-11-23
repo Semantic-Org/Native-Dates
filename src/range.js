@@ -47,7 +47,6 @@ class Range {
   // (start, end, zone), (start, end, { zone, loose }), or (interval, { zone, loose })
   constructor(start, end, options) {
     const kind = this.constructor.kind;
-    this.text = undefined; // keep text first in console previews
     this.kind = kind;
     if (Range.isOptions(end)) {
       [end, options] = [undefined, end];
@@ -75,7 +74,6 @@ class Range {
           : 0,
       });
     }
-    this.text = kind === 'datetime' ? this.format(textFormat) : this.format();
     Object.freeze(this);
   }
 
@@ -356,6 +354,10 @@ class Range {
     return tag.length
       ? new byKind[this.kind](this.start.locale(tag[0]), this.end.locale(tag[0]))
       : this.start.locale();
+  }
+
+  get text() {
+    return this.kind === 'datetime' ? this.format(textFormat) : this.format();
   }
 
   format(spec, locale = this.start.locale()) {

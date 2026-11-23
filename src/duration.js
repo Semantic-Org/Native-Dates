@@ -45,7 +45,6 @@ export class Duration {
       : temporalDurationOf(fieldsFrom(input, name));
     this.#anchor = anchor;
     this.#locale = locale ? checkedLocale(locale) : undefined;
-    this.text = undefined; // keep text first in console previews
     const temporal = this.#temporal;
     this.years = temporal.years;
     this.months = temporal.months;
@@ -57,7 +56,6 @@ export class Duration {
     this.milliseconds = temporal.milliseconds;
     this.sign = temporal.sign;
     this.anchor = anchor;
-    this.text = this.format('long');
     Object.freeze(this);
   }
 
@@ -298,6 +296,10 @@ export class Duration {
   *******************************/
 
   // keep calendar fields as written, balance clock overflow up to hours, and hide sub-second fields when >= 1s is set
+  get text() {
+    return this.format('long');
+  }
+
   format(style = 'long', locale = this.#locale) {
     if (!styles.includes(style)) {
       refuse('unknownFormat', String(style), {

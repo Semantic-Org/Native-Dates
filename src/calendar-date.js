@@ -76,13 +76,11 @@ export class CalendarDate {
         ? input
         : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings)
     ).withCalendar('iso8601');
-    this.text = undefined; // keep text first in console previews
     const plain = this.#plain;
     this.month = plain.month;
     this.day = plain.day;
     this.year = plain.year;
     this.dayOfWeek = plain.dayOfWeek;
-    this.text = this.format();
     Object.freeze(this);
   }
 
@@ -436,6 +434,10 @@ export class CalendarDate {
   /*******************************
               Output
   *******************************/
+
+  get text() {
+    return this.format();
+  }
 
   format(spec, locale = this.#locale) {
     const options = intlOptions('date', spec);
