@@ -47,16 +47,22 @@ const presets = {
 
 const dateParts = ['dateStyle', 'weekday', 'era', 'year', 'month', 'day'];
 const timeParts = ['timeStyle', 'hour', 'minute', 'second', 'fractionalSecondDigits', 'dayPeriod'];
-const zoneParts = ['timeZone', 'timeZoneName'];
 const ownParts = { date: dateParts, time: timeParts };
-const otherParts = { date: [...timeParts, ...zoneParts], time: [...dateParts, ...zoneParts] };
+const allParts = [...dateParts, ...timeParts, 'timeZone', 'timeZoneName'];
+
+const keepParts = (bag, names) => {
+  const options = { ...bag };
+  each(allParts, (part) => {
+    if (!names.includes(part)) {
+      delete options[part];
+    }
+  });
+  return options;
+};
 
 // strip parts the noun lacks so one options bag works across DateTime, CalendarDate, and Time
 const ownOptions = (kind, bag) => {
-  const options = { ...bag };
-  each(otherParts[kind], (part) => {
-    delete options[part];
-  });
+  const options = keepParts(bag, ownParts[kind]);
   if (options.timeStyle === 'long' || options.timeStyle === 'full') {
     options.timeStyle = 'medium';
   }
@@ -136,8 +142,6 @@ const partFormatters = /* @__PURE__ */ cached((locale, options) => {
 
 export const partFormatter = (options, locale) => partFormatters(pickLocale(locale), options);
 
-const allParts = [...dateParts, ...timeParts, ...zoneParts];
-
 export const partOptions = (named, names, styles) => {
   const spec = namedFormat(named);
   if (isString(spec) && Object.hasOwn(styles, spec)) {
@@ -150,12 +154,7 @@ export const partOptions = (named, names, styles) => {
   if (bag.dateStyle) {
     return styles[bag.dateStyle];
   }
-  const options = { ...bag };
-  each(allParts, (part) => {
-    if (!names.includes(part)) {
-      delete options[part];
-    }
-  });
+  const options = keepParts(bag, names);
   // require at least one primary field (not just 'era') before skipping the medium fallback
   return names.slice(0, 2).some((name) => options[name] !== undefined) ? options : { ...options, ...styles.medium };
 };

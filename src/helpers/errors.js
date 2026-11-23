@@ -41,9 +41,14 @@ const point = new Set([
   'invalidDateTime',
   'invalidDate',
   'invalidTime',
+  'invalidMonthDay',
+  'invalidYearMonth',
   'missingDateTime',
   'missingDate',
   'missingTime',
+  'missingMonthDay',
+  'missingYearMonth',
+  'unsupportedCalendar',
   'invalidNumber',
 ]);
 const length = new Set([

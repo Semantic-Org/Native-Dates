@@ -1427,6 +1427,8 @@ describe('DateTime.until() and since()', () => {
     expect(foldStart.until(shiftEnd, 'hours')).toBe(8);
     expect(foldStart.until(shiftEnd).toString()).toBe('PT8H');
     expect(foldStart.plus(foldStart.until(shiftEnd)).toString()).toBe(shiftEnd.toString());
+    expect(foldStart.until('2026-10-25T01:00:00Z').toString()).toBe('-PT30M');
+    expect(foldStart.until('2026-10-25T00:30:00Z', 'hours')).toBe(-1);
   });
 
   it('throws a TypeError with missingDateTime for null or undefined targets', () => {

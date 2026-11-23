@@ -367,10 +367,6 @@ class Range {
     return `${this.start}/${this.end}`;
   }
 
-  toJSON() {
-    return this.toString();
-  }
-
   valueOf() {
     return refuse('unsupportedComparison', String(this), {
       explanation: isDevelopment
@@ -446,7 +442,7 @@ export class TimeRange extends Range {
   static kind = 'time';
 }
 
-alias(Range, { lang: 'locale', includes: 'contains', splitBy: 'split' });
+alias(Range, { lang: 'locale', includes: 'contains', splitBy: 'split', toJSON: 'toString' });
 
 const byKind = { date: DateRange, datetime: DateTimeRange, time: TimeRange };
 

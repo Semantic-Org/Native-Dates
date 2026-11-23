@@ -13,6 +13,8 @@ export const cachedText = (self, spec) => {
   }
   return value;
 };
+
+// process-wide defaults mutated by configure()
 export const settings = {
   zone: undefined,
   locale: undefined,
@@ -198,7 +200,7 @@ export const checkedLocale = (tag) => {
   if (!knownLocales.has(tag)) {
     const kept = /[_,;*]/.test(tag)
       && tag.replace(/_/g, '-').split(',')
-        .map((part) => part.trim().split(/\s*;\s*q=/i))
+        .map((part) => part.trim().split(/(?<!\s)\s*;\s*q=/i))
         .filter(([name, weight]) => name && name !== '*' && weight != 0)
         .sort((a, b) => (b[1] ?? 1) - (a[1] ?? 1));
     const tags = kept && kept.flatMap(([name]) => canonicalTag(name) ?? []);
@@ -224,11 +226,7 @@ export const namedFormat = (spec) => (isString(spec) && settings.formats?.[spec]
 export const locale = (override) =>
   override === undefined ? settings.locale : checkedLocale(override) ?? settings.locale;
 export const dayFirst = (override, localeOverride) =>
-  override !== undefined
-    ? !!override
-    : (localeOverride !== undefined && checkedLocale(localeOverride) !== undefined)
-    ? undefined
-    : settings.dayFirst;
+  override !== undefined ? !!override : checkedLocale(localeOverride) ? undefined : settings.dayFirst;
 
 // take the first tag Intl supports as it was written, so region and -u-fw- extensions survive where
 // DateTimeFormat would resolve 'en-CN' to 'en', and use the system locale when none is supported

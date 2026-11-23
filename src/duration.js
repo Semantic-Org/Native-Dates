@@ -329,20 +329,12 @@ export class Duration {
     return this.#temporal.toString();
   }
 
-  toJSON() {
-    return this.#temporal.toString();
-  }
-
   toTemporal() {
     return this.#temporal;
   }
 
   toMilliseconds() {
     return this.total('millisecond');
-  }
-
-  valueOf() {
-    return this.toMilliseconds();
   }
 
   // '+' sends hint 'default', which would return ms instead of toString() without this
@@ -355,15 +347,23 @@ export class Duration {
   }
 }
 
-alias(Duration, { add: 'plus', subtract: 'minus', lang: 'locale', as: 'total' });
+alias(Duration, {
+  add: 'plus',
+  subtract: 'minus',
+  lang: 'locale',
+  as: 'total',
+  toJSON: 'toString',
+  valueOf: 'toMilliseconds',
+});
 
 export const duration = (input, unitOrOptions) => {
   const hasOptions = isPlainObject(unitOrOptions);
+  const hasLocale = hasOptions && unitOrOptions.locale !== undefined;
   const name = hasOptions ? undefined : unitOrOptions;
-  const locale = hasOptions && unitOrOptions.locale !== undefined ? checkedLocale(unitOrOptions.locale) : undefined;
+  const locale = hasLocale ? checkedLocale(unitOrOptions.locale) : undefined;
   const build = () =>
     input instanceof Duration && name === undefined
-      ? (hasOptions && unitOrOptions.locale !== undefined ? input.locale(locale) : input)
+      ? (hasLocale ? input.locale(locale) : input)
       : new Duration(input, name, { locale });
   return hasOptions && unitOrOptions.loose ? loosely(build, unreadable.length) : build();
 };

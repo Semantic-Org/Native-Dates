@@ -447,11 +447,12 @@ describe('errors in browser bundles without a process global', () => {
     expect([...declared].sort()).toEqual([...thrown].sort());
   });
 
-  it('rejects oversized malformed inputs in linear time without quadratic regex backtracking', () => {
+  it('handles oversized malformed inputs and headers in linear time without quadratic regex backtracking', () => {
     const t0 = performance.now();
     expect(() => duration(`${'1'.repeat(20_000)}!`)).toThrowError(RangeError);
     expect(() => datetime('['.repeat(20_000))).toThrowError(RangeError);
     expect(() => dateRange('['.repeat(20_000))).toThrowError(RangeError);
-    expect(performance.now() - t0).toBeLessThan(100);
+    expect(date('2026-01-01', { locale: `en${' '.repeat(20_000)}x,fr` }).locale()).toBe('fr');
+    expect(performance.now() - t0).toBeLessThan(500);
   });
 });

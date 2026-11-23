@@ -66,6 +66,9 @@ const prefixMonth = (words, months) =>
   months.find(({ name }) => words.split(' ').some((word) => word.length > 2 && name.startsWith(` ${word}`)));
 
 const findMonth = (text, locale) => {
+  if (!/\p{L}/u.test(text)) {
+    return {};
+  }
   const { englishMonths, localizedMonths, weekdays } = localeData(locale);
   const words = wordsOf(text, locale);
   // look past a weekday that opens the text, since it can spell a month ('mar, 16 jun', 'Dydd Mawrth')
@@ -94,10 +97,9 @@ const findMonth = (text, locale) => {
 };
 
 // a number of four or more digits is a year, so 3-digit room or status numbers never masquerade as years
-const dateParts = (text, { locale, dayFirst }) => {
+const dateParts = (text, { locale, dayFirst, month = findMonth(text, locale).month }) => {
   const numbers = text.match(/\d+/g) ?? [];
   const isYear = (number) => number?.length > 3;
-  const { month } = findMonth(text, locale);
   if (month) {
     return numbers.length < 3
       ? { year: numbers.find(isYear), month, day: numbers.find((number) => !isYear(number)) }
@@ -201,7 +203,7 @@ const parseWithEngine = (text, settings) => {
     }
   }
   else {
-    const parts = dateParts(withoutClock, settings);
+    const parts = dateParts(withoutClock, { ...settings, month: 0 });
     if (
       !parts || +parts.month !== read.month || +parts.day !== read.day || !validYearToken(parts.year, read.year)
     ) {

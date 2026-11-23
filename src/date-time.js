@@ -147,7 +147,8 @@ export class DateTime {
 
   static #parse(text, settings, timeZone, disambiguation) {
     const trimmed = yearFirst(text.trim());
-    if (settings.loose && !opensOnDate(trimmed)) {
+    const isoStart = opensOnDate(trimmed);
+    if (settings.loose && !isoStart) {
       const zoned = parseLoose(trimmed, settings);
       if (zoned) {
         return zoned;
@@ -179,7 +180,7 @@ export class DateTime {
       );
     }
     catch (error) {
-      const zoned = settings.loose && opensOnDate(trimmed) && error.code === 'invalidDateTime'
+      const zoned = settings.loose && isoStart && error.code === 'invalidDateTime'
         && parseLoose(trimmed, settings);
       if (!zoned) {
         throw error;
@@ -453,12 +454,10 @@ export class DateTime {
 
   until(other, name) {
     const end = new DateTime(other, this.zone).toTemporal();
-    // sub-day spans starting in a fall-back fold hour use exact elapsed hours so day-0 'compatible' resolution does not add 1h
-    let diff = this.#zoned.until(end, { largestUnit: 'day' });
-    if (!diff.days) {
-      diff = this.#zoned.until(end, { largestUnit: 'hour' });
-    }
-    const span = anchored(diff, this.#zoned, this.#locale);
+    // sub-day spans use exact elapsed hours so day-0 'compatible' resolution starting in a fall-back fold hour cannot add 1h or throw
+    const subDay = (this.offset === end.offset && Math.abs(end.epochMilliseconds - this.epochMilliseconds) < 864e5)
+      || !this.#zoned.toPlainDateTime().until(end.toPlainDateTime()).days;
+    const span = anchored(this.#zoned.until(end, { largestUnit: subDay ? 'hour' : 'day' }), this.#zoned, this.#locale);
     return name === undefined ? span : span.total(name);
   }
 
@@ -498,10 +497,6 @@ export class DateTime {
     return this.#zoned.toInstant().toString({ fractionalSecondDigits: digits });
   }
 
-  toJSON() {
-    return this.toString();
-  }
-
   toJSDate() {
     return new Date(this.epochMilliseconds);
   }
@@ -524,7 +519,7 @@ export class DateTime {
   }
 }
 
-alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative: 'from' });
+alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative: 'from', toJSON: 'toString' });
 
 export const datetime = (input, options) => {
   const settings = zoneOptions(options);

@@ -2,16 +2,7 @@ import { isObject, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
 import { isDevelopment } from './helpers/environment.js';
-import {
-  guard,
-  loosely,
-  parseLooseParts,
-  readAs,
-  refuse,
-  refuseType,
-  requireLoose,
-  unreadable,
-} from './helpers/errors.js';
+import { guard, loosely, parseLooseParts, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_MONTH_DAY } from './helpers/identity.js';
 import { opensOnDate, wholeParts } from './helpers/parts.js';
@@ -282,10 +273,6 @@ export class MonthDay {
     return this.#plain.toString();
   }
 
-  toJSON() {
-    return this.#plain.toString();
-  }
-
   toTemporal() {
     return this.#plain;
   }
@@ -308,14 +295,12 @@ export class MonthDay {
   }
 }
 
-alias(MonthDay, { lang: 'locale', isOn: 'fallsOn', last: 'previous' });
-
-const unread = new Set([...unreadable.point, 'invalidMonthDay', 'missingMonthDay', 'unsupportedCalendar']);
+alias(MonthDay, { lang: 'locale', isOn: 'fallsOn', last: 'previous', toJSON: 'toString' });
 
 export const monthDay = (input, dayOrOptions) => {
   const build = () =>
     input instanceof MonthDay && dayOrOptions === undefined ? input : new MonthDay(input, dayOrOptions);
-  return isPlainObject(dayOrOptions) && dayOrOptions.loose ? loosely(build, unread) : build();
+  return isPlainObject(dayOrOptions) && dayOrOptions.loose ? loosely(build) : build();
 };
 
 // forces day-first order on numeric strings and (day, month) pairs regardless of configure({ dayFirst })

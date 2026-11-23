@@ -375,10 +375,6 @@ export class Time {
     return this.#plain.toString({ fractionalSecondDigits: digits });
   }
 
-  toJSON() {
-    return this.toString();
-  }
-
   toTemporal() {
     return this.#plain;
   }
@@ -401,7 +397,7 @@ export class Time {
   }
 }
 
-alias(Time, { add: 'plus', subtract: 'minus', lang: 'locale' });
+alias(Time, { add: 'plus', subtract: 'minus', lang: 'locale', toJSON: 'toString' });
 
 export const time = (input, minuteOrOptions, second) => {
   const build = () =>

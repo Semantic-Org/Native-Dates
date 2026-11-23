@@ -10,13 +10,7 @@ export const zonedDateTimeFormat = cached((locale, options, zone) =>
     options,
   )
 );
-export const plainDateTimeFormat = cached((locale, options) =>
-  guard(
-    () => new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }),
-    'unknownFormat',
-    options,
-  )
-);
+export const plainDateTimeFormat = (locale, options) => zonedDateTimeFormat(locale, options, 'UTC');
 export const durationFormat = cached((locale, style, hoursDisplay) =>
   new Intl.DurationFormat(locale, { style, hoursDisplay })
 );

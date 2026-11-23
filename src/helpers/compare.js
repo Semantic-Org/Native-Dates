@@ -91,8 +91,10 @@ export const kindOf = (value) => {
 };
 
 const sameKind = (left, right) => {
-  if (kindOf(left) !== kindOf(right)) {
-    refuseType('conflictingKinds', `${kindOf(left)} with ${kindOf(right)}`, {
+  const leftKind = kindOf(left);
+  const rightKind = kindOf(right);
+  if (leftKind !== rightKind) {
+    refuseType('conflictingKinds', `${leftKind} with ${rightKind}`, {
       explanation: isDevelopment
         ? "cannot compare values of different types. Convert one side first with `.date`, `.time`, or `.at('00:00', zone)`"
         : 0,

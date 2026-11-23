@@ -2,16 +2,7 @@ import { isObject, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
 import { isDevelopment } from './helpers/environment.js';
-import {
-  guard,
-  loosely,
-  parseLooseParts,
-  readAs,
-  refuse,
-  refuseType,
-  requireLoose,
-  unreadable,
-} from './helpers/errors.js';
+import { guard, loosely, parseLooseParts, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_YEAR_MONTH } from './helpers/identity.js';
@@ -318,10 +309,6 @@ export class YearMonth {
     return this.#plain.toString();
   }
 
-  toJSON() {
-    return this.#plain.toString();
-  }
-
   toTemporal() {
     return this.#plain;
   }
@@ -344,14 +331,12 @@ export class YearMonth {
   }
 }
 
-alias(YearMonth, { add: 'plus', subtract: 'minus', lang: 'locale', includes: 'contains' });
-
-const unread = new Set([...unreadable.point, 'invalidYearMonth', 'missingYearMonth', 'unsupportedCalendar']);
+alias(YearMonth, { add: 'plus', subtract: 'minus', lang: 'locale', includes: 'contains', toJSON: 'toString' });
 
 export const yearMonth = (input, monthOrOptions) => {
   const build = () =>
     input instanceof YearMonth && monthOrOptions === undefined ? input : new YearMonth(input, monthOrOptions);
-  return isPlainObject(monthOrOptions) && monthOrOptions.loose ? loosely(build, unread) : build();
+  return isPlainObject(monthOrOptions) && monthOrOptions.loose ? loosely(build) : build();
 };
 
 export const monthYear = (input, yearOrOptions) => {
