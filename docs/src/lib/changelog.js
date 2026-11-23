@@ -9,6 +9,9 @@ import { esc } from './markdown/inline.js';
 import { PACKAGE_DIR } from './sizes.js';
 
 const RELEASE_HEADING_RE = /^(.+?)\s+\((\d{4}-\d{2}-\d{2})\)$/;
+const NOTE_PREFIX_RE = /^Note:\s+(.+)$/;
+const NOTE_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
 
 const slugify = (text) =>
   text
@@ -40,6 +43,11 @@ export function changelogData(locale = DEFAULT_LOCALE, dir = PACKAGE_DIR) {
     if (!para.length) { return; }
     const text = para.join(' ').trim();
     para = [];
+    const noteMatch = text.match(NOTE_PREFIX_RE);
+    if (noteMatch) {
+      blocks.push(`<div class="callout" data-kind="note">${NOTE_ICON}<div><p>${renderInline(noteMatch[1])}</p></div></div>`);
+      return;
+    }
     if (!seenRelease && !lede) {
       lede = text;
       return;
