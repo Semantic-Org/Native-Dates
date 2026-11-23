@@ -119,8 +119,10 @@ export class Terminal {
     this.interactive = Boolean(input.isTTY && output.isTTY);
     // lines can be redrawn in place, which the live list and the checklist need
     this.redraws = this.interactive && env.TERM !== 'dumb';
-    // off for NO_COLOR and FORCE_COLOR=0, on when forced, otherwise only for a terminal, as formatServerLog decides
-    this.colors = !env.NO_COLOR && env.FORCE_COLOR !== '0' && Boolean(env.FORCE_COLOR || output.isTTY);
+    // off for NO_COLOR and FORCE_COLOR=0, on when forced, otherwise only for a terminal, as formatServerLog decides,
+    // and never for one that says it is dumb, which prints the codes as text
+    const shows = output.isTTY && env.TERM !== 'dumb';
+    this.colors = !env.NO_COLOR && env.FORCE_COLOR !== '0' && Boolean(env.FORCE_COLOR || shows);
     // 24-bit where the terminal says it can, stepping down to 256 and then 16 colours where it cannot
     this.depth = output.isTTY ? output.getColorDepth() : ({ 2: 8, 3: 24 })[env.FORCE_COLOR] ?? 4;
     const unicode = process.platform === 'win32' ? Boolean(env.WT_SESSION || env.TERM_PROGRAM) : env.TERM !== 'linux';

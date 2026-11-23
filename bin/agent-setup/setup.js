@@ -87,6 +87,7 @@ export class Setup {
     docs: 'docs: {homepage}',
     again: 'skip prompts next time: `npx {name} {flags}`',
     kept: '`{path}`. Already exists with different contents',
+    stepFailed: '{step} step failed. No further changes made. {reason}',
     pluginFailed:
       '`{command}` failed. No further changes made. Fix the {manager} error below, then re-run `npx {name}`',
     failed:
@@ -134,7 +135,7 @@ Options (previews changes and prompts by default):
   // or nobody could be asked
   async run(args = process.argv.slice(2)) {
     const { terminal, name, version, root } = this;
-    const option = args.find((arg) => !(arg in Setup.flags));
+    const option = args.find((arg) => !Object.hasOwn(Setup.flags, arg));
     this.given = new Set(args.map((arg) => Setup.flags[arg]));
     if (option) { return this.refuse('unknownOption', { option }); }
     if (this.given.has('help')) { return this.print(this.words('usage')); }
@@ -162,7 +163,7 @@ Options (previews changes and prompts by default):
     // with nobody to pick, where the skills go comes from the flag, and what will change is printed once
     if (!live) {
       this.plan(this.given.has('global') ? 'machine' : 'project');
-      if (!this.items.length) { return this.settled(); }
+      if (this.isSettled) { return this.settled(); }
       if (asking) {
         for (const line of this.preview()) { terminal.line(line); }
         terminal.line();
@@ -176,7 +177,7 @@ Options (previews changes and prompts by default):
       if (asking && !await this.ask()) {
         return this.print(`  ${terminal.say(this.words('declined'), { faded: true })}\n`);
       }
-      if (!this.items.length) { return this.settled(); }
+      if (this.isSettled) { return this.settled(); }
       if (asking) { terminal.line(); }
       return this.finish(await this.apply(), asking);
     }
@@ -227,6 +228,12 @@ Options (previews changes and prompts by default):
     return [...rows, ...this.doubled()];
   }
 
+  // true when no change is selected to begin with. a folder no found agent reads stays in the plan,
+  // switched off, and by itself it is not a reason to ask
+  get isSettled() {
+    return !this.items.some(({ selected = true }) => selected);
+  }
+
   // nothing left to change for the answer given
   settled() {
     const { terminal } = this;
@@ -273,7 +280,7 @@ Options (previews changes and prompts by default):
       }
       if (scope === -1) { return this.answered(false); }
       this.plan(scope === 1 ? 'machine' : 'project');
-      if (!this.items.length) { return this.answered(true); }
+      if (this.isSettled) { return this.answered(true); }
       const record = asksScope ? [terminal.record(copy.scopeQuestion, scopes[scope]), ''] : [];
       const above = [...record, ...this.preview(), ''];
       for (let highlighted = 0; agreed === null; highlighted = 1) {
@@ -352,7 +359,7 @@ Options (previews changes and prompts by default):
       }
       catch (error) {
         item.state = 'fail';
-        failure = error;
+        failure = Object.assign(error, { step: item.label });
       }
       stop();
       if (terminal.redraws) {
@@ -368,8 +375,11 @@ Options (previews changes and prompts by default):
   finish(failure, asked) {
     const { terminal, homepage, notices } = this;
     if (failure) {
-      const key = Project.agents[failure.manager] ? 'pluginFailed' : 'failed';
-      terminal.line(`\n  ${terminal.say(this.words(key, failure), { level: 'error' })}`);
+      // a command that failed is named with its tool, and anything else, such as a folder that cannot
+      // be written, with the step and the reason the system gave
+      const key = !failure.command ? 'stepFailed' : Project.agents[failure.manager] ? 'pluginFailed' : 'failed';
+      const sentence = this.words(key, { ...failure, reason: failure.message });
+      terminal.line(`\n  ${terminal.say(sentence, { level: 'error' })}`);
       if (failure.output?.trim()) {
         terminal.line(`\n${terminal.say(failure.output.trim().replace(/^/gm, '    '), { faded: true })}`);
       }
@@ -379,8 +389,10 @@ Options (previews changes and prompts by default):
     for (const line of [...this.kept, ...this.doubled()]) { terminal.line(line); }
     const skills = joinWords(this.project.skills.map((skill) => `\`${skill}\``));
     const flags = asked && this.repeatFlags;
-    // ready only when an agent has a skill to read, which a withheld step can leave it without
-    const isReady = existsSync(`${this.root}/${this.project.skillPath}`);
+    // ready only when an agent has a skill to read, in this project or through a plugin that went in,
+    // which a withheld step can leave it without
+    const isPlugged = this.items.some(({ step, state }) => step === 'plugin' && state === 'done');
+    const isReady = isPlugged || existsSync(`${this.root}/${this.project.skillPath}`);
     const closing = isReady ? this.words('ready', { skills }) : this.words('notReady');
     terminal.line(
       `\n  ${terminal.mark(isReady ? 'done' : 'warn')} ${terminal.say(closing, { level: isReady ? 'info' : 'warn' })}`,

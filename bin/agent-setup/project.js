@@ -7,7 +7,6 @@ import {
   readdirSync,
   readFileSync,
   realpathSync,
-  rmSync,
   symlinkSync,
   unlinkSync,
   writeFileSync,
@@ -82,17 +81,30 @@ export class Project {
     this.skills = readdirSync(join(packageDir, 'skills'));
     this.noteMarkers = [`<!-- ${name}:start -->`, `<!-- ${name}:end -->`];
     this.noteSentence = note;
-    // on disk as a direct dependency, nested under an alias, or as an alias's pnpm sibling
-    this.installPaths = [
-      `node_modules/${name}`,
-      ...aliases.map((alias) => `node_modules/${alias}/node_modules/${name}`),
-      ...aliases.map((alias) => `node_modules/${alias}/${alias.replace(/[^/]+/g, '..')}/${name}`),
-    ];
+    // on disk as a direct dependency, nested under an alias, or as an alias's pnpm sibling,
+    // here or above in the same repository, where a workspace hoists what its packages share
+    const above = [...Array(Project.above(root).length).keys()].map((steps) => '../'.repeat(steps));
+    this.installPaths = above.flatMap((up) => [
+      `${up}node_modules/${name}`,
+      ...aliases.map((alias) => `${up}node_modules/${alias}/node_modules/${name}`),
+      ...aliases.map((alias) => `${up}node_modules/${alias}/${alias.replace(/[^/]+/g, '..')}/${name}`),
+    ]);
   }
 
   /*******************************
                Plan
   *******************************/
+
+  // a folder and each one above it up to the root of its repository, nearest first. outside a repository
+  // it is the folder alone, so a stray lockfile in a home folder never speaks for a project
+  static above(folder) {
+    const chain = [];
+    for (let at = folder;; at = dirname(at)) {
+      chain.push(at);
+      if (existsSync(join(at, '.git'))) { return chain; }
+      if (dirname(at) === at) { return [folder]; }
+    }
+  }
 
   // true when a binary of that name is on the path, read from the folders and never by running anything
   static onPath(bin) {
@@ -118,7 +130,6 @@ export class Project {
     });
   }
 
-  // the skill folders to fill for a scope
   // who a folder is for. found is the found agents that read it, less those that get a plugin under scope
   // 'machine'. every is each agent that reads it, found ones first, for choosing a folder nothing was found for
   readers(folder, scope = 'project') {
@@ -129,6 +140,7 @@ export class Project {
     return { found, every: [...found, ...others] };
   }
 
+  // the skill folders to fill for a scope
   // 'project' is every folder, and 'machine' only what the found agents without a plugin need,
   // each in the first folder it reads that no plugin agent reads too, so a skill loads twice only when it must
   foldersFor(scope) {
@@ -193,8 +205,11 @@ export class Project {
               Install
   *******************************/
 
+  // the nearest lockfile in the repository says who installs here. in a workspace it sits at the root above
   get packageManager() {
-    const lockfile = Object.keys(Project.lockfiles).find((file) => existsSync(join(this.root, file)));
+    const lockfiles = Object.keys(Project.lockfiles);
+    const home = Project.above(this.root).find((folder) => lockfiles.some((file) => existsSync(join(folder, file))));
+    const lockfile = home && lockfiles.find((file) => existsSync(join(home, file)));
     if (lockfile) { return Project.lockfiles[lockfile]; }
     const declared = this.manifest.packageManager?.split('@')[0];
     const runner = process.env.npm_config_user_agent?.split('/')[0];
@@ -246,7 +261,9 @@ export class Project {
   // an older copy is brought up to this command's version, and a newer or equal one is left alone
   // nothing to run under Yarn Plug'n'Play, where a declared package has no node_modules folder to appear in
   get installCommand() {
-    const add = [this.packageManager, Project.addCommands[this.packageManager]];
+    // pnpm refuses to add to a workspace root unless told that the root is meant
+    const atRoot = this.packageManager === 'pnpm' && existsSync(join(this.root, 'pnpm-workspace.yaml'));
+    const add = [this.packageManager, Project.addCommands[this.packageManager], ...(atRoot ? ['-w'] : [])];
     if (this.installPath) { return this.isOlder ? [...add, `${this.dependencyName}@${this.version}`] : null; }
     if (!this.isDependency) { return [...add, `${this.name}@${this.version}`]; }
     return existsSync(join(this.root, '.pnp.cjs')) ? null : [this.packageManager, 'install'];
@@ -315,12 +332,13 @@ export class Project {
     const from = source ? `${this.root}/${source}` : join(this.packageDir, 'skills', skill);
     const read = (dir) => existsSync(join(dir, 'SKILL.md')) && readFileSync(join(dir, 'SKILL.md'), 'utf8');
     if (real === realPath(from) || read(real) === read(from)) { return 'ready'; }
-    // a copy this command made from another version carries the version pack stamps into every skill,
-    // which tells it from a folder someone else wrote, so it is refreshed and theirs is left alone
+    // a copy this command made from another version carries that version, stamped into every skill at pack,
+    // which tells it from a folder someone else wrote. the same version with other words is a copy someone
+    // edited, so it is left alone with theirs
+    const stamp = (text) => (text || '').match(/\n  version: "?([^"\n]+)/)?.[1];
     const copy = read(real) || '';
-    const isCopy = !lstatSync(path).isSymbolicLink() && copy.includes(`\nname: ${skill}\n`)
-      && /\n  version: /.test(copy);
-    return isCopy ? 'stale' : 'other';
+    const isCopy = !lstatSync(path).isSymbolicLink() && copy.includes(`\nname: ${skill}\n`);
+    return isCopy && stamp(copy) && stamp(copy) !== stamp(read(from)) ? 'stale' : 'other';
   }
 
   skillsIn(...states) {
@@ -338,12 +356,11 @@ export class Project {
   }
 
   // links to the installed copy, and copies where there is none to link to or the system refuses links
+  // a stale copy is written over and never removed, so a file someone added beside the skill stays
   placeSkill({ folder, skill }) {
     const path = join(this.root, folder, skill);
     const source = this.skillSource(skill);
-    const state = this.skillState(folder, skill);
-    if (state === 'broken') { unlinkSync(path); }
-    if (state === 'stale') { rmSync(path, { recursive: true }); }
+    if (this.skillState(folder, skill) === 'broken') { unlinkSync(path); }
     mkdirSync(dirname(path), { recursive: true });
     if (source) {
       try {
@@ -404,9 +421,13 @@ export class Project {
   withNote(content) {
     const [start, end] = this.noteMarkers;
     const from = content.indexOf(start);
+    if (from === -1) { return content.trim() ? `${content.trimEnd()}\n\n${this.note}\n` : `${this.note}\n`; }
+    // the end that closes this start comes before any later start. a start left without one is replaced
+    // by itself, so what a person wrote after it is never taken for the old note
+    const next = content.indexOf(start, from + start.length);
     const to = content.indexOf(end, from);
-    if (from !== -1 && to !== -1) { return content.slice(0, from) + this.note + content.slice(to + end.length); }
-    return content.trim() ? `${content.trimEnd()}\n\n${this.note}\n` : `${this.note}\n`;
+    const isClosed = to !== -1 && (next === -1 || to < next);
+    return content.slice(0, from) + this.note + content.slice(isClosed ? to + end.length : from + start.length);
   }
 
   get pendingNotes() {

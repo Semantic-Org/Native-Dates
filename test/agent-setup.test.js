@@ -38,7 +38,8 @@ const agentBins = join(scratch, 'agents');
 const nodeOnly = join(scratch, 'node');
 // a home for anything that looks for one, so nothing can reach a real agent's configuration
 const home = join(scratch, 'home');
-const scriptBin = ['/usr/bin/script', '/bin/script'].find((path) => existsSync(path));
+// util-linux script, whose -c runs a command in a terminal. the BSD one on a Mac takes other arguments
+const scriptBin = process.platform === 'linux' && ['/usr/bin/script', '/bin/script'].find((path) => existsSync(path));
 const sttyBin = ['/usr/bin/stty', '/bin/stty'].find((path) => existsSync(path));
 
 const environment = (agents = [], extra = {}) => ({
@@ -331,6 +332,7 @@ describe('npx native-dates', () => {
   // down and enter pick 'Let me choose', then space deselects the first row, which is the install
   it.runIf(scriptBin)('in a terminal lets the person switch a change off before confirming', () => {
     const dir = project();
+    writeFileSync(calls, '');
     const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
     const { status } = spawnSync(scriptBin, ['-qec', command, '/dev/null'], {
       cwd: dir,
@@ -568,12 +570,116 @@ describe('npx native-dates', () => {
     30_000,
   );
 
+  it('reports a project as set up on a second run when the one agent found reads a single folder', () => {
+    const dir = project();
+    expect(setupWith({ agents: ['claude'] }, dir, '--yes').status).toBe(0);
+    const again = setupWith({ agents: ['claude'] }, dir);
+    expect(again).toMatchObject({ status: 0, calls: '' });
+    expect(again.output).toContain(copy.alreadySetUp);
+    expect(existsSync(join(dir, '.agents'))).toBe(false);
+  });
+
+  it('takes the package manager from a lockfile at the root of the repository above', () => {
+    const dir = project({ '.git/HEAD': '', 'pnpm-lock.yaml': '', 'apps/web/package.json': '{ "name": "web" }' });
+    const { status, calls: ran } = setup(join(dir, 'apps/web'), '--yes');
+    expect(status).toBe(0);
+    expect(ran).toBe(`pnpm add native-dates@${version}`);
+  });
+
+  it('tells pnpm the root is meant when the project is a workspace root', () => {
+    const dir = project({ 'package.json': '{ "name": "app" }', 'pnpm-lock.yaml': '', 'pnpm-workspace.yaml': '' });
+    expect(setup(dir, '--yes').calls).toBe(`pnpm add -w native-dates@${version}`);
+  });
+
+  it('links to a copy a workspace hoisted to the root of the repository, and installs nothing', () => {
+    const dir = project({
+      '.git/HEAD': '',
+      'package-lock.json': '',
+      'apps/web/package.json': dependsOn['package.json'],
+    });
+    installed(dir, version);
+    const web = join(dir, 'apps/web');
+    const { status, calls: ran } = setup(web, '--yes');
+    expect(status).toBe(0);
+    expect(ran).toBe('');
+    expect(readlinkSync(join(web, '.agents/skills/native-dates'))).toBe(
+      '../../../../node_modules/native-dates/skills/native-dates',
+    );
+    expect(readFileSync(join(web, '.agents/skills/native-dates/SKILL.md'), 'utf8')).toContain('name: native-dates');
+  });
+
+  it('keeps a copied skill someone edited, and a file they added beside one it refreshes', () => {
+    const dir = project({ ...dependsOn, '.pnp.cjs': '' });
+    setup(dir, '--yes');
+    const folder = join(dir, '.agents/skills/native-dates');
+    const copied = join(folder, 'SKILL.md');
+    const current = readFileSync(copied, 'utf8');
+    // the same version with other words is theirs
+    writeFileSync(copied, `${current}\nteam notes\n`);
+    expect(setup(dir, '--yes').status).toBe(0);
+    expect(readFileSync(copied, 'utf8')).toContain('team notes');
+    // another version is refreshed in place, beside what they added
+    writeFileSync(copied, current.replace(`version: "${version}"`, 'version: "0.0.1"'));
+    writeFileSync(join(folder, 'team-notes.md'), 'ours\n');
+    setup(dir, '--yes');
+    expect(readFileSync(copied, 'utf8')).toBe(current);
+    expect(existsSync(join(folder, 'team-notes.md'))).toBe(true);
+  });
+
+  it('leaves what follows a note whose end marker was removed', () => {
+    const dir = project({
+      'package.json': '{ "name": "app" }',
+      'AGENTS.md': '# Rules\n\n<!-- native-dates:start -->\nold note\n\n## Deploy\n\nKeep this section.\n',
+    });
+    setup(dir, '--yes');
+    setup(dir, '--yes');
+    const agents = readFileSync(join(dir, 'AGENTS.md'), 'utf8');
+    expect(agents).toContain('Keep this section.');
+    expect(agents.split('<!-- native-dates:start -->')).toHaveLength(2);
+  });
+
+  // a folder the system will not write to, which root and Windows are never refused
+  it.runIf(process.platform !== 'win32' && process.getuid() !== 0)(
+    "names the step and the system's reason when a change cannot be written",
+    () => {
+      const dir = project({ 'package.json': '{ "name": "app" }', '.claude/skills/.keep': '' });
+      chmodSync(join(dir, '.claude/skills'), 0o555);
+      const { status, output } = setupWith({ agents: ['claude'] }, dir, '--yes');
+      chmodSync(join(dir, '.claude/skills'), 0o755);
+      expect(status).toBe(1);
+      expect(output).toContain('EACCES');
+      expect(output).not.toContain('{command}');
+    },
+  );
+
+  it('counts a plugin that went in as set up, with no skill in the project to point at', () => {
+    const dir = project();
+    const { status } = setupWith({ agents: ['claude'] }, dir, '--yes', '--global', '--no-install');
+    expect(status).toBe(0);
+    expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false);
+  });
+
+  it.runIf(scriptBin)('prints no escape codes on a terminal that says it is dumb', () => {
+    const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+    const { stdout } = spawnSync(scriptBin, ['-qec', command, '/dev/null'], {
+      cwd: project(),
+      input: 'n\n',
+      encoding: 'utf8',
+      timeout: 30_000,
+      env: environment([], { TERM: 'dumb' }),
+    });
+    expect(stdout).toContain(copy.tagline);
+    expect(stdout).not.toContain('\x1b[');
+  });
+
   it('refuses outside a project and on an unknown option without writing', () => {
     const empty = mkdtempSync(join(scratch, 'empty-'));
     expect(setup(empty, '--yes').status).toBe(1);
     expect(existsSync(join(empty, 'AGENTS.md'))).toBe(false);
     const dir = project();
     expect(setup(dir, '--force')).toMatchObject({ status: 1, calls: '' });
+    // a word every object carries is not an option either
+    expect(setup(dir, 'toString')).toMatchObject({ status: 1, calls: '' });
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false);
   });
 });
