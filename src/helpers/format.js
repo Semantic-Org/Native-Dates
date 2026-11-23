@@ -37,7 +37,6 @@ const presets = {
   date: {},
   time: {
     default: { timeStyle: 'short' },
-    short: { timeStyle: 'short' },
     medium: { timeStyle: 'medium' },
     // Intl timeStyle 'long' and 'full' append a timezone name, which PlainTime doesn't have
     long: { timeStyle: 'medium' },
@@ -50,11 +49,12 @@ const timeParts = ['timeStyle', 'hour', 'minute', 'second', 'fractionalSecondDig
 const ownParts = { date: dateParts, time: timeParts };
 const allParts = [...dateParts, ...timeParts, 'timeZone', 'timeZoneName'];
 
+// copy kept keys rather than deleting from a spread clone so V8 preserves fast in-object properties
 const keepParts = (bag, names) => {
-  const options = { ...bag };
-  each(allParts, (part) => {
-    if (!names.includes(part)) {
-      delete options[part];
+  const options = {};
+  each(bag, (value, part) => {
+    if (names.includes(part) || !allParts.includes(part)) {
+      options[part] = value;
     }
   });
   return options;
@@ -100,19 +100,14 @@ each(['date', 'time'], (kind) => {
 });
 
 // frozen so cached() in utils.js keys preset bags by reference instead of JSON.stringify
-each(presets, (kind) => {
-  each(kind, (options) => {
-    Object.freeze(options);
-  });
-});
+each(presets, (kind) => each(kind, Object.freeze));
 
 // temporal-polyfill doesn't patch Intl.DateTimeFormat, so format dates and times via UTC epoch ms
 export const epochOf = (kind, subject) => {
   if (kind === 'date') {
     // Date.UTC maps years 0..99 to 1900..1999, whereas setUTCFullYear keeps them verbatim
-    const stamp = new Date(0);
-    stamp.setUTCFullYear(subject.year, subject.month - 1, subject.day);
-    return stamp.getTime();
+    const { year, month, day } = subject;
+    return year < 0 || year > 99 ? Date.UTC(year, month - 1, day) : new Date(0).setUTCFullYear(year, month - 1, day);
   }
   if (kind === 'time') {
     return Date.UTC(1970, 0, 1, subject.hour, subject.minute, subject.second, subject.millisecond);
