@@ -19,8 +19,8 @@ Active package decisions grouped by area, newest first.
 
 ### Ranges
 
-- **D16:** Ranges accept `.for()` for durations alongside `.to()`, and only `CalendarDate` has `.through()` (2026-11-17) [L95-L99](decisions/package.md#d16-ranges-accept-for-for-durations-alongside-to-and-only-calendardate-has-through-2026-11-17)
-  - Reopen: users report confusion from `.for()` accepting endpoints as an alias of `.to()`, or ask for inclusive `.through()` on `DateTime`.
+- **D24:** Ranges built with `.for()` accept only explicit durations, while `.to()` keeps both endpoints and durations (2026-11-23) [L143-L147](decisions/package.md#d24-ranges-built-with-for-accept-only-explicit-durations-while-to-keeps-both-endpoints-and-durations-2026-11-23)
+  - Reopen: callers building ranges from numeric millisecond constants ask for a millisecond shorthand on `.for()` rather than `milliseconds(n)` or `(n, 'ms')`.
 - **D5:** `DateRange` includes its end date while `DateTimeRange` and `TimeRange` are half-open (2026-11-12) [L29-L33](decisions/package.md#d5-daterange-includes-its-end-date-while-datetimerange-and-timerange-are-half-open-2026-11-12)
   - Reopen: bug reports show frequent off-by-one errors when converting between inclusive `DateRange` and half-open `DateTimeRange` bounds.
 
@@ -109,7 +109,7 @@ Every package decision (`D1`..`Dn`) in file order.
 - **D15:** `Duration` uses `balance()` without a `normalize()` alias, and `total(unit)` instead of `in(unit)` (2026-11-17) [L89-L93](decisions/package.md#d15-duration-uses-balance-without-a-normalize-alias-and-totalunit-instead-of-inunit-2026-11-17)
   - Reopen: cold-reader studies or user issues show developers repeatedly reaching for `duration.in(unit)` or `duration.normalize()`.
 - **D16:** Ranges accept `.for()` for durations alongside `.to()`, and only `CalendarDate` has `.through()` (2026-11-17) [L95-L99](decisions/package.md#d16-ranges-accept-for-for-durations-alongside-to-and-only-calendardate-has-through-2026-11-17)
-  - Reopen: users report confusion from `.for()` accepting endpoints as an alias of `.to()`, or ask for inclusive `.through()` on `DateTime`.
+  - Superseded by D24 (2026-11-23)
 - **D17:** Adjacent unit boundaries use `startOfNext()` and `startOfPrevious()` instead of overloading `next()` and `previous()` (2026-11-19) [L101-L105](decisions/package.md#d17-adjacent-unit-boundaries-use-startofnext-and-startofprevious-instead-of-overloading-next-and-previous-2026-11-19)
   - Reopen: cold-reader studies or user issues show developers trying unit names in `next()` and `previous()`, or passing numeric weekdays to `startOfNext()`.
 - **D18:** `native-dates/helpers/*` stays open for official plugins without semver guarantees (2026-11-20) [L107-L111](decisions/package.md#d18-native-dateshelpers-stays-open-for-official-plugins-without-semver-guarantees-2026-11-20)
@@ -124,3 +124,5 @@ Every package decision (`D1`..`Dn`) in file order.
   - Reopen: city requests keep expanding the alias table without a clear boundary, or users report locale-driven lookup misreading foreign-country abbreviations.
 - **D23:** Instances expose `.text` as a lazy prototype getter instead of an eager own property (2026-11-23) [L137-L141](decisions/package.md#d23-instances-expose-text-as-a-lazy-prototype-getter-instead-of-an-eager-own-property-2026-11-23)
   - Reopen: browser developers report collapsed DevTools previews missing timezone or formatted text frequently enough to warrant a cheap non-`Intl` preview property.
+- **D24:** Ranges built with `.for()` accept only explicit durations, while `.to()` keeps both endpoints and durations (2026-11-23) [L143-L147](decisions/package.md#d24-ranges-built-with-for-accept-only-explicit-durations-while-to-keeps-both-endpoints-and-durations-2026-11-23)
+  - Reopen: callers building ranges from numeric millisecond constants ask for a millisecond shorthand on `.for()` rather than `milliseconds(n)` or `(n, 'ms')`.

@@ -2,7 +2,7 @@ import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate } from './calendar-date.js';
 import { DateTime } from './date-time.js';
-import { anchored, duration } from './duration.js';
+import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
@@ -295,7 +295,7 @@ export class Time {
   }
 
   for(length, name) {
-    return this.to(duration(length, name));
+    return this.to(forLength(length, name));
   }
 
   /*******************************

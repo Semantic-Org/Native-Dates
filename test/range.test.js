@@ -376,11 +376,26 @@ describe('Point to(), for(), and through()', () => {
     expect(time('9am').through).toBeUndefined();
   });
 
-  it('treats a bare number in DateTime.prototype.for() and Time.prototype.for() as milliseconds rather than an endpoint', () => {
-    expect(datetime('2026-09-01T09:00', 'UTC').for(5_400_000).toString())
-      .toBe('2026-09-01T09:00:00.000Z/2026-09-01T10:30:00.000Z');
-    expect(time('9am').for(3_600_000).toString()).toBe('09:00:00/10:00:00');
-    expect(time('9am').for(2).toString()).toBe('09:00:00/09:00:00.002');
+  it('accepts explicit durations in point.for() and refuses endpoints and bare unitless numbers', () => {
+    expect(datetime('2026-09-01T09:00', 'UTC').for('2h').toString())
+      .toBe('2026-09-01T09:00:00.000Z/2026-09-01T11:00:00.000Z');
+    expect(datetime('2026-09-01T09:00', 'UTC').for(2, 'hours').toString())
+      .toBe('2026-09-01T09:00:00.000Z/2026-09-01T11:00:00.000Z');
+    expect(datetime('2026-09-01T09:00', 'UTC').for(hours(2)).toString())
+      .toBe('2026-09-01T09:00:00.000Z/2026-09-01T11:00:00.000Z');
+    expect(date('2026-09-01').for(3, 'days').toString()).toBe('2026-09-01/2026-09-03');
+
+    expect(() => datetime('2026-09-01T09:00', 'UTC').for('2026-09-01T10:30'))
+      .toThrowError(expect.objectContaining({ code: 'invalidDuration' }));
+    expect(() => time('9am').for('17:00')).toThrowError(expect.objectContaining({ code: 'invalidDuration' }));
+    expect(() => date('2026-09-01').for('2026-09-07')).toThrowError(
+      expect.objectContaining({ code: 'invalidDuration' }),
+    );
+
+    expect(() => datetime('2026-09-01T09:00', 'UTC').for(5_400_000))
+      .toThrowError(expect.objectContaining({ code: 'invalidDuration', at: '5400000' }));
+    expect(() => time('9am').for(2)).toThrowError(expect.objectContaining({ code: 'invalidDuration', at: '2' }));
+    expect(() => date('2026-09-01').for(3)).toThrowError(expect.objectContaining({ code: 'invalidDuration', at: '3' }));
   });
 });
 

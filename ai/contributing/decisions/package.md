@@ -96,7 +96,7 @@ Reopen: cold-reader studies or user issues show developers repeatedly reaching f
 
 Cold readers misread `start.to(3, 'days')` as a unit conversion and ranked `start.for(3, 'days')` first (+10 B). `.to()` still accepts durations because restricting it to endpoints would parse `time('9am').to(8, 'hours')` as `08:00` and produce a 23-hour overnight range, and `.through()` exists only on `CalendarDate` because `DateTimeRange` and `TimeRange` exclude their end.
 
-Reopen: users report confusion from `.for()` accepting endpoints as an alias of `.to()`, or ask for inclusive `.through()` on `DateTime`.
+Superseded by D24 (2026-11-23).
 
 ## D17: Adjacent unit boundaries use `startOfNext()` and `startOfPrevious()` instead of overloading `next()` and `previous()` (2026-11-19)
 
@@ -139,3 +139,9 @@ Reopen: city requests keep expanding the alias table without a clear boundary, o
 Supersedes D3. Formatting `.text` via `Intl` inside every constructor made `CalendarDate` ISO parsing ~2.5-2.9x slower on the benchmark suite (~1.8x slower on `DateTime.plus()` and ~20x slower on `Duration` construction), left `.text` stale after `configure({ locale })`, and caused `toEqual()` to disagree with `.equals()` across instance locales (`D6`). Moving `text` to a prototype getter removes constructor `Intl` work from arithmetic and parsing chains, keeps compact `util.inspect()` output in Node/Bun/Deno, and orders `DateTime` own fields as `month, day, year, hour, minute` first so browser DevTools' five-property preview still distinguishes same-day times.
 
 Reopen: browser developers report collapsed DevTools previews missing timezone or formatted text frequently enough to warrant a cheap non-`Intl` preview property.
+
+## D24: Ranges built with `.for()` accept only explicit durations, while `.to()` keeps both endpoints and durations (2026-11-23)
+
+Supersedes D16. Aliasing `.for()` directly to `.to()` accepted target endpoints (`date('2026-09-01').for('2026-09-07')`) and muddled bare numbers (`time('9am').for(2)` parsed `2` as `02:00` for a 17-hour overnight range, while `dt.for(5_400_000)` read as `1970-01-01`). `.for()` on `CalendarDate`, `DateTime`, and `Time` now requires an explicit duration (`'2h'`, `(2, 'hours')`, `hours(2)`, `{ hours: 2 }`) and refuses endpoints and bare unitless numbers, while `.to()` remains unchanged and `.through()` stays exclusive to `CalendarDate`.
+
+Reopen: callers building ranges from numeric millisecond constants ask for a millisecond shorthand on `.for()` rather than `milliseconds(n)` or `(n, 'ms')`.

@@ -619,7 +619,7 @@ export class DateTime {
   /**
    * Creates a half-open `DateTimeRange` starting at this moment and lasting for `length`.
    *
-   * @param length - Duration instance, phrase such as `'90m'`, ISO duration, or milliseconds
+   * @param length - Duration instance, phrase such as `'90m'`, ISO duration, or units object
    * @returns A half-open `DateTimeRange` in this moment's time zone
    *
    * @example
@@ -630,7 +630,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#to to}
    */
-  for(length: DurationInput): DateTimeRange;
+  for(length: Exclude<DurationInput, number>): DateTimeRange;
   /**
    * Creates a half-open `DateTimeRange` starting at this moment and lasting for `count` of `unit`.
    *

@@ -14,7 +14,7 @@ import {
 } from './helpers/fields.js';
 import { IS_DURATION } from './helpers/identity.js';
 import { durationFormat, unitFormat } from './helpers/intl.js';
-import { alias, inspect, isTemporalDuration, unit } from './helpers/units.js';
+import { alias, inspect, isCount, isTemporalDuration, unit } from './helpers/units.js';
 import { checkedLocale, locale as pickLocale } from './helpers/zones.js';
 
 /*
@@ -369,6 +369,15 @@ export const duration = (input, unitOrOptions) => {
 };
 
 export const anchored = (temporal, anchor, locale) => new Duration(temporal, undefined, { anchor, locale });
+
+export const forLength = (length, name) =>
+  name === undefined && isCount(length)
+    ? refuse('invalidDuration', String(length), {
+      explanation: isDevelopment
+        ? "a bare number in `for()` requires a unit, such as `.for(2, 'hours')` or `.for(3, 'days')`"
+        : 0,
+    })
+    : duration(length, name);
 
 export const isDuration = (value) => value instanceof Duration;
 

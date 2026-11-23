@@ -1,7 +1,7 @@
 import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
-import { anchored, duration } from './duration.js';
+import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
@@ -385,7 +385,7 @@ export class DateTime {
   }
 
   for(length, name) {
-    return this.to(duration(length, name));
+    return this.to(forLength(length, name));
   }
 
   range(name, firstDay) {

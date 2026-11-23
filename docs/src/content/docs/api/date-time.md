@@ -716,7 +716,7 @@ dt.for(length): DateTimeRange
 dt.for(count, unit): DateTimeRange
 ```
 
-Creates a half-open [`DateTimeRange`](/api/ranges/) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start. Given a length, it is also aliased as `for()`.
+Creates a half-open [`DateTimeRange`](/api/ranges/) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start. Use `for()` to pass an explicit duration length (refusing endpoints and unitless numbers).
 
 **Parameters**
 

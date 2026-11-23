@@ -543,7 +543,7 @@ t.for(length): TimeRange
 t.for(count, unit): TimeRange
 ```
 
-Creates a half-open [`TimeRange`](/api/ranges/) from this time until the target time or elapsed duration. An end earlier than the start wraps overnight across midnight. Given a length, it is also aliased as `for()`.
+Creates a half-open [`TimeRange`](/api/ranges/) from this time until the target time or elapsed duration. An end earlier than the start wraps overnight across midnight. Use `for()` to pass an explicit duration length (refusing endpoints and unitless numbers).
 
 **Parameters**
 

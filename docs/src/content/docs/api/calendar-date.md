@@ -608,7 +608,7 @@ d.for(length): DateRange
 d.for(count, unit): DateRange
 ```
 
-Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included. Also aliased as `through()`, or as `for()` when given a length.
+Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included. Also aliased as `through()`; use `for()` to pass an explicit duration length (refusing endpoints and unitless numbers).
 
 **Parameters**
 

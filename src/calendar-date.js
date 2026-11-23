@@ -1,7 +1,7 @@
 import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 
 import { DateTime, now } from './date-time.js';
-import { anchored, duration } from './duration.js';
+import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
@@ -313,6 +313,10 @@ export class CalendarDate {
     return new DateRange(this, name === undefined ? end : duration(end, name));
   }
 
+  for(length, name) {
+    return this.to(forLength(length, name));
+  }
+
   range(name, firstDay) {
     return new DateRange(this.startOf(name, firstDay), this.endOf(name, firstDay));
   }
@@ -486,7 +490,6 @@ alias(CalendarDate, {
   subtract: 'minus',
   lang: 'locale',
   formatRelative: 'from',
-  for: 'to',
   through: 'to',
   splitBy: 'split',
 });

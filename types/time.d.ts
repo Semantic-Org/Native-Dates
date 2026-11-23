@@ -483,7 +483,7 @@ export class Time {
   /**
    * Creates a half-open `TimeRange` starting at this time and lasting for `length`.
    *
-   * @param length - Clock `Duration`, phrase such as `'90m'`, ISO duration, or milliseconds
+   * @param length - Clock `Duration`, phrase such as `'90m'`, ISO duration, or units object
    * @returns A half-open `TimeRange` starting at this time
    *
    * @example
@@ -493,7 +493,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#to to}
    */
-  for(length: DurationInput): TimeRange;
+  for(length: Exclude<DurationInput, number>): TimeRange;
   /**
    * Creates a half-open `TimeRange` starting at this time and lasting for `count` of `unit`.
    *

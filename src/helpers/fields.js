@@ -72,7 +72,7 @@ const parseWords = (text) => {
   }
   const found = [];
   const rest = phrase.replace(quantity, (_, sign, amount, name) => {
-    found.push([sign, Number(amount), unit(name)]);
+    found.push([sign, Number(amount), name]);
     return '';
   });
   if (rest.trim()) {
@@ -86,7 +86,7 @@ const parseWords = (text) => {
   const negateAll = found[0]?.[0] === '-' && found.slice(1).every(([sign]) => sign === '');
   const fields = {};
   each(found, ([sign, amount, name]) => {
-    spill(fields, name, negateAll || sign === '-' ? -amount : amount);
+    spill(fields, unit(name), negateAll || sign === '-' ? -amount : amount);
   });
   return fields;
 };

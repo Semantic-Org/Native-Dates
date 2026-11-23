@@ -387,7 +387,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#to to}
    */
-  for(length: DurationInput): DateRange;
+  for(length: Exclude<DurationInput, number>): DateRange;
   /**
    * Creates an inclusive `DateRange` starting on this date and lasting for `count` of `unit`.
    *

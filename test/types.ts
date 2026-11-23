@@ -236,3 +236,11 @@ dayOfWeek('funday');
 stay.count('weeks');
 // @ts-expect-error toTemporal() returns a typed Temporal shape rather than any
 meeting.toTemporal().nonExistentMethod();
+// @ts-expect-error point.for() rejects bare numbers without a unit
+meeting.for(5_400_000);
+// @ts-expect-error point.for() rejects bare numbers without a unit on Time
+opening.for(2);
+// @ts-expect-error point.for() rejects bare numbers without a unit on CalendarDate
+due.for(3);
+// @ts-expect-error point.for() rejects point endpoints
+meeting.for(viaCore);
