@@ -1,4 +1,4 @@
-# <img alt="" src=".github/logo.svg" height="47" align="absmiddle"> Native Dates
+# <img alt="" src="https://nativedates.dev/logo.svg" height="47" align="absmiddle"> Native Dates
 
 > A thin date library built on the browser's Temporal and Intl APIs
 
@@ -8,7 +8,7 @@
 - **Legibility** - Natural phrases (`'1h 30m'`, `today().plus(2, 'days').at('9am')`) and `Intl` presets
 - **Small Core** -  under 15kb bt for core, everything arbitary is a plugin (day.js style)
 
-### Usage
+## Usage
 
 This library is fully built ontop of [Temporal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) and [Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) API so correctness is a standard-committees problem not a GitHub Issue. 
 
@@ -18,11 +18,11 @@ The library also makes it incredibly easy to ju-jitsu between `DateTime`, `Time`
 standup.in('Asia/Tokyo').as('time');
 ```
 
-### Browser Compatibility
+## Browser Compatibility
 
 This library is compatible with latest Chrome, Edge, Firefox, and Safari Technical Preview.
 
-For those needing Safari support before Spring 2027 (when this lands in baseline) or for other reasons use the included polyfill in @native-dates/polyfill
+For those needing Safari support before Spring 2027 (when this lands in baseline) or for other reasons use the included polyfill in `@native-dates/polyfill`
 
 ## Packages
 

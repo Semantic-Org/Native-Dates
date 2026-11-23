@@ -56,7 +56,7 @@ meeting.date.format('short', 'zh-HK'); // '16/11/2026'
 meeting.date.format('short', 'zh-SG'); // '16/11/26'
 ```
 
-On Sundays, Mainland China closes the current week while Taiwan, Hong Kong, and Singapore start a new one. Pass `'monday'` to `startOf()` to keep shared weekly report keys aligned:
+On Sundays, Mainland China closes the current week while Taiwan, Hong Kong, and Singapore start a new one. Pass `'monday'` to [`startOf()`](/api/calendar-date/#startof) to keep shared weekly report keys aligned:
 
 ```js
 import { date } from 'native-dates';
@@ -142,7 +142,7 @@ yearMonth('2026-11').format('long', 'zh-TW-u-ca-roc'); // '民國115年11月'
 
 ## Relative time
 
-`CalendarDate` counts calendar days, returning *前天* for two days ago and *后天* for two days ahead. `DateTime` counts elapsed seconds so 23 hours ago never reads as yesterday:
+[`CalendarDate`](/api/calendar-date/) counts calendar days, returning *前天* for two days ago and *后天* for two days ahead. [`DateTime`](/api/date-time/) counts elapsed seconds so 23 hours ago never reads as yesterday:
 
 ```js
 import { date, datetime, today } from 'native-dates';
@@ -156,4 +156,4 @@ anchor.minus(2, 'days').from(anchor, 'zh-CN'); // '2天前'
 date('2026-11-18').from(today('Asia/Shanghai'), 'zh-CN');
 ```
 
-On UTC servers, zero-argument `fromNow()` between midnight and 8:00 AM Beijing time lands on the previous UTC day, so pass `today('Asia/Shanghai')` explicitly.
+On UTC servers, zero-argument [`fromNow()`](/api/calendar-date/#fromnow) between midnight and 8:00 AM Beijing time lands on the previous UTC day, so pass [`today('Asia/Shanghai')`](/api/date-fn/#today) explicitly.

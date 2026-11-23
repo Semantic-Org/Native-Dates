@@ -17,7 +17,7 @@ datetime(input, zone?): DateTime
 datetime(input, options?): DateTime
 ```
 
-Reads a string, timestamp, fields object, or calendar date into a [`DateTime`](/api/date-time/) viewed in a time zone. Omit the time zone to use your configured default or the runtime's local zone.
+Reads a string, timestamp, fields object, or calendar date into a [`DateTime`](/api/date-time/) viewed in a time zone. Omit the time zone to use your [configured default](/api/configure/) or the runtime's local zone.
 
 ```js title="read.js"
 import { date, datetime } from 'native-dates';
@@ -82,7 +82,7 @@ Every input produces an immutable instance viewed in the target time zone:
 | ISO string with offset | `'2026-11-16T17:30:00Z'`, `'2026-11-16 12:30-05:00'` | Fixes the exact moment and views it in the target time zone. |
 | Bracketed zone string | `'2026-11-16T09:30[America/New_York]'` | Keeps the bracketed zone unless a second zone argument overrides it. |
 | Local date and time | `'2026-11-16T09:30'`, `'2026年11月16日 14:30'` | Reads a year-first date and time of day directly in the target zone. |
-| Date string or CalendarDate | `'2026-11-16'`, `date(2026, 11, 16)` | Starts at the beginning of that calendar day in the target zone. |
+| Date string or [CalendarDate](/api/calendar-date/) | `'2026-11-16'`, `date(2026, 11, 16)` | Starts at the beginning of that calendar day in the target zone. |
 | Milliseconds or Date | `1794850200000`, `new Date()` | Converts the Unix timestamp to the target zone, truncating fractional milliseconds like `Date`. |
 | Fields object | `{ year: 2026, month: 11, day: 16, hour: 9 }` | Reads 1-indexed calendar and clock fields in the target zone and rejects impossible dates. |
 | DateTime or Temporal | `dt`, `Temporal.Instant`, `Temporal.ZonedDateTime` | Preserves an existing zone unless an explicit zone argument is passed. |

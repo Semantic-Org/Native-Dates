@@ -1,7 +1,7 @@
 ---
 title: Installation
 lede: Install the core package, add a Temporal polyfill for older runtimes, and configure defaults.
-updated: 2026-11-16
+updated: 2026-11-23
 ---
 
 Native Dates ships as a small ES module package with TypeScript types included and zero runtime dependencies.
@@ -28,15 +28,27 @@ const billing = yearMonth('2026-11');
 const birthday = monthDay('10/17');
 ```
 
+## Setup for coding agents
+
+If you work with a coding agent, run the interactive setup command to install the package and link its agent skills:
+
+```bash
+npx native-dates@latest
+```
+
+The package ships skills covering core usage and plugins, also served at [`/skills/native-dates.md`](/skills/native-dates.md) and [`/skills/native-dates-plugins.md`](/skills/native-dates-plugins.md).
+
 ## Runtime support and polyfilling
 
 Native Dates runs directly on the platform's built-in `Temporal` and `Intl` APIs. Current releases of Chrome, Edge, Firefox, Node 26+, Deno, and Bun ship both natively.
 
-Safari, older browser versions, and Node releases before 26 do not ship native `Temporal` yet. When targeting those runtimes, install `@native-dates/polyfill` alongside `temporal-polyfill`:
+Safari, older browsers, and Node 24–25 lack native `Temporal` and need `@native-dates/polyfill` alongside `temporal-polyfill`:
 
 ```bash
 npm i @native-dates/polyfill temporal-polyfill
 ```
+
+Node releases below 24 also lack `Intl.DurationFormat`, so server code calling [`Duration.format()`](/api/duration/#format) requires Node 24+, though browser builds still bundle fine on older Node.
 
 Import `@native-dates/polyfill` once at your application entry point before anything else:
 

@@ -11,7 +11,7 @@ Core parses standard, unambiguous inputs directly into the type you ask for:
 - [`time()`](/api/time-fn/) for 24-hour and 12-hour times of day
 - [`duration()`](/api/duration-fn/) for human unit phrases and ISO 8601 durations
 - [`yearMonth()`](/api/year-month-fn/) and [`monthDay()`](/api/month-day-fn/) for billing months, card expiries, and recurring birthdays
-- [`dateRange()`](/api/range-fn/), `datetimeRange()`, and `timeRange()` for intervals and endpoint pairs
+- [`dateRange()`](/api/range-fn/#daterange), [`datetimeRange()`](/api/range-fn/#datetimerange), and [`timeRange()`](/api/range-fn/#timerange) for intervals and endpoint pairs
 
 ## ISO dates and timestamps
 
@@ -80,7 +80,7 @@ duration({ hours: 1, minutes: 30 });
 
 ## Partial dates and ranges
 
-Pass ISO year-month strings to [`yearMonth()`](/api/year-month-fn/), or read card expiries where the month leads with `monthYear()`:
+Pass ISO year-month strings to [`yearMonth()`](/api/year-month-fn/), or read card expiries where the month leads with [`monthYear()`](/api/year-month-fn/#monthyear):
 
 ```js
 import { dayMonth, monthDay, monthYear, yearMonth } from 'native-dates';
@@ -92,7 +92,7 @@ monthDay('10/17');
 dayMonth('17/10'); // MonthDay(10-17)
 ```
 
-Recurring dates without a year work the same way through [`monthDay()`](/api/month-day-fn/) and `dayMonth()`. For spans, [range factories](/api/range-fn/) read two endpoints or a single interval string:
+Recurring dates without a year work the same way through [`monthDay()`](/api/month-day-fn/) and [`dayMonth()`](/api/month-day-fn/#daymonth). For spans, [range factories](/api/range-fn/) read two endpoints or a single interval string:
 
 ```js
 import { dateRange, timeRange } from 'native-dates';

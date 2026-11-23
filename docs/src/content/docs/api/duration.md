@@ -9,7 +9,7 @@ updated: 2026-11-16
 
 ## Creating a Duration
 
-Parse phrases and ISO 8601 strings with [`duration()`](/api/duration-fn/), call unit helpers like [`hours()`](/api/duration-fn/), or measure the span between two dates or times. Instances are immutable, so every method returns a new value.
+Parse phrases and ISO 8601 strings with [`duration()`](/api/duration-fn/), call unit helpers like [`hours()`](/api/duration-fn/#hours), or measure the span between two dates or times. Instances are immutable, so every method returns a new value.
 
 ```js title="create.js"
 import { date, days, duration, hours } from 'native-dates';
@@ -21,7 +21,7 @@ const quarter = date('2026-01-01').until('2026-04-01');
 ```
 
 :::note[Fields stay as written]
-Creating a duration from 90 minutes keeps `minutes` at `90` rather than converting to 1 hour and 30 minutes. Calendar days also stay separate from hours across daylight saving changes until you call `balance()`.
+Creating a duration from 90 minutes keeps `minutes` at `90` rather than converting to 1 hour and 30 minutes. Calendar days also stay separate from hours across daylight saving changes until you call [`balance()`](#balance).
 :::
 
 ## Properties
@@ -35,7 +35,7 @@ Properties reflect the unit counts stored on the duration.
 | `hours`, `minutes`, `seconds` | `number` | Signed clock unit counts. |
 | `milliseconds`, `microseconds`, `nanoseconds` | `number` | Signed sub-second unit counts. |
 | `sign` | `number` | Overall direction of the duration: `1`, `0`, or `-1`. |
-| `anchor` | `TemporalValue` | Starting point recorded by `until()` or `since()`, or `undefined` on standalone durations. |
+| `anchor` | `TemporalValue` | Starting point recorded by [`until()`](/api/date-time/#until) or [`since()`](/api/date-time/#since), or `undefined` on standalone durations. |
 
 ## Arithmetic and sign
 
@@ -178,7 +178,7 @@ hours(2).negated().toString(); // '-PT2H'
 Roll smaller units up into larger ones, round to a target precision, or express the entire span as a single number.
 
 :::warning[Converting months and years to days]
-Pure month and year durations balance, total, and compare among themselves using 12 months per year. Converting them to weeks, days, or clock units requires a starting date from `until()` or `since()`, since calendar months vary in day count.
+Pure month and year durations balance, total, and compare among themselves using 12 months per year. Converting them to weeks, days, or clock units requires a starting date from [`until()`](/api/calendar-date/#until) or [`since()`](/api/calendar-date/#since), since calendar months vary in day count.
 :::
 
 :::entry
@@ -421,7 +421,7 @@ dur.locale(): Locale | undefined
 dur.locale(tag): Duration
 ```
 
-Reads the locale carried on this duration, or returns a copy formatted in another locale across text previews, presets, and arithmetic chains. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+Reads the locale carried on this duration, or returns a copy formatted in another locale across text previews, presets, and arithmetic chains. Passing an empty tag clears the carried locale, and [`lang()`](#lang) works as an alias.
 
 **Parameters**
 

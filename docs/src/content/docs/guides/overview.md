@@ -49,7 +49,7 @@ Read [Types of time](/guides/types-of-time/) next to see how to pick between the
 
 ## Immutable values
 
-Every instance is immutable. Calling methods like `plus()` or `in()` always returns a new value and leaves the original untouched.
+Every instance is immutable. Calling methods like [`plus()`](/api/date-time/#plus) or [`in()`](/api/date-time/#in) always returns a new value and leaves the original untouched.
 
 Passing a date into a helper or UI component can never mutate caller state behind your back:
 
@@ -71,7 +71,7 @@ time('9:30am').text; // '9:30 AM'
 ```
 
 :::tip[Comparing values]
-Because methods return new instances, `===` checks object references rather than value equality. Call `equals()` to check whether two instances represent the same date, time, or moment.
+Because methods return new instances, `===` checks object references rather than value equality. Call [`equals()`](/api/date-time/#equals) to check whether two instances represent the same date, time, or moment.
 :::
 
 ## Lean core and opt-in plugins

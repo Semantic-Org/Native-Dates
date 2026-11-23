@@ -37,10 +37,10 @@ Properties read the ISO calendar fields directly.
 |---|---|---|
 | `text` | `string` | Locale-formatted calendar date, such as `'Nov 16, 2026'`. |
 | `year`, `month`, `day` | `number` | Calendar year, month (1–12), and day of month (1–31). |
-| `yearMonth` | `YearMonth` | Calendar year and month with the day dropped. |
-| `monthDay` | `MonthDay` | Calendar month and day with the year dropped. |
+| `yearMonth` | [`YearMonth`](/api/year-month/) | Calendar year and month with the day dropped. |
+| `monthDay` | [`MonthDay`](/api/month-day/) | Calendar month and day with the year dropped. |
 | `dayOfWeek` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
-| `weekStart` | `number` | First day of this date's weeks from 1 to 7, following `configure()` or its locale. |
+| `weekStart` | `number` | First day of this date's weeks from 1 to 7, following [`configure()`](/api/configure/) or its locale. |
 | `quarter` | `number` | Calendar quarter (1–4). |
 | `weekOfYear`, `dayOfYear` | `number` | ISO week number (1–53) and day of the year (1–366). |
 | `daysInMonth`, `daysInYear` | `number` | Number of days in the current month (28–31) and year (365 or 366). |
@@ -425,7 +425,7 @@ date('2026-11-16').previous(monthDay('10-31')).toString(); // '2026-10-31'
 Compare calendar dates directly or pass any input accepted by [`date()`](/api/date-fn/).
 
 :::warning[Avoid numeric comparison operators]
-A calendar date is not a timestamp, so numeric operators throw a `RangeError` rather than coercing to milliseconds. Compare dates with methods like `isBefore()`, or sort arrays with [`compare()`](/api/compare/).
+A calendar date is not a timestamp, so numeric operators throw a `RangeError` rather than coercing to milliseconds. Compare dates with methods like [`isBefore()`](#isbefore), or sort arrays with [`compare()`](/api/compare/).
 :::
 
 :::entry
@@ -608,7 +608,7 @@ d.for(length): DateRange
 d.for(count, unit): DateRange
 ```
 
-Creates an inclusive [`DateRange`](/api/ranges/) starting on this date and running through the end date or span length. Both the start day and end day are included. Also aliased as `through()`; use `for()` to pass an explicit duration length (refusing endpoints and unitless numbers).
+Creates an inclusive [`DateRange`](/api/ranges/#daterange) starting on this date and running through the end date or span length. Both the start day and end day are included. Also aliased as `through()`; use `for()` to pass an explicit duration length (refusing endpoints and unitless numbers).
 
 **Parameters**
 
@@ -642,7 +642,7 @@ date('2026-11-01').for(7, 'days').toString(); // '2026-11-01/2026-11-07'
 d.range(unit, firstDay?): DateRange
 ```
 
-Returns an inclusive [`DateRange`](/api/ranges/) covering every day of the calendar unit containing this date, from its first day through its last.
+Returns an inclusive [`DateRange`](/api/ranges/#daterange) covering every day of the calendar unit containing this date, from its first day through its last.
 
 **Parameters**
 
@@ -720,7 +720,7 @@ d.splitBy(step, zone?): DateTimeRange[]
 d.splitBy(count, unit, zone?): DateTimeRange[]
 ```
 
-Divides this calendar day into contiguous half-open [`DateTimeRange`](/api/ranges/) intervals in the given or configured time zone. It is also aliased as `splitBy()`.
+Divides this calendar day into contiguous half-open [`DateTimeRange`](/api/ranges/#datetimerange) intervals in the given or configured time zone. It is also aliased as `splitBy()`.
 
 **Parameters**
 
@@ -808,7 +808,7 @@ d.formatRelative(other?, locale?): string
 
 Formats the calendar distance from another date to this one as a localized phrase via `Intl.RelativeTimeFormat`, such as `'yesterday'` or `'in 3 weeks'`.
 
-Omitting the first argument compares against `today()`, and `formatRelative()` works as an alias. Distances under seven days use natural words for yesterday, today, and tomorrow, while weeks, months, and years use numeric counts.
+Omitting the first argument compares against [`today()`](/api/date-fn/#today), and [`formatRelative()`](#formatrelative) works as an alias. Distances under seven days use natural words for yesterday, today, and tomorrow, while weeks, months, and years use numeric counts.
 
 **Parameters**
 
@@ -887,7 +887,7 @@ d.locale(): Locale | undefined
 d.locale(tag): CalendarDate
 ```
 
-Reads the locale carried on this date, or returns a copy that formats and starts weeks in another locale across presets, week boundaries, and derived values. Underscore tags and `Accept-Language` headers normalize automatically, an empty tag clears it, and `lang()` is an alias.
+Reads the locale carried on this date, or returns a copy that formats and starts weeks in another locale across presets, week boundaries, and derived values. Underscore tags and `Accept-Language` headers normalize automatically, an empty tag clears it, and [`lang()`](#lang) is an alias.
 
 **Parameters**
 

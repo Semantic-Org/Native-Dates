@@ -41,7 +41,10 @@ function verifyInputs(metafile, checkoutDir, benchDir) {
     if (!abs.startsWith(`${checkoutRoot}/`)) {
       throw new Error(`import resolved outside ${checkoutRoot} (${input}). Run npm install in ${checkoutRoot}`);
     }
-    inputs.push(relative(checkoutRoot, abs));
+    const rel = relative(checkoutRoot, abs);
+    // omit installed third-party packages from git diff inputs since lockfile changes already select all suites
+    if (rel.startsWith('node_modules/')) { continue; }
+    inputs.push(rel);
   }
   return inputs.sort();
 }

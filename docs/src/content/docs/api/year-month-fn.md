@@ -83,7 +83,7 @@ monthYear(input, options?): YearMonth
 monthYear(month, year): YearMonth
 ```
 
-Reads month-first strings and numbers in the order printed on payment cards, such as `'11/26'`. Two-digit years from 0 through 99 are added to `YearMonth.century`, which defaults to 2000.
+Reads month-first strings and numbers in the order printed on payment cards, such as `'11/26'`. Two-digit years from 0 through 99 are added to [`YearMonth.century`](/api/year-month/#properties), which defaults to 2000.
 
 ISO strings written as `'2026-11'` still read year-first under both functions, so serialized values always round-trip cleanly.
 

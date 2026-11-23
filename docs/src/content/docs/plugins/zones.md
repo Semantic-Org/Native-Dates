@@ -39,7 +39,7 @@ moment.in('東京').zone; // 'Asia/Tokyo'
 moment.in('Москва').zone; // 'Europe/Moscow'
 ```
 
-Built-in city aliases cover major hubs such as NYC, San Francisco, Beijing, Mumbai, Munich, and Osaka. Unrecognized names still throw an `unknownZone` error rather than falling back to the local system clock.
+Built-in city aliases cover major hubs such as NYC, San Francisco, Beijing, Mumbai, Munich, and Osaka. Unrecognized names still throw an [`unknownZone`](/api/errors/#units-zones-and-formats) error rather than falling back to the local system clock.
 
 ## Abbreviations that follow the locale
 

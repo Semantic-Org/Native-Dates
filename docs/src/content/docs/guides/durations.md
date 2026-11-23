@@ -8,7 +8,7 @@ A [`Duration`](/api/duration/) represents a length of time, such as 90 minutes o
 
 ## Creating a Duration
 
-Create a length of time with unit helpers like `hours()`, or pass a phrase, an ISO 8601 string, or a fields object to [`duration()`](/api/duration-fn/):
+Create a length of time with unit helpers like [`hours()`](/api/duration-fn/#hours), or pass a phrase, an ISO 8601 string, or a fields object to [`duration()`](/api/duration-fn/):
 
 ```js
 import { days, duration, hours } from 'native-dates';
@@ -33,7 +33,7 @@ ninety.minutes; // 90
 
 ## Measuring between two values
 
-Call `until()` or `since()` on two dates, times, [`YearMonth`](/api/year-month/) values, or moments to measure the span between them:
+Call [`until()`](/api/date-time/#until) or [`since()`](/api/date-time/#since) on two dates, times, [`YearMonth`](/api/year-month/) values, or moments to measure the span between them:
 
 ```js
 import { datetime } from 'native-dates';
@@ -64,7 +64,7 @@ timeRange('9:00am', '5:30pm').duration.hours; // 8
 
 ## Balancing and totaling units
 
-Values stay in the units you gave them until you ask otherwise. Call `balance()` when you want overflow carried into larger units:
+Values stay in the units you gave them until you ask otherwise. Call [`balance()`](/api/duration/#balance) when you want overflow carried into larger units:
 
 ```js
 import { hours, minutes, months } from 'native-dates';
@@ -78,7 +78,7 @@ Without an argument, standalone durations carry months into years and clock unit
 
 Pass `'day'` or `'week'` when you want fixed 24-hour days or 7-day weeks.
 
-Call `total()` or its chain-friendly alias `as()` to collapse the entire span into a single floating-point number in one unit:
+Call [`total()`](/api/duration/#total) or its chain-friendly alias [`as()`](/api/duration/#as) to collapse the entire span into a single floating-point number in one unit:
 
 ```js
 import { duration } from 'native-dates';
@@ -105,7 +105,7 @@ span.total('days'); // 90
 
 ## Formatting durations
 
-Every instance sets `.text` to its localized long form. Call `format()` with a preset style for spelled-out, abbreviated, compact, or digital output:
+Every instance sets `.text` to its localized long form. Call [`format()`](/api/duration/#format) with a preset style for spelled-out, abbreviated, compact, or digital output:
 
 ```js
 import { duration } from 'native-dates';
@@ -119,4 +119,4 @@ flight.format('narrow', 'en-US'); // '2h 30m'
 flight.format('digital', 'en-US'); // '2:30:00'
 ```
 
-Pass a locale tag as the second argument to translate unit labels, or call `toString()` when you need an ISO 8601 string for an API payload.
+Pass a locale tag as the second argument to translate unit labels, or call [`toString()`](/api/duration/#tostring) when you need an ISO 8601 string for an API payload.

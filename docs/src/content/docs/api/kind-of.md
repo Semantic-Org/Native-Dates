@@ -162,7 +162,7 @@ isMonthDay(monthDay('10-17')); // true
 isDateRange(value): value is DateRange
 ```
 
-Returns true when the value is a [`DateRange`](/api/ranges/) instance, narrowing its type in TypeScript.
+Returns true when the value is a [`DateRange`](/api/ranges/#daterange) instance, narrowing its type in TypeScript.
 
 ```js
 import { dateRange, isDateRange } from 'native-dates';
@@ -178,7 +178,7 @@ isDateRange(dateRange('2026-11-01', '2026-11-07')); // true
 isDateTimeRange(value): value is DateTimeRange
 ```
 
-Returns true when the value is a [`DateTimeRange`](/api/ranges/) instance, narrowing its type in TypeScript.
+Returns true when the value is a [`DateTimeRange`](/api/ranges/#datetimerange) instance, narrowing its type in TypeScript.
 
 ```js
 import { datetimeRange, isDateTimeRange } from 'native-dates';
@@ -194,7 +194,7 @@ isDateTimeRange(datetimeRange('2026-11-16T09:00Z', '2026-11-16T10:00Z')); // tru
 isTimeRange(value): value is TimeRange
 ```
 
-Returns true when the value is a [`TimeRange`](/api/ranges/) instance, narrowing its type in TypeScript.
+Returns true when the value is a [`TimeRange`](/api/ranges/#timerange) instance, narrowing its type in TypeScript.
 
 ```js
 import { isTimeRange, timeRange } from 'native-dates';

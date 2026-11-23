@@ -61,7 +61,7 @@ consulta.format('D [de] MMMM [de] YYYY'); // '16 de novembro de 2026'
 
 Brazilian short months and weekdays stay lowercase with a trailing period. `dd` uses single-letter initials because *segunda* and *sexta* share their first two letters.
 
-Brazil also writes the first of the month as *1º* in *1º de maio*, while Portugal uses plain numbers. Scope `ordinals` and weekday overrides to `'pt-BR'` so Portugal keeps its own defaults:
+Brazil also writes the first of the month as *1º* in *1º de maio*, while Portugal uses plain numbers. Scope [`ordinals`](/api/configure/) and weekday overrides to `'pt-BR'` so Portugal keeps its own defaults:
 
 ```js
 import { configure, weekdayNames } from 'native-dates';
@@ -128,9 +128,9 @@ datetime('2026-11-16 14:30 BRT', { loose: true, zone: 'UTC' })?.toString();
 // '2026-11-16T17:30:00.000Z'
 ```
 
-Calendar dates return natural words out to *anteontem* for two days ago and *depois de amanhã* for two days ahead. `DateTime` counts elapsed hours and phrases future spans differently in Brazil and Portugal.
+Calendar dates return natural words out to *anteontem* for two days ago and *depois de amanhã* for two days ahead. [`DateTime`](/api/date-time/) counts elapsed hours and phrases future spans differently in Brazil and Portugal.
 
-Because UTC midnight happens at 21:00 Brasília Time, pass `today('America/Sao_Paulo')` on UTC servers instead of calling `fromNow()`:
+Because UTC midnight happens at 21:00 Brasília Time, pass [`today('America/Sao_Paulo')`](/api/date-fn/#today) on UTC servers instead of calling [`fromNow()`](/api/calendar-date/#fromnow):
 
 ```js
 import { date, today } from 'native-dates';

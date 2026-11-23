@@ -1,7 +1,7 @@
 ---
 title: Working with Temporal
 lede: How Native Dates maps onto JavaScript's Temporal API and interops with raw Temporal values.
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 
 Native Dates is a thin, ergonomic layer over JavaScript's built-in `Temporal` and Intl APIs.
@@ -18,8 +18,8 @@ Each core value class wraps one underlying `Temporal` type and hands it back whe
 | [`CalendarDate`](/api/calendar-date/) | `Temporal.PlainDate` | Pairs with `at(time, zone)` and formats presets and token patterns directly |
 | [`Time`](/api/time/) | `Temporal.PlainTime` | Reads 12-hour strings like `'9:30am'` alongside 24-hour ISO clock times |
 | [`Duration`](/api/duration/) | `Temporal.Duration` | Parses `'1h 30m'` phrases, spills fractional units, and remembers anchors from `until()` |
-| [`YearMonth`](/api/year-month/) | `Temporal.PlainYearMonth` | Built-in class for billing months and card expiries with [`monthYear()`](/api/year-month-fn/) and `on()` |
-| [`MonthDay`](/api/month-day/) | `Temporal.PlainMonthDay` | Built-in class for birthdays and recurring dates with [`dayMonth()`](/api/month-day-fn/), `fallsOn()`, and `next()` |
+| [`YearMonth`](/api/year-month/) | `Temporal.PlainYearMonth` | Built-in class for billing months and card expiries with [`monthYear()`](/api/year-month-fn/#monthyear) and `on()` |
+| [`MonthDay`](/api/month-day/) | `Temporal.PlainMonthDay` | Built-in class for birthdays and recurring dates with [`dayMonth()`](/api/month-day-fn/#daymonth), `fallsOn()`, and `next()` |
 
 Temporal leaves ranges out of its specification. Core adds [`DateRange`, `DateTimeRange`, and `TimeRange`](/api/ranges/) on top of endpoint pairs for containment, overlap, and stepping.
 
@@ -56,7 +56,7 @@ standup.equals(berlin); // true
 
 ## Unwrapping with toTemporal()
 
-Call `toTemporal()` on any value to access its underlying Temporal instance.
+Call [`toTemporal()`](/api/date-time/#totemporal) on any value to access its underlying Temporal instance.
 
 Use it when calling third-party libraries that expect Temporal objects or working with non-ISO calendar systems.
 
@@ -77,9 +77,9 @@ Each instance holds a real Temporal object internally, so `toTemporal()` returns
 
 ## Polyfilling older runtimes
 
-Modern browsers and current Node releases ship Temporal natively, so core includes zero polyfill code in its bundle.
+Current Chrome, Edge, Firefox, Node 26+, Deno, and Bun ship `Temporal` natively, so core includes zero polyfill code in its bundle.
 
-If your application supports older browsers or Node versions without native support, install `@native-dates/polyfill` alongside `temporal-polyfill`:
+Safari, older browsers, and Node 24–25 need `@native-dates/polyfill` alongside `temporal-polyfill`. Server code calling [`Duration.format()`](/api/duration/#format) requires Node 24+ because older Node releases lack `Intl.DurationFormat`:
 
 ```sh
 npm install @native-dates/polyfill temporal-polyfill

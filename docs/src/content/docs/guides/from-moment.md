@@ -12,7 +12,7 @@ Migrating removes defensive clones and bundle bloat while letting you update lar
 
 Adding days or shifting to the start of a month in Moment mutates that instance in place. Passing a shared date into a helper can silently corrupt the caller's state unless everyone remembers to clone first.
 
-Every value here is immutable. Methods like `plus()` and `in()` always return a fresh instance and leave the original untouched.
+Every value here is immutable. Methods like [`plus()`](/api/date-time/#plus) and [`in()`](/api/date-time/#in) always return a fresh instance and leave the original untouched.
 
 ```js
 import { date } from 'native-dates';
@@ -100,7 +100,7 @@ quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 
 ## Migrating incrementally
 
-Large codebases rarely convert in a single pull request. Call `toJSDate()` at boundaries that still expect a native JavaScript date, and pass dates straight back into [`datetime()`](/api/datetime-fn/) on the way in.
+Large codebases rarely convert in a single pull request. Call [`toJSDate()`](/api/date-time/#tojsdate) at boundaries that still expect a native JavaScript date, and pass dates straight back into [`datetime()`](/api/datetime-fn/) on the way in.
 
 ```js
 import { datetime } from 'native-dates';

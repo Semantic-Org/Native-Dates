@@ -91,7 +91,7 @@ datetime('2026. 11. 16. 14:30 KST', { loose: true, zone: 'UTC' })?.toString();
 // '2026-11-16T05:30:00.000Z'
 ```
 
-Short Korean zones print GMT+9, while `'zzz'` outputs the full Korean name *한국 표준시*. Because UTC servers stay on yesterday until 8:59 AM in Korea, pass Seoul to `today()`:
+Short Korean zones print GMT+9, while `'zzz'` outputs the full Korean name *한국 표준시*. Because UTC servers stay on yesterday until 8:59 AM in Korea, pass Seoul to [`today()`](/api/date-fn/#today):
 
 ```js
 import { datetime, today } from 'native-dates';
@@ -132,7 +132,7 @@ wed.startOf('week').toString(); // '2026-11-16'
 
 ## Relative dates and lunar holidays
 
-Korean calendar dates return *그저께* for two days ago and *모레* for two days ahead. `DateTime` returns *지금* at zero seconds and counted units otherwise:
+Korean calendar dates return *그저께* for two days ago and *모레* for two days ahead. [`DateTime`](/api/date-time/) returns *지금* at zero seconds and counted units otherwise:
 
 ```js
 import { date, datetime } from 'native-dates';
@@ -157,5 +157,5 @@ leapDay.format('long', 'ko-KR-u-ca-dangi'); // '을사년 윤6월 1일'
 ```
 
 :::tip[Formatting recurring lunar dates]
-`MonthDay` and `YearMonth` stay Gregorian even when passed a lunar locale tag. Format lunar birthdays and holidays from that year's Gregorian `CalendarDate` instead.
+[`MonthDay`](/api/month-day/) and [`YearMonth`](/api/year-month/) stay Gregorian even when passed a lunar locale tag. Format lunar birthdays and holidays from that year's Gregorian [`CalendarDate`](/api/calendar-date/) instead.
 :::

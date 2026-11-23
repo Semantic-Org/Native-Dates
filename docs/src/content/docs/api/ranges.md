@@ -86,7 +86,7 @@ Every range exposes its formatted label, typed endpoints, kind tag, and measured
 | `text` | `string` | Locale-formatted range string, such as `'Sep 1 – 7, 2026'`. |
 | `start`, `end` | `CalendarDate \| DateTime \| Time` | Start and end points matching the range class. |
 | `kind` | `'date' \| 'datetime' \| 'time'` | Tag naming which kind of points the range holds. |
-| `duration` | `Duration` | Full length anchored at `start`, counting the last day on date ranges and crossing midnight on overnight clock ranges. |
+| `duration` | [`Duration`](/api/duration/) | Full length anchored at `start`, counting the last day on date ranges and crossing midnight on overnight clock ranges. |
 
 ## Building from points
 
@@ -302,7 +302,7 @@ dateRange('2026-09-01', '2026-09-07').equals('2026-09-01/2026-09-07'); // true
 range.isEmpty(): boolean
 ```
 
-Returns true when a moment or clock range has identical start and end points. Always returns false on a `DateRange` because a single calendar date spans one full day.
+Returns true when a moment or clock range has identical start and end points. Always returns false on a [`DateRange`](#daterange) because a single calendar date spans one full day.
 
 ```js
 timeRange('09:00', '09:00').isEmpty(); // true
@@ -357,7 +357,7 @@ timeRange('22:00', '02:00').every(1, 'hour').map(String);
 dateRange.count(kind?): number
 ```
 
-Counts calendar days inside a `DateRange` without allocating intermediate date instances. Pass `'days'` (the default), `'weekdays'`, `'weekends'`, or a weekday name such as `'mondays'`. `'weekdays'` and `'weekends'` follow the active locale's weekend days.
+Counts calendar days inside a [`DateRange`](#daterange) without allocating intermediate date instances. Pass `'days'` (the default), `'weekdays'`, `'weekends'`, or a weekday name such as `'mondays'`. `'weekdays'` and `'weekends'` follow the active locale's weekend days.
 
 **Parameters**
 
@@ -411,7 +411,7 @@ dateRange.in(zone?): DateTimeRange
 dtRange.in(zone): DateTimeRange
 ```
 
-Converts a `DateRange` into a half-open `DateTimeRange` from midnight on the start day until midnight after the final day, matching timestamp query bounds. On a moment range, shifts both endpoints into the target time zone.
+Converts a [`DateRange`](#daterange) into a half-open [`DateTimeRange`](#datetimerange) from midnight on the start day until midnight after the final day, matching timestamp query bounds. On a moment range, shifts both endpoints into the target time zone.
 
 Calling `in()` on a clock range throws a `RangeError` because times of day have no calendar date.
 
@@ -484,7 +484,7 @@ range.locale(): Locale | undefined
 range.locale(tag): Range
 ```
 
-Reads the locale carried on this range, or returns a copy formatted in another locale across text previews, presets, endpoints, and sub-ranges. Passing an empty tag clears the carried locale, and `lang()` works as an alias.
+Reads the locale carried on this range, or returns a copy formatted in another locale across text previews, presets, endpoints, and sub-ranges. Passing an empty tag clears the carried locale, and [`lang()`](#lang) works as an alias.
 
 **Parameters**
 
@@ -560,7 +560,7 @@ range.valueOf(): never
 
 Throws a `RangeError` so numeric operators never coerce a range to a number.
 
-Narrow unknown values at runtime with [`kindOf()`](/api/kind-of/) or the exported range guard functions:
+Narrow unknown values at runtime with [`kindOf()`](/api/kind-of/) or the exported [range guard functions](/api/kind-of/#type-guards):
 
 ```js
 import { dateRange, isDateRange, isDateTimeRange, isTimeRange } from 'native-dates';

@@ -21,7 +21,7 @@ billing.quarter; // 4
 expiry.isPast('UTC'); // false
 ```
 
-Check whether a date falls inside a month with `contains()`, step forward by months or quarters with `plus()`, and pick a specific day with `on()`:
+Check whether a date falls inside a month with [`contains()`](/api/year-month/#contains), step forward by months or quarters with [`plus()`](/api/year-month/#plus), and pick a specific day with [`on()`](/api/year-month/#on):
 
 ```js
 billing.contains('2026-11-16'); // true
@@ -46,7 +46,7 @@ birthday.equals(european); // true
 birthday.in(2027).toString(); // '2027-10-17'
 ```
 
-Find the next or most recent occurrence from today or any reference date with `next()` and `previous()`:
+Find the next or most recent occurrence from today or any reference date with [`next()`](/api/month-day/#next) and [`previous()`](/api/month-day/#previous):
 
 ```js
 birthday.next('2026-05-01').toString(); // '2026-10-17'
@@ -54,7 +54,7 @@ birthday.next('2026-10-17').toString(); // '2027-10-17'
 birthday.previous('2026-10-17').toString(); // '2025-10-17'
 ```
 
-February 29 shifts to February 28 in non-leap years. Call `fallsOn()` to check whether a given date matches:
+February 29 shifts to February 28 in non-leap years. Call [`fallsOn()`](/api/month-day/#fallson) to check whether a given date matches:
 
 ```js
 const leapDay = monthDay(2, 29);
@@ -67,7 +67,7 @@ leapDay.fallsOn('2028-02-29'); // true
 
 ## Moving between months, days, and full dates
 
-Read `.yearMonth` or `.monthDay` off any date or moment, or call `as()` mid-chain:
+Read `.yearMonth` or `.monthDay` off any date or moment, or call [`as()`](/api/date-time/#as) mid-chain:
 
 ```js
 import { date, datetime } from 'native-dates';
@@ -80,11 +80,11 @@ datetime('2026-11-01T02:00:00Z', 'America/Los_Angeles').as('yearMonth').toString
 // '2026-10'
 ```
 
-Going the other way, call `on()` with a day on a month or `in()` with a year on a birthday to get a full calendar date.
+Going the other way, call `on()` with a day on a month or [`in()`](/api/month-day/#in) with a year on a birthday to get a full calendar date.
 
 ## Formatting and storing
 
-Both types format through `.text` and `format()`, and turn into ISO strings with `toString()`:
+Both types format through `.text` and [`format()`](/api/year-month/#format), and turn into ISO strings with [`toString()`](/api/year-month/#tostring):
 
 ```js
 import { monthDay, yearMonth } from 'native-dates';

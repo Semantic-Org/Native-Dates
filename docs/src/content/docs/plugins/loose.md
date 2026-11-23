@@ -190,7 +190,7 @@ dateRange('TBD', '2026-09-07', { loose: true }); // null
 
 Incomplete dates missing a year or day return `null` in date and datetime factories instead of inventing a default. Use a partial-date factory when only a month and year or month and day are present.
 
-Two-digit years beside a non-English month name, ambiguous month abbreviations, hours past 12 beside AM or PM, and bare clocks passed to `datetime()` are rejected. Unknown uppercase zone codes and bare hours like `'14h'` return null as well.
+Two-digit years beside a non-English month name, ambiguous month abbreviations, hours past 12 beside AM or PM, and bare clocks passed to [`datetime()`](/api/datetime-fn/) are rejected. Unknown uppercase zone codes and bare hours like `'14h'` return null as well.
 
 :::note[Bad data returns null, bad options still throw]
 Loose mode only handles unreadable input data. Passing an unknown time zone like `'Mars/Olympus'` is a mistake in application code rather than user input, so it still throws immediately.

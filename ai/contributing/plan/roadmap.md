@@ -6,7 +6,6 @@ Larger features with open design details keep a spec in `scopes/<name>.md`.
 
 | Feature | Status | Summary |
 |---|---|---|
-| Benchmark suite | In progress | Parallel browser benchmark runner live in `tools/bench.js` and `tools/ci/bench/`; workload suite design in `bench/` next |
 | Documentation translations | Ready to build | Translated and reviewed guides, API references, and examples across the 8 supported locales |
 
 ## Deferred

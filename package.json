@@ -1,11 +1,9 @@
 {
   "name": "native-dates",
-  "version": "0.0.6",
+  "version": "1.0.0",
   "title": "Native Dates",
   "description": "Natural-language dates, times, durations, and ranges built on the browser's Temporal and Intl APIs",
   "author": "Jack Lukic",
-  "repository": "https://github.com/Semantic-Org/Native-Dates",
-  "homepage": "https://nativedates.dev",
   "license": "ISC",
   "homepage": "https://nativedates.dev",
   "repository": {
@@ -29,9 +27,6 @@
   ],
   "type": "module",
   "sideEffects": false,
-  "engines": {
-    "node": ">=26"
-  },
   "main": "src/index.js",
   "module": "src/index.js",
   "types": "types/index.d.ts",

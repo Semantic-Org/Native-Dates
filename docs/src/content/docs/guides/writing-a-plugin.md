@@ -25,9 +25,9 @@ CalendarDate.prototype.nextBusinessDay = function nextBusinessDay() {
 date('2026-11-13').nextBusinessDay().toString(); // '2026-11-16'
 ```
 
-Read public properties on the instance or call `this.toTemporal()`, and build return values through methods like `this.plus()`.
+Read public properties on the instance or call [`this.toTemporal()`](/api/calendar-date/#totemporal), and build return values through methods like [`this.plus()`](/api/calendar-date/#plus).
 
-When extending an existing method like `format()`, capture the original method first and delegate back to it for inputs your plugin does not handle:
+When extending an existing method like [`format()`](/api/calendar-date/#format), capture the original method first and delegate back to it for inputs your plugin does not handle:
 
 ```js
 const baseFormat = CalendarDate.prototype.format;
@@ -47,7 +47,7 @@ date('2026-11-16').format('short', 'en-US'); // '11/16/26'
 
 Avoid checking `value.constructor.name` in plugin helpers. In monorepos, micro-frontends, or iframes, two copies of a package can load in memory at once.
 
-Every class carries a global symbol brand. Type guards, [`kindOf()`](/api/kind-of/), and brand symbols like `IS_DATE_TIME` recognize values across realms and duplicate bundles.
+Every class carries a global symbol brand. Type guards, [`kindOf()`](/api/kind-of/), and brand symbols like [`IS_DATE_TIME`](/api/kind-of/#cross-realm-instanceof-and-brands) recognize values across realms and duplicate bundles.
 
 ```js
 import { date, IS_CALENDAR_DATE, IS_DATE_TIME, kindOf, now } from 'native-dates';
@@ -76,7 +76,7 @@ Callers activate a plugin with a bare import. List your entry files in `"sideEff
   },
   "sideEffects": ["./index.js"],
   "peerDependencies": {
-    "native-dates": "^0.0.6"
+    "native-dates": "^1.0.0"
   }
 }
 ```

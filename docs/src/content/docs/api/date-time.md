@@ -46,12 +46,12 @@ Properties read the date and time in the instance's time zone.
 | `epochSeconds` | `number` | Whole seconds since the Unix epoch, rounded down. |
 | `epochMilliseconds` | `number` | Milliseconds since the Unix epoch. |
 | `epochNanoseconds` | `bigint` | Exact nanoseconds since the Unix epoch. |
-| `date` | `CalendarDate` | Calendar date in this time zone. |
-| `time` | `Time` | Time of day in this time zone. |
-| `yearMonth` | `YearMonth` | Calendar year and month in this time zone. |
-| `monthDay` | `MonthDay` | Calendar month and day in this time zone. |
+| `date` | [`CalendarDate`](/api/calendar-date/) | Calendar date in this time zone. |
+| `time` | [`Time`](/api/time/) | Time of day in this time zone. |
+| `yearMonth` | [`YearMonth`](/api/year-month/) | Calendar year and month in this time zone. |
+| `monthDay` | [`MonthDay`](/api/month-day/) | Calendar month and day in this time zone. |
 | `dayOfWeek` | `number` | ISO day of the week, from 1 for Monday through 7 for Sunday. |
-| `weekStart` | `number` | First day of this moment's weeks from 1 to 7, following `configure()` or its locale. |
+| `weekStart` | `number` | First day of this moment's weeks from 1 to 7, following [`configure()`](/api/configure/) or its locale. |
 | `quarter` | `number` | Calendar quarter (1–4). |
 | `weekOfYear`, `dayOfYear` | `number` | ISO week number (1–53) and day of the year (1–366). |
 | `daysInMonth`, `daysInYear`, `hoursInDay` | `number` | Length of the current month, year, and local calendar day. |
@@ -534,7 +534,7 @@ datetime('2026-11-16T09:01:00Z').ceil(15, 'minutes').toString(); // '2026-11-16T
 Comparisons check when each moment happened, even if the two values use different time zones.
 
 :::warning[Comparing with ===]
-JavaScript's `===` operator checks whether two variables point to the same object in memory. Call `equals()` to check whether two `DateTime` instances represent the same moment.
+JavaScript's `===` operator checks whether two variables point to the same object in memory. Call [`equals()`](#equals) to check whether two `DateTime` instances represent the same moment.
 :::
 
 :::entry
@@ -659,7 +659,7 @@ dt.until(other): Duration
 dt.until(other, unit): number
 ```
 
-Measures the time from this moment to another, returning a negative span when the target is earlier. Pass a unit name to get the total length as a single number instead of a `Duration`.
+Measures the time from this moment to another, returning a negative span when the target is earlier. Pass a unit name to get the total length as a single number instead of a [`Duration`](/api/duration/).
 
 **Parameters**
 
@@ -716,7 +716,7 @@ dt.for(length): DateTimeRange
 dt.for(count, unit): DateTimeRange
 ```
 
-Creates a half-open [`DateTimeRange`](/api/ranges/) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start. Use `for()` to pass an explicit duration length (refusing endpoints and unitless numbers).
+Creates a half-open [`DateTimeRange`](/api/ranges/#datetimerange) starting at this moment and ending before the target moment or elapsed duration. Throws a `RangeError` if the end is earlier than the start. Use `for()` to pass an explicit duration length (refusing endpoints and unitless numbers).
 
 **Parameters**
 
@@ -752,7 +752,7 @@ standup.for(2, 'hours').end.hour; // 11
 dt.range(unit, firstDay?): DateTimeRange
 ```
 
-Returns the half-open [`DateTimeRange`](/api/ranges/) for the calendar or clock unit containing this moment, from its start up to the start of the next unit.
+Returns the half-open [`DateTimeRange`](/api/ranges/#datetimerange) for the calendar or clock unit containing this moment, from its start up to the start of the next unit.
 
 **Parameters**
 
@@ -839,7 +839,7 @@ dt.formatRelative(other?, locale?): string
 
 Formats the elapsed distance from another moment to this one as a localized phrase via `Intl.RelativeTimeFormat`, such as `'3 hours ago'` or `'in 2 days'`.
 
-Omitting the first argument compares against the current moment, and `formatRelative()` works as an alias. Zero seconds prints `'now'`, while days, months, and years use numeric counts rather than calendar words like yesterday.
+Omitting the first argument compares against the current moment, and [`formatRelative()`](#formatrelative) works as an alias. Zero seconds prints `'now'`, while days, months, and years use numeric counts rather than calendar words like yesterday.
 
 **Parameters**
 
@@ -918,7 +918,7 @@ dt.locale(): Locale | undefined
 dt.locale(tag): DateTime
 ```
 
-Reads the locale carried on this moment, or returns a copy that formats and starts weeks in another locale across presets, week boundaries, and derived values. Underscore tags and `Accept-Language` headers normalize automatically, an empty tag clears it, and `lang()` is an alias.
+Reads the locale carried on this moment, or returns a copy that formats and starts weeks in another locale across presets, week boundaries, and derived values. Underscore tags and `Accept-Language` headers normalize automatically, an empty tag clears it, and [`lang()`](#lang) is an alias.
 
 **Parameters**
 

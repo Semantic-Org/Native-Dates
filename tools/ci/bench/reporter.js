@@ -2,7 +2,7 @@
 // parses tachometer JSON into comment.md, summary.md, and bench-report.json using only Node built-ins
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
@@ -199,7 +199,7 @@ export function loadPrHistory(filePath) {
          Classification
 *******************************/
 
-// 95% CI width of the difference of two means at sampleSize: 2 * 1.96 * sqrt(2 / sampleSize) * sigma / mean * 100
+// 95% CI width of the difference of two means under fixed runner scheduling jitter: 2 * 1.96 * sqrt(2 / n) * sigma / mean * 100
 function expectedNoisePp(meanMs, sampleSize, sigma = DEFAULT_JITTER_MS) {
   if (!(meanMs > 0) || !(sampleSize > 0)) { return 0; }
   return (2 * 1.96 * Math.sqrt(2 / sampleSize) * sigma) / meanMs * 100;
@@ -299,8 +299,9 @@ export function buildReport({
   const classified = results.metrics.map((metric) => {
     const meanMs = mid(metric.thisChangeMs);
     const widthPp = metric.percentDelta[1] - metric.percentDelta[0];
-    const sigma = metric.sigmaMs ?? DEFAULT_JITTER_MS;
-    const expectedPp = expectedNoisePp(meanMs, sampleSize, sigma);
+    // compare observed CI width against fixed ~2 ms runner scheduling jitter rather than the op's own variance
+    const effectiveSamples = metric.sampleCount > 0 ? metric.sampleCount : sampleSize;
+    const expectedPp = expectedNoisePp(meanMs, effectiveSamples, DEFAULT_JITTER_MS);
     const ratio = expectedPp > 0 ? widthPp / expectedPp : Infinity;
     const indexed = benchIndex.get(metric.id);
     const status = classify(metric.percentDelta, floor, ratio);
