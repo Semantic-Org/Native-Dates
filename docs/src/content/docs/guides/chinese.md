@@ -112,7 +112,7 @@ yearMonth('2026年11月').toString(); // '2026-11'
 date('16/11/2026', { loose: true, locale: 'zh-HK' })?.toString(); // '2026-11-16'
 date('２０２６年１１月１６日', { loose: true })?.toString(); // '2026-11-16'
 time('下午5:05', { loose: true, locale: 'zh-TW' })?.toString(); // '17:05:00'
-time('晚上9:10', { loose: true, locale: 'zh-TW' })?.toString(); // '21:10:00'
+time('晚上9:10', { loose: true, locale: 'zh-CN' })?.toString(); // '21:10:00'
 time('凌晨12:00', { loose: true, locale: 'zh-TW' })?.toString(); // '00:00:00'
 monthDay('11月16日', { loose: true })?.toString(); // '11-16'
 datetime('2026年11月16日 14:30 CST', {
@@ -122,7 +122,7 @@ datetime('2026年11月16日 14:30 CST', {
 })?.toString(); // '2026-11-16T06:30:00.000Z'
 ```
 
-Taiwan's default clock prints periods like *凌晨*, *中午*, and *晚上*, so loose mode reads them under `'zh-TW'`. Mainland China's default clock uses 24-hour time, so `'zh-CN'` only shifts hours on *上午* and *下午*.
+Loose mode reads both *上午* / *下午* and part-of-day words like *凌晨*, *中午*, and *晚上* across `'zh-CN'` and `'zh-TW'`.
 
 ## Chinese lunar and Minguo calendars
 

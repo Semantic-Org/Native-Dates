@@ -1,5 +1,5 @@
 ---
-source: c74fb5e4f647
+source: a507b213ffd1
 reviewed: false
 title: 中文
 lede: 处理各中文地区的日期格式与农历显示。
@@ -113,7 +113,7 @@ yearMonth('2026年11月').toString(); // '2026-11'
 date('16/11/2026', { loose: true, locale: 'zh-HK' })?.toString(); // '2026-11-16'
 date('２０２６年１１月１６日', { loose: true })?.toString(); // '2026-11-16'
 time('下午5:05', { loose: true, locale: 'zh-TW' })?.toString(); // '17:05:00'
-time('晚上9:10', { loose: true, locale: 'zh-TW' })?.toString(); // '21:10:00'
+time('晚上9:10', { loose: true, locale: 'zh-CN' })?.toString(); // '21:10:00'
 time('凌晨12:00', { loose: true, locale: 'zh-TW' })?.toString(); // '00:00:00'
 monthDay('11月16日', { loose: true })?.toString(); // '11-16'
 datetime('2026年11月16日 14:30 CST', {
@@ -123,7 +123,7 @@ datetime('2026年11月16日 14:30 CST', {
 })?.toString(); // '2026-11-16T06:30:00.000Z'
 ```
 
-台湾地区的默认时钟会输出凌晨、中午和晚上等时段，因此 `'zh-TW'` 下的宽松解析可直接识别这些词。中国大陆默认采用 24 小时制，`'zh-CN'` 仅按上午和下午换算小时。
+宽松解析在 `'zh-CN'` 和 `'zh-TW'` 下均可识别上午、下午以及凌晨、中午、晚上等时段词。
 
 ## 农历与民国纪年
 

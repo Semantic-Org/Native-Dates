@@ -51,7 +51,7 @@ Year-first locales like Korean read two-digit years at the start, so `'26. 5. 5.
 
 Dotted clocks like `'14.30'` parse only in locales whose clock uses a dot, such as Finnish and Danish, and return `null` elsewhere. Dotted seconds parse after a date, while standalone three-part dotted strings stay dates.
 
-Day-period words match whatever `Intl` prints for the active locale, such as Traditional Chinese *晚上* or Malay *PTG*. Words a locale's default clock omits do not shift the hour. Before the clock, a period word counts where the locale places it there or when the hour is 1 to 11.
+Day-period words cover both AM/PM and part-of-day phrases from `Intl`, such as English *in the evening*, Chinese *晚上*, and Korean *밤*. Part-of-day phrases apply only to 12-hour clocks, leaving 24-hour times untouched. Before the clock, a period word counts unless it is the connector that locale puts between a date and its time.
 
 ## Returning null on bad data
 
@@ -78,7 +78,7 @@ Incomplete dates missing a year or day return `null` in date and datetime factor
 
 Shortened month names must point to a single month. In French, *juil* parses as July while *jui* returns `null` because it opens both *juin* and *juillet*.
 
-Two-digit years beside a non-English month name, hours past 12 beside a day-period word, and bare clocks passed to `datetime()` are rejected. Unknown uppercase zone codes and bare hours like `'14h'` return null as well.
+Two-digit years beside a non-English month name, hours past 12 beside AM or PM, and bare clocks passed to `datetime()` are rejected. Unknown uppercase zone codes and bare hours like `'14h'` return null as well.
 
 :::note[Bad data returns null, bad options still throw]
 Loose mode only handles unreadable input data. Passing an unknown time zone like `'Mars/Olympus'` is a mistake in application code rather than user input, so it still throws immediately.
