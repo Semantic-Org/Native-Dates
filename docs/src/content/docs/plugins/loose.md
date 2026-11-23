@@ -26,7 +26,7 @@ Strict parsing stays the default wherever you omit loose mode. Importing the plu
 
 ## Reading in the active locale
 
-Loose mode reads back the dates and clock times `Intl` prints for the active locale. Inflected month names, day-period words across the day, and numeric date order all follow the runtime. Digits from any script fold automatically.
+Loose mode reads back the dates and clock times `Intl` prints for the active locale. Month names, AM/PM and part-of-day phrases, and numeric day-month order come from the runtime, and digits from any script fold automatically.
 
 The active locale follows the same order as formatting: the locale option, then [`configure()`](/api/configure/), then the runtime default.
 
@@ -37,21 +37,18 @@ import { date, datetime, time } from 'native-dates';
 date('06/11/2026', { loose: true, locale: 'fr' })?.toString(); // '2026-11-06'
 date('06/11/2026', { loose: true, locale: 'en-US' })?.toString(); // '2026-06-11'
 date('16 de noviembre de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-11-16'
-date('2026(e)ko azaroaren 16(a)', { loose: true, locale: 'eu' })?.toString(); // '2026-11-16'
+date('1er mai 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-05-01'
 date('١٦‏/١١‏/٢٠٢٦', { loose: true, locale: 'ar-EG' })?.toString(); // '2026-11-16'
-time('晚上9:10', { loose: true, locale: 'zh-TW' })?.toString(); // '21:10:00'
-datetime('16.11.2026 klo 14.30', {
+time('오후 2:30', { loose: true, locale: 'ko' })?.toString(); // '14:30:00'
+time('晚上9:10', { loose: true, locale: 'zh-CN' })?.toString(); // '21:10:00'
+datetime('16 de novembro de 2026 às 14:30', {
   loose: true,
-  locale: 'fi',
-  zone: 'UTC',
-})?.toString(); // '2026-11-16T14:30:00.000Z'
+  locale: 'pt-BR',
+  zone: 'America/Sao_Paulo',
+})?.hour; // 14
 ```
 
 Year-first locales like Korean read two-digit years at the start, so `'26. 5. 5.'` reads as May 5, 2026 in Korean. Connecting words, ordinals, and leading weekday names are skipped across full dates and partial dates alike.
-
-Dotted clocks like `'14.30'` parse only in locales whose clock uses a dot, such as Finnish and Danish, and return `null` elsewhere. Dotted seconds parse after a date, while standalone three-part dotted strings stay dates.
-
-Day-period words cover both AM/PM and part-of-day phrases from `Intl`, such as English *in the evening*, Chinese *晚上*, and Korean *밤*. Part-of-day phrases apply only to 12-hour clocks, leaving 24-hour times untouched. Before the clock, a period word counts unless it is the connector that locale puts between a date and its time.
 
 ## Returning null on bad data
 
@@ -76,9 +73,7 @@ dateRange('TBD', '2026-09-07', { loose: true }); // null
 
 Incomplete dates missing a year or day return `null` in date and datetime factories instead of inventing a default. Use a partial-date factory when only a month and year or month and day are present.
 
-Shortened month names must point to a single month. In French, *juil* parses as July while *jui* returns `null` because it opens both *juin* and *juillet*.
-
-Two-digit years beside a non-English month name, hours past 12 beside AM or PM, and bare clocks passed to `datetime()` are rejected. Unknown uppercase zone codes and bare hours like `'14h'` return null as well.
+Two-digit years beside a non-English month name, ambiguous month abbreviations, hours past 12 beside AM or PM, and bare clocks passed to `datetime()` are rejected. Unknown uppercase zone codes and bare hours like `'14h'` return null as well.
 
 :::note[Bad data returns null, bad options still throw]
 Loose mode only handles unreadable input data. Passing an unknown time zone like `'Mars/Olympus'` is a mistake in application code rather than user input, so it still throws immediately.
@@ -120,6 +115,28 @@ configure({ dayFirst: null });
 ```
 
 Pass `dayFirst: null` to `configure()` to follow the active locale again. Partial date factories like [`monthDay()`](/api/month-day-fn/) always read numeric pairs in the order their name states, regardless of locale.
+
+## Regional clock and month rules
+
+Dotted clocks like `'14.30'` parse only in locales whose clock uses a dot, such as Finnish and Danish, and return `null` elsewhere. Dotted seconds parse after a date, while standalone three-part dotted strings stay dates.
+
+Part-of-day phrases like English *in the evening* and Korean *밤* shift 12-hour clocks while leaving 24-hour times untouched. Date-to-time connectors are never read as AM or PM, so Welsh *am*, meaning "at", keeps 14:30 intact while English `'AM 12:30'` reads as midnight.
+
+Inflected and affixed month forms written in full dates parse automatically, including Hebrew and Basque. Shortened month names must match a single month, so French *juil* parses as July while *jui* returns `null`.
+
+```js
+datetime('16.11.2026 klo 14.30.15', {
+  loose: true,
+  locale: 'fi',
+  zone: 'UTC',
+})?.toString(); // '2026-11-16T14:30:15.000Z'
+time('14.30', { loose: true, locale: 'de' }); // null
+time('밤 11:30', { loose: true, locale: 'ko' })?.toString(); // '23:30:00'
+time('am 14:30', { loose: true, locale: 'cy' })?.toString(); // '14:30:00'
+date('2026(e)ko azaroaren 16(a)', { loose: true, locale: 'eu' })?.toString(); // '2026-11-16'
+date('6 juil 2026', { loose: true, locale: 'fr' })?.toString(); // '2026-07-06'
+date('6 jui 2026', { loose: true, locale: 'fr' }); // null
+```
 
 ## Factory options
 
