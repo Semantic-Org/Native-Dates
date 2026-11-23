@@ -168,7 +168,7 @@ parsed?.toString(); // '2026-09-01'
 configure({ dayFirst }): Settings
 ```
 
-Overrides the numeric date order for all loose calls that do not specify `dayFirst` explicitly. Unset by default so loose mode follows the active locale.
+Overrides the default numeric date order for loose calls that specify neither `dayFirst` nor `locale` per call. Unset by default so loose mode follows the active locale.
 
 **Parameters**
 

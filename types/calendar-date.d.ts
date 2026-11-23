@@ -3,6 +3,7 @@ import type { Duration, DurationInput } from './duration.js';
 import type { FormatSpec } from './helpers/format.js';
 import { IS_CALENDAR_DATE } from './helpers/identity.js';
 import type {
+  CalendarFieldUnit,
   DateUnit,
   DayOfWeek,
   TemporalInstant,
@@ -145,7 +146,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#plus plus}
    */
-  plus(amount: DurationInput, unit?: Unit): CalendarDate;
+  plus(amount: DurationInput, unit?: DateUnit): CalendarDate;
 
   /**
    * Alias for `plus()` that moves forward by a calendar duration.
@@ -156,7 +157,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#plus plus}
    */
-  add(amount: DurationInput, unit?: Unit): CalendarDate;
+  add(amount: DurationInput, unit?: DateUnit): CalendarDate;
 
   /**
    * Moves backward by years, quarters, months, weeks, or days and returns a new `CalendarDate`.
@@ -172,7 +173,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#minus minus}
    */
-  minus(amount: DurationInput, unit?: Unit): CalendarDate;
+  minus(amount: DurationInput, unit?: DateUnit): CalendarDate;
 
   /**
    * Alias for `minus()` that moves backward by a calendar duration.
@@ -183,7 +184,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#minus minus}
    */
-  subtract(amount: DurationInput, unit?: Unit): CalendarDate;
+  subtract(amount: DurationInput, unit?: DateUnit): CalendarDate;
 
   /**
    * Returns a new `CalendarDate` with one or more calendar fields replaced.
@@ -212,7 +213,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#set set}
    */
-  set(unit: DateUnit, value: number): CalendarDate;
+  set(unit: CalendarFieldUnit, value: number): CalendarDate;
 
   /**
    * Returns the first day of the calendar unit containing this date.

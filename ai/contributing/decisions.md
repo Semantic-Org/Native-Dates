@@ -9,7 +9,7 @@ Active package decisions grouped by area, newest first.
 ### Zones, Offsets, and Serialization
 
 - **D23:** Explicit standard and daylight abbreviations inside `{ loose: true }` strings keep fixed UTC offsets (2026-11-23) [L139-L143](decisions/package.md#d23-explicit-standard-and-daylight-abbreviations-inside--loose-true--strings-keep-fixed-utc-offsets-2026-11-23)
-  - Reopen: non-North American standard/daylight pairs (such as `'AEST'`/`'AEDT'` or `'CET'`/`'CEST'`) hit the same DST shift in inline log timestamps and need fixed-offset entries too.
+  - Reopen: users report another regional standard/daylight pair hitting a seasonal shift inside inline log timestamps, or expect human-typed `'2:30 PM EST'` in summer to follow daylight time.
 - **D22:** `@native-dates/plugins/zones` maps non-IANA city names and resolves shared abbreviations by locale (2026-11-22) [L133-L137](decisions/package.md#d22-native-datespluginszones-maps-non-iana-city-names-and-resolves-shared-abbreviations-by-locale-2026-11-22)
   - Reopen: city requests keep expanding the alias table without a clear boundary, or users report locale-driven lookup misreading foreign-country abbreviations.
 - **D2:** `DateTime` serializes to ISO 8601 UTC rather than Temporal's bracketed `[Zone]` string (2026-11-05) [L11-L15](decisions/package.md#d2-datetime-serializes-to-iso-8601-utc-rather-than-temporals-bracketed-zone-string-2026-11-05)
@@ -123,6 +123,6 @@ Every package decision (`D1`..`Dn`) in file order.
 - **D22:** `@native-dates/plugins/zones` maps non-IANA city names and resolves shared abbreviations by locale (2026-11-22) [L133-L137](decisions/package.md#d22-native-datespluginszones-maps-non-iana-city-names-and-resolves-shared-abbreviations-by-locale-2026-11-22)
   - Reopen: city requests keep expanding the alias table without a clear boundary, or users report locale-driven lookup misreading foreign-country abbreviations.
 - **D23:** Explicit standard and daylight abbreviations inside `{ loose: true }` strings keep fixed UTC offsets (2026-11-23) [L139-L143](decisions/package.md#d23-explicit-standard-and-daylight-abbreviations-inside--loose-true--strings-keep-fixed-utc-offsets-2026-11-23)
-  - Reopen: non-North American standard/daylight pairs (such as `'AEST'`/`'AEDT'` or `'CET'`/`'CEST'`) hit the same DST shift in inline log timestamps and need fixed-offset entries too.
+  - Reopen: users report another regional standard/daylight pair hitting a seasonal shift inside inline log timestamps, or expect human-typed `'2:30 PM EST'` in summer to follow daylight time.
 - **D24:** Instances expose `.text` as a lazy prototype getter instead of an eager own property (2026-11-23) [L145-L149](decisions/package.md#d24-instances-expose-text-as-a-lazy-prototype-getter-instead-of-an-eager-own-property-2026-11-23)
   - Reopen: browser developers report collapsed DevTools previews missing timezone or formatted text frequently enough to warrant a cheap non-`Intl` preview property.

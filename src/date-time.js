@@ -27,7 +27,6 @@ import {
   quarterStart,
   singularKeys,
   stepOf,
-  timeUnits,
   unit,
   weekdayNamed,
   withParts,
@@ -102,7 +101,7 @@ export class DateTime {
     }
     if (input instanceof CalendarDate) {
       return guard(
-        () => input.toTemporal().toZonedDateTime({ timeZone, disambiguation }),
+        () => input.toTemporal().toZonedDateTime({ timeZone }),
         'invalidDateTime',
         String(input),
       );
@@ -130,7 +129,7 @@ export class DateTime {
       return guard(() => input.toZonedDateTime(timeZone, { disambiguation }), 'invalidDateTime', String(input));
     }
     if (isPlainDate(input)) {
-      return guard(() => input.toZonedDateTime({ timeZone, disambiguation }), 'invalidDateTime', String(input));
+      return guard(() => input.toZonedDateTime({ timeZone }), 'invalidDateTime', String(input));
     }
     if (isPlainObject(input)) {
       return guard(
@@ -160,7 +159,7 @@ export class DateTime {
               ? Temporal.Instant.from(trimmed).toZonedDateTimeISO(timeZone)
               : Temporal.PlainDateTime.from(trimmed).toZonedDateTime(timeZone, { disambiguation });
           }
-          return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone, disambiguation });
+          return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone });
         },
         'invalidDateTime',
         text,
@@ -284,17 +283,11 @@ export class DateTime {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return this.#next(
-      guard(
-        () => withParts(this.#zoned, changes, ['year', 'month', 'day', ...timeUnits]),
-        'cannotSet',
-        JSON.stringify(changes),
-      ),
-    );
+    return this.#next(guard(() => withParts(this.#zoned, changes), 'cannotSet', JSON.stringify(changes)));
   }
 
   at(when, options) {
-    return this.date.at(when, isPlainObject(options) ? { zone: this.zone, ...options } : this.zone);
+    return this.date.at(when, isPlainObject(options) ? { ...options, zone: this.zone } : this.zone);
   }
 
   in(zone) {

@@ -3,7 +3,9 @@ import type { Duration, DurationInput } from './duration.js';
 import type { FormatSpec } from './helpers/format.js';
 import { IS_DATE_TIME } from './helpers/identity.js';
 import type {
+  DateTimeFieldUnit,
   DayOfWeek,
+  RoundUnit,
   TemporalInstant,
   TemporalPlainDate,
   TemporalPlainDateTime,
@@ -336,14 +338,14 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#set set}
    */
-  set(unit: Unit, value: number): DateTime;
+  set(unit: DateTimeFieldUnit, value: number): DateTime;
 
   /**
    * Returns a new `DateTime` on the same local date and time zone with the time of day replaced.
    *
    * @param time - Time string such as `'5:00pm'`, `Time` instance, fields object, or `Date`
-   * @param options - Optional `disambiguation` rule for DST gaps and folds
-   * @returns A new `DateTime` on the same date at `time`
+   * @param options - Optional `disambiguation` and `locale` options
+   * @returns A new `DateTime` on the same date and time zone at `time`
    *
    * @example
    * ```ts
@@ -353,7 +355,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#at at}
    */
-  at(time: TimeInput, options?: ReadOptions): DateTime;
+  at(time: TimeInput, options?: Omit<ReadOptions, 'zone'>): DateTime;
 
   /**
    * Returns a new `DateTime` representing the exact same moment viewed in another time zone.
@@ -467,7 +469,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#round round}
    */
-  round(unit: Unit): DateTime;
+  round(unit: RoundUnit): DateTime;
   /**
    * Rounds to the nearest step increment of `unit`, with half-way ties rounding up.
    *
@@ -482,7 +484,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#round round}
    */
-  round(increment: number, unit: Unit): DateTime;
+  round(increment: number, unit: RoundUnit): DateTime;
 
   /**
    * Rounds down to the start of a calendar day or clock unit.
@@ -497,7 +499,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#floor floor}
    */
-  floor(unit: Unit): DateTime;
+  floor(unit: RoundUnit): DateTime;
   /**
    * Rounds down to the start of a step increment of `unit`.
    *
@@ -507,7 +509,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#floor floor}
    */
-  floor(increment: number, unit: Unit): DateTime;
+  floor(increment: number, unit: RoundUnit): DateTime;
 
   /**
    * Rounds up to the next calendar day or clock unit boundary.
@@ -522,7 +524,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#ceil ceil}
    */
-  ceil(unit: Unit): DateTime;
+  ceil(unit: RoundUnit): DateTime;
   /**
    * Rounds up to the next step increment of `unit`.
    *
@@ -532,7 +534,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#ceil ceil}
    */
-  ceil(increment: number, unit: Unit): DateTime;
+  ceil(increment: number, unit: RoundUnit): DateTime;
 
   /**
    * Moves forward to the next given weekday at the same time of day.

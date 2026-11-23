@@ -3,12 +3,28 @@ import type { DateTime, DateTimeInput } from './date-time.js';
 import type { Duration, DurationInput } from './duration.js';
 import type { FormatSpec } from './helpers/format.js';
 import { IS_DATE_RANGE, IS_DATE_TIME_RANGE, IS_RANGE, IS_TIME_RANGE } from './helpers/identity.js';
-import type { Unit } from './helpers/units.js';
+import type { DayOfWeek, Unit } from './helpers/units.js';
 import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
 import type { Time, TimeInput } from './time.js';
 
 // keeps BaseRange out of the module's exports, which a declaration file would otherwise add
 export {};
+
+type CountWord =
+  | 'days'
+  | 'day'
+  | 'weekdays'
+  | 'weekday'
+  | 'weekends'
+  | 'weekend'
+  | 'mondays'
+  | 'tuesdays'
+  | 'wednesdays'
+  | 'thursdays'
+  | 'fridays'
+  | 'saturdays'
+  | 'sundays'
+  | Lowercase<Exclude<DayOfWeek, number>>;
 
 declare abstract class BaseRange<Point, Input> {
   /** @internal */
@@ -363,63 +379,7 @@ export class DateRange extends BaseRange<CalendarDate, CalendarDateInput> {
    *
    * @see {@link https://nativedates.dev/api/ranges/#count count}
    */
-  count(
-    kind?:
-      | 'days'
-      | 'day'
-      | 'weekdays'
-      | 'weekday'
-      | 'weekends'
-      | 'weekend'
-      | 'mondays'
-      | 'tuesdays'
-      | 'wednesdays'
-      | 'thursdays'
-      | 'fridays'
-      | 'saturdays'
-      | 'sundays'
-      | 'monday'
-      | 'tuesday'
-      | 'wednesday'
-      | 'thursday'
-      | 'friday'
-      | 'saturday'
-      | 'sunday'
-      | 'mon'
-      | 'tue'
-      | 'wed'
-      | 'thu'
-      | 'fri'
-      | 'sat'
-      | 'sun'
-      | 'Days'
-      | 'Day'
-      | 'Weekdays'
-      | 'Weekday'
-      | 'Weekends'
-      | 'Weekend'
-      | 'Mondays'
-      | 'Tuesdays'
-      | 'Wednesdays'
-      | 'Thursdays'
-      | 'Fridays'
-      | 'Saturdays'
-      | 'Sundays'
-      | 'Monday'
-      | 'Tuesday'
-      | 'Wednesday'
-      | 'Thursday'
-      | 'Friday'
-      | 'Saturday'
-      | 'Sunday'
-      | 'Mon'
-      | 'Tue'
-      | 'Wed'
-      | 'Thu'
-      | 'Fri'
-      | 'Sat'
-      | 'Sun',
-  ): number;
+  count(kind?: CountWord | Capitalize<CountWord> | Uppercase<CountWord>): number;
 
   /**
    * Converts this `DateRange` into a half-open `DateTimeRange` from midnight on the start day

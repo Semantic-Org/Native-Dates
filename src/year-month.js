@@ -224,9 +224,7 @@ export class YearMonth {
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
     YearMonth.#refuseSmaller(smaller.find((part) => part in changes));
-    return this.#next(
-      guard(() => withParts(this.#plain, changes, ['year', 'month']), 'cannotSet', JSON.stringify(changes)),
-    );
+    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)));
   }
 
   on(day) {

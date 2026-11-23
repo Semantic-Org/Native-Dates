@@ -427,9 +427,11 @@ describe('{ loose: true } option validation', () => {
     'call me at 5',
     'invoice 2',
     '12',
-    '11/16/2026 junk',
+    'Error 404 on Jan 2',
+    'Room 500, May 12',
     'Nov 16',
     '12/25',
+    '12/25 junk',
     '2026',
     'May 2026',
     '1/2/3',
@@ -437,6 +439,15 @@ describe('{ loose: true } option validation', () => {
   ])('returns null rather than fabricating a date from partial or noisy input %j', (text) => {
     expect(date(text, { loose: true })).toBeNull();
     expect(datetime(text, { loose: true, zone: 'UTC' })).toBeNull();
+  });
+
+  it('does not let Date.parse misread "junk" as June in numeric dates and preserves vi, mn, and bo dates', () => {
+    expect(date('11/16/2026 junk', { loose: true })?.toString()).toBe('2026-11-16');
+    expect(date('Date: 11/16/2026', { loose: true })?.toString()).toBe('2026-11-16');
+    expect(date('16 tháng 11, 2026', { loose: true, locale: 'vi' })?.toString()).toBe('2026-11-16');
+    expect(date('16 thg 11, 2026', { loose: true, locale: 'vi' })?.toString()).toBe('2026-11-16');
+    expect(date('2026 оны 11-р сарын 16', { loose: true, locale: 'mn' })?.toString()).toBe('2026-11-16');
+    expect(date('2026 ལོའི་ཟླ་༡༡ཚེས་16', { loose: true, locale: 'bo' })?.toString()).toBe('2026-11-16');
   });
 
   it('treats empty or whitespace locale options as unset rather than throwing unknownLocale', () => {

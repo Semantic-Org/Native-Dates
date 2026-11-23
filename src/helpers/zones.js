@@ -166,44 +166,45 @@ const canonicalTag = (name) => {
 };
 
 // accept BCP 47 tags, POSIX 'en_US' tags, tag arrays, and raw HTTP Accept-Language headers
+const validArrays = new WeakSet();
 const knownLocales = bounded();
 export const checkedLocale = (tag) => {
-  if (tag === undefined || tag === null || (isString(tag) && !tag.trim())) {
+  if (!tag || (isString(tag) && !tag.trim())) {
     return undefined;
+  }
+  if (validArrays.has(tag)) {
+    return tag;
   }
   const explanation = isDevelopment
     ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
     : 0;
   if (!isString(tag)) {
-    guard(() => Intl.getCanonicalLocales(tag), 'unknownLocale', String(tag), explanation);
+    guard(
+      () => (Array.isArray(tag) ? Intl.getCanonicalLocales(tag) : fail()),
+      'unknownLocale',
+      String(tag),
+      explanation,
+    );
+    validArrays.add(tag);
     return tag;
   }
   if (!knownLocales.has(tag)) {
-    if (!/[;,*]/.test(tag)) {
-      const normalized = guard(
-        () => Intl.getCanonicalLocales(tag.trim().replace(/_/g, '-'))[0],
-        'unknownLocale',
-        tag,
-        explanation,
-      );
-      return knownLocales.set(tag, normalized);
-    }
-    // parse RFC 9110 Accept-Language q-weights case-insensitively, dropping '*' wildcards, q=0, and malformed fallback tags
-    const entries = tag.split(',')
-      .map((part) => {
-        const [rawName, ...params] = part.trim().split(/\s*;\s*/);
-        const qParam = params.find((param) => /^q=/i.test(param));
-        const weight = qParam ? Number(qParam.slice(2)) : 1;
-        return [rawName.replace(/_/g, '-'), weight];
-      })
-      .filter(([name, weight]) => name && name !== '*' && weight > 0 && weight <= 1)
-      .sort((a, b) => b[1] - a[1]);
-    const valid = entries.map(([name]) => canonicalTag(name)).filter(Boolean);
-    if (entries.length && !valid.length) {
-      refuse('unknownLocale', tag, { explanation });
-    }
-    // headers with no accepted language (like '*' or `es;q=0`) resolve to undefined
-    knownLocales.set(tag, valid.length > 1 ? Object.freeze(valid) : valid[0]);
+    const kept = /[_,;*]/.test(tag)
+      && tag.replace(/_/g, '-').split(',')
+        .map((part) => part.trim().split(/\s*;\s*q=/i))
+        .filter(([name, weight]) => name && name !== '*' && weight != 0)
+        .sort((a, b) => (b[1] ?? 1) - (a[1] ?? 1));
+    const tags = kept && kept.flatMap(([name]) => canonicalTag(name) ?? []);
+    guard(
+      () => (kept ? kept.length && !tags.length && fail() : Intl.getCanonicalLocales(tag.trim())),
+      'unknownLocale',
+      tag,
+      explanation,
+    );
+    knownLocales.set(
+      tag,
+      kept ? (tags.length > 1 ? (validArrays.add(tags), Object.freeze(tags)) : tags[0]) : tag.trim(),
+    );
   }
   return knownLocales.get(tag);
 };

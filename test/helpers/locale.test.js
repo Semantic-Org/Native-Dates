@@ -496,4 +496,12 @@ describe('locale precedence in formatting', () => {
     expect(date('2026-05-15').locale('en-US, @@@;q=0.5').locale()).toBe('en-US');
     expect(date('2026-05-15').locale('   ').locale()).toBeUndefined();
   });
+
+  it('treats { locale: false } as unset and preserves carried locale on duration(d, { locale: undefined })', () => {
+    configure({ locale: 'fr' });
+    const d = date('2026-05-15', { locale: false });
+    expect(d.locale()).toBeUndefined();
+    expect(d.format('MMMM')).toBe('mai');
+    expect(duration(hours(2).locale('fr'), { locale: undefined }).locale()).toBe('fr');
+  });
 });

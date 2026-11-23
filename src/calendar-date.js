@@ -256,9 +256,7 @@ export class CalendarDate {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return this.#next(
-      guard(() => withParts(this.#plain, changes, ['year', 'month', 'day']), 'cannotSet', JSON.stringify(changes)),
-    );
+    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)));
   }
 
   startOf(name, firstDay) {
@@ -394,19 +392,20 @@ export class CalendarDate {
 
   at(when, options) {
     const settings = zoneOptions(options);
+    const locale = settings.locale ?? this.#locale;
     const disambiguation = checkedDisambiguation(settings.disambiguation);
     // Date, Temporal.Instant, and instant strings carry no zone of their own, while DateTime and ZonedDateTime keep their wall-clock time
     const plainTime = new Time(when ?? '00:00', isUnzoned(when) ? { zone: settings.zone } : undefined).toTemporal();
     return new DateTime(
       guard(
         () =>
-          this.#plain.toPlainDateTime(plainTime).toZonedDateTime(zoneId(settings.zone, this.#locale), {
+          this.#plain.toPlainDateTime(plainTime).toZonedDateTime(zoneId(settings.zone, locale), {
             disambiguation,
           }),
         'invalidDateTime',
         `${this}T${plainTime}`,
       ),
-      { locale: settings.locale ?? this.#locale },
+      { locale },
     );
   }
 

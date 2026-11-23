@@ -45,10 +45,14 @@ export type { CalendarDateInput } from './calendar-date.js';
 export type { DateTimeFields, DateTimeInput } from './date-time.js';
 export type { DurationFields, DurationInput } from './duration.js';
 export type { Point, Range, RangeMap } from './helpers/compare.js';
+export type { ErrorCode, NativeDatesError } from './helpers/errors.js';
 export type { FormatSpec } from './helpers/format.js';
 export type {
+  CalendarFieldUnit,
+  DateTimeFieldUnit,
   DateUnit,
   DayOfWeek,
+  RoundUnit,
   TemporalDuration,
   TemporalInstant,
   TemporalPlainDate,
@@ -60,6 +64,7 @@ export type {
   TemporalZonedDateTime,
   TimeUnit,
   Unit,
+  YearMonthUnit,
 } from './helpers/units.js';
 export type { ActiveSettings, Disambiguation, Locale, ReadOptions, Settings, Zone } from './helpers/zones.js';
 export type { MonthDayFields, MonthDayFormat, MonthDayInput, MonthDayOptions } from './month-day.js';

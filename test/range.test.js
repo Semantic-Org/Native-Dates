@@ -742,7 +742,12 @@ describe('Range overlaps()', () => {
     );
   });
 
-  it.todo('parses an unzoned interval string in the receiver timezone in DateTimeRange.prototype.overlaps()');
+  it('parses an unzoned interval string in the receiver timezone in DateTimeRange overlaps() and equals()', () => {
+    const tokyo = datetimeRange('2026-09-01T09:00', '2026-09-01T10:30', 'Asia/Tokyo');
+    expect(tokyo.overlaps('2026-09-01T09:30/2026-09-01T11:00')).toBe(true);
+    expect(tokyo.overlaps('2026-09-01T10:30/2026-09-01T11:00')).toBe(false);
+    expect(tokyo.equals('2026-09-01T09:00/2026-09-01T10:30')).toBe(true);
+  });
 });
 
 describe('Range intersection()', () => {
@@ -815,7 +820,13 @@ describe('Range intersection()', () => {
     );
   });
 
-  it.todo('preserves the receiver timezone on DateTimeRange.prototype.intersection()');
+  it('preserves the receiver timezone on DateTimeRange.prototype.intersection()', () => {
+    const tokyo = datetimeRange('2026-09-01T09:00', '2026-09-01T10:30', 'Asia/Tokyo');
+    const berlin = datetimeRange('2026-09-01T03:00', '2026-09-01T04:00', 'Europe/Berlin');
+    const shared = tokyo.intersection(berlin);
+    expect(shared.start.zone).toBe('Asia/Tokyo');
+    expect(shared.end.zone).toBe('Asia/Tokyo');
+  });
 
   it('returns false from overlaps() and contains(), and null from intersection(), when either range is empty', () => {
     const office = timeRange('09:00', '17:00');

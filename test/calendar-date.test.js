@@ -538,11 +538,12 @@ describe('CalendarDate.set()', () => {
     expect(() => day.set('month', 13)).toThrowError(expect.objectContaining({ code: 'cannotSet' }));
   });
 
-  it('constrains the day to month-end when set() updates month or year', () => {
+  it('constrains the day to month-end when set() updates month or year, ignoring undefined values', () => {
     expect(date('2024-02-29').set('year', 2025).toString()).toBe('2025-02-28');
     expect(date('2024-02-29').set('year', 2028).toString()).toBe('2028-02-29');
     expect(date('2026-01-31').set('month', 2).toString()).toBe('2026-02-28');
     expect(date('2026-03-31').set({ month: 4 }).toString()).toBe('2026-04-30');
+    expect(date('2026-01-31').set({ month: 2, day: undefined }).toString()).toBe('2026-02-28');
   });
 
   it('throws cannotSet for fractional field values', () => {

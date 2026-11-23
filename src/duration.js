@@ -363,7 +363,7 @@ export const duration = (input, unitOrOptions) => {
   const locale = hasOptions && unitOrOptions.locale !== undefined ? checkedLocale(unitOrOptions.locale) : undefined;
   const build = () =>
     input instanceof Duration && name === undefined
-      ? (hasOptions && Object.hasOwn(unitOrOptions, 'locale') ? input.locale(locale) : input)
+      ? (hasOptions && unitOrOptions.locale !== undefined ? input.locale(locale) : input)
       : new Duration(input, name, { locale });
   return hasOptions && unitOrOptions.loose ? loosely(build, unreadable.length) : build();
 };

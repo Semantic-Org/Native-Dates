@@ -43,20 +43,12 @@ const monthsFrom = (table, locale) =>
 const localeData = cached((locale) => {
   const [english, localized] = [names('en'), names(locale)];
   const partsOf = (options) => new Intl.DateTimeFormat(locale, { ...options, calendar: 'gregory' }).formatToParts(0);
-  const fullLiterals = partsOf({ dateStyle: 'full' })
-    .filter((part) => part.type === 'literal')
-    .flatMap((part) => part.value.toLocaleLowerCase(locale).match(/[\p{L}\p{M}]+/gu) ?? []);
-  const rawWeekdays = [...localized.dddd, ...localized.ddd, ...english.dddd, ...english.ddd];
-  const caselessParts = [
-    ...rawWeekdays.flatMap((name) => name.toLocaleLowerCase(locale).match(/[\p{L}\p{M}]+/gu) ?? []),
-    ...fullLiterals,
-  ].sort((first, second) => second.length - first.length);
   return {
     englishMonths: monthsFrom(english, locale),
     localizedMonths: monthsFrom(localized, locale),
-    weekdays: rawWeekdays.map((name) => wordsOf(name, locale)),
-    dateLiterals: new Set(fullLiterals),
-    caselessParts,
+    weekdays: [...localized.dddd, ...localized.ddd, ...english.dddd, ...english.ddd].map((name) =>
+      wordsOf(name, locale)
+    ),
     dayPeriods: localized.dayPeriods.map((name) => wordsOf(name, locale)),
     order: partsOf({ dateStyle: 'short' })
       .map((part) => part.type)
@@ -100,10 +92,10 @@ const findMonth = (text, locale) => {
   return {};
 };
 
-// a number of three or more digits is a year, so only an all-numeric date depends on day-month order
+// a number of four or more digits is a year, so 3-digit room or status numbers never masquerade as years
 const dateParts = (text, { locale, dayFirst }) => {
   const numbers = text.match(/\d+/g) ?? [];
-  const isYear = (number) => number?.length > 2;
+  const isYear = (number) => number?.length > 3;
   const { month } = findMonth(text, locale);
   if (month) {
     return numbers.length < 3
@@ -177,29 +169,6 @@ const validYearToken = (token, resolvedYear) =>
     ? resolvedYear % 100 === +token
     : token.length >= 4 && +token >= 100 && resolvedYear === +token);
 
-// verify every word in a clockless numeric date belongs to the locale's weekdays or date literals (rejecting '11/16/2026 junk')
-const hasOnlyDateWords = (text, locale) => {
-  const { weekdays, dateLiterals, caselessParts } = localeData(locale);
-  let remaining = wordsOf(text, locale);
-  for (const day of weekdays) {
-    remaining = remaining.replaceAll(day, ' ');
-  }
-  return remaining.trim().split(/\s+/).filter(Boolean).every((word) => {
-    if (dateLiterals.has(word)) {
-      return true;
-    }
-    // scripts without spaces glue literals and weekdays together ('2026年1月6日火曜日')
-    if (word.toUpperCase() === word.toLowerCase()) {
-      let rest = word;
-      for (const part of caselessParts) {
-        rest = rest.replaceAll(part, '');
-      }
-      return rest === '';
-    }
-    return false;
-  });
-};
-
 // Date.parse invents missing years (2001), days (01), and months from stray words ('junk' -> June), and uses the host OS
 // timezone on unzoned strings. Parse unzoned text in UTC and verify the written year, month, and day all match
 const parseWithEngine = (text, settings) => {
@@ -213,12 +182,6 @@ const parseWithEngine = (text, settings) => {
   const { month } = findMonth(withoutClock, settings.locale);
   if (month ? nums.length !== 2 : nums.length !== 3) {
     return undefined;
-  }
-  if (!month) {
-    const stripped = withoutClock.replace(/\b(?:[ap]\.?m\.?|t)\b/gi, ' ');
-    if (!hasOnlyDateWords(stripped, settings.locale)) {
-      return undefined;
-    }
   }
   const [epoch, written] = [Date.parse(text), parseUtcWall(withoutComments)];
   if (Number.isNaN(epoch) || Number.isNaN(written)) {
@@ -270,13 +233,10 @@ const parseWithLocale = (text, settings) => {
   const before = clock ? lower.slice(0, clock.index) : lower;
   const after = clock ? lower.slice(clock.index + clock[0].length) : '';
   const dateText = `${before} ${after}`;
-  if (!clock && !findMonth(dateText, locale).month && !hasOnlyDateWords(before, locale)) {
-    return undefined;
-  }
   const parts = dateParts(dateText, settings);
   try {
     let date;
-    if (parts?.year?.length > 2 && (parts.year.length < 4 || +parts.year >= 100) && parts.day) {
+    if (parts?.year?.length > 3 && +parts.year >= 100 && parts.day) {
       date = Temporal.PlainDate.from({ year: +parts.year, month: +parts.month, day: +parts.day }, {
         overflow: 'reject',
       });
@@ -309,7 +269,7 @@ const zoneAbbreviation =
   /(\d:\d{2}(?::\d{2}(?:\.\d+)?)?(?: ?[AaPp]\.?[Mm]\.?)?(?: [+-]\d{2}:?\d{2})?) (?![AP]M\b)(\p{Lu}{2}|(?:(?![a-z])[\p{L}\p{M}]){3,5})(?![\p{L}\p{M}+]|-\d)/u;
 
 // explicit standard and daylight abbreviations inside timestamp strings keep their fixed UTC offsets rather than
-// shifting across DST when @native-dates/plugins/zones maps bare 'EST' or 'PST' to regional IANA zones
+// shifting across DST when @native-dates/plugins/zones maps bare 'EST', 'CET', or 'AEST' to regional IANA zones
 const fixedOffsets = {
   EST: '-05:00',
   EDT: '-04:00',
@@ -320,6 +280,19 @@ const fixedOffsets = {
   AKST: '-09:00',
   AKDT: '-08:00',
   HST: '-10:00',
+  WET: '+00:00',
+  WEST: '+01:00',
+  CET: '+01:00',
+  CEST: '+02:00',
+  EET: '+02:00',
+  EEST: '+03:00',
+  AWST: '+08:00',
+  ACST: '+09:30',
+  ACDT: '+10:30',
+  AEST: '+10:00',
+  AEDT: '+11:00',
+  NZST: '+12:00',
+  NZDT: '+13:00',
 };
 
 const zoneNamed = (name, locale) => {
@@ -330,11 +303,16 @@ const zoneNamed = (name, locale) => {
   }
   try {
     const resolved = zoneId(name, locale);
-    if (!hasCustomAlias && upper === 'CST' && resolved === 'America/Chicago') {
-      return '-06:00';
-    }
-    if (!hasCustomAlias && upper === 'PST' && resolved === 'America/Los_Angeles') {
-      return '-08:00';
+    if (!hasCustomAlias) {
+      if (upper === 'CST' && resolved === 'America/Chicago') {
+        return '-06:00';
+      }
+      if (upper === 'PST' && resolved === 'America/Los_Angeles') {
+        return '-08:00';
+      }
+      if (upper === 'BST' && resolved === 'Europe/London') {
+        return '+01:00';
+      }
     }
     return resolved;
   }

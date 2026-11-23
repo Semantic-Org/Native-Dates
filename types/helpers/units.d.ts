@@ -173,11 +173,11 @@ export type TemporalValue =
   | TemporalDuration;
 
 /**
- * Calendar unit name from `'year'` down to `'day'` in singular, plural, or shorthand form.
+ * Year, quarter, or month unit name accepted by `YearMonth` arithmetic.
  *
- * @see {@link https://nativedates.dev/api/calendar-date/ CalendarDate}
+ * @see {@link https://nativedates.dev/api/year-month/ YearMonth}
  */
-export type DateUnit =
+export type YearMonthUnit =
   | 'year'
   | 'years'
   | 'y'
@@ -192,15 +192,32 @@ export type DateUnit =
   | 'months'
   | 'M'
   | 'mo'
+  | 'mos';
+
+/**
+ * Calendar field name (`'year'`, `'month'`, or `'day'`) accepted by `CalendarDate.prototype.set()`.
+ */
+export type CalendarFieldUnit =
+  | 'year'
+  | 'years'
+  | 'y'
+  | 'yr'
+  | 'yrs'
+  | 'month'
+  | 'months'
+  | 'M'
+  | 'mo'
   | 'mos'
-  | 'week'
-  | 'weeks'
-  | 'w'
-  | 'wk'
-  | 'wks'
   | 'day'
   | 'days'
   | 'd';
+
+/**
+ * Calendar unit name from `'year'` down to `'day'` in singular, plural, or shorthand form.
+ *
+ * @see {@link https://nativedates.dev/api/calendar-date/ CalendarDate}
+ */
+export type DateUnit = YearMonthUnit | 'week' | 'weeks' | 'w' | 'wk' | 'wks' | 'day' | 'days' | 'd';
 
 /**
  * Clock unit name from `'hour'` down to `'nanosecond'` in singular, plural, or shorthand form.
@@ -237,6 +254,16 @@ export type TimeUnit =
   | 'ns';
 
 /**
+ * Calendar or clock field name accepted by `DateTime.prototype.set()`.
+ */
+export type DateTimeFieldUnit = CalendarFieldUnit | TimeUnit;
+
+/**
+ * Unit name from `'day'` down to `'nanosecond'` accepted by `DateTime` rounding methods.
+ */
+export type RoundUnit = 'day' | 'days' | 'd' | TimeUnit;
+
+/**
  * Calendar or clock unit name in singular, plural, or common shorthand form,
  * such as `'days'`, `'hour'`, or `'min'`.
  *
@@ -245,20 +272,42 @@ export type TimeUnit =
 export type Unit = DateUnit | TimeUnit;
 
 type WeekdayName =
-  | 'monday'
-  | 'tuesday'
-  | 'wednesday'
-  | 'thursday'
-  | 'friday'
-  | 'saturday'
-  | 'sunday'
   | 'mon'
+  | 'mond'
+  | 'monda'
+  | 'monday'
   | 'tue'
+  | 'tues'
+  | 'tuesd'
+  | 'tuesda'
+  | 'tuesday'
   | 'wed'
+  | 'wedn'
+  | 'wedne'
+  | 'wednes'
+  | 'wednesd'
+  | 'wednesda'
+  | 'wednesday'
   | 'thu'
+  | 'thur'
+  | 'thurs'
+  | 'thursd'
+  | 'thursda'
+  | 'thursday'
   | 'fri'
+  | 'frid'
+  | 'frida'
+  | 'friday'
   | 'sat'
-  | 'sun';
+  | 'satu'
+  | 'satur'
+  | 'saturd'
+  | 'saturda'
+  | 'saturday'
+  | 'sun'
+  | 'sund'
+  | 'sunda'
+  | 'sunday';
 
 /**
  * Day of the week as a full name or three-letter prefix such as `'monday'` or `'Fri'`,

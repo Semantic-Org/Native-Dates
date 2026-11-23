@@ -204,21 +204,19 @@ class Range {
 
   overlaps(other) {
     const rival = this.#make(this.kind, other);
-    if (this.isEmpty() || rival.isEmpty()) {
-      return false;
-    }
-    if (this.kind === 'time') {
-      const [start, end] = Range.#spanOf(this);
-      return Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart < end && start < rivalEnd);
-    }
     if (this.#inclusive()) {
       return !this.start.isAfter(rival.end) && !rival.start.isAfter(this.end);
     }
-    return this.start.isBefore(rival.end) && rival.start.isBefore(this.end);
+    if (this.kind === 'time') {
+      const [start, end] = Range.#spanOf(this);
+      const hits = Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart < end && start < rivalEnd);
+      return hits && !this.isEmpty() && !rival.isEmpty();
+    }
+    return this.start.isBefore(rival.end) && rival.start.isBefore(this.end) && !this.isEmpty() && !rival.isEmpty();
   }
 
   #make(kind, start, end) {
-    return new byKind[kind](start, end, { locale: this.start.locale() });
+    return new byKind[kind](start, end, { zone: this.start.zone, locale: this.start.locale() });
   }
 
   equals(other) {
@@ -337,7 +335,7 @@ class Range {
       return this.#make('datetime', this.start.at('00:00', zone), this.end.plus(days(1)).at('00:00', zone));
     }
     if (this.kind === 'datetime') {
-      return this.#make('datetime', this.start.in(zone), this.end.in(zone));
+      return new DateTimeRange(this.start.in(zone), this.end.in(zone));
     }
     return refuse('unsupportedZone', String(this), {
       explanation: isDevelopment

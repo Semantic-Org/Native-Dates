@@ -2,7 +2,7 @@ import type { CalendarDate, CalendarDateInput } from './calendar-date.js';
 import type { Duration, DurationInput } from './duration.js';
 import type { FormatSpec } from './helpers/format.js';
 import { IS_YEAR_MONTH } from './helpers/identity.js';
-import type { TemporalPlainYearMonth, Unit } from './helpers/units.js';
+import type { TemporalPlainYearMonth, Unit, YearMonthUnit } from './helpers/units.js';
 import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
 
 /**
@@ -134,7 +134,7 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#plus plus}
    */
-  plus(amount: DurationInput, unit?: Unit): YearMonth;
+  plus(amount: DurationInput, unit?: YearMonthUnit): YearMonth;
 
   /**
    * Alias for `plus()` that moves forward by years, quarters, or months.
@@ -145,7 +145,7 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#plus plus}
    */
-  add(amount: DurationInput, unit?: Unit): YearMonth;
+  add(amount: DurationInput, unit?: YearMonthUnit): YearMonth;
 
   /**
    * Moves backward by years, quarters, or months and returns a new `YearMonth`.
@@ -161,7 +161,7 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#minus minus}
    */
-  minus(amount: DurationInput, unit?: Unit): YearMonth;
+  minus(amount: DurationInput, unit?: YearMonthUnit): YearMonth;
 
   /**
    * Alias for `minus()` that moves backward by years, quarters, or months.
@@ -172,7 +172,7 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#minus minus}
    */
-  subtract(amount: DurationInput, unit?: Unit): YearMonth;
+  subtract(amount: DurationInput, unit?: YearMonthUnit): YearMonth;
 
   /**
    * Returns a new `YearMonth` with the year, month, or both replaced.

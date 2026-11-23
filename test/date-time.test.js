@@ -708,6 +708,9 @@ describe('DateTime.plus() and minus()', () => {
     expect(datetime('2026-11-01T12:00', 'America/New_York').at('01:30', { disambiguation: 'later' }).offset).toBe(
       '-05:00',
     );
+    expect(datetime('2026-11-01T12:00', 'America/New_York').at('09:00', { zone: 'Asia/Tokyo' }).zone).toBe(
+      'America/New_York',
+    );
     expect(() => datetime('2026-11-01T01:30', { zone: 'America/New_York', disambiguation: 'reject' })).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime' }),
     );
