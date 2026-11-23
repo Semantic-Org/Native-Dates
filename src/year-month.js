@@ -2,16 +2,7 @@ import { isObject, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
 import { isDevelopment } from './helpers/environment.js';
-import {
-  guard,
-  loosely,
-  parseLooseParts,
-  readAs,
-  refuse,
-  refuseType,
-  requireLoose,
-  unreadable,
-} from './helpers/errors.js';
+import { guard, loosely, parseLooseParts, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_YEAR_MONTH } from './helpers/identity.js';
@@ -30,7 +21,7 @@ import {
   units,
   withParts,
 } from './helpers/units.js';
-import { zoneId } from './helpers/zones.js';
+import { cachedText, zoneId } from './helpers/zones.js';
 
 /*
   a calendar year and month with no day (Temporal.PlainYearMonth), such as a billing period or card expiry.
@@ -67,12 +58,10 @@ export class YearMonth {
 
   // yearMonth(2026, 11), yearMonth(input, zone), or yearMonth(input, { zone, loose })
   constructor(input, monthOrOptions) {
-    this.#plain = YearMonth.#read(input, monthOrOptions);
     this.#locale = localeOf(monthOrOptions, input);
-    this.text = undefined; // keep text first in console previews
+    this.#plain = YearMonth.#read(input, monthOrOptions);
     this.month = this.#plain.month;
     this.year = this.#plain.year;
-    this.text = this.format();
     Object.freeze(this);
   }
 
@@ -143,7 +132,7 @@ export class YearMonth {
     if (isPlainObject(input)) {
       const fields = singularKeys(input);
       if (!('day' in fields)) {
-        return YearMonth.#fromFields(fields, JSON.stringify(input));
+        return YearMonth.#fromFields(fields, input);
       }
     }
     const plain = isPlainDate(input)
@@ -154,7 +143,7 @@ export class YearMonth {
     return plain.withCalendar('iso8601').toPlainYearMonth();
   }
 
-  static #fromFields(fields, at = JSON.stringify(fields)) {
+  static #fromFields(fields, at = fields) {
     return guard(
       () => Temporal.PlainYearMonth.from(wholeParts(fields, ['year', 'month']), { overflow: 'reject' }),
       'invalidYearMonth',
@@ -226,9 +215,7 @@ export class YearMonth {
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
     YearMonth.#refuseSmaller(smaller.find((part) => part in changes));
-    return this.#next(
-      guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
-    );
+    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', changes));
   }
 
   on(day) {
@@ -307,6 +294,10 @@ export class YearMonth {
     return tag.length ? new YearMonth(this.#plain, { locale: tag[0] }) : this.#locale;
   }
 
+  get text() {
+    return cachedText(this);
+  }
+
   format(spec, locale = this.#locale) {
     const options = partOptions(spec, ['year', 'month', 'era'], presets);
     return options
@@ -319,7 +310,7 @@ export class YearMonth {
   }
 
   toJSON() {
-    return this.#plain.toString();
+    return this.toString();
   }
 
   toTemporal() {
@@ -346,12 +337,10 @@ export class YearMonth {
 
 alias(YearMonth, { add: 'plus', subtract: 'minus', lang: 'locale', includes: 'contains' });
 
-const unread = new Set([...unreadable.point, 'invalidYearMonth', 'missingYearMonth', 'unsupportedCalendar']);
-
 export const yearMonth = (input, monthOrOptions) => {
   const build = () =>
     input instanceof YearMonth && monthOrOptions === undefined ? input : new YearMonth(input, monthOrOptions);
-  return isPlainObject(monthOrOptions) && monthOrOptions.loose ? loosely(build, unread) : build();
+  return isPlainObject(monthOrOptions) && monthOrOptions.loose ? loosely(build) : build();
 };
 
 export const monthYear = (input, yearOrOptions) => {

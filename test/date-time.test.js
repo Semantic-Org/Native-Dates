@@ -677,9 +677,46 @@ describe('DateTime.plus() and minus()', () => {
     expect(saturday.toString()).toBe('2026-03-07T14:00:00.000Z');
   });
 
-  it('advances wall-clock times that land inside a spring-forward DST gap', () => {
+  it('advances wall-clock times that land inside a spring-forward DST gap, and supports explicit disambiguation', () => {
     const earlySaturday = datetime('2026-03-07T02:30', 'America/New_York');
     expect(earlySaturday.plus(1, 'day')).toMatchObject({ day: 8, hour: 3, minute: 30 });
+
+    // spring-forward gap in New York on 2026-03-08 (02:00 jumps to 03:00)
+    expect(datetime('2026-03-08T02:30', { zone: 'America/New_York', disambiguation: 'earlier' })).toMatchObject({
+      hour: 1,
+      minute: 30,
+      offset: '-05:00',
+    });
+    expect(datetime('2026-03-08T02:30', { zone: 'America/New_York', disambiguation: 'later' })).toMatchObject({
+      hour: 3,
+      minute: 30,
+      offset: '-04:00',
+    });
+    expect(() => datetime('2026-03-08T02:30', { zone: 'America/New_York', disambiguation: 'reject' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime' }),
+    );
+    expect(() => date('2026-03-08').at('02:30', { zone: 'America/New_York', disambiguation: 'reject' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime' }),
+    );
+    expect(() => time('02:30').on('2026-03-08', { zone: 'America/New_York', disambiguation: 'reject' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime' }),
+    );
+
+    // fall-back fold in New York on 2026-11-01 (01:00..02:00 repeats from -04:00 to -05:00)
+    expect(datetime('2026-11-01T01:30', { zone: 'America/New_York', disambiguation: 'earlier' }).offset).toBe('-04:00');
+    expect(datetime('2026-11-01T01:30', { zone: 'America/New_York', disambiguation: 'later' }).offset).toBe('-05:00');
+    expect(datetime('2026-11-01T12:00', 'America/New_York').at('01:30', { disambiguation: 'later' }).offset).toBe(
+      '-05:00',
+    );
+    expect(datetime('2026-11-01T12:00', 'America/New_York').at('09:00', { zone: 'Asia/Tokyo' }).zone).toBe(
+      'America/New_York',
+    );
+    expect(() => datetime('2026-11-01T01:30', { zone: 'America/New_York', disambiguation: 'reject' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime' }),
+    );
+    expect(() => datetime('2026-11-01T12:00', { zone: 'America/New_York', disambiguation: 'bogus' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownDisambiguation', at: 'bogus' }),
+    );
   });
 
   it('throws a TypeError with invalidDuration for null or undefined amounts', () => {
@@ -1380,10 +1417,18 @@ describe('DateTime.until() and since()', () => {
     expect(sundayInUtc.since(saturday).toString()).toBe('PT23H');
   });
 
-  it('round-trips start.plus(start.until(end)) back to end', () => {
+  it('round-trips start.plus(start.until(end)) back to end and measures exact hours from a fall-back fold hour', () => {
     const start = datetime('2026-01-31T09:00', 'America/New_York');
     const end = datetime('2027-03-01T10:30', 'America/New_York');
     expect(start.plus(start.until(end)).toString()).toBe(end.toString());
+
+    const foldStart = datetime('2026-10-25T01:30:00Z', 'Europe/Berlin');
+    const shiftEnd = datetime('2026-10-25T09:30:00Z', 'Europe/Berlin');
+    expect(foldStart.until(shiftEnd, 'hours')).toBe(8);
+    expect(foldStart.until(shiftEnd).toString()).toBe('PT8H');
+    expect(foldStart.plus(foldStart.until(shiftEnd)).toString()).toBe(shiftEnd.toString());
+    expect(foldStart.until('2026-10-25T01:00:00Z').toString()).toBe('-PT30M');
+    expect(foldStart.until('2026-10-25T00:30:00Z', 'hours')).toBe(-1);
   });
 
   it('throws a TypeError with missingDateTime for null or undefined targets', () => {

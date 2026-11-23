@@ -6,11 +6,11 @@
 - **Browser-Native I18N** - Time zones, daylight transitions and calendar math handled exactly as the browser specifies (and committee adjudicated) not the library
 - **Immutability**  - Prevents js pitfalls of accidental date mutations when working with copies 
 - **Legibility** - Natural phrases (`'1h 30m'`, `today().plus(2, 'days').at('9am')`) and `Intl` presets
-- **Fully Tree Shakeable** -  ~7kb bt for core, everything arbitary is a plugin (day.js style)
+- **Small Core** -  under 15kb bt for core, everything arbitary is a plugin (day.js style)
 
 ### Usage
 
-This library is fully built ontop of [Temporal](https://developer.mozilla.org/en-US/docs/Web/Javacript/Reference/Global_Objects/Temporal) and [Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) API so correctness is a standard-committees problem not a GitHub Issue. 
+This library is fully built ontop of [Temporal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) and [Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) API so correctness is a standard-committees problem not a GitHub Issue. 
 
 The library also makes it incredibly easy to ju-jitsu between `DateTime`, `Time`, `Duration` etc by chaining 
 
@@ -20,7 +20,7 @@ standup.in('Asia/Tokyo').as('time');
 
 ### Browser Compatibility
 
-This library is compatible with latest Chrome, Internet Explorer, Firefox, and Safari Technical Preview.
+This library is compatible with latest Chrome, Edge, Firefox, and Safari Technical Preview.
 
 For those needing Safari support before Spring 2027 (when this lands in baseline) or for other reasons use the included polyfill in @native-dates/polyfill
 

@@ -1,30 +1,44 @@
 import { isArray } from 'native-dates/helpers/utils';
 import { canonicalZone, intlLocale, setZoneExtension } from 'native-dates/helpers/zones';
 
-// checked before the tables below, left mutable so apps can override entries at startup
-// (`timezones.IST = 'Asia/Jerusalem'`) or via `configure({ zoneAliases })`
-export const timezones = {
-  ET: 'America/New_York',
-  CT: 'America/Chicago',
-  MT: 'America/Denver',
-  PT: 'America/Los_Angeles',
-  AKT: 'America/Anchorage',
-  HT: 'Pacific/Honolulu',
-  AT: 'America/Halifax',
-  UK: 'Europe/London',
-  WET: 'Europe/London',
-  CET: 'Europe/Paris',
-  ECT: 'Europe/Paris',
-  EET: 'Europe/Helsinki',
-  IRST: 'Asia/Tehran',
-  AET: 'Australia/Sydney',
-  AWT: 'Australia/Perth',
-  NZT: 'Pacific/Auckland',
-  BRT: 'America/Sao_Paulo',
-  INST: 'Asia/Kolkata',
-  JST: 'Asia/Tokyo',
-  SGT: 'Asia/Singapore',
-};
+// checked before the tables below, wrapped in a Proxy so mutating entries at startup
+// (`timezones.IST = 'Asia/Jerusalem'`) clears the resolved zone cache automatically
+export const timezones = new Proxy(
+  {
+    ET: 'America/New_York',
+    CT: 'America/Chicago',
+    MT: 'America/Denver',
+    PT: 'America/Los_Angeles',
+    AKT: 'America/Anchorage',
+    HT: 'Pacific/Honolulu',
+    AT: 'America/Halifax',
+    UK: 'Europe/London',
+    WET: 'Europe/London',
+    CET: 'Europe/Paris',
+    ECT: 'Europe/Paris',
+    EET: 'Europe/Helsinki',
+    IRST: 'Asia/Tehran',
+    AET: 'Australia/Sydney',
+    AWT: 'Australia/Perth',
+    NZT: 'Pacific/Auckland',
+    BRT: 'America/Sao_Paulo',
+    INST: 'Asia/Kolkata',
+    JST: 'Asia/Tokyo',
+    SGT: 'Asia/Singapore',
+  },
+  {
+    set(target, key, value) {
+      target[key] = value;
+      setZoneExtension(resolveZone);
+      return true;
+    },
+    deleteProperty(target, key) {
+      delete target[key];
+      setZoneExtension(resolveZone);
+      return true;
+    },
+  },
+);
 
 // checked before Temporal itself because bare IANA 'EST', 'MST', and 'HST' are legacy fixed-offset
 // zones without DST, whereas callers writing 'EST' expect America/New_York

@@ -1,13 +1,13 @@
 import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
-import { anchored, duration } from './duration.js';
+import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
-import { yearFirst } from './helpers/parts.js';
+import { opensOnDate, yearFirst } from './helpers/parts.js';
 import { relativeSeconds } from './helpers/relative.js';
 import { formatTokens } from './helpers/tokens.js';
 import {
@@ -32,7 +32,7 @@ import {
   withParts,
   zoneOptions,
 } from './helpers/units.js';
-import { isWeekend, weekStart, zoneId } from './helpers/zones.js';
+import { cachedText, checkedDisambiguation, isWeekend, weekStart, zoneId } from './helpers/zones.js';
 import { MonthDay } from './month-day.js';
 import { DateTimeRange } from './range.js';
 import { Time } from './time.js';
@@ -60,32 +60,32 @@ export class DateTime {
   constructor(input, options) {
     const settings = zoneOptions(options);
     this.#locale = localeOf(settings, input);
-    this.#zoned = (
-      isZonedDateTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
-        ? input
-        : DateTime.#read(input, settings)
-    ).withCalendar('iso8601');
-    this.text = undefined; // keep text first in console previews
-    const zoned = this.#zoned;
+    const read = isZonedDateTime(input) && settings.zone === undefined && !settings.loose
+        && settings.dayFirst === undefined && settings.disambiguation === undefined
+      ? input
+      : DateTime.#read(input, settings);
+    const zoned = read.calendarId === 'iso8601' ? read : read.withCalendar('iso8601');
+    this.#zoned = zoned;
+    // keep month, day, year, hour, minute in the first five own fields so browser DevTools previews distinguish same-day times
     this.month = zoned.month;
     this.day = zoned.day;
     this.year = zoned.year;
-    this.dayOfWeek = zoned.dayOfWeek;
     this.hour = zoned.hour;
     this.minute = zoned.minute;
     this.second = zoned.second;
     this.millisecond = zoned.millisecond;
+    this.dayOfWeek = zoned.dayOfWeek;
     this.zone = zoned.timeZoneId;
     this.offset = zoned.offset;
     this.epochMilliseconds = zoned.epochMilliseconds;
-    this.text = this.format(textFormat);
     Object.freeze(this);
   }
 
   static #read(input, settings) {
     const { zone, loose, dayFirst } = settings;
-    // validate zone up front so a bad zone throws even when loose: true returns null on bad input
+    // validate zone and disambiguation up front so bad options throw even when loose: true returns null on bad input
     const timeZone = zoneId(zone, settings.locale);
+    const disambiguation = checkedDisambiguation(settings.disambiguation);
     if (loose || dayFirst !== undefined) {
       requireLoose(loose ? 'loose' : 'dayFirst');
     }
@@ -100,7 +100,11 @@ export class DateTime {
       return zone === undefined ? input.toTemporal() : input.toTemporal().withTimeZone(timeZone);
     }
     if (input instanceof CalendarDate) {
-      return input.toTemporal().toZonedDateTime({ timeZone });
+      return guard(
+        () => input.toTemporal().toZonedDateTime({ timeZone }),
+        'invalidDateTime',
+        input,
+      );
     }
     if (isDate(input) || isNumber(input)) {
       const epoch = isNumber(input) ? input : input.getTime();
@@ -113,7 +117,7 @@ export class DateTime {
       return Temporal.Instant.fromEpochMilliseconds(Math.trunc(epoch)).toZonedDateTimeISO(timeZone);
     }
     if (isString(input)) {
-      return DateTime.#parse(input, settings, timeZone);
+      return DateTime.#parse(input, settings, timeZone, disambiguation);
     }
     if (isZonedDateTime(input)) {
       return zone === undefined ? input : input.withTimeZone(timeZone);
@@ -122,16 +126,16 @@ export class DateTime {
       return input.toZonedDateTimeISO(timeZone);
     }
     if (isPlainDateTime(input)) {
-      return input.toZonedDateTime(timeZone);
+      return guard(() => input.toZonedDateTime(timeZone, { disambiguation }), 'invalidDateTime', input);
     }
     if (isPlainDate(input)) {
-      return input.toZonedDateTime({ timeZone });
+      return guard(() => input.toZonedDateTime({ timeZone }), 'invalidDateTime', input);
     }
     if (isPlainObject(input)) {
       return guard(
-        () => Temporal.ZonedDateTime.from({ ...singularKeys(input), timeZone }, { overflow: 'reject' }),
+        () => Temporal.ZonedDateTime.from({ ...singularKeys(input), timeZone }, { overflow: 'reject', disambiguation }),
         'invalidDateTime',
-        JSON.stringify(input),
+        input,
       );
     }
     return refuseType('invalidDateTime', String(input), {
@@ -141,19 +145,26 @@ export class DateTime {
     });
   }
 
-  static #parse(text, settings, timeZone) {
+  static #parse(text, settings, timeZone, disambiguation) {
     const trimmed = yearFirst(text.trim());
+    const isoStart = settings.loose ? opensOnDate(trimmed) : false;
+    if (settings.loose && !isoStart) {
+      const zoned = parseLoose(trimmed, settings);
+      if (zoned) {
+        return zoned;
+      }
+    }
     try {
       return guard(
         () => {
           if (hasZoneName.test(trimmed)) {
-            const zoned = Temporal.ZonedDateTime.from(trimmed);
+            const zoned = Temporal.ZonedDateTime.from(trimmed, { disambiguation });
             return settings.zone === undefined ? zoned : zoned.withTimeZone(timeZone);
           }
           if (hasTime.test(trimmed)) {
             return hasOffset.test(trimmed)
               ? Temporal.Instant.from(trimmed).toZonedDateTimeISO(timeZone)
-              : Temporal.PlainDateTime.from(trimmed).toZonedDateTime(timeZone);
+              : Temporal.PlainDateTime.from(trimmed).toZonedDateTime(timeZone, { disambiguation });
           }
           return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone });
         },
@@ -169,10 +180,7 @@ export class DateTime {
       );
     }
     catch (error) {
-      if (!settings.loose || error.code !== 'invalidDateTime') {
-        throw error;
-      }
-      const zoned = parseLoose(trimmed, settings);
+      const zoned = isoStart && error.code === 'invalidDateTime' && parseLoose(trimmed, settings);
       if (!zoned) {
         throw error;
       }
@@ -185,7 +193,7 @@ export class DateTime {
   }
 
   #next(zoned) {
-    return new DateTime(zoned, { locale: this.#locale });
+    return new DateTime(zoned, this.#locale ? { locale: this.#locale } : undefined);
   }
 
   /*******************************
@@ -279,13 +287,11 @@ export class DateTime {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return this.#next(
-      guard(() => withParts(this.#zoned, changes), 'cannotSet', JSON.stringify(changes)),
-    );
+    return this.#next(guard(() => withParts(this.#zoned, changes), 'cannotSet', changes));
   }
 
-  at(when) {
-    return this.date.at(when, this.zone);
+  at(when, options) {
+    return this.date.at(when, isPlainObject(options) ? { ...options, zone: this.zone } : this.zone);
   }
 
   in(zone) {
@@ -382,6 +388,10 @@ export class DateTime {
     return new DateTimeRange(this, name === undefined ? end : duration(end, name));
   }
 
+  for(length, name) {
+    return this.to(forLength(length, name));
+  }
+
   range(name, firstDay) {
     return new DateTimeRange(this.startOf(name, firstDay), this.#nextStart(name, firstDay));
   }
@@ -442,8 +452,13 @@ export class DateTime {
   *******************************/
 
   until(other, name) {
-    const end = new DateTime(other, this.zone);
-    const span = anchored(this.#zoned.until(end.toTemporal(), { largestUnit: 'day' }), this.#zoned, this.#locale);
+    const end = new DateTime(other, this.zone).toTemporal();
+    const hours = Math.abs(end.epochMilliseconds - this.epochMilliseconds) / 36e5;
+    // sub-day spans use exact elapsed hours so day-0 'compatible' resolution starting in a fall-back fold hour cannot add 1h or throw
+    const subDay = hours < 26
+      && ((this.offset === end.offset && hours < 24)
+        || !this.#zoned.toPlainDateTime().until(end.toPlainDateTime()).days);
+    const span = anchored(this.#zoned.until(end, { largestUnit: subDay ? 'hour' : 'day' }), this.#zoned, this.#locale);
     return name === undefined ? span : span.total(name);
   }
 
@@ -454,6 +469,10 @@ export class DateTime {
   /*******************************
               Output
   *******************************/
+
+  get text() {
+    return cachedText(this, textFormat);
+  }
 
   format(spec, locale = this.#locale) {
     const options = intlOptions('datetime', spec);
@@ -505,13 +524,13 @@ export class DateTime {
   }
 }
 
-alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative: 'from', for: 'to' });
+alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative: 'from' });
 
 export const datetime = (input, options) => {
   const settings = zoneOptions(options);
   const build = () =>
     input instanceof DateTime && settings.zone === undefined && settings.dayFirst === undefined
-      && settings.locale === undefined
+      && settings.locale === undefined && settings.disambiguation === undefined
       ? input
       : new DateTime(input, settings);
   return settings.loose ? loosely(build) : build();

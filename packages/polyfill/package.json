@@ -5,6 +5,15 @@
   "description": "Loads temporal-polyfill onto globalThis only when the runtime lacks native Temporal",
   "author": "Jack Lukic",
   "license": "ISC",
+  "homepage": "https://nativedates.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Semantic-Org/Native-Dates.git",
+    "directory": "packages/polyfill"
+  },
+  "bugs": {
+    "url": "https://github.com/Semantic-Org/Native-Dates/issues"
+  },
   "type": "module",
   "sideEffects": [
     "./index.js",

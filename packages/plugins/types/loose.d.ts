@@ -5,14 +5,20 @@ import type {
   DateTime,
   DateTimeInput,
   DateTimeRange,
+  Disambiguation,
   Duration,
   DurationInput,
   Locale,
+  MonthDay,
+  MonthDayInput,
+  MonthDayOptions,
   ReadOptions,
-  TemporalValue,
+  TemporalZonedDateTime,
   Time,
   TimeInput,
   TimeRange,
+  YearMonth,
+  YearMonthInput,
   Zone,
 } from 'native-dates';
 
@@ -24,8 +30,14 @@ import type {
  */
 export function looseZoned(
   text: string,
-  options?: { zone?: Zone; dayFirst?: boolean; locale?: Locale; timeOnly?: boolean; },
-): TemporalValue | undefined;
+  options?: {
+    zone?: Zone;
+    dayFirst?: boolean;
+    locale?: Locale;
+    timeOnly?: boolean;
+    disambiguation?: Disambiguation;
+  },
+): TemporalZonedDateTime | undefined;
 
 /**
  * Parses the year, month, and day named by an informal partial date (`'16 de enero'`, `'ноябрь 2026 г.'`).
@@ -50,8 +62,7 @@ declare module 'native-dates' {
 
     /**
      * Interpret ambiguous numeric dates such as `'07.09.2026'` day-first in loose mode.
-     * Defaults to `configure().dayFirst`, or the order the active locale writes dates in
-     * (day-first in `'fr'` and `'ru'`, month-first in `'en-US'`).
+     * Precedence: per-call `dayFirst` > per-call `locale` > `configure().dayFirst` > `configure().locale` > runtime locale.
      *
      * @see {@link https://nativedates.dev/plugins/loose/#day-first-numeric-dates Day-first numeric dates}
      */
@@ -60,9 +71,9 @@ declare module 'native-dates' {
 
   interface Settings {
     /**
-     * Numeric date order for loose calls that do not specify `dayFirst` explicitly, overriding the
-     * order of the active locale. When `true`, `'07.09.2026'` reads as September 7 rather than July 9.
-     * Pass `null` to follow the locale again.
+     * Default numeric date order for loose calls that specify neither `dayFirst` nor `locale` per call,
+     * overriding the configured or runtime default locale. When `true`, `'07.09.2026'` reads as September 7
+     * rather than July 9. Pass `null` to follow the locale again.
      *
      * @default undefined
      * @example
@@ -84,7 +95,7 @@ declare module 'native-dates' {
    * when `input` cannot be read or rolls over an impossible day like February 30.
    *
    * @param input - Untrusted string, timestamp, or unknown value
-   * @param options - Options with `loose: true` and optional `zone`, `locale`, and `dayFirst`
+   * @param options - Options with `loose: true` and optional `zone`, `locale`, `disambiguation`, and `dayFirst`
    * @returns Parsed `DateTime` in the target zone, or `null` when unreadable
    *
    * @example
@@ -106,7 +117,7 @@ declare module 'native-dates' {
    * when `input` cannot be read or represents an impossible date like February 30.
    *
    * @param input - Untrusted string, date, or unknown value
-   * @param options - Options with `loose: true` and optional `zone`, `locale`, and `dayFirst`
+   * @param options - Options with `loose: true` and optional `zone`, `locale`, `disambiguation`, and `dayFirst`
    * @returns Parsed `CalendarDate`, or `null` when unreadable
    *
    * @example
@@ -128,7 +139,7 @@ declare module 'native-dates' {
    * when `input` cannot be read.
    *
    * @param input - Untrusted string, time, or unknown value
-   * @param options - Options with `loose: true` and optional `zone`, `locale`, and `dayFirst`
+   * @param options - Options with `loose: true` and optional `zone`, `locale`, `disambiguation`, and `dayFirst`
    * @returns Parsed `Time`, or `null` when unreadable
    *
    * @example
@@ -167,6 +178,32 @@ declare module 'native-dates' {
   export function duration(input: DurationInput, options: { loose: false; locale?: Locale; }): Duration;
   export function duration(input: unknown, options: { loose: boolean; locale?: Locale; }): Duration | null;
 
+  /**
+   * Parses a `MonthDay` in loose mode, matching English or localized month names such as `'17 février'`
+   * and returning `null` when unreadable.
+   */
+  export function monthDay(input: MonthDayInput, options: MonthDayOptions & { loose: false; }): MonthDay;
+  export function monthDay(input: unknown, options: MonthDayOptions & { loose: boolean; }): MonthDay | null;
+
+  /**
+   * Parses a day-first `MonthDay` in loose mode, returning `null` when unreadable.
+   */
+  export function dayMonth(input: MonthDayInput, options: MonthDayOptions & { loose: false; }): MonthDay;
+  export function dayMonth(input: unknown, options: MonthDayOptions & { loose: boolean; }): MonthDay | null;
+
+  /**
+   * Parses a `YearMonth` in loose mode, matching English or localized month names such as `'février 2026'`
+   * and returning `null` when unreadable.
+   */
+  export function yearMonth(input: YearMonthInput, options: ReadOptions & { loose: false; }): YearMonth;
+  export function yearMonth(input: unknown, options: ReadOptions & { loose: boolean; }): YearMonth | null;
+
+  /**
+   * Parses a month-first `YearMonth` in loose mode, returning `null` when unreadable.
+   */
+  export function monthYear(input: YearMonthInput, options: ReadOptions & { loose: false; }): YearMonth;
+  export function monthYear(input: unknown, options: ReadOptions & { loose: boolean; }): YearMonth | null;
+
   type Strict = ReadOptions & { loose: false; };
   type Loose = ReadOptions & { loose: boolean; };
 
@@ -178,13 +215,13 @@ declare module 'native-dates' {
   export function dateRange(interval: string, options: Strict): DateRange;
 
   /**
-   * Parses a `DateRange` from endpoints in loose mode, returning `null` if either endpoint is unreadable
-   * or if the end date precedes the start date.
+   * Parses a `DateRange` from endpoints in loose mode, returning `null` if either endpoint is unreadable,
+   * and throwing a `RangeError` (`invalidRange`) if a valid end date precedes the start date.
    *
    * @param start - Start calendar date input
    * @param end - Inclusive end date or calendar duration length
-   * @param options - Options with `loose: true` and optional `zone`, `locale`, and `dayFirst`
-   * @returns Parsed `DateRange`, or `null` when unreadable
+   * @param options - Options with `loose: true` and optional `zone`, `locale`, `disambiguation`, and `dayFirst`
+   * @returns Parsed `DateRange`, or `null` when either endpoint is unreadable
    *
    * @example
    * ```ts
@@ -197,15 +234,15 @@ declare module 'native-dates' {
    * @see {@link https://nativedates.dev/plugins/loose/#datetime dateRange}
    */
   export function dateRange(
-    start: CalendarDateInput,
-    end: CalendarDateInput | DurationInput,
+    start: unknown,
+    end: unknown,
     options: Loose,
   ): DateRange | null;
   /**
    * Parses a `DateRange` from an interval string in loose mode, returning `null` when unreadable.
    *
    * @param interval - Interval string such as `'Sep 1, 2026 to Sep 7, 2026'`
-   * @param options - Options with `loose: true` and optional `zone`, `locale`, and `dayFirst`
+   * @param options - Options with `loose: true` and optional `zone`, `locale`, `disambiguation`, and `dayFirst`
    * @returns Parsed `DateRange`, or `null` when unreadable
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime dateRange}
@@ -217,7 +254,7 @@ declare module 'native-dates' {
    *
    * @param start - Start moment input
    * @param end - Exclusive end moment or duration length
-   * @param options - Options with `loose: true` and optional `zone`, `locale`, and `dayFirst`
+   * @param options - Options with `loose: true` and optional `zone`, `locale`, `disambiguation`, and `dayFirst`
    * @returns Parsed `DateTimeRange`, or `null` when unreadable
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime datetimeRange}
@@ -229,15 +266,15 @@ declare module 'native-dates' {
   ): DateTimeRange;
   export function datetimeRange(interval: string, options: Strict): DateTimeRange;
   export function datetimeRange(
-    start: DateTimeInput,
-    end: DateTimeInput | DurationInput,
+    start: unknown,
+    end: unknown,
     options: Loose,
   ): DateTimeRange | null;
   /**
    * Parses a `DateTimeRange` from an interval string in loose mode, returning `null` when unreadable.
    *
    * @param interval - Interval string
-   * @param options - Options with `loose: true` and optional `zone`, `locale`, and `dayFirst`
+   * @param options - Options with `loose: true` and optional `zone`, `locale`, `disambiguation`, and `dayFirst`
    * @returns Parsed `DateTimeRange`, or `null` when unreadable
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime datetimeRange}
@@ -249,19 +286,19 @@ declare module 'native-dates' {
    *
    * @param start - Start clock time input
    * @param end - Exclusive closing time or clock duration length
-   * @param options - Options with `loose: true` and optional `zone`, `locale`, and `dayFirst`
+   * @param options - Options with `loose: true` and optional `zone`, `locale`, `disambiguation`, and `dayFirst`
    * @returns Parsed `TimeRange`, or `null` when unreadable
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime timeRange}
    */
   export function timeRange(start: TimeInput, end: TimeInput | DurationInput, options: Strict): TimeRange;
   export function timeRange(interval: string, options: Strict): TimeRange;
-  export function timeRange(start: TimeInput, end: TimeInput | DurationInput, options: Loose): TimeRange | null;
+  export function timeRange(start: unknown, end: unknown, options: Loose): TimeRange | null;
   /**
    * Parses a `TimeRange` from an interval string in loose mode, returning `null` when unreadable.
    *
    * @param interval - Interval string
-   * @param options - Options with `loose: true` and optional `zone`, `locale`, and `dayFirst`
+   * @param options - Options with `loose: true` and optional `zone`, `locale`, `disambiguation`, and `dayFirst`
    * @returns Parsed `TimeRange`, or `null` when unreadable
    *
    * @see {@link https://nativedates.dev/plugins/loose/#datetime timeRange}

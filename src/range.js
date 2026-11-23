@@ -18,7 +18,7 @@ import {
   weekdayNamed,
   zoneOptions,
 } from './helpers/units.js';
-import { weekendDays } from './helpers/zones.js';
+import { cachedText, weekendDays } from './helpers/zones.js';
 import { Time } from './time.js';
 
 /*
@@ -47,7 +47,6 @@ class Range {
   // (start, end, zone), (start, end, { zone, loose }), or (interval, { zone, loose })
   constructor(start, end, options) {
     const kind = this.constructor.kind;
-    this.text = undefined; // keep text first in console previews
     this.kind = kind;
     if (Range.isOptions(end)) {
       [end, options] = [undefined, end];
@@ -75,20 +74,19 @@ class Range {
           : 0,
       });
     }
-    this.text = kind === 'datetime' ? this.format(textFormat) : this.format();
     Object.freeze(this);
   }
 
   // distinguish trailing options in dateRange('a/b', opts) from a field-bag endpoint like { year, month, day }
   static isOptions(value) {
     return isPlainObject(value) && Object.keys(value).length > 0
-      && Object.keys(value).every((key) => ['loose', 'zone', 'dayFirst', 'locale'].includes(key));
+      && Object.keys(value).every((key) => ['loose', 'zone', 'dayFirst', 'locale', 'disambiguation'].includes(key));
   }
 
   // mask bracketed '[America/New_York]' zones before splitting on '/', checking spaced ' - ' / ' to ' first
   // so '2026/11/06 - 2026/11/10' stays intact and falling back to '-' / '–' only for plain time ranges
   static #splitInterval(text, kind) {
-    const blanked = text.replace(/\[[^\]]*\]/g, (zone) => ' '.repeat(zone.length));
+    const blanked = text.replace(/\[[^[\]]*\]/g, (zone) => ' '.repeat(zone.length));
     const separator = blanked.match(/\s(?:-|–|to)\s/) ?? blanked.match('/')
       ?? (kind === 'time' ? blanked.match(/[-–]/) : null);
     return separator
@@ -97,25 +95,17 @@ class Range {
   }
 
   // coerce endpoints in start's zone and locale so both ends share one frame of reference
-  static #read(kind, value, start, { zone, loose, dayFirst, locale } = {}) {
-    const readOptions = { locale: locale ?? start?.locale() };
-    const targetZone = kind === 'datetime' ? (start?.zone ?? zone) : zone;
-    if (targetZone !== undefined) {
-      readOptions.zone = targetZone;
-    }
-    if (loose) {
-      readOptions.loose = true;
-    }
-    if (dayFirst !== undefined) {
-      readOptions.dayFirst = dayFirst;
-    }
-    if (kind === 'date') {
-      return new CalendarDate(value, readOptions);
-    }
-    if (kind === 'datetime') {
-      return new DateTime(value, readOptions);
-    }
-    return new Time(value, readOptions);
+  static #read(kind, value, start, options = {}) {
+    const readOptions = {
+      ...options,
+      locale: options.locale ?? start?.locale(),
+      zone: kind === 'datetime' ? (start?.zone ?? options.zone) : options.zone,
+    };
+    return kind === 'date'
+      ? new CalendarDate(value, readOptions)
+      : kind === 'datetime'
+      ? new DateTime(value, readOptions)
+      : new Time(value, readOptions);
   }
 
   // endpoints can also be durations (e.g. start.for('2h')), subtracting 1 day on inclusive DateRanges
@@ -173,11 +163,15 @@ class Range {
   contains(value) {
     if (value instanceof Range) {
       const rival = this.#make(this.kind, value);
+      let holds;
       if (this.kind === 'time') {
         const [start, end] = Range.#spanOf(this);
-        return Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart >= start && rivalEnd <= end);
+        holds = Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart >= start && rivalEnd <= end);
       }
-      return !rival.start.isBefore(this.start) && !rival.end.isAfter(this.end);
+      else {
+        holds = !rival.start.isBefore(this.start) && !rival.end.isAfter(this.end);
+      }
+      return holds && !this.isEmpty() && !rival.isEmpty();
     }
     return this.#holds(value);
   }
@@ -199,18 +193,22 @@ class Range {
 
   overlaps(other) {
     const rival = this.#make(this.kind, other);
-    if (this.kind === 'time') {
-      const [start, end] = Range.#spanOf(this);
-      return Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart < end && start < rivalEnd);
-    }
     if (this.#inclusive()) {
       return !this.start.isAfter(rival.end) && !rival.start.isAfter(this.end);
     }
-    return this.start.isBefore(rival.end) && rival.start.isBefore(this.end);
+    let hits;
+    if (this.kind === 'time') {
+      const [start, end] = Range.#spanOf(this);
+      hits = Range.#besides(rival).some(([rivalStart, rivalEnd]) => rivalStart < end && start < rivalEnd);
+    }
+    else {
+      hits = this.start.isBefore(rival.end) && rival.start.isBefore(this.end);
+    }
+    return hits && !this.isEmpty() && !rival.isEmpty();
   }
 
   #make(kind, start, end) {
-    return new byKind[kind](start, end, { locale: this.start.locale() });
+    return new byKind[kind](start, end, { zone: this.start.zone, locale: this.start.locale() });
   }
 
   equals(other) {
@@ -329,7 +327,7 @@ class Range {
       return this.#make('datetime', this.start.at('00:00', zone), this.end.plus(days(1)).at('00:00', zone));
     }
     if (this.kind === 'datetime') {
-      return this.#make('datetime', this.start.in(zone), this.end.in(zone));
+      return new DateTimeRange(this.start.in(zone), this.end.in(zone));
     }
     return refuse('unsupportedZone', String(this), {
       explanation: isDevelopment
@@ -346,6 +344,10 @@ class Range {
     return tag.length
       ? new byKind[this.kind](this.start.locale(tag[0]), this.end.locale(tag[0]))
       : this.start.locale();
+  }
+
+  get text() {
+    return cachedText(this, this.kind === 'datetime' ? textFormat : undefined);
   }
 
   format(spec, locale = this.start.locale()) {

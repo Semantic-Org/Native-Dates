@@ -7,6 +7,26 @@
   "repository": "https://github.com/Semantic-Org/Native-Dates",
   "homepage": "https://nativedates.dev",
   "license": "ISC",
+  "homepage": "https://nativedates.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Semantic-Org/Native-Dates.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Semantic-Org/Native-Dates/issues"
+  },
+  "keywords": [
+    "dates",
+    "datetime",
+    "time",
+    "duration",
+    "timezone",
+    "temporal",
+    "intl",
+    "i18n",
+    "calendar",
+    "immutable"
+  ],
   "type": "module",
   "sideEffects": false,
   "engines": {

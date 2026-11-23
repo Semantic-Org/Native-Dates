@@ -2,7 +2,16 @@ import type { CalendarDate } from './calendar-date.js';
 import type { Duration, DurationInput } from './duration.js';
 import type { FormatSpec } from './helpers/format.js';
 import { IS_DATE_TIME } from './helpers/identity.js';
-import type { DayOfWeek, TemporalValue, Unit } from './helpers/units.js';
+import type {
+  DateTimeFieldUnit,
+  DayOfWeek,
+  RoundUnit,
+  TemporalInstant,
+  TemporalPlainDate,
+  TemporalPlainDateTime,
+  TemporalZonedDateTime,
+  Unit,
+} from './helpers/units.js';
 import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
 import type { MonthDay } from './month-day.js';
 import type { DateTimeRange } from './range.js';
@@ -41,7 +50,17 @@ export interface DateTimeFields {
  *
  * @see {@link https://nativedates.dev/api/datetime-fn/#accepted-inputs Accepted inputs}
  */
-export type DateTimeInput = DateTime | CalendarDate | Date | number | string | DateTimeFields | TemporalValue;
+export type DateTimeInput =
+  | DateTime
+  | CalendarDate
+  | Date
+  | number
+  | string
+  | DateTimeFields
+  | TemporalZonedDateTime
+  | TemporalInstant
+  | TemporalPlainDateTime
+  | TemporalPlainDate;
 
 /**
  * A specific moment in time viewed in a time zone, for timestamps, meetings, and deadlines.
@@ -319,13 +338,14 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#set set}
    */
-  set(unit: Unit, value: number): DateTime;
+  set(unit: DateTimeFieldUnit, value: number): DateTime;
 
   /**
    * Returns a new `DateTime` on the same local date and time zone with the time of day replaced.
    *
    * @param time - Time string such as `'5:00pm'`, `Time` instance, fields object, or `Date`
-   * @returns A new `DateTime` on the same date at `time`
+   * @param options - Optional `disambiguation` and `locale` options
+   * @returns A new `DateTime` on the same date and time zone at `time`
    *
    * @example
    * ```ts
@@ -335,7 +355,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#at at}
    */
-  at(time: TimeInput): DateTime;
+  at(time: TimeInput, options?: Omit<ReadOptions, 'zone'>): DateTime;
 
   /**
    * Returns a new `DateTime` representing the exact same moment viewed in another time zone.
@@ -449,7 +469,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#round round}
    */
-  round(unit: Unit): DateTime;
+  round(unit: RoundUnit): DateTime;
   /**
    * Rounds to the nearest step increment of `unit`, with half-way ties rounding up.
    *
@@ -464,7 +484,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#round round}
    */
-  round(increment: number, unit: Unit): DateTime;
+  round(increment: number, unit: RoundUnit): DateTime;
 
   /**
    * Rounds down to the start of a calendar day or clock unit.
@@ -479,7 +499,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#floor floor}
    */
-  floor(unit: Unit): DateTime;
+  floor(unit: RoundUnit): DateTime;
   /**
    * Rounds down to the start of a step increment of `unit`.
    *
@@ -489,7 +509,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#floor floor}
    */
-  floor(increment: number, unit: Unit): DateTime;
+  floor(increment: number, unit: RoundUnit): DateTime;
 
   /**
    * Rounds up to the next calendar day or clock unit boundary.
@@ -504,7 +524,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#ceil ceil}
    */
-  ceil(unit: Unit): DateTime;
+  ceil(unit: RoundUnit): DateTime;
   /**
    * Rounds up to the next step increment of `unit`.
    *
@@ -514,7 +534,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#ceil ceil}
    */
-  ceil(increment: number, unit: Unit): DateTime;
+  ceil(increment: number, unit: RoundUnit): DateTime;
 
   /**
    * Moves forward to the next given weekday at the same time of day.
@@ -599,7 +619,7 @@ export class DateTime {
   /**
    * Creates a half-open `DateTimeRange` starting at this moment and lasting for `length`.
    *
-   * @param length - Duration instance, phrase such as `'90m'`, ISO duration, or milliseconds
+   * @param length - Duration instance, phrase such as `'90m'`, ISO duration, or units object
    * @returns A half-open `DateTimeRange` in this moment's time zone
    *
    * @example
@@ -610,7 +630,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#to to}
    */
-  for(length: DurationInput): DateTimeRange;
+  for(length: Exclude<DurationInput, number>): DateTimeRange;
   /**
    * Creates a half-open `DateTimeRange` starting at this moment and lasting for `count` of `unit`.
    *
@@ -968,7 +988,7 @@ export class DateTime {
    *
    * @see {@link https://nativedates.dev/api/date-time/#totemporal toTemporal}
    */
-  toTemporal(): TemporalValue;
+  toTemporal(): TemporalZonedDateTime;
 
   /**
    * Returns epoch milliseconds so `DateTime` instances can be compared or subtracted with `<` and `-`.

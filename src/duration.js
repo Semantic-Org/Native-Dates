@@ -14,8 +14,8 @@ import {
 } from './helpers/fields.js';
 import { IS_DURATION } from './helpers/identity.js';
 import { durationFormat, unitFormat } from './helpers/intl.js';
-import { alias, inspect, isTemporalDuration, unit } from './helpers/units.js';
-import { checkedLocale, locale as pickLocale } from './helpers/zones.js';
+import { alias, inspect, isCount, isTemporalDuration, unit } from './helpers/units.js';
+import { cachedText, checkedLocale, locale as pickLocale } from './helpers/zones.js';
 
 /*
   a span of calendar and clock units (Temporal.Duration).
@@ -45,7 +45,6 @@ export class Duration {
       : temporalDurationOf(fieldsFrom(input, name));
     this.#anchor = anchor;
     this.#locale = locale ? checkedLocale(locale) : undefined;
-    this.text = undefined; // keep text first in console previews
     const temporal = this.#temporal;
     this.years = temporal.years;
     this.months = temporal.months;
@@ -57,7 +56,6 @@ export class Duration {
     this.milliseconds = temporal.milliseconds;
     this.sign = temporal.sign;
     this.anchor = anchor;
-    this.text = this.format('long');
     Object.freeze(this);
   }
 
@@ -154,14 +152,14 @@ export class Duration {
         });
       }
       return this.#next(
-        guard(() => Duration.#fixed(this).round({ largestUnit: into }), 'cannotBalance', String(this)),
+        guard(() => Duration.#fixed(this).round({ largestUnit: into }), 'cannotBalance', this),
       );
     }
     return this.#next(
       guard(
         () => this.#temporal.round({ largestUnit: unit(largest ?? 'day'), relativeTo: this.#anchor }),
         'cannotBalance',
-        String(this),
+        this,
       ),
       this.#anchor,
     );
@@ -173,7 +171,7 @@ export class Duration {
       guard(
         () => Duration.#fixed(this).round({ smallestUnit: target, relativeTo: this.#anchor }),
         'cannotRound',
-        String(this),
+        this,
       ),
       this.#anchor,
     );
@@ -298,6 +296,10 @@ export class Duration {
   *******************************/
 
   // keep calendar fields as written, balance clock overflow up to hours, and hide sub-second fields when >= 1s is set
+  get text() {
+    return cachedText(this, 'long');
+  }
+
   format(style = 'long', locale = this.#locale) {
     if (!styles.includes(style)) {
       refuse('unknownFormat', String(style), {
@@ -309,10 +311,10 @@ export class Duration {
     const fields = { ...written, ...Object.fromEntries(fieldNames.slice(4).map((field) => [field, clock[field]])) };
     const large = fieldNames.slice(0, subsecond).some((field) => fields[field]);
     // hoursDisplay: 'auto' omits zero hours so digital zero formats as '00:00'
-    const shown = { hours: 0 };
+    const shown = {};
     each(fieldNames, (field, index) => {
-      if (fields[field] && (!large || index < subsecond)) {
-        shown[field] = fields[field];
+      if (field === 'hours' || (fields[field] && (!large || index < subsecond))) {
+        shown[field] = fields[field] || 0;
       }
     });
     // Intl.DurationFormat omits zero fields by default (returning '' for { seconds: 0 } and throwing on {})
@@ -328,7 +330,7 @@ export class Duration {
   }
 
   toJSON() {
-    return this.#temporal.toString();
+    return this.toString();
   }
 
   toTemporal() {
@@ -337,10 +339,6 @@ export class Duration {
 
   toMilliseconds() {
     return this.total('millisecond');
-  }
-
-  valueOf() {
-    return this.toMilliseconds();
   }
 
   // '+' sends hint 'default', which would return ms instead of toString() without this
@@ -353,20 +351,30 @@ export class Duration {
   }
 }
 
-alias(Duration, { add: 'plus', subtract: 'minus', lang: 'locale', as: 'total' });
+alias(Duration, { add: 'plus', subtract: 'minus', lang: 'locale', as: 'total', valueOf: 'toMilliseconds' });
 
 export const duration = (input, unitOrOptions) => {
   const hasOptions = isPlainObject(unitOrOptions);
+  const hasLocale = hasOptions && unitOrOptions.locale !== undefined;
   const name = hasOptions ? undefined : unitOrOptions;
-  const locale = hasOptions ? unitOrOptions.locale : undefined;
+  const locale = hasLocale ? checkedLocale(unitOrOptions.locale) : undefined;
   const build = () =>
     input instanceof Duration && name === undefined
-      ? (locale === undefined ? input : input.locale(locale))
+      ? (hasLocale ? input.locale(locale) : input)
       : new Duration(input, name, { locale });
   return hasOptions && unitOrOptions.loose ? loosely(build, unreadable.length) : build();
 };
 
 export const anchored = (temporal, anchor, locale) => new Duration(temporal, undefined, { anchor, locale });
+
+export const forLength = (length, name) =>
+  name === undefined && isCount(length)
+    ? refuse('invalidDuration', String(length), {
+      explanation: isDevelopment
+        ? "a bare number in `for()` requires a unit, such as `.for(2, 'hours')` or `.for(3, 'days')`"
+        : 0,
+    })
+    : duration(length, name);
 
 export const isDuration = (value) => value instanceof Duration;
 

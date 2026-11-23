@@ -96,6 +96,13 @@ const skipped = datetime('2026-03-08T02:30', 'America/New_York');
 skipped.text; // 'Mar 8, 2026, 3:30 AM EDT'
 ```
 
+When scheduling or auditing requires a different rule across spring-forward gaps or fall-back folds, pass `disambiguation` (`'compatible'`, `'earlier'`, `'later'`, or `'reject'`) to `datetime()`, `date.at()`, `dt.at()`, or `time.on()`:
+
+```js
+datetime('2026-11-01T01:30', { zone: 'America/New_York', disambiguation: 'later' }).offset; // '-05:00'
+datetime('2026-03-08T02:30', { zone: 'America/New_York', disambiguation: 'reject' }); // throws RangeError [invalidDateTime]
+```
+
 ## City names and abbreviations
 
 Core accepts canonical IANA names, `'UTC'`, and fixed offsets. Import [`@native-dates/plugins/zones`](/plugins/zones/) to look up city names, regional abbreviations, and custom aliases.

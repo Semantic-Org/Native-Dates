@@ -22,6 +22,8 @@ import {
   yearMonth,
 } from 'native-dates';
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
 import vm from 'node:vm';
@@ -424,4 +426,33 @@ describe('errors in browser bundles without a process global', () => {
     },
     30_000,
   );
+
+  it('keeps the exported ErrorCode union in sync with every code thrown across src/ and packages/', () => {
+    const root = fileURLToPath(new URL('../..', import.meta.url));
+    const dts = fs.readFileSync(path.join(root, 'types/helpers/errors.d.ts'), 'utf8');
+    const declared = new Set([...dts.matchAll(/\|\s*'([a-zA-Z]+)'/g)].map((match) => match[1]));
+    const codePattern = /'((?:missing|invalid|cannot|unknown|unsupported|conflicting)[A-Z][a-zA-Z]*|immutable)'/g;
+    const thrown = new Set();
+    for (const folder of ['src', 'packages/plugins/src']) {
+      for (const entry of fs.readdirSync(path.join(root, folder), { recursive: true })) {
+        if (!entry.endsWith('.js')) {
+          continue;
+        }
+        const source = fs.readFileSync(path.join(root, folder, entry), 'utf8');
+        for (const match of source.matchAll(codePattern)) {
+          thrown.add(match[1]);
+        }
+      }
+    }
+    expect([...declared].sort()).toEqual([...thrown].sort());
+  });
+
+  it('handles oversized malformed inputs and headers in linear time without quadratic regex backtracking', () => {
+    const t0 = performance.now();
+    expect(() => duration(`${'1'.repeat(20_000)}!`)).toThrowError(RangeError);
+    expect(() => datetime('['.repeat(20_000))).toThrowError(RangeError);
+    expect(() => dateRange('['.repeat(20_000))).toThrowError(RangeError);
+    expect(date('2026-01-01', { locale: `en${' '.repeat(20_000)}x,fr` }).locale()).toBe('fr');
+    expect(performance.now() - t0).toBeLessThan(500);
+  });
 });

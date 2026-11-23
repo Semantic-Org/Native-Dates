@@ -1,4 +1,4 @@
-import { cached } from './intl.js';
+import { cached } from './utils.js';
 import { locale as pickLocale } from './zones.js';
 
 // elapsed seconds use numeric: 'always' ('1 day ago') because 'yesterday' can be wrong 22h before 11pm.

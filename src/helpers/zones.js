@@ -1,9 +1,18 @@
-import { each, isPlainObject, isString } from './utils.js';
+import { each, isPlainObject, isString, remember } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { guard, refuse, requireLoose } from './errors.js';
 import { nameCache, weekdayWidths } from './tokens.js';
 import { dayOfWeek } from './units.js';
+
+let textCache = new WeakMap();
+export const cachedText = (self, spec) => {
+  let value = textCache.get(self);
+  if (value === undefined) {
+    textCache.set(self, value = self.format(spec));
+  }
+  return value;
+};
 
 // process-wide defaults mutated by configure()
 export const settings = {
@@ -62,8 +71,7 @@ export const zoneId = (id, tag) => {
         : 0,
     });
   }
-  resolved.set(key, found);
-  return found;
+  return remember(resolved, key, found);
 };
 
 export const configure = (options) => {
@@ -143,35 +151,72 @@ export const configure = (options) => {
     requireLoose('dayFirst');
     settings.dayFirst = dayFirst === null ? undefined : !!dayFirst;
   }
+  textCache = new WeakMap();
   return { ...settings, zoneAliases: { ...settings.zoneAliases } };
 };
 
-// accept BCP 47 tags, POSIX 'en_US' tags, tag arrays, and raw HTTP Accept-Language headers
+const disambiguations = ['compatible', 'earlier', 'later', 'reject'];
+export const checkedDisambiguation = (mode) =>
+  mode === undefined || disambiguations.includes(mode)
+    ? (mode ?? 'compatible')
+    : refuse('unknownDisambiguation', String(mode), {
+      explanation: isDevelopment
+        ? `expected a disambiguation mode in [${disambiguations.join(', ')}]`
+        : 0,
+    });
+
+const canonicalTag = (name) => {
+  try {
+    return Intl.getCanonicalLocales(name)[0];
+  }
+  catch {
+    return undefined;
+  }
+};
+
+// accept BCP 47 tags, POSIX 'en_US' tags, tag arrays, Intl.Locale instances, and raw HTTP Accept-Language headers
+const validObjects = new WeakSet();
 const knownLocales = new Map();
 export const checkedLocale = (tag) => {
-  // bracket array keys so ['es', 'en'] doesn't collide with header string 'es,en'
-  const key = isString(tag) ? tag : `[${tag}]`;
-  if (!knownLocales.has(key)) {
-    // parse Accept-Language q-weights in descending order, dropping '*' wildcards and q=0 rejections
-    const tags = isString(tag) && /[_,;*]/.test(tag)
-      ? tag.replace(/_/g, '-').split(',')
-        .map((part) => part.trim().split(/\s*;\s*q=/))
-        .filter(([name, weight]) => name && name !== '*' && weight != 0)
-        .sort((a, b) => (b[1] ?? 1) - (a[1] ?? 1))
-        .map(([name]) => name)
-      : undefined;
-    guard(
-      () => Intl.getCanonicalLocales(tags ?? tag),
-      'unknownLocale',
-      String(tag),
-      isDevelopment
-        ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
-        : 0,
-    );
-    // headers with no accepted language (like '*' or `es;q=0`) resolve to undefined
-    knownLocales.set(key, tags ? (tags.length > 1 ? Object.freeze(tags) : tags[0]) : tag);
+  if (!tag || (isString(tag) && !tag.trim())) {
+    return undefined;
   }
-  return isString(tag) ? knownLocales.get(key) : tag;
+  if (validObjects.has(tag)) {
+    return tag;
+  }
+  const explanation = isDevelopment
+    ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
+    : 0;
+  if (!isString(tag)) {
+    guard(
+      () => (Array.isArray(tag) || tag instanceof Intl.Locale ? Intl.getCanonicalLocales(tag) : fail()),
+      'unknownLocale',
+      tag,
+      explanation,
+    );
+    validObjects.add(tag);
+    return tag;
+  }
+  if (!knownLocales.has(tag)) {
+    const kept = /[_,;*]/.test(tag)
+      && tag.replace(/_/g, '-').split(',')
+        .map((part) => part.trim().split(/(?<!\s)\s*;\s*q=/i))
+        .filter(([name, weight]) => name && name !== '*' && weight != 0)
+        .sort((a, b) => (b[1] ?? 1) - (a[1] ?? 1));
+    const tags = kept && kept.flatMap(([name]) => canonicalTag(name) ?? []);
+    guard(
+      () => (kept ? kept.length && !tags.length && fail() : Intl.getCanonicalLocales(tag.trim())),
+      'unknownLocale',
+      tag,
+      explanation,
+    );
+    remember(
+      knownLocales,
+      tag,
+      kept ? (tags.length > 1 ? (validObjects.add(tags), Object.freeze(tags)) : tags[0]) : tag.trim(),
+    );
+  }
+  return knownLocales.get(tag);
 };
 
 // checked before built-in presets so apps can redefine names like 'short'
@@ -180,7 +225,8 @@ export const namedFormat = (spec) => (isString(spec) && settings.formats?.[spec]
 // fall back to configured locale when an override header like '*' resolves to undefined
 export const locale = (override) =>
   override === undefined ? settings.locale : checkedLocale(override) ?? settings.locale;
-export const dayFirst = (override) => (override === undefined ? settings.dayFirst : !!override);
+export const dayFirst = (override, localeOverride) =>
+  override !== undefined ? !!override : checkedLocale(localeOverride) ? undefined : settings.dayFirst;
 
 // take the first tag Intl supports as it was written, so region and -u-fw- extensions survive where
 // DateTimeFormat would resolve 'en-CN' to 'en', and use the system locale when none is supported
@@ -193,10 +239,8 @@ const weekInfos = new Map();
 const weekInfo = (tag) => {
   const activeLocale = locale(tag);
   const key = String(activeLocale);
-  if (!weekInfos.has(key)) {
-    weekInfos.set(key, intlLocale(activeLocale).getWeekInfo?.() ?? { firstDay: 1, weekend: [6, 7] });
-  }
-  return weekInfos.get(key);
+  return weekInfos.get(key)
+    ?? remember(weekInfos, key, intlLocale(activeLocale).getWeekInfo?.() ?? { firstDay: 1, weekend: [6, 7] });
 };
 
 export const weekStart = (override, tag) =>

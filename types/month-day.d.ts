@@ -1,7 +1,7 @@
 import type { CalendarDate, CalendarDateInput } from './calendar-date.js';
 import type { FormatSpec } from './helpers/format.js';
 import { IS_MONTH_DAY } from './helpers/identity.js';
-import type { TemporalValue } from './helpers/units.js';
+import type { TemporalPlainMonthDay } from './helpers/units.js';
 import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
 
 /**
@@ -18,11 +18,11 @@ export interface MonthDayFields {
 
 /**
  * Any input accepted by the month-day factories: a `MonthDay`, ISO `'10-17'` string,
- * numeric pair string, fields object, or any date or timestamp input with its year dropped.
+ * numeric pair string, fields object, `Temporal.PlainMonthDay`, or any date or timestamp input with its year dropped.
  *
  * @see {@link https://nativedates.dev/api/month-day-fn/#accepted-inputs Accepted inputs}
  */
-export type MonthDayInput = MonthDay | MonthDayFields | CalendarDateInput;
+export type MonthDayInput = MonthDay | MonthDayFields | TemporalPlainMonthDay | CalendarDateInput;
 
 /**
  * Options accepted as the second argument to `monthDay()` and `dayMonth()`.
@@ -374,7 +374,7 @@ export class MonthDay {
    *
    * @see {@link https://nativedates.dev/api/month-day/#totemporal toTemporal}
    */
-  toTemporal(): TemporalValue;
+  toTemporal(): TemporalPlainMonthDay;
 
   /**
    * Throws a `RangeError` so numeric operators never coerce a month-day to a number.
@@ -403,18 +403,7 @@ export class MonthDay {
  *
  * @see {@link https://nativedates.dev/api/month-day-fn/#monthday monthDay}
  */
-export function monthDay(input: MonthDayInput, options?: Zone | (MonthDayOptions & { loose?: false; })): MonthDay;
-/**
- * Parses a month-day in loose mode when `@native-dates/plugins/loose` is imported, matching
- * English or localized month names such as `'17 février'` and returning `null` when unreadable.
- *
- * @param input - Untrusted string or month-day input
- * @param options - Options with `loose: true` and optional `dayFirst`, `locale`, and `zone`
- * @returns A `MonthDay`, or `null` when `input` cannot be parsed
- *
- * @see {@link https://nativedates.dev/api/month-day-fn/#monthday monthDay}
- */
-export function monthDay(input: unknown, options: MonthDayOptions & { loose: boolean; }): MonthDay | null;
+export function monthDay(input: MonthDayInput, options?: Zone | MonthDayOptions): MonthDay;
 /**
  * Creates a `MonthDay` from 1-indexed month and day numbers.
  *
@@ -450,18 +439,7 @@ export function monthDay(month: number | string, day: number | string): MonthDay
  *
  * @see {@link https://nativedates.dev/api/month-day-fn/#daymonth dayMonth}
  */
-export function dayMonth(input: MonthDayInput, options?: Zone | (MonthDayOptions & { loose?: false; })): MonthDay;
-/**
- * Parses a day-first month-day in loose mode (with `@native-dates/plugins/loose` imported),
- * returning `null` when `input` cannot be parsed.
- *
- * @param input - Untrusted string or month-day input
- * @param options - Options with `loose: true` and optional `locale` and `zone`
- * @returns A `MonthDay`, or `null` when `input` cannot be parsed
- *
- * @see {@link https://nativedates.dev/api/month-day-fn/#daymonth dayMonth}
- */
-export function dayMonth(input: unknown, options: MonthDayOptions & { loose: boolean; }): MonthDay | null;
+export function dayMonth(input: MonthDayInput, options?: Zone | MonthDayOptions): MonthDay;
 /**
  * Creates a `MonthDay` from whole-number day and month arguments in day-first order.
  *

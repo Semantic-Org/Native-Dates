@@ -105,7 +105,7 @@ t.for(length, unit?): TimeRange
 
 Builds a range from this point to an end point or across a duration. On a [calendar date](/api/calendar-date/), passing a length of 7 days lands six days after the start day because both endpoints are included.
 
-Given a length, the same call is also aliased as `for()`. A calendar date also provides `through()`, since its range includes the last day.
+Use `for()` to build a range from an explicit duration length (refusing endpoints and unitless numbers). A calendar date also provides `through()` as an alias for `to()`, since its range includes the last day.
 
 **Parameters**
 

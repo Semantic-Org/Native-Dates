@@ -2,7 +2,7 @@ import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
 import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
 import { dayOfWeek, pad } from './units.js';
-import { each } from './utils.js';
+import { each, remember } from './utils.js';
 import { locale as pickLocale, namedFormat, settings, weekStart } from './zones.js';
 
 // cleared by configure() when custom weekdayNames or ordinals change
@@ -77,7 +77,7 @@ export const names = (locale) => {
           table[weekdayWidths[width]][dayOfWeek(day) - 1] = name;
         }));
     });
-    nameCache.set(key, table);
+    remember(nameCache, key, table, 100);
   }
   return nameCache.get(key);
 };

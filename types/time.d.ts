@@ -3,17 +3,42 @@ import type { DateTime, DateTimeFields } from './date-time.js';
 import type { Duration, DurationInput } from './duration.js';
 import type { FormatSpec } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
-import type { TemporalValue, Unit } from './helpers/units.js';
+import type {
+  TemporalInstant,
+  TemporalPlainDateTime,
+  TemporalPlainTime,
+  TemporalZonedDateTime,
+  TimeUnit,
+} from './helpers/units.js';
 import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
 import type { TimeRange } from './range.js';
 
 /**
+ * Singular clock fields accepted when creating or updating a `Time`.
+ *
+ * @see {@link https://nativedates.dev/api/time/#set set}
+ */
+export type TimeFields = Pick<
+  DateTimeFields,
+  'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond'
+>;
+
+/**
  * Any input accepted by `time()`: a 12-hour or 24-hour clock string such as `'9:30am'`,
- * fields object, time of day, moment, native JavaScript date, or `Temporal` value.
+ * clock fields object, time of day, moment, native JavaScript date, or `Temporal` clock or instant value.
  *
  * @see {@link https://nativedates.dev/api/time-fn/#accepted-inputs Accepted inputs}
  */
-export type TimeInput = Time | DateTime | Date | string | DateTimeFields | TemporalValue;
+export type TimeInput =
+  | Time
+  | DateTime
+  | Date
+  | string
+  | TimeFields
+  | TemporalPlainTime
+  | TemporalPlainDateTime
+  | TemporalZonedDateTime
+  | TemporalInstant;
 
 /**
  * A time of day with no calendar date and no time zone, for store hours, schedules, and daily alarms.
@@ -88,7 +113,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#plus plus}
    */
-  plus(amount: DurationInput, unit?: Unit): Time;
+  plus(amount: DurationInput, unit?: TimeUnit): Time;
 
   /**
    * Alias for `plus()` that moves forward on the 24-hour clock.
@@ -99,7 +124,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#plus plus}
    */
-  add(amount: DurationInput, unit?: Unit): Time;
+  add(amount: DurationInput, unit?: TimeUnit): Time;
 
   /**
    * Moves backward on the 24-hour clock and returns a new `Time`, wrapping before midnight when needed.
@@ -115,7 +140,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#minus minus}
    */
-  minus(amount: DurationInput, unit?: Unit): Time;
+  minus(amount: DurationInput, unit?: TimeUnit): Time;
 
   /**
    * Alias for `minus()` that moves backward on the 24-hour clock.
@@ -126,7 +151,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#minus minus}
    */
-  subtract(amount: DurationInput, unit?: Unit): Time;
+  subtract(amount: DurationInput, unit?: TimeUnit): Time;
 
   /**
    * Returns a new `Time` with one or more clock fields replaced.
@@ -144,7 +169,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#set set}
    */
-  set(fields: Partial<Record<'hour' | 'minute' | 'second' | 'millisecond', number>>): Time;
+  set(fields: TimeFields): Time;
   /**
    * Returns a new `Time` with a single clock field replaced.
    *
@@ -154,7 +179,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#set set}
    */
-  set(unit: Unit, value: number): Time;
+  set(unit: TimeUnit, value: number): Time;
 
   /**
    * Zeros out all clock fields smaller than `unit`.
@@ -169,7 +194,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#startof startOf}
    */
-  startOf(unit: Unit): Time;
+  startOf(unit: TimeUnit): Time;
 
   /**
    * Moves to the final millisecond of the given clock unit.
@@ -184,7 +209,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#endof endOf}
    */
-  endOf(unit: Unit): Time;
+  endOf(unit: TimeUnit): Time;
 
   /**
    * Moves forward to the start of the clock unit after the one containing this time, wrapping at midnight.
@@ -201,7 +226,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#startofnext startOfNext}
    */
-  startOfNext(unit: Unit): Time;
+  startOfNext(unit: TimeUnit): Time;
 
   /**
    * Moves back to the start of the clock unit before the one containing this time, wrapping at midnight.
@@ -217,7 +242,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#startofprevious startOfPrevious}
    */
-  startOfPrevious(unit: Unit): Time;
+  startOfPrevious(unit: TimeUnit): Time;
 
   /**
    * Rounds to the nearest clock unit, with half-way ties rounding up.
@@ -234,7 +259,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#round round}
    */
-  round(unit: Unit): Time;
+  round(unit: TimeUnit): Time;
   /**
    * Rounds to the nearest step increment of `unit`, with half-way ties rounding up.
    *
@@ -244,7 +269,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#round round}
    */
-  round(increment: number, unit: Unit): Time;
+  round(increment: number, unit: TimeUnit): Time;
 
   /**
    * Rounds down to the start of a clock unit.
@@ -259,7 +284,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#floor floor}
    */
-  floor(unit: Unit): Time;
+  floor(unit: TimeUnit): Time;
   /**
    * Rounds down to the start of a step increment of `unit`.
    *
@@ -269,7 +294,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#floor floor}
    */
-  floor(increment: number, unit: Unit): Time;
+  floor(increment: number, unit: TimeUnit): Time;
 
   /**
    * Rounds up to the next clock unit boundary.
@@ -284,7 +309,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#ceil ceil}
    */
-  ceil(unit: Unit): Time;
+  ceil(unit: TimeUnit): Time;
   /**
    * Rounds up to the next step increment of `unit`.
    *
@@ -294,7 +319,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#ceil ceil}
    */
-  ceil(increment: number, unit: Unit): Time;
+  ceil(increment: number, unit: TimeUnit): Time;
 
   /**
    * Returns true when both values represent the exact same time of day.
@@ -356,7 +381,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#issame isSame}
    */
-  isSame(other: TimeInput, unit?: Unit): boolean;
+  isSame(other: TimeInput, unit?: TimeUnit): boolean;
 
   /**
    * Measures the signed time from this time to `other` within the same day as a `Duration`
@@ -384,7 +409,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#until until}
    */
-  until(other: TimeInput, unit: Unit): number;
+  until(other: TimeInput, unit: TimeUnit): number;
 
   /**
    * Measures the time elapsed since an earlier time on the same day as a `Duration`.
@@ -409,15 +434,15 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#since since}
    */
-  since(other: TimeInput, unit: Unit): number;
+  since(other: TimeInput, unit: TimeUnit): number;
 
   /**
    * Places this time of day onto a calendar date in a time zone and returns a `DateTime`.
-   * Mirrors calling `date.at(time, zone)`.
+   * Mirrors calling `date.at(time, options)`.
    *
    * @param day - Date string, `CalendarDate`, `DateTime`, fields object, or `Date`
-   * @param zone - Time zone name or offset, defaulting to the configured zone
-   * @returns A new `DateTime` on `day` at this time in `zone`
+   * @param options - Time zone name or `ReadOptions` (including `zone`, `locale`, and `disambiguation`)
+   * @returns A new `DateTime` on `day` at this time in the resolved time zone
    *
    * @example
    * ```ts
@@ -426,7 +451,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#on on}
    */
-  on(day: CalendarDateInput, zone?: Zone): DateTime;
+  on(day: CalendarDateInput, options?: Zone | ReadOptions): DateTime;
 
   /**
    * Creates a half-open `TimeRange` from this time until `end` (excluding `end`), or across a duration.
@@ -453,12 +478,12 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#to to}
    */
-  to(count: number, unit: Unit): TimeRange;
+  to(count: number, unit: TimeUnit): TimeRange;
 
   /**
    * Creates a half-open `TimeRange` starting at this time and lasting for `length`.
    *
-   * @param length - Clock `Duration`, phrase such as `'90m'`, ISO duration, or milliseconds
+   * @param length - Clock `Duration`, phrase such as `'90m'`, ISO duration, or units object
    * @returns A half-open `TimeRange` starting at this time
    *
    * @example
@@ -468,7 +493,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#to to}
    */
-  for(length: DurationInput): TimeRange;
+  for(length: Exclude<DurationInput, number>): TimeRange;
   /**
    * Creates a half-open `TimeRange` starting at this time and lasting for `count` of `unit`.
    *
@@ -483,7 +508,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#to to}
    */
-  for(count: number, unit: Unit): TimeRange;
+  for(count: number, unit: TimeUnit): TimeRange;
 
   /**
    * Returns this `Time` unchanged when `'time'` is requested in generic conversion chains.
@@ -587,7 +612,7 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#totemporal toTemporal}
    */
-  toTemporal(): TemporalValue;
+  toTemporal(): TemporalPlainTime;
 
   /**
    * Throws a `RangeError` so numeric operators never coerce a time of day to a number.

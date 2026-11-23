@@ -399,6 +399,7 @@ describe('@native-dates/plugins/zones abbreviations used by several countries', 
     expect(chinese.in('CST').zone).toBe('Asia/Shanghai');
     expect(chinese.locale('en-US').in('CST').zone).toBe('America/Chicago');
     expect(date('2026-07-01', { locale: 'zh-CN' }).at('09:00', 'CST').offset).toBe('+08:00');
+    expect(date('2026-07-01').at('09:00', { zone: 'CST', locale: 'zh-CN' }).zone).toBe('Asia/Shanghai');
   });
 
   it('resolves by configure({ locale }) and to the first listed zone once the locale is cleared', () => {
@@ -418,11 +419,14 @@ describe('@native-dates/plugins/zones abbreviations used by several countries', 
     expect(yearMonth('2026-11-30T20:00:00Z', options).toString()).toBe('2026-12');
   });
 
-  it('resolves zoneAliases and timezones entries ahead of the locale', () => {
+  it('resolves zoneAliases and timezones entries ahead of the locale, invalidating cached lookups when timezones mutates', () => {
     configure({ zoneAliases: { CST: 'America/Havana' } });
     expect(zoneOf('CST', 'zh-CN')).toBe('America/Havana');
     configure({ zoneAliases: null });
+    expect(zoneOf('IST', 'en-IE')).toBe('Europe/Dublin');
     timezones.IST = 'Asia/Jerusalem';
     expect(zoneOf('IST', 'en-IE')).toBe('Asia/Jerusalem');
+    delete timezones.IST;
+    expect(zoneOf('IST', 'en-IE')).toBe('Europe/Dublin');
   });
 });

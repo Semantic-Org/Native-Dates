@@ -1,8 +1,8 @@
-import { each, isPlainObject, isString } from './utils.js';
+import { cached, each, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { refuse } from './errors.js';
-import { cached, plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
+import { plainDateTimeFormat, zonedDateTimeFormat } from './intl.js';
 import { locale as pickLocale, namedFormat } from './zones.js';
 
 const presets = {
@@ -47,16 +47,22 @@ const presets = {
 
 const dateParts = ['dateStyle', 'weekday', 'era', 'year', 'month', 'day'];
 const timeParts = ['timeStyle', 'hour', 'minute', 'second', 'fractionalSecondDigits', 'dayPeriod'];
-const zoneParts = ['timeZone', 'timeZoneName'];
 const ownParts = { date: dateParts, time: timeParts };
-const otherParts = { date: [...timeParts, ...zoneParts], time: [...dateParts, ...zoneParts] };
+const allParts = [...dateParts, ...timeParts, 'timeZone', 'timeZoneName'];
+
+const keepParts = (bag, names) => {
+  const options = { ...bag };
+  each(allParts, (part) => {
+    if (!names.includes(part)) {
+      delete options[part];
+    }
+  });
+  return options;
+};
 
 // strip parts the noun lacks so one options bag works across DateTime, CalendarDate, and Time
 const ownOptions = (kind, bag) => {
-  const options = { ...bag };
-  each(otherParts[kind], (part) => {
-    delete options[part];
-  });
+  const options = keepParts(bag, ownParts[kind]);
   if (options.timeStyle === 'long' || options.timeStyle === 'full') {
     options.timeStyle = 'medium';
   }
@@ -93,7 +99,7 @@ each(['date', 'time'], (kind) => {
   });
 });
 
-// frozen so cached() in intl.js keys preset bags by reference instead of JSON.stringify
+// frozen so cached() in utils.js keys preset bags by reference instead of JSON.stringify
 each(presets, (kind) => {
   each(kind, (options) => {
     Object.freeze(options);
@@ -116,7 +122,7 @@ export const epochOf = (kind, subject) => {
 
 export const formatter = (kind, options, locale, zone) =>
   kind === 'datetime'
-    ? zonedDateTimeFormat(pickLocale(locale), options, zone)
+    ? zonedDateTimeFormat(pickLocale(locale), options, options.timeZone ?? zone)
     : plainDateTimeFormat(pickLocale(locale), options);
 
 export const formatIntl = (kind, subject, options, locale, zone) =>
@@ -136,22 +142,6 @@ const partFormatters = /* @__PURE__ */ cached((locale, options) => {
 
 export const partFormatter = (options, locale) => partFormatters(pickLocale(locale), options);
 
-const parts = [
-  'weekday',
-  'era',
-  'year',
-  'month',
-  'day',
-  'timeStyle',
-  'hour',
-  'minute',
-  'second',
-  'fractionalSecondDigits',
-  'dayPeriod',
-  'timeZone',
-  'timeZoneName',
-];
-
 export const partOptions = (named, names, styles) => {
   const spec = namedFormat(named);
   if (isString(spec) && Object.hasOwn(styles, spec)) {
@@ -164,12 +154,7 @@ export const partOptions = (named, names, styles) => {
   if (bag.dateStyle) {
     return styles[bag.dateStyle];
   }
-  const options = { ...bag };
-  each(parts, (part) => {
-    if (!names.includes(part)) {
-      delete options[part];
-    }
-  });
+  const options = keepParts(bag, names);
   // require at least one primary field (not just 'era') before skipping the medium fallback
   return names.slice(0, 2).some((name) => options[name] !== undefined) ? options : { ...options, ...styles.medium };
 };

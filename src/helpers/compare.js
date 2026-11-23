@@ -3,6 +3,7 @@ import { isArray, isDate, isNumber, isString } from './utils.js';
 import { CalendarDate } from '../calendar-date.js';
 import { DateTime } from '../date-time.js';
 import { Time } from '../time.js';
+import { YearMonth } from '../year-month.js';
 import { isDevelopment } from './environment.js';
 import { refuse, refuseType } from './errors.js';
 import {
@@ -48,6 +49,9 @@ export const point = (input) => {
   if (isPlainTime(input)) {
     return new Time(input);
   }
+  if (input instanceof Temporal.PlainYearMonth) {
+    return new YearMonth(input);
+  }
   return refuseType('invalidPoint', String(input), {
     explanation: isDevelopment
       ? 'expected a `DateTime`, `CalendarDate`, `Time`, `Date`, epoch milliseconds, or ISO string'
@@ -87,8 +91,10 @@ export const kindOf = (value) => {
 };
 
 const sameKind = (left, right) => {
-  if (kindOf(left) !== kindOf(right)) {
-    refuseType('conflictingKinds', `${kindOf(left)} with ${kindOf(right)}`, {
+  const leftKind = kindOf(left);
+  const rightKind = kindOf(right);
+  if (leftKind !== rightKind) {
+    refuseType('conflictingKinds', `${leftKind} with ${rightKind}`, {
       explanation: isDevelopment
         ? "cannot compare values of different types. Convert one side first with `.date`, `.time`, or `.at('00:00', zone)`"
         : 0,
@@ -104,6 +110,9 @@ const asKindOf = (left, value) => {
   if (kind === 'datetime') {
     // parse wall-clock strings in left's zone rather than the default zone
     return new DateTime(value, left.zone);
+  }
+  if (kind === 'yearMonth') {
+    return new YearMonth(value);
   }
   return kind === 'date' ? new CalendarDate(value) : new Time(value);
 };

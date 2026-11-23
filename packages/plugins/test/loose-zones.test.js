@@ -39,9 +39,11 @@ describe('datetime() zone abbreviations in the input string with { loose: true }
     expect(read('2026-11-16 14:30 HQ')).toBe('2026-11-16T06:30:00.000Z');
   });
 
-  it('parses EST in July as America/New_York daylight time, matching the zone argument', () => {
+  it('parses EST and CET in July as daylight time, matching the zone argument', () => {
     expect(read('2026-07-04 14:30 EST')).toBe('2026-07-04T18:30:00.000Z');
     expect(datetime('2026-07-04 14:30', 'EST').toString()).toBe('2026-07-04T18:30:00.000Z');
+    expect(read('2026-07-15 14:30 CET')).toBe('2026-07-15T12:30:00.000Z');
+    expect(datetime('2026-07-15 14:30', 'CET').toString()).toBe('2026-07-15T12:30:00.000Z');
   });
 
   it('sets the instant from the abbreviation and keeps the zone option on the result', () => {

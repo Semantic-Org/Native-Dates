@@ -3,20 +3,9 @@ import { each, isNumber, isPlainObject, isString } from './utils.js';
 import { isDevelopment } from './environment.js';
 import { guard, refuse, refuseType } from './errors.js';
 import { IS_DURATION } from './identity.js';
-import { isDigits, isTemporalDuration, plural, unit } from './units.js';
+import { isDigits, isTemporalDuration, plural, unit, units } from './units.js';
 
-export const fieldNames = [
-  'years',
-  'months',
-  'weeks',
-  'days',
-  'hours',
-  'minutes',
-  'seconds',
-  'milliseconds',
-  'microseconds',
-  'nanoseconds',
-];
+export const fieldNames = units.map(plural);
 
 // cascade fractional units downward (1.5 days -> 1d 12h). Months vary in length so they are omitted
 // and rejected below, and toFixed(9) strips IEEE-754 float residue so 0.1h doesn't leak stray nanoseconds
@@ -68,7 +57,7 @@ export const fieldsOf = (temporal) => {
   return fields;
 };
 
-const quantity = /([-+]?)(\d+(?:\.\d+)?)\s*([a-zµ]+)/gi;
+const quantity = /(?<![\d.])([-+]?)(\d+(?:\.\d+)?)(?![\d.])\s*([a-zµ]+)/gi;
 
 const parseWords = (text) => {
   const phrase = text.trim().replace(/,|\band\b/gi, ' ');
@@ -83,7 +72,7 @@ const parseWords = (text) => {
   }
   const found = [];
   const rest = phrase.replace(quantity, (_, sign, amount, name) => {
-    found.push([sign, Number(amount), unit(name)]);
+    found.push([sign, Number(amount), name]);
     return '';
   });
   if (rest.trim()) {
@@ -97,7 +86,7 @@ const parseWords = (text) => {
   const negateAll = found[0]?.[0] === '-' && found.slice(1).every(([sign]) => sign === '');
   const fields = {};
   each(found, ([sign, amount, name]) => {
-    spill(fields, name, negateAll || sign === '-' ? -amount : amount);
+    spill(fields, unit(name), negateAll || sign === '-' ? -amount : amount);
   });
   return fields;
 };
@@ -206,7 +195,7 @@ export const addFields = (a, b, sign, anchor) => {
 // Temporal.Duration.from({}) throws RangeError, so construct a zero duration directly when empty
 export const temporalDurationOf = (fields) =>
   Object.keys(fields).length
-    ? guard(() => Temporal.Duration.from(fields), 'invalidDuration', JSON.stringify(fields))
+    ? guard(() => Temporal.Duration.from(fields), 'invalidDuration', fields)
     : new Temporal.Duration();
 
 export const temporalDurationFrom = (input, name) => temporalDurationOf(fieldsFrom(input, name));

@@ -1,4 +1,4 @@
-import { each, isDate, isNumber, isPlainObject, isString } from './utils.js';
+import { each, isDate, isNumber, isObject, isPlainObject, isString } from './utils.js';
 
 import { isDevelopment } from './environment.js';
 import { fail, refuse } from './errors.js';
@@ -79,7 +79,7 @@ export const units = [
   'microsecond',
   'nanosecond',
 ];
-export const timeUnits = ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'];
+export const timeUnits = units.slice(4);
 
 export const isDigits = (value) => isString(value) && /^\s*[-+]?\d+(?:\.\d+)?\s*$/.test(value);
 
@@ -132,7 +132,7 @@ export const isUnzoned = (value) => isDate(value) || isInstant(value) || isStrin
 // true only when text includes both a clock time and an offset or bracketed zone, pinning an exact instant
 export const hasTime = /[T ]\d{1,2}(?::?\d{2})?/;
 export const hasOffset = /(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$/;
-export const hasZoneName = /\[[^\]]+\]$/;
+export const hasZoneName = /\[[^[\]]+\]$/;
 export const namesInstant = (text) => {
   const trimmed = text.trim();
   return hasTime.test(trimmed) && (hasOffset.test(trimmed) || hasZoneName.test(trimmed));
@@ -151,6 +151,9 @@ export const withParts = (temporal, changes) => {
   if (!wholeNumbers(Object.values(changes))) {
     fail(isDevelopment ? 'each value passed to `set()` must be a whole number' : '');
   }
+  if (Object.keys(changes).some((key) => !(key in temporal))) {
+    fail(isDevelopment ? 'one or more fields cannot be set on this value' : '');
+  }
   // validate passed fields against day 1 so explicit out-of-range values reject while an unchanged day clamps to month-end
   temporal.with({ day: 1, ...changes }, { overflow: 'reject' });
   return temporal.with(changes);
@@ -159,7 +162,10 @@ export const withParts = (temporal, changes) => {
 export const singularKeys = (fields) => {
   const out = {};
   each(fields, (value, key) => {
-    out[unit(key)] = value;
+    const name = unit(key);
+    if (value !== undefined) {
+      out[name] = value;
+    }
   });
   return out;
 };
@@ -182,11 +188,16 @@ export const alias = (Class, names) => {
 // check brand before calling .locale() so plain field bags with a `locale` key aren't invoked as methods
 const nouns = [IS_DATE_TIME, IS_CALENDAR_DATE, IS_TIME, IS_DURATION, IS_MONTH_DAY, IS_YEAR_MONTH, IS_RANGE];
 export const localeOf = (options, input) => {
-  const tag = options?.locale ?? (nouns.some((brand) => input?.[brand]) ? input.locale?.() : undefined);
-  return tag ? checkedLocale(tag) : undefined;
+  if (isPlainObject(options) && Object.hasOwn(options, 'locale') && options.locale !== undefined) {
+    return checkedLocale(options.locale);
+  }
+  return isObject(input) && input.locale && nouns.some((brand) => input[brand]) ? input.locale() : undefined;
 };
 
-export const zoneOptions = (value) => (isPlainObject(value) ? value : { zone: value });
+const noOptions = Object.freeze({});
+export const zoneOptions = (
+  value,
+) => (value === undefined ? noOptions : isPlainObject(value) ? value : { zone: value });
 
 // disambiguate every('hour', zone) from every(30, 'minutes', zone)
 export const stepArguments = (step, [second, third]) =>

@@ -1,7 +1,7 @@
 import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 
 import { DateTime, now } from './date-time.js';
-import { anchored, duration } from './duration.js';
+import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
@@ -33,8 +33,9 @@ import {
   weekdayNamed,
   wholeNumbers,
   withParts,
+  zoneOptions,
 } from './helpers/units.js';
-import { isWeekend, weekStart, zoneId } from './helpers/zones.js';
+import { cachedText, checkedDisambiguation, isWeekend, weekStart, zoneId } from './helpers/zones.js';
 import { MonthDay } from './month-day.js';
 import { DateRange } from './range.js';
 import { Time } from './time.js';
@@ -63,25 +64,18 @@ export class CalendarDate {
     if (isDigits(input) && isCount(monthOrOptions)) {
       [input, monthOrOptions, day] = [Number(input), Number(monthOrOptions), day === undefined ? day : Number(day)];
     }
-    const settings = isPlainObject(monthOrOptions)
-      ? monthOrOptions
-      : isString(monthOrOptions)
-      ? { zone: monthOrOptions }
-      : {};
+    const settings = zoneOptions(isNumber(monthOrOptions) ? undefined : monthOrOptions);
     this.#locale = localeOf(settings, input);
     // a Temporal value or '[u-ca=persian]' string in another calendar names the same day, read here as ISO
-    this.#plain = (
-      isPlainDate(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
-        ? input
-        : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings)
-    ).withCalendar('iso8601');
-    this.text = undefined; // keep text first in console previews
-    const plain = this.#plain;
+    const read = isPlainDate(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
+      ? input
+      : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings);
+    const plain = read.calendarId === 'iso8601' ? read : read.withCalendar('iso8601');
+    this.#plain = plain;
     this.month = plain.month;
     this.day = plain.day;
     this.year = plain.year;
     this.dayOfWeek = plain.dayOfWeek;
-    this.text = this.format();
     Object.freeze(this);
   }
 
@@ -89,6 +83,7 @@ export class CalendarDate {
     if (settings.zone !== undefined) {
       zoneId(settings.zone);
     }
+    checkedDisambiguation(settings.disambiguation);
     if (settings.loose || settings.dayFirst !== undefined) {
       requireLoose(settings.loose ? 'loose' : 'dayFirst');
     }
@@ -121,6 +116,9 @@ export class CalendarDate {
     }
     if (input instanceof CalendarDate) {
       return input.toTemporal();
+    }
+    if (isPlainDate(input)) {
+      return input;
     }
     // instants and zoned inputs resolve their calendar day in the requested (or default) zone
     if (
@@ -158,7 +156,7 @@ export class CalendarDate {
       return guard(
         () => Temporal.PlainDate.from(singularKeys(input), { overflow: 'reject' }),
         'invalidDate',
-        JSON.stringify(input),
+        input,
       );
     }
     return refuseType('invalidDate', String(input), {
@@ -188,7 +186,7 @@ export class CalendarDate {
   }
 
   #next(plain) {
-    return new CalendarDate(plain, { locale: this.#locale });
+    return new CalendarDate(plain, this.#locale ? { locale: this.#locale } : undefined);
   }
 
   /*******************************
@@ -258,9 +256,7 @@ export class CalendarDate {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return this.#next(
-      guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
-    );
+    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', changes));
   }
 
   startOf(name, firstDay) {
@@ -315,6 +311,10 @@ export class CalendarDate {
 
   to(end, name) {
     return new DateRange(this, name === undefined ? end : duration(end, name));
+  }
+
+  for(length, name) {
+    return this.to(forLength(length, name));
   }
 
   range(name, firstDay) {
@@ -394,12 +394,23 @@ export class CalendarDate {
     return new CalendarDate(other, { locale: this.#locale }).until(this, name);
   }
 
-  at(when, zone) {
+  at(when, options) {
+    const settings = zoneOptions(options);
+    const locale = settings.locale ?? this.#locale;
+    const disambiguation = checkedDisambiguation(settings.disambiguation);
     // Date, Temporal.Instant, and instant strings carry no zone of their own, while DateTime and ZonedDateTime keep their wall-clock time
-    const plainTime = new Time(when ?? '00:00', isUnzoned(when) ? { zone } : undefined).toTemporal();
-    return new DateTime(this.#plain.toZonedDateTime({ timeZone: zoneId(zone, this.#locale), plainTime }), {
-      locale: this.#locale,
-    });
+    const plainTime = new Time(when ?? '00:00', isUnzoned(when) ? { zone: settings.zone } : undefined).toTemporal();
+    return new DateTime(
+      guard(
+        () =>
+          this.#plain.toPlainDateTime(plainTime).toZonedDateTime(zoneId(settings.zone, locale), {
+            disambiguation,
+          }),
+        'invalidDateTime',
+        `${this}T${plainTime}`,
+      ),
+      { locale },
+    );
   }
 
   get monthDay() {
@@ -422,6 +433,10 @@ export class CalendarDate {
               Output
   *******************************/
 
+  get text() {
+    return cachedText(this);
+  }
+
   format(spec, locale = this.#locale) {
     const options = intlOptions('date', spec);
     return options ? formatIntl('date', this.#plain, options, locale) : formatTokens(this, 'date', spec, locale);
@@ -440,7 +455,7 @@ export class CalendarDate {
   }
 
   toJSON() {
-    return this.#plain.toString();
+    return this.toString();
   }
 
   toJSDate(zone) {
@@ -475,7 +490,6 @@ alias(CalendarDate, {
   subtract: 'minus',
   lang: 'locale',
   formatRelative: 'from',
-  for: 'to',
   through: 'to',
   splitBy: 'split',
 });

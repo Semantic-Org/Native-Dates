@@ -2,16 +2,7 @@ import { isObject, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
 import { isDevelopment } from './helpers/environment.js';
-import {
-  guard,
-  loosely,
-  parseLooseParts,
-  readAs,
-  refuse,
-  refuseType,
-  requireLoose,
-  unreadable,
-} from './helpers/errors.js';
+import { guard, loosely, parseLooseParts, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_MONTH_DAY } from './helpers/identity.js';
 import { opensOnDate, wholeParts } from './helpers/parts.js';
@@ -26,7 +17,7 @@ import {
   singularKeys,
   zoneOptions,
 } from './helpers/units.js';
-import { zoneId } from './helpers/zones.js';
+import { cachedText, zoneId } from './helpers/zones.js';
 
 /*
   a recurring month and day with no year (Temporal.PlainMonthDay), such as a birthday or annual holiday.
@@ -63,13 +54,11 @@ export class MonthDay {
 
   // monthDay(10, 17), monthDay(input, zone), or monthDay(input, { zone, loose, dayFirst })
   constructor(input, dayOrOptions) {
-    this.#plain = MonthDay.#read(input, dayOrOptions);
     this.#locale = localeOf(dayOrOptions, input);
-    this.text = undefined; // keep text first in console previews
+    this.#plain = MonthDay.#read(input, dayOrOptions);
     // PlainMonthDay omits .month because lunisolar month numbers shift with leap months, so read monthCode ('M10')
     this.month = Number(this.#plain.monthCode.slice(1));
     this.day = this.#plain.day;
-    this.text = this.format();
     Object.freeze(this);
   }
 
@@ -117,13 +106,13 @@ export class MonthDay {
     if (isPlainObject(input)) {
       const fields = singularKeys(input);
       if (!('year' in fields)) {
-        return MonthDay.#fromParts(fields, JSON.stringify(input));
+        return MonthDay.#fromParts(fields, input);
       }
     }
     return MonthDay.#dayOf(input, settings).toPlainMonthDay();
   }
 
-  static #fromParts(parts, at = JSON.stringify(parts), explanation) {
+  static #fromParts(parts, at = parts, explanation) {
     return guard(
       () => Temporal.PlainMonthDay.from(wholeParts(parts, ['month', 'day']), { overflow: 'reject' }),
       'invalidMonthDay',
@@ -269,6 +258,10 @@ export class MonthDay {
     return tag.length ? new MonthDay(this.#plain, { locale: tag[0] }) : this.#locale;
   }
 
+  get text() {
+    return cachedText(this);
+  }
+
   format(spec, locale = this.#locale) {
     const options = partOptions(spec, ['month', 'day'], presets);
     return options
@@ -281,7 +274,7 @@ export class MonthDay {
   }
 
   toJSON() {
-    return this.#plain.toString();
+    return this.toString();
   }
 
   toTemporal() {
@@ -308,12 +301,10 @@ export class MonthDay {
 
 alias(MonthDay, { lang: 'locale', isOn: 'fallsOn', last: 'previous' });
 
-const unread = new Set([...unreadable.point, 'invalidMonthDay', 'missingMonthDay', 'unsupportedCalendar']);
-
 export const monthDay = (input, dayOrOptions) => {
   const build = () =>
     input instanceof MonthDay && dayOrOptions === undefined ? input : new MonthDay(input, dayOrOptions);
-  return isPlainObject(dayOrOptions) && dayOrOptions.loose ? loosely(build, unread) : build();
+  return isPlainObject(dayOrOptions) && dayOrOptions.loose ? loosely(build) : build();
 };
 
 // forces day-first order on numeric strings and (day, month) pairs regardless of configure({ dayFirst })

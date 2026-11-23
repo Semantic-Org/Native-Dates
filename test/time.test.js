@@ -369,8 +369,11 @@ describe('Time.set()', () => {
     );
   });
 
-  it('throws cannotSet when passed a calendar field', () => {
+  it('throws cannotSet when passed a calendar field in unit or object form', () => {
     expect(() => time('09:30').set('day', 3)).toThrow(
+      expect.objectContaining({ name: 'RangeError', code: 'cannotSet', at: expect.stringContaining('day') }),
+    );
+    expect(() => time('09:30').set({ hour: 10, day: 5 })).toThrow(
       expect.objectContaining({ name: 'RangeError', code: 'cannotSet', at: expect.stringContaining('day') }),
     );
   });

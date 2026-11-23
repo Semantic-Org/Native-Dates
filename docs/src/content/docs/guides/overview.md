@@ -61,7 +61,7 @@ original.text; // 'Nov 16, 2026, 9:30 AM PST'
 moved.text; // 'Nov 16, 2026, 10:30 AM PST'
 ```
 
-Every value also includes a `.text` property with a human-readable summary. Logging an instance in Node or browser DevTools shows what it means right away without clicking getters:
+Every value also includes a `.text` getter with a human-readable summary in its active locale, and custom `util.inspect` output so `console.log()` in Node prints a concise single-line preview:
 
 ```js
 import { time } from 'native-dates';

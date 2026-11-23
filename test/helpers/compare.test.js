@@ -303,5 +303,10 @@ describe('earliest() and latest()', () => {
     expect(call).toThrowError(expect.objectContaining({ name: 'TypeError', code: 'invalidPoint' }));
   });
 
-  it.todo('coerces a year-month string alongside a YearMonth instance');
+  it('coerces a year-month string alongside a YearMonth instance', () => {
+    const nov = yearMonth('2026-11');
+    expect(earliest(nov, '2026-10').toString()).toBe('2026-10');
+    expect(latest(nov, '2026-12').toString()).toBe('2026-12');
+    expect(earliest([nov, '2026-05']).toString()).toBe('2026-05');
+  });
 });

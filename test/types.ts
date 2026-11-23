@@ -18,6 +18,7 @@ import {
   dayOfWeek,
   type Duration,
   earliest,
+  type ErrorCode,
   type FormatSpec,
   hours,
   IS_DATE_TIME,
@@ -28,6 +29,7 @@ import {
   monthDay,
   monthNames,
   monthYear,
+  type NativeDatesError,
   now,
   type Range,
   type ReadOptions,
@@ -173,3 +175,72 @@ meeting.startOfPrevious(7);
 opening.startOfNext(2, 'hours');
 // @ts-expect-error loose: true returns DateTime | null
 export const unchecked: DateTime = datetime('TBD', { loose: true });
+
+// disambiguation is typed on ReadOptions, at(), and on()
+export const strictSpring: DateTime = datetime('2026-03-08T12:00', {
+  zone: 'America/New_York',
+  disambiguation: 'reject',
+});
+export const laterFold: DateTime = due.at('01:30', { zone: 'America/New_York', disambiguation: 'later' });
+export const earlierOn: DateTime = opening.on(due, { zone: 'America/New_York', disambiguation: 'earlier' });
+export const earliestYm: YearMonth = earliest(expiry, '2026-10');
+export const temporalYear: number = due.toTemporal().year;
+export const temporalEpoch: bigint = meeting.toTemporal().epochNanoseconds;
+export const thursdayNum: number = dayOfWeek('thurs');
+export const tuesdayNum: number = dayOfWeek('Tues');
+export const upperThursdays: number = stay.count('THURSDAYS');
+export const capDays: number = stay.count('Days');
+export function readErrorCode(err: NativeDatesError): ErrorCode {
+  return err.code;
+}
+
+// @ts-expect-error invalid disambiguation mode is rejected at compile time
+datetime('2026-03-08T12:00', { zone: 'America/New_York', disambiguation: 'skip' });
+// @ts-expect-error DateTime.at() keeps this.zone (use .in() to change zones)
+meeting.at('09:00', { zone: 'Asia/Tokyo' });
+// @ts-expect-error TemporalValue is no longer any, so invalid primitives fail typechecking
+datetime(Symbol('nope'));
+// @ts-expect-error booleans are not valid CalendarDateInput
+date(true);
+// @ts-expect-error unrelated object bags fail weak-type checking on CalendarDateInput
+date({ totallyWrong: 123 });
+// @ts-expect-error clock-only fields fail weak-type checking on CalendarDateInput
+date({ hour: 12 });
+// @ts-expect-error clock fields are rejected on CalendarDate.set()
+due.set({ month: 2, hour: 12 });
+// @ts-expect-error calendar fields are rejected on Time.set()
+opening.set({ hour: 10, day: 5 });
+// @ts-expect-error clock units are rejected on CalendarDate.plus()
+due.plus(1, 'hours');
+// @ts-expect-error quarter is not a direct CalendarDate.set() field
+due.set('quarter', 2);
+// @ts-expect-error quarter is not a direct DateTime.set() field
+meeting.set('quarter', 2);
+// @ts-expect-error month is larger than day on DateTime.round()
+meeting.round('month');
+// @ts-expect-error sub-month units are rejected on YearMonth.plus()
+expiry.plus(5, 'days');
+// @ts-expect-error Map is not a valid DurationInput
+hours(1).plus(new Map());
+// @ts-expect-error null is not accepted by equals()
+meeting.equals(null);
+// @ts-expect-error unrecognized unit names fail typechecking (no string & {} escape hatch)
+due.plus(1, 'lightyears');
+// @ts-expect-error clock units fail typechecking on CalendarDate.startOf()
+due.startOf('hours');
+// @ts-expect-error calendar units fail typechecking on Time.startOf()
+opening.startOf('day');
+// @ts-expect-error unrecognized weekday names fail typechecking
+dayOfWeek('funday');
+// @ts-expect-error unrecognized count kinds fail typechecking
+stay.count('weeks');
+// @ts-expect-error toTemporal() returns a typed Temporal shape rather than any
+meeting.toTemporal().nonExistentMethod();
+// @ts-expect-error point.for() rejects bare numbers without a unit
+meeting.for(5_400_000);
+// @ts-expect-error point.for() rejects bare numbers without a unit on Time
+opening.for(2);
+// @ts-expect-error point.for() rejects bare numbers without a unit on CalendarDate
+due.for(3);
+// @ts-expect-error point.for() rejects point endpoints
+meeting.for(viaCore);

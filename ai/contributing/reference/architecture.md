@@ -33,7 +33,7 @@ How `src/` is laid out and how a class is structured follow [`folders-and-filena
 | `YearMonth` | `yearMonth()`, `monthYear()` | `Temporal.PlainYearMonth` | Year and month with no day. Counts in months and years and refuses smaller units. Reached via `.yearMonth` or `as('yearMonth')`. |
 | `DateRange`, `DateTimeRange`, `TimeRange` | `dateRange()`, `datetimeRange()`, `timeRange()`, `.to()`, `.for()`, `.range()` | Two points of one kind | Not a `Temporal` type. A date range includes its last day, a datetime or time range excludes its end, and a time range may cross midnight. |
 
-Every instance freezes on construction and defines `text` first among its own enumerable properties so logging a value in DevTools or Node leads with its human-readable form without clicking getters.
+Every instance freezes on construction, exposes a lazy `.text` prototype getter and custom `util.inspect()` summary, and orders `month, day, year, hour, minute` first among `DateTime`'s own enumerable properties for DevTools previews.
 
 ## Core vs. Plugins
 

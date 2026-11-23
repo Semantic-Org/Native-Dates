@@ -492,5 +492,21 @@ describe('locale precedence in formatting', () => {
   it('normalizes underscore tags and Accept-Language headers passed directly to format()', () => {
     expect(date('2026-05-15').format('MMMM', 'fr_FR')).toBe('mai');
     expect(date('2026-05-15').format('MMMM', 'ja,en;q=0.5')).toBe('5月');
+    expect(date('2026-05-15').locale('fr-FR;Q=0.9, en;Q=0.5').format('MMMM')).toBe('mai');
+    expect(date('2026-05-15').locale('en-US, @@@;q=0.5').locale()).toBe('en-US');
+    expect(date('2026-05-15').locale('   ').locale()).toBeUndefined();
+  });
+
+  it('treats { locale: false } as unset, accepts Intl.Locale instances, and preserves carried locale on duration(d, { locale: undefined })', () => {
+    configure({ locale: 'fr' });
+    const d = date('2026-05-15', { locale: false });
+    expect(d.locale()).toBeUndefined();
+    expect(d.format('MMMM')).toBe('mai');
+    const german = new Intl.Locale('de');
+    expect(date('2026-05-15', { locale: german }).format('MMMM')).toBe('Mai');
+    expect(date('2026-05-15', { locale: german }).plus(1, 'day').format('MMMM')).toBe('Mai');
+    expect(date('2026-05-15').format('MMMM', german)).toBe('Mai');
+    expect(date('2026-05-15').format('long', german)).toContain('Mai');
+    expect(duration(hours(2).locale('fr'), { locale: undefined }).locale()).toBe('fr');
   });
 });

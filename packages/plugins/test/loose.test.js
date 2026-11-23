@@ -415,7 +415,45 @@ describe('{ loose: true } option validation', () => {
     expect(() => dateRange('TBD', 'TBD', { loose: true, locale: 'not a locale' })).toThrowError(unknownLocale);
   });
 
-  it.todo('validates { locale } before returning null on unreadable input in yearMonth(), monthDay(), and duration()');
+  it('validates { locale } before returning null on unreadable input in yearMonth(), monthDay(), and duration()', () => {
+    const unknownLocale = expect.objectContaining({ name: 'RangeError', code: 'unknownLocale', at: 'not a locale' });
+    expect(() => yearMonth('TBD', { loose: true, locale: 'not a locale' })).toThrowError(unknownLocale);
+    expect(() => monthDay('TBD', { loose: true, locale: 'not a locale' })).toThrowError(unknownLocale);
+    expect(() => duration('TBD', { loose: true, locale: 'not a locale' })).toThrowError(unknownLocale);
+  });
+
+  it.each([
+    'Room 12',
+    'call me at 5',
+    'invoice 2',
+    '12',
+    'Error 404 on Jan 2',
+    'Room 500, May 12',
+    'Nov 16',
+    '12/25',
+    '12/25 junk',
+    '2026',
+    'May 2026',
+    '1/2/3',
+    '1/1/0001',
+  ])('returns null rather than fabricating a date from partial or noisy input %j', (text) => {
+    expect(date(text, { loose: true })).toBeNull();
+    expect(datetime(text, { loose: true, zone: 'UTC' })).toBeNull();
+  });
+
+  it('does not let Date.parse misread "junk" as June in numeric dates and preserves vi, mn, and bo dates', () => {
+    expect(date('11/16/2026 junk', { loose: true })?.toString()).toBe('2026-11-16');
+    expect(date('Date: 11/16/2026', { loose: true })?.toString()).toBe('2026-11-16');
+    expect(date('16 tháng 11, 2026', { loose: true, locale: 'vi' })?.toString()).toBe('2026-11-16');
+    expect(date('16 thg 11, 2026', { loose: true, locale: 'vi' })?.toString()).toBe('2026-11-16');
+    expect(date('2026 оны 11-р сарын 16', { loose: true, locale: 'mn' })?.toString()).toBe('2026-11-16');
+    expect(date('2026 ལོའི་ཟླ་༡༡ཚེས་16', { loose: true, locale: 'bo' })?.toString()).toBe('2026-11-16');
+  });
+
+  it('treats empty or whitespace locale options as unset rather than throwing unknownLocale', () => {
+    expect(date('Sep 6, 2026', { loose: true, locale: '' })?.toString()).toBe('2026-09-06');
+    expect(date('Sep 6, 2026', { loose: true, locale: '   ' })?.toString()).toBe('2026-09-06');
+  });
 });
 
 describe('class constructors with { loose: true }', () => {
@@ -472,7 +510,10 @@ describe('strict behavior alongside @native-dates/plugins/loose', () => {
     expect(datetime(text, { loose: true, zone })?.toString()).toBe(datetime(text, zone).toString());
   });
 
-  it.todo('accepts Temporal.PlainDate and Temporal.PlainTime inputs when { loose: true } is set');
+  it('accepts Temporal.PlainDate and Temporal.PlainTime inputs when { loose: true } is set', () => {
+    expect(date(Temporal.PlainDate.from('2026-11-16'), { loose: true })?.toString()).toBe('2026-11-16');
+    expect(time(Temporal.PlainTime.from('14:30:00'), { loose: true })?.toString()).toBe('14:30:00');
+  });
 });
 
 describe('{ loose: true, dayFirst }', () => {
@@ -603,11 +644,11 @@ describe('configure({ dayFirst })', () => {
     expect(date('Jul 9, 2026', { loose: true })?.toString()).toBe('2026-07-09');
   });
 
-  it('parses month-first when set to false and by the locale order when reset to null', () => {
+  it('parses month-first when set to false, lets per-call locale override global dayFirst, and follows locale when reset to null', () => {
     configure({ dayFirst: true });
     configure({ dayFirst: false });
     expect(date('7/9/2026', { loose: true })?.toString()).toBe('2026-07-09');
-    expect(date('7/9/2026', { loose: true, locale: 'fr' })?.toString()).toBe('2026-07-09');
+    expect(date('7/9/2026', { loose: true, locale: 'fr' })?.toString()).toBe('2026-09-07');
     configure({ dayFirst: true });
     expect(configure({ dayFirst: null }).dayFirst).toBe(undefined);
     expect(date('7/9/2026', { loose: true, locale: 'en-US' })?.toString()).toBe('2026-07-09');
@@ -999,11 +1040,29 @@ describe('date() numeric day and month order with { loose: true, locale }', () =
     expect(date('12.11.26', { loose: true, locale: 'ko' })?.toString()).toBe('2012-11-26');
   });
 
-  it('uses the dayFirst option or configure({ dayFirst }) over the locale order', () => {
+  it('applies per-call dayFirst > per-call locale > configure({ dayFirst }) > configure({ locale })', () => {
     expect(date('06/11/2026', { loose: true, locale: 'fr', dayFirst: false })?.toString()).toBe('2026-06-11');
     expect(date('06/11/2026', { loose: true, locale: 'en-US', dayFirst: true })?.toString()).toBe('2026-11-06');
-    configure({ dayFirst: false });
-    expect(date('06/11/2026', { loose: true, locale: 'fr' })?.toString()).toBe('2026-06-11');
+    configure({ locale: 'fr', dayFirst: false });
+    expect(date('06/11/2026', { loose: true })?.toString()).toBe('2026-06-11');
+    expect(date('06/11/2026', { loose: true, locale: 'fr' })?.toString()).toBe('2026-11-06');
+  });
+
+  it('parses numeric dates in locales whose short format is year-first (en-CA, fr-CA, fa-IR, sv-SE)', () => {
+    expect(date('11/06/2026', { loose: true, locale: 'en-CA' })?.toString()).toBe('2026-11-06');
+    expect(date('06/11/2026', { loose: true, locale: 'fr-CA' })?.toString()).toBe('2026-11-06');
+    expect(date('06/11/2026', { loose: true, locale: 'fa-IR' })?.toString()).toBe('2026-11-06');
+    expect(date('16 نوامبر 2026', { loose: true, locale: 'fa-IR' })?.toString()).toBe('2026-11-16');
+    expect(date('06/11/2026', { loose: true, locale: 'sv-SE' })?.toString()).toBe('2026-11-06');
+  });
+
+  it('keeps wall-clock hours intact across host-timezone DST gaps and honors disambiguation', () => {
+    const berlin = datetime('Mar 8, 2026 02:30', { loose: true, zone: 'Europe/Berlin' });
+    expect(berlin).toMatchObject({ zone: 'Europe/Berlin', month: 3, day: 8, hour: 2, minute: 30, offset: '+01:00' });
+    expect(datetime('Mar 8, 2026 02:30', { loose: true, zone: 'America/New_York', disambiguation: 'reject' }))
+      .toBeNull();
+    expect(datetime('Nov 1, 2026 01:30', { loose: true, zone: 'America/New_York', disambiguation: 'later' })?.offset)
+      .toBe('-05:00');
   });
 
   it('returns null when the locale order puts a number above 12 in the month', () => {
@@ -1101,6 +1160,20 @@ describe('time() and datetime() localized AM/PM with { loose: true, locale }', (
     expect(time('14h', { loose: true, locale: 'fr' })).toBeNull();
     expect(timeRange('22:00', '8h', { loose: true })?.toString()).toBe('22:00:00/06:00:00');
   });
+
+  it('keeps dateless wall-clock times unchanged in time() even when Temporal.Now is on a DST spring-forward day', () => {
+    const originalPlainDateISO = Temporal.Now.plainDateISO;
+    Temporal.Now.plainDateISO = () => Temporal.PlainDate.from('2026-03-08');
+    try {
+      expect(time('上午 2:30', { loose: true, locale: 'zh', zone: 'America/New_York' })?.toString()).toBe('02:30:00');
+      expect(
+        time('上午 2:30', { loose: true, locale: 'zh', zone: 'America/New_York', disambiguation: 'reject' })?.toString(),
+      ).toBe('02:30:00');
+    }
+    finally {
+      Temporal.Now.plainDateISO = originalPlainDateISO;
+    }
+  });
 });
 
 describe('monthDay() and yearMonth() connecting words and unit labels with { loose: true, locale }', () => {
@@ -1144,6 +1217,7 @@ describe('monthDay() and yearMonth() connecting words and unit labels with { loo
 describe('datetime() zone abbreviations in the input string with { loose: true }', () => {
   it('parses EST as the fixed -05:00 IANA zone and EDT through Date.parse', () => {
     expect(datetime('2026-01-15 09:30 EST', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-01-15T14:30:00.000Z');
+    expect(datetime('2026-07-04 14:30 EST', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-07-04T19:30:00.000Z');
     expect(datetime('2026-07-15 09:30 EDT', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-07-15T13:30:00.000Z');
   });
 

@@ -2,7 +2,7 @@ import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate } from './calendar-date.js';
 import { DateTime } from './date-time.js';
-import { anchored, duration } from './duration.js';
+import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
@@ -27,8 +27,9 @@ import {
   unit,
   wholeNumbers,
   withParts,
+  zoneOptions,
 } from './helpers/units.js';
-import { zoneId } from './helpers/zones.js';
+import { cachedText, checkedDisambiguation, zoneId } from './helpers/zones.js';
 import { TimeRange } from './range.js';
 
 /*
@@ -60,23 +61,17 @@ export class Time {
         second === undefined ? second : Number(second),
       ];
     }
-    const settings = isPlainObject(minuteOrOptions)
-      ? minuteOrOptions
-      : isString(minuteOrOptions)
-      ? { zone: minuteOrOptions }
-      : {};
+    const settings = zoneOptions(isNumber(minuteOrOptions) ? undefined : minuteOrOptions);
     this.#locale = localeOf(settings, input);
     this.#plain =
       isPlainTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
         ? input
         : Time.#read(input, isNumber(minuteOrOptions) ? minuteOrOptions : undefined, second, settings);
-    this.text = undefined; // keep text first in console previews
     const plain = this.#plain;
     this.hour = plain.hour;
     this.minute = plain.minute;
     this.second = plain.second;
     this.millisecond = plain.millisecond;
-    this.text = this.format();
     Object.freeze(this);
   }
 
@@ -84,6 +79,7 @@ export class Time {
     if (settings.zone !== undefined) {
       zoneId(settings.zone);
     }
+    checkedDisambiguation(settings.disambiguation);
     if (settings.loose || settings.dayFirst !== undefined) {
       requireLoose(settings.loose ? 'loose' : 'dayFirst');
     }
@@ -110,6 +106,9 @@ export class Time {
     }
     if (input instanceof Time) {
       return input.toTemporal();
+    }
+    if (isPlainTime(input)) {
+      return input;
     }
     // instants and zoned inputs resolve their wall-clock time in the requested (or default) zone
     if (
@@ -140,7 +139,7 @@ export class Time {
       return guard(
         () => Temporal.PlainTime.from(singularKeys(input), { overflow: 'reject' }),
         'invalidTime',
-        JSON.stringify(input),
+        input,
       );
     }
     return refuseType('invalidTime', String(input), {
@@ -247,14 +246,12 @@ export class Time {
 
   set(fields, value) {
     const changes = isString(fields) ? { [unit(fields)]: value } : singularKeys(fields);
-    return this.#next(
-      guard(() => withParts(this.#plain, changes), 'cannotSet', JSON.stringify(changes)),
-    );
+    return this.#next(guard(() => withParts(this.#plain, changes), 'cannotSet', changes));
   }
 
   startOf(name) {
     return this.#next(
-      guard(() => this.#plain.round({ smallestUnit: unit(name), roundingMode: 'floor' }), 'cannotRound', String(name)),
+      guard(() => this.#plain.round({ smallestUnit: unit(name), roundingMode: 'floor' }), 'cannotRound', name),
     );
   }
 
@@ -295,6 +292,10 @@ export class Time {
 
   to(end, name) {
     return new TimeRange(this, name === undefined ? end : duration(end, name));
+  }
+
+  for(length, name) {
+    return this.to(forLength(length, name));
   }
 
   /*******************************
@@ -342,9 +343,13 @@ export class Time {
     return new Time(other, { locale: this.#locale }).until(this, name);
   }
 
-  on(day, zone) {
+  on(day, options) {
+    const settings = zoneOptions(options);
     // Date, Temporal.Instant, and instant strings carry no zone of their own, so resolve their date in `zone`
-    return new CalendarDate(day, { zone: isUnzoned(day) ? zone : undefined, locale: this.#locale }).at(this, zone);
+    return new CalendarDate(day, { zone: isUnzoned(day) ? settings.zone : undefined, locale: this.#locale }).at(
+      this,
+      settings,
+    );
   }
 
   as(kind) {
@@ -354,6 +359,10 @@ export class Time {
   /*******************************
               Output
   *******************************/
+
+  get text() {
+    return cachedText(this);
+  }
 
   format(spec, locale = this.#locale) {
     const options = intlOptions('time', spec);
@@ -392,7 +401,7 @@ export class Time {
   }
 }
 
-alias(Time, { add: 'plus', subtract: 'minus', lang: 'locale', for: 'to' });
+alias(Time, { add: 'plus', subtract: 'minus', lang: 'locale' });
 
 export const time = (input, minuteOrOptions, second) => {
   const build = () =>

@@ -376,7 +376,27 @@ describe('Point to(), for(), and through()', () => {
     expect(time('9am').through).toBeUndefined();
   });
 
-  it.todo('rejects a bare number without a unit in point.for()');
+  it('accepts explicit durations in point.for() and refuses endpoints and bare unitless numbers', () => {
+    expect(datetime('2026-09-01T09:00', 'UTC').for('2h').toString())
+      .toBe('2026-09-01T09:00:00.000Z/2026-09-01T11:00:00.000Z');
+    expect(datetime('2026-09-01T09:00', 'UTC').for(2, 'hours').toString())
+      .toBe('2026-09-01T09:00:00.000Z/2026-09-01T11:00:00.000Z');
+    expect(datetime('2026-09-01T09:00', 'UTC').for(hours(2)).toString())
+      .toBe('2026-09-01T09:00:00.000Z/2026-09-01T11:00:00.000Z');
+    expect(date('2026-09-01').for(3, 'days').toString()).toBe('2026-09-01/2026-09-03');
+
+    expect(() => datetime('2026-09-01T09:00', 'UTC').for('2026-09-01T10:30'))
+      .toThrowError(expect.objectContaining({ code: 'invalidDuration' }));
+    expect(() => time('9am').for('17:00')).toThrowError(expect.objectContaining({ code: 'invalidDuration' }));
+    expect(() => date('2026-09-01').for('2026-09-07')).toThrowError(
+      expect.objectContaining({ code: 'invalidDuration' }),
+    );
+
+    expect(() => datetime('2026-09-01T09:00', 'UTC').for(5_400_000))
+      .toThrowError(expect.objectContaining({ code: 'invalidDuration', at: '5400000' }));
+    expect(() => time('9am').for(2)).toThrowError(expect.objectContaining({ code: 'invalidDuration', at: '2' }));
+    expect(() => date('2026-09-01').for(3)).toThrowError(expect.objectContaining({ code: 'invalidDuration', at: '3' }));
+  });
 });
 
 describe('CalendarDate.prototype.range() and DateTime.prototype.range()', () => {
@@ -742,7 +762,12 @@ describe('Range overlaps()', () => {
     );
   });
 
-  it.todo('parses an unzoned interval string in the receiver timezone in DateTimeRange.prototype.overlaps()');
+  it('parses an unzoned interval string in the receiver timezone in DateTimeRange overlaps() and equals()', () => {
+    const tokyo = datetimeRange('2026-09-01T09:00', '2026-09-01T10:30', 'Asia/Tokyo');
+    expect(tokyo.overlaps('2026-09-01T09:30/2026-09-01T11:00')).toBe(true);
+    expect(tokyo.overlaps('2026-09-01T10:30/2026-09-01T11:00')).toBe(false);
+    expect(tokyo.equals('2026-09-01T09:00/2026-09-01T10:30')).toBe(true);
+  });
 });
 
 describe('Range intersection()', () => {
@@ -815,10 +840,33 @@ describe('Range intersection()', () => {
     );
   });
 
-  it.todo('preserves the receiver timezone on DateTimeRange.prototype.intersection()');
-  it.todo(
-    'returns an empty TimeRange rather than null from intersection() when an empty range lies inside another, matching overlaps()',
-  );
+  it('preserves the receiver timezone on DateTimeRange.prototype.intersection()', () => {
+    const tokyo = datetimeRange('2026-09-01T09:00', '2026-09-01T10:30', 'Asia/Tokyo');
+    const berlin = datetimeRange('2026-09-01T03:00', '2026-09-01T04:00', 'Europe/Berlin');
+    const shared = tokyo.intersection(berlin);
+    expect(shared.start.zone).toBe('Asia/Tokyo');
+    expect(shared.end.zone).toBe('Asia/Tokyo');
+  });
+
+  it('returns false from overlaps() and contains(), and null from intersection(), when either range is empty', () => {
+    const office = timeRange('09:00', '17:00');
+    const emptyTime = timeRange('12:00', '12:00');
+    expect(office.overlaps(emptyTime)).toBe(false);
+    expect(emptyTime.overlaps(office)).toBe(false);
+    expect(office.contains(emptyTime)).toBe(false);
+    expect(emptyTime.contains(emptyTime)).toBe(false);
+    expect(office.intersection(emptyTime)).toBeNull();
+    expect(emptyTime.intersection(office)).toBeNull();
+
+    const block = datetimeRange('2026-09-01T09:00Z', '2026-09-01T17:00Z');
+    const emptyMoment = datetimeRange('2026-09-01T12:00Z', '2026-09-01T12:00Z');
+    expect(block.overlaps(emptyMoment)).toBe(false);
+    expect(emptyMoment.overlaps(block)).toBe(false);
+    expect(block.contains(emptyMoment)).toBe(false);
+    expect(emptyMoment.contains(emptyMoment)).toBe(false);
+    expect(block.intersection(emptyMoment)).toBeNull();
+    expect(emptyMoment.intersection(block)).toBeNull();
+  });
 });
 
 describe('Range equals()', () => {

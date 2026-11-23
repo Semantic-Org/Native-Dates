@@ -71,15 +71,19 @@ describe('instance freezing and method immutability', () => {
 
   it.each(classNames)('throws TypeError when assigning, adding, or deleting a property on %s', (className) => {
     const value = values[className];
+    const ownKey = Object.keys(value)[0];
     const before = { ...value };
     expect(() => {
       value.text = 'changed';
     }).toThrowError(TypeError);
     expect(() => {
+      value[ownKey] = 'changed';
+    }).toThrowError(TypeError);
+    expect(() => {
       value.extra = 1;
     }).toThrowError(TypeError);
     expect(() => {
-      delete value.text;
+      delete value[ownKey];
     }).toThrowError(TypeError);
     expect({ ...value }).toEqual(before);
   });
@@ -190,16 +194,19 @@ describe('prototype extension', () => {
 });
 
 describe('own properties and object spread', () => {
-  // DevTools previews own properties in insertion order, so text appears first
-  it.each(classNames)('places string property "text" first in Object.keys() on %s', (className) => {
-    expect(Object.keys(values[className])[0]).toBe('text');
+  it.each(classNames)('exposes .text as a prototype getter rather than an own key on %s', (className) => {
+    expect(Object.keys(values[className])).not.toContain('text');
     expect(values[className].text).toBeTypeOf('string');
     expect(values[className].text).not.toBe('');
   });
 
+  // DevTools truncates collapsed object previews after five own properties
+  it('places month, day, year, hour, and minute in the first five own keys of DateTime', () => {
+    expect(Object.keys(values.DateTime).slice(0, 5)).toEqual(['month', 'day', 'year', 'hour', 'minute']);
+  });
+
   it('spreads DateTime into calendar, clock, zone, offset, and epochMilliseconds fields', () => {
     expect({ ...values.DateTime }).toStrictEqual({
-      text: expect.any(String),
       year: 2026,
       month: 11,
       day: 16,
@@ -216,7 +223,6 @@ describe('own properties and object spread', () => {
 
   it('spreads CalendarDate into year, month, day, and dayOfWeek fields', () => {
     expect({ ...values.CalendarDate }).toStrictEqual({
-      text: expect.any(String),
       year: 2026,
       month: 11,
       day: 16,
@@ -226,7 +232,6 @@ describe('own properties and object spread', () => {
 
   it('spreads Time into hour, minute, second, and millisecond fields', () => {
     expect({ ...values.Time }).toStrictEqual({
-      text: expect.any(String),
       hour: 9,
       minute: 30,
       second: 15,
@@ -236,7 +241,6 @@ describe('own properties and object spread', () => {
 
   it('spreads Duration into unit fields from years to milliseconds plus sign and anchor', () => {
     expect({ ...values.Duration }).toStrictEqual({
-      text: expect.any(String),
       years: 0,
       months: 0,
       weeks: 0,
@@ -252,17 +256,17 @@ describe('own properties and object spread', () => {
   });
 
   it('spreads YearMonth into year and month and MonthDay into month and day', () => {
-    expect({ ...values.YearMonth }).toStrictEqual({ text: expect.any(String), year: 2026, month: 11 });
-    expect({ ...values.MonthDay }).toStrictEqual({ text: expect.any(String), month: 10, day: 17 });
+    expect({ ...values.YearMonth }).toStrictEqual({ year: 2026, month: 11 });
+    expect({ ...values.MonthDay }).toStrictEqual({ month: 10, day: 17 });
   });
 
   it.each([
     ['DateRange', 'date', '2026-11-01', '2026-11-07'],
     ['DateTimeRange', 'datetime', '2026-11-16T09:00:00.000Z', '2026-11-16T10:00:00.000Z'],
     ['TimeRange', 'time', '09:00:00', '17:00:00'],
-  ])('spreads %s into text, kind, start, and end', (className, kind, start, end) => {
+  ])('spreads %s into kind, start, and end', (className, kind, start, end) => {
     const spread = { ...values[className] };
-    expect(Object.keys(spread).sort()).toEqual(['end', 'kind', 'start', 'text']);
+    expect(Object.keys(spread).sort()).toEqual(['end', 'kind', 'start']);
     expect(spread.kind).toBe(kind);
     expect(spread.start.toString()).toBe(start);
     expect(spread.end.toString()).toBe(end);
@@ -270,6 +274,13 @@ describe('own properties and object spread', () => {
 });
 
 describe('structural deep equality', () => {
+  it('treats equal values with different instance locales as deeply equal', () => {
+    const en = date('2026-11-16').locale('en-US');
+    const fr = date('2026-11-16').locale('fr');
+    expect(en.text).not.toBe(fr.text);
+    expect(en).toEqual(fr);
+    expect(isDeepStrictEqual(en, fr)).toBe(true);
+  });
   it.each([
     ['DateTimes', datetime, '2026-11-16T17:30:00Z'],
     ['CalendarDates', date, '2026-11-16'],

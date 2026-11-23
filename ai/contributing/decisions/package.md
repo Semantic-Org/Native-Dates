@@ -18,7 +18,7 @@ Reopen: RFC 9557 bracketed zone strings gain broad parser and database support a
 
 Putting `text` on the instance as its first own property shows the human-readable value inline in `console.log()` and DevTools instead of hiding it behind prototype getters. On `Duration`, eager `Intl.DurationFormat` formatting (~14 µs in Node) was accepted over a lazy getter so every class inspects the same way.
 
-Reopen: profiles in `bench/` or user performance reports show eager `text` formatting dominating hot arithmetic or `range.every()` loops.
+Superseded by D23 (2026-11-23).
 
 ## D4: Plugins attach on subpath import instead of requiring `use()` or `extend()` (2026-11-08)
 
@@ -96,7 +96,7 @@ Reopen: cold-reader studies or user issues show developers repeatedly reaching f
 
 Cold readers misread `start.to(3, 'days')` as a unit conversion and ranked `start.for(3, 'days')` first (+10 B). `.to()` still accepts durations because restricting it to endpoints would parse `time('9am').to(8, 'hours')` as `08:00` and produce a 23-hour overnight range, and `.through()` exists only on `CalendarDate` because `DateTimeRange` and `TimeRange` exclude their end.
 
-Reopen: users report confusion from `.for()` accepting endpoints as an alias of `.to()`, or ask for inclusive `.through()` on `DateTime`.
+Superseded by D24 (2026-11-23).
 
 ## D17: Adjacent unit boundaries use `startOfNext()` and `startOfPrevious()` instead of overloading `next()` and `previous()` (2026-11-19)
 
@@ -133,3 +133,27 @@ Reopen: users parsing RFC 2822 email or HTTP headers report bugs from `'EST'` or
 Without built-in aliases, every localized app had to configure its own `zoneAliases` for major cities that IANA files under another name (`'Beijing'` -> `Asia/Shanghai`, `'Mumbai'` -> `Asia/Kolkata`) and for shared abbreviations like `'CST'` and `'IST'`. Shipping those tables adds ~0.9 kB Brotli to the plugin and resolves shared names against `Intl.Locale.prototype.getTimeZones()` for the active locale's country (falling back to the first listed zone). `IST` and `ACT` were also removed from the exported `timezones` defaults so they do not shadow locale lookup unless reassigned explicitly.
 
 Reopen: city requests keep expanding the alias table without a clear boundary, or users report locale-driven lookup misreading foreign-country abbreviations.
+
+## D23: Instances expose `.text` as a lazy prototype getter instead of an eager own property (2026-11-23)
+
+Supersedes D3. Formatting `.text` via `Intl` inside every constructor dominated `CalendarDate`, `DateTime`, and `Duration` construction cost (measured in `bench/`), left `.text` stale after `configure({ locale })`, and caused `toEqual()` to disagree with `.equals()` across instance locales (`D6`). Moving `text` to a prototype getter removes constructor `Intl` work from arithmetic and parsing chains, keeps compact `util.inspect()` output in Node/Bun/Deno, and orders `DateTime` own fields as `month, day, year, hour, minute` first so browser DevTools' five-property preview still distinguishes same-day times.
+
+Reopen: browser developers report collapsed DevTools previews missing timezone or formatted text frequently enough to warrant a cheap non-`Intl` preview property.
+
+## D24: Ranges built with `.for()` accept only explicit durations, while `.to()` keeps both endpoints and durations (2026-11-23)
+
+Supersedes D16. Aliasing `.for()` directly to `.to()` accepted target endpoints (`date('2026-09-01').for('2026-09-07')`) and muddled bare numbers (`time('9am').for(2)` parsed `2` as `02:00` for a 17-hour overnight range, while `dt.for(5_400_000)` read as `1970-01-01`). `.for()` on `CalendarDate`, `DateTime`, and `Time` now requires an explicit duration (`'2h'`, `(2, 'hours')`, `hours(2)`, `{ hours: 2 }`) and refuses endpoints and bare unitless numbers, while `.to()` remains unchanged and `.through()` stays exclusive to `CalendarDate`.
+
+Reopen: callers building ranges from numeric millisecond constants ask for a millisecond shorthand on `.for()` rather than `milliseconds(n)` or `(n, 'ms')`.
+
+## D25: Per-call `locale` decides numeric date order ahead of `configure({ dayFirst })` (2026-11-23)
+
+Passing `{ locale }` on a `{ loose: true }` call declares the format convention of that input, whereas `configure({ dayFirst })` sets a process-wide fallback when neither `dayFirst` nor `locale` is given at the callsite (`{ dayFirst }` > `{ locale }` > `configure({ dayFirst })` > `configure({ locale })`). Letting `configure({ dayFirst: true })` beat `{ locale: 'en-US' }` caused `date('7/9/2026', { loose: true, locale: 'en-US' })` to ignore the locale explicitly passed for that string.
+
+Reopen: server apps passing per-request `Accept-Language` headers alongside `configure({ dayFirst: true })` report wanting the configured `dayFirst` setting to override per-call `locale`.
+
+## D26: Loose parsing returns `null` unless year, month, and day are all written (2026-11-23)
+
+Delegating partial or noisy strings to `Date.parse()` fabricated V8's default year `2001` and day `01` (`'Room 12'` -> `2001-12-01`, `'Nov 16'` -> `2001-11-16`, `'May 2026'` -> `2026-05-01`). Requiring all three date parts in `date()` and `datetime()` under `{ loose: true }` returns `null` instead of invented dates, while partial dates use dedicated factories (`monthDay('Nov 16', { loose: true })`, `yearMonth('May 2026', { loose: true })`).
+
+Reopen: callers report friction from human-typed current-year dates like `'Nov 16'` returning `null`.

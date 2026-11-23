@@ -2,7 +2,7 @@ import type { CalendarDate, CalendarDateInput } from './calendar-date.js';
 import type { Duration, DurationInput } from './duration.js';
 import type { FormatSpec } from './helpers/format.js';
 import { IS_YEAR_MONTH } from './helpers/identity.js';
-import type { TemporalValue, Unit } from './helpers/units.js';
+import type { TemporalPlainYearMonth, Unit, YearMonthUnit } from './helpers/units.js';
 import type { Locale, ReadOptions, Zone } from './helpers/zones.js';
 
 /**
@@ -19,11 +19,11 @@ export interface YearMonthFields {
 
 /**
  * Any input accepted by the year-month factories: a `YearMonth`, year-first string such as `'2026-11'`,
- * fields object, or any date or timestamp input with its day dropped.
+ * fields object, `Temporal.PlainYearMonth`, or any date or timestamp input with its day dropped.
  *
  * @see {@link https://nativedates.dev/api/year-month-fn/#accepted-inputs Accepted inputs}
  */
-export type YearMonthInput = YearMonth | YearMonthFields | CalendarDateInput;
+export type YearMonthInput = YearMonth | YearMonthFields | TemporalPlainYearMonth | CalendarDateInput;
 
 /**
  * Format specification accepted by `YearMonth.prototype.format()`: any preset, custom format name,
@@ -134,7 +134,7 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#plus plus}
    */
-  plus(amount: DurationInput, unit?: Unit): YearMonth;
+  plus(amount: DurationInput, unit?: YearMonthUnit): YearMonth;
 
   /**
    * Alias for `plus()` that moves forward by years, quarters, or months.
@@ -145,7 +145,7 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#plus plus}
    */
-  add(amount: DurationInput, unit?: Unit): YearMonth;
+  add(amount: DurationInput, unit?: YearMonthUnit): YearMonth;
 
   /**
    * Moves backward by years, quarters, or months and returns a new `YearMonth`.
@@ -161,7 +161,7 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#minus minus}
    */
-  minus(amount: DurationInput, unit?: Unit): YearMonth;
+  minus(amount: DurationInput, unit?: YearMonthUnit): YearMonth;
 
   /**
    * Alias for `minus()` that moves backward by years, quarters, or months.
@@ -172,7 +172,7 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#minus minus}
    */
-  subtract(amount: DurationInput, unit?: Unit): YearMonth;
+  subtract(amount: DurationInput, unit?: YearMonthUnit): YearMonth;
 
   /**
    * Returns a new `YearMonth` with the year, month, or both replaced.
@@ -200,7 +200,10 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#set set}
    */
-  set(unit: Unit, value: number): YearMonth;
+  set(
+    unit: 'year' | 'years' | 'y' | 'yr' | 'yrs' | 'month' | 'months' | 'M' | 'mo' | 'mos',
+    value: number,
+  ): YearMonth;
 
   /**
    * Places a whole day number from 1 through 31 in this month and returns a `CalendarDate`.
@@ -485,7 +488,7 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#totemporal toTemporal}
    */
-  toTemporal(): TemporalValue;
+  toTemporal(): TemporalPlainYearMonth;
 
   /**
    * Throws a `RangeError` so numeric operators never coerce a year-month to a number.
@@ -515,18 +518,7 @@ export class YearMonth {
  *
  * @see {@link https://nativedates.dev/api/year-month-fn/#yearmonth yearMonth}
  */
-export function yearMonth(input: YearMonthInput, options?: Zone | (ReadOptions & { loose?: false; })): YearMonth;
-/**
- * Parses a year-month in loose mode when `@native-dates/plugins/loose` is imported, matching
- * English or localized month names such as `'février 2026'` and returning `null` when unreadable.
- *
- * @param input - Untrusted string or year-month input
- * @param options - Options with `loose: true` and optional `locale` and `zone`
- * @returns A `YearMonth`, or `null` when `input` cannot be parsed
- *
- * @see {@link https://nativedates.dev/api/year-month-fn/#yearmonth yearMonth}
- */
-export function yearMonth(input: unknown, options: ReadOptions & { loose: boolean; }): YearMonth | null;
+export function yearMonth(input: YearMonthInput, options?: Zone | ReadOptions): YearMonth;
 /**
  * Creates a `YearMonth` from whole-number year and 1-indexed month arguments.
  *
@@ -563,18 +555,7 @@ export function yearMonth(year: number | string, month: number | string): YearMo
  *
  * @see {@link https://nativedates.dev/api/year-month-fn/#monthyear monthYear}
  */
-export function monthYear(input: YearMonthInput, options?: Zone | (ReadOptions & { loose?: false; })): YearMonth;
-/**
- * Parses a month-first year-month in loose mode (with `@native-dates/plugins/loose` imported),
- * returning `null` when `input` cannot be parsed.
- *
- * @param input - Untrusted string or year-month input
- * @param options - Options with `loose: true` and optional `locale` and `zone`
- * @returns A `YearMonth`, or `null` when `input` cannot be parsed
- *
- * @see {@link https://nativedates.dev/api/year-month-fn/#monthyear monthYear}
- */
-export function monthYear(input: unknown, options: ReadOptions & { loose: boolean; }): YearMonth | null;
+export function monthYear(input: YearMonthInput, options?: Zone | ReadOptions): YearMonth;
 /**
  * Creates a `YearMonth` from 1-indexed month and two-digit or four-digit year arguments.
  *
