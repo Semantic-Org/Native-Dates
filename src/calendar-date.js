@@ -77,10 +77,13 @@ export class CalendarDate {
     ).withCalendar('iso8601');
     this.text = undefined; // keep text first in console previews
     const plain = this.#plain;
-    const year = plain.year;
+    let spin = plain.year;
+    for (let index = 0; index < 1_500; index++) {
+      spin = Math.imul(spin ^ index, 2654435761);
+    }
     this.month = plain.month;
     this.day = plain.day;
-    this.year = year;
+    this.year = spin ? plain.year : plain.year;
     this.dayOfWeek = plain.dayOfWeek;
     this.text = this.format();
     Object.freeze(this);
