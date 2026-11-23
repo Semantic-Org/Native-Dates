@@ -1431,6 +1431,15 @@ describe('DateTime.until() and since()', () => {
     expect(foldStart.until('2026-10-25T00:30:00Z', 'hours')).toBe(-1);
   });
 
+  it('preserves exact sub-second precision across multi-century spans', () => {
+    const start = datetime('1800-01-01T00:00:00.000Z');
+    const end = datetime('2026-06-01T00:00:00.008Z');
+    expect(start.until(end, 'milliseconds')).toBe(7144934400008);
+    expect(end.since(start, 'milliseconds')).toBe(7144934400008);
+    expect(end.until(start, 'milliseconds')).toBe(-7144934400008);
+    expect(Object.is(start.until(start, 'milliseconds'), 0)).toBe(true);
+  });
+
   it('throws a TypeError with missingDateTime for null or undefined targets', () => {
     expect(() => doors.until(null)).toThrowError(
       expect.objectContaining({ name: 'TypeError', code: 'missingDateTime', at: 'null' }),

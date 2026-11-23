@@ -1119,6 +1119,7 @@ describe('CalendarDate.until() and since()', () => {
   it('computes since() as the inverse calendar span from an earlier date', () => {
     expect(date('2026-11-16').since('2026-11-02').days).toBe(14);
     expect(date('2026-11-16').since('2026-11-02', 'weeks')).toBe(2);
+    expect(date('2026-11-16').since(date('2026-11-02'), 'weeks')).toBe(2);
     expect(date('2027-04-05').since('2026-01-01').toString()).toBe('P459D');
     expect(date('2026-11-16').since('2026-11-20', 'days')).toBe(-4);
   });

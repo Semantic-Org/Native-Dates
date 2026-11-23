@@ -45,6 +45,13 @@ import { YearMonth } from './year-month.js';
   DST transitions uses real zone rules rather than a frozen offset
 */
 
+const clockScales = {
+  hour: 3600_000_000_000n,
+  minute: 60_000_000_000n,
+  second: 1_000_000_000n,
+  millisecond: 1_000_000n,
+};
+
 export class DateTime {
   // brand datetime
   get [IS_DATE_TIME]() {
@@ -452,7 +459,14 @@ export class DateTime {
   *******************************/
 
   until(other, name) {
-    const end = new DateTime(other, this.zone).toTemporal();
+    const rival = (other?.[IS_DATE_TIME] ? other : new DateTime(other, this.zone)).toTemporal();
+    const scale = name !== undefined && clockScales[unit(name)];
+    if (scale) {
+      // divide in BigInt first so multi-century nanosecond spans keep full sub-second float64 precision
+      const diff = rival.epochNanoseconds - this.#zoned.epochNanoseconds;
+      return Number(diff / scale) + Number(diff % scale) / Number(scale);
+    }
+    const end = rival.withTimeZone(this.zone);
     const hours = Math.abs(end.epochMilliseconds - this.epochMilliseconds) / 36e5;
     // sub-day spans use exact elapsed hours so day-0 'compatible' resolution starting in a fall-back fold hour cannot add 1h or throw
     const subDay = hours < 26
@@ -482,7 +496,9 @@ export class DateTime {
   }
 
   from(other, locale = this.#locale) {
-    const reference = other === undefined ? Date.now() : new DateTime(other, this.zone).epochMilliseconds;
+    const reference = other === undefined
+      ? Date.now()
+      : (other?.[IS_DATE_TIME] ? other : new DateTime(other, this.zone)).epochMilliseconds;
     return relativeSeconds((this.epochMilliseconds - reference) / 1000, locale);
   }
 

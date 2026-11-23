@@ -385,9 +385,12 @@ export class CalendarDate {
   *******************************/
 
   until(other, name) {
-    const end = new CalendarDate(other);
-    const span = anchored(this.#plain.until(end.toTemporal(), { largestUnit: 'day' }), this.#plain, this.#locale);
-    return name === undefined ? span : span.total(name);
+    const raw = this.#plain.until((other?.[IS_CALENDAR_DATE] ? other : new CalendarDate(other)).toTemporal());
+    return name === undefined
+      ? anchored(raw, this.#plain, this.#locale)
+      : unit(name) === 'day'
+      ? raw.days
+      : anchored(raw, this.#plain, this.#locale).total(name);
   }
 
   since(other, name) {
