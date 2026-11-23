@@ -85,6 +85,8 @@ describe('skills in ai/skills', () => {
       cwd: root,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      // Windows only finds npm through a shell
+      shell: process.platform === 'win32',
       env: { ...process.env, SKIP_INSTALL_SIMPLE_GIT_HOOKS: '1' },
     });
     // prepare's own lines come first on the same stream, so the report is read from where it opens

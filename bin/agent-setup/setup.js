@@ -392,7 +392,7 @@ Options (previews changes and prompts by default):
     // ready only when an agent has a skill to read, in this project or through a plugin that went in,
     // which a withheld step can leave it without
     const isPlugged = this.items.some(({ step, state }) => step === 'plugin' && state === 'done');
-    const isReady = isPlugged || existsSync(`${this.root}/${this.project.skillPath}`);
+    const isReady = isPlugged || existsSync(`${this.root}/${this.project.skillPath()}`);
     const closing = isReady ? this.words('ready', { skills }) : this.words('notReady');
     terminal.line(
       `\n  ${terminal.mark(isReady ? 'done' : 'warn')} ${terminal.say(closing, { level: isReady ? 'info' : 'warn' })}`,

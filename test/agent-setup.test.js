@@ -672,6 +672,48 @@ describe('npx native-dates', () => {
     expect(stdout).not.toContain('\x1b[');
   });
 
+  it('links skills that resolve when the skills folder is itself a link to somewhere else', () => {
+    const dir = project({ 'package.json': '{ "name": "app" }', 'shared/deep/skills/.keep': '', '.agents/.keep': '' });
+    symlinkSync('../shared/deep/skills', join(dir, '.agents/skills'));
+    expect(setup(dir, '--yes').status).toBe(0);
+    expect(readFileSync(join(dir, '.agents/skills/native-dates/SKILL.md'), 'utf8')).toContain('name: native-dates');
+    expect(setup(dir)).toMatchObject({ status: 0, calls: '' });
+  });
+
+  it('says how many skills a folder holds when it is another folder of the plan under a second name', () => {
+    const dir = project({ 'package.json': '{ "name": "app" }', '.agents/skills/.keep': '', '.claude/.keep': '' });
+    symlinkSync('../.agents/skills', join(dir, '.claude/skills'));
+    const { status, output } = setup(dir, '--yes');
+    expect(status).toBe(0);
+    const [, many] = copy.nouns;
+    const placed = fill(copy.linked, { count: 2, noun: many });
+    for (const folder of ['.agents/skills', '.claude/skills']) {
+      expect(output).toContain(fill(copy.skillsDone, { placed, folder }));
+    }
+  });
+
+  it('is set up after one run when a second agent appears, with the note left as it was', () => {
+    const dir = project();
+    setupWith({ agents: ['claude'] }, dir, '--yes');
+    const note = readFileSync(join(dir, 'AGENTS.md'), 'utf8');
+    expect(setupWith({ agents: ['claude', 'codex'] }, dir, '--yes').status).toBe(0);
+    expect(existsSync(join(dir, '.agents/skills/native-dates/SKILL.md'))).toBe(true);
+    const again = setupWith({ agents: ['claude', 'codex'] }, dir);
+    expect(again).toMatchObject({ status: 0, calls: '' });
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf8')).toBe(note);
+  });
+
+  it("places the skills the installed copy ships, which can differ from this command's own", () => {
+    const dir = project(dependsOn);
+    installed(dir, version);
+    const shipped = join(dir, 'node_modules/native-dates/skills');
+    cpSync(join(shipped, 'native-dates'), join(shipped, 'native-dates-extra'), { recursive: true });
+    rmSync(join(shipped, 'native-dates-plugins'), { recursive: true });
+    expect(setup(dir, '--yes').status).toBe(0);
+    expect(existsSync(join(dir, '.agents/skills/native-dates-extra/SKILL.md'))).toBe(true);
+    expect(existsSync(join(dir, '.agents/skills/native-dates-plugins'))).toBe(false);
+  });
+
   it('refuses outside a project and on an unknown option without writing', () => {
     const empty = mkdtempSync(join(scratch, 'empty-'));
     expect(setup(empty, '--yes').status).toBe(1);

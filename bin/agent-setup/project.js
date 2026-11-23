@@ -78,7 +78,6 @@ export class Project {
     this.version = version;
     this.aliases = aliases;
     this.manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-    this.skills = readdirSync(join(packageDir, 'skills'));
     this.noteMarkers = [`<!-- ${name}:start -->`, `<!-- ${name}:end -->`];
     this.noteSentence = note;
     // on disk as a direct dependency, nested under an alias, or as an alias's pnpm sibling,
@@ -104,6 +103,13 @@ export class Project {
       if (existsSync(join(at, '.git'))) { return chain; }
       if (dirname(at) === at) { return [folder]; }
     }
+  }
+
+  // the skills to place: the installed copy's own when it carries any, since those are the ones linked and
+  // another version can ship a different set, else the ones this command came with
+  get skills() {
+    const installed = this.installPath && `${this.root}/${this.installPath}/skills`;
+    return readdirSync(installed && existsSync(installed) ? installed : join(this.packageDir, 'skills'));
   }
 
   // true when a binary of that name is on the path, read from the folders and never by running anything
@@ -213,7 +219,7 @@ export class Project {
     if (lockfile) { return Project.lockfiles[lockfile]; }
     const declared = this.manifest.packageManager?.split('@')[0];
     const runner = process.env.npm_config_user_agent?.split('/')[0];
-    return [declared, runner].find((manager) => manager in Project.addCommands) ?? 'npm';
+    return [declared, runner].find((manager) => Object.hasOwn(Project.addCommands, manager ?? '')) ?? 'npm';
   }
 
   get isDependency() {
@@ -363,8 +369,11 @@ export class Project {
     if (this.skillState(folder, skill) === 'broken') { unlinkSync(path); }
     mkdirSync(dirname(path), { recursive: true });
     if (source) {
+      // the way back to the project is measured from where the folder really is, since a skills folder
+      // that is itself a link somewhere else would send a path measured from its name to nowhere
+      const [parent, root] = [realPath(dirname(path)), realPath(this.root)];
       try {
-        symlinkSync(`${relative(dirname(path), this.root) || '.'}/${source}`, path, 'junction');
+        symlinkSync(`${relative(parent, root) || '.'}/${source}`, path, 'junction');
         return 'linked';
       }
       catch {
@@ -390,7 +399,10 @@ export class Project {
     }
     const placed = this.pendingSkills.filter((skill) => skill.folder === folder).map((skill) => this.placeSkill(skill));
     const count = (how) => placed.filter((entry) => entry === how).length;
-    return ['skillsDone', { folder, linked: count('linked'), copied: count('copied'), to: this.version }];
+    // nothing left to place means an earlier step filled this folder under its other name, as when one
+    // skills folder is a link to another, so what it now holds is what is reported
+    const held = placed.length ? 0 : this.skills.filter((skill) => this.skillState(folder, skill) === 'ready').length;
+    return ['skillsDone', { folder, linked: count('linked') + held, copied: count('copied'), to: this.version }];
   }
 
   /*******************************
@@ -406,28 +418,34 @@ export class Project {
     return separate ? ['AGENTS.md', 'CLAUDE.md'] : ['AGENTS.md'];
   }
 
-  // the entry skill at a path that exists: a skills folder holding it, else the installed package's own copy
-  get skillPath() {
-    const folder = Project.skillFolders.find((folder) => this.skillState(folder, this.name) === 'ready');
+  // the entry skill at a path that exists: the skills folder a file's note already names while that still
+  // holds it, so a note does not change when another folder is filled later, else the first folder holding
+  // it, else the installed package's own copy
+  skillPath(content = '') {
+    const ready = Project.skillFolders.filter((folder) => this.skillState(folder, this.name) === 'ready');
+    const folder = ready.find((folder) => content.includes(`${folder}/${this.name}/SKILL.md`)) ?? ready[0];
     const home = folder ?? `${this.installPath ?? `node_modules/${this.name}`}/skills`;
     return `${home}/${this.name}/SKILL.md`;
   }
 
-  get note() {
+  // the note for a file, given what the file holds now
+  noteFor(content) {
     const [start, end] = this.noteMarkers;
-    return [start, `## ${this.name}`, '', this.noteSentence.replaceAll('{skill}', this.skillPath), end].join('\n');
+    const sentence = this.noteSentence.replaceAll('{skill}', this.skillPath(content));
+    return [start, `## ${this.name}`, '', sentence, end].join('\n');
   }
 
   withNote(content) {
     const [start, end] = this.noteMarkers;
+    const note = this.noteFor(content);
     const from = content.indexOf(start);
-    if (from === -1) { return content.trim() ? `${content.trimEnd()}\n\n${this.note}\n` : `${this.note}\n`; }
+    if (from === -1) { return content.trim() ? `${content.trimEnd()}\n\n${note}\n` : `${note}\n`; }
     // the end that closes this start comes before any later start. a start left without one is replaced
     // by itself, so what a person wrote after it is never taken for the old note
     const next = content.indexOf(start, from + start.length);
     const to = content.indexOf(end, from);
     const isClosed = to !== -1 && (next === -1 || to < next);
-    return content.slice(0, from) + this.note + content.slice(isClosed ? to + end.length : from + start.length);
+    return content.slice(0, from) + note + content.slice(isClosed ? to + end.length : from + start.length);
   }
 
   get pendingNotes() {
@@ -440,7 +458,7 @@ export class Project {
 
   // a note that points at no skill is worse than none, so it is only written once the skill is there
   writeNote(file) {
-    if (!existsSync(`${this.root}/${this.skillPath}`)) { return ['noteWithheld', { file }, 'warn']; }
+    if (!existsSync(`${this.root}/${this.skillPath()}`)) { return ['noteWithheld', { file }, 'warn']; }
     const path = join(this.root, file);
     const isNew = !existsSync(path);
     writeFileSync(path, this.withNote(isNew ? '' : readFileSync(path, 'utf8')));
