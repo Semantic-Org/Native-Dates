@@ -66,7 +66,7 @@ tokyo.getMonth(); // 10 (0-indexed; tokyo.month is 11)
 tokyo.setHours(12); // RangeError [immutable] — use tokyo.set('hour', 12)
 ```
 
-**5. Node `<26` (Node 20/22/24 LTS) and Safari require both `@native-dates/polyfill` AND `"temporal-polyfill": ">=0.3.0"` in your app's `dependencies`.** Bundlers statically resolve `import('temporal-polyfill')`, so omitting `"temporal-polyfill"` from `package.json` breaks builds even when targeting Chrome. Use `'@native-dates/polyfill/sync'` in CommonJS, build targets without top-level `await`, or when sibling static imports call `today()`/`now()` at module top level.
+**5. Node 24–25 and Safari require both `@native-dates/polyfill` AND `"temporal-polyfill": ">=0.3.0"` in your app's `dependencies`.** (Node `<24` also lacks `Intl.DurationFormat`, so `Duration.format()` requires Node 24+ on the server; browser builds still bundle fine on older Node.) Bundlers statically resolve `import('temporal-polyfill')`, so omitting `"temporal-polyfill"` from `package.json` breaks builds even when targeting Chrome. Use `'@native-dates/polyfill/sync'` in CommonJS, build targets without top-level `await`, or when sibling static imports call `today()`/`now()` at module top level.
 
 ---
 
@@ -124,7 +124,7 @@ Shims `Date.prototype` onto `DateTime.prototype` (`valueOf()` / `+dt` and `toJSD
 
 | Entrypoint | Mechanism | When to use |
 |---|---|---|
-| `import '@native-dates/polyfill'` | `if (!globalThis.Temporal) await import('temporal-polyfill')` | ESM browser entrypoints (0 B downloaded on Chrome/Firefox/Edge; dynamic chunk on Safari) & async ESM on Node `<26` |
+| `import '@native-dates/polyfill'` | `if (!globalThis.Temporal) await import('temporal-polyfill')` | ESM browser entrypoints (0 B downloaded on Chrome/Firefox/Edge; dynamic chunk on Safari) & async ESM on Node 24–25 |
 | `import '@native-dates/polyfill/sync'` | Sync `import { Temporal } from 'temporal-polyfill'` + `if (!globalThis.Temporal)` | CommonJS, test setups, targets without top-level `await`, or when sibling static imports call `today()`/`now()` during module evaluation |
 
 ---

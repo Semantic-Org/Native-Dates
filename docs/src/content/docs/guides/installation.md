@@ -42,11 +42,13 @@ The package ships skills covering core usage and plugins, also served at [`/skil
 
 Native Dates runs directly on the platform's built-in `Temporal` and `Intl` APIs. Current releases of Chrome, Edge, Firefox, Node 26+, Deno, and Bun ship both natively.
 
-Safari, older browser versions, and Node releases before 26 do not ship native `Temporal` yet. When targeting those runtimes, install `@native-dates/polyfill` alongside `temporal-polyfill`:
+Safari, older browsers, and Node 24–25 lack native `Temporal` and need `@native-dates/polyfill` alongside `temporal-polyfill`:
 
 ```bash
 npm i @native-dates/polyfill temporal-polyfill
 ```
+
+Node releases below 24 also lack `Intl.DurationFormat`, so server code calling `Duration.format()` requires Node 24+, though browser builds still bundle fine on older Node.
 
 Import `@native-dates/polyfill` once at your application entry point before anything else:
 
