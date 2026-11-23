@@ -33,6 +33,14 @@ export async function getStaticPaths() {
         lede: 'Interactive examples running live in the browser across time zones, durations, calendars, and locales.',
       },
     },
+    {
+      params: { slug: 'changelog' },
+      props: {
+        title: 'Changelog',
+        section: 'Releases',
+        lede: 'Release notes for native-dates, @native-dates/core, @native-dates/plugins, and @native-dates/polyfill.',
+      },
+    },
     ...entries.map((e) => ({
       params: { slug: e.id },
       props: {

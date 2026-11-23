@@ -189,7 +189,7 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
       <nav class="footer-cols" aria-label={t(locale, 'home.footer.label')}>
         <div><h2>{t(locale, 'home.footer.docs')}</h2>{SECTIONS.map(([name, path]) => <a href={to(path)}>{t(locale, name)}</a>)}</div>
         <div><h2>{t(locale, 'home.footer.packages')}</h2><a href="https://www.npmjs.com/package/native-dates">native-dates</a><a href="https://www.npmjs.com/package/@native-dates/plugins">@native-dates/plugins</a><a href="https://www.npmjs.com/package/@native-dates/polyfill">@native-dates/polyfill</a></div>
-        <div><h2>{t(locale, 'home.footer.project')}</h2><a href={REPO_URL}>{t(locale, 'nav.github')}</a><a href={`${REPO_URL}/releases`}>{t(locale, 'version.changelog')}</a></div>
+        <div><h2>{t(locale, 'home.footer.project')}</h2><a href={REPO_URL}>{t(locale, 'nav.github')}</a><a href={to('/changelog/')}>{t(locale, 'version.changelog')}</a></div>
       </nav>
     </div>
   </footer>

@@ -70,6 +70,10 @@
     "prepare": "simple-git-hooks",
     "prepack": "node tools/skills.js pack",
     "postpack": "node tools/skills.js clean",
+    "release:check": "node tools/release.js check",
+    "release:bump": "node tools/release.js bump",
+    "release:notes": "node tools/release.js notes",
+    "release:publish": "node tools/release.js publish",
     "setup:demo": "node tools/setup-demo.js",
     "setup": "npx simple-git-hooks"
   },

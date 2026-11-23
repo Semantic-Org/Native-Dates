@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import VERSIONS from '../data/versions.json' with { type: 'json' };
-import { DEFAULT_LOCALE, t } from './i18n.js';
+import { DEFAULT_LOCALE, localePath, t } from './i18n.js';
 import { PACKAGE_DIR } from './sizes.js';
 
 // src/data/versions.json lists archived major docs newest first as { version: "1", url: "https://v1.nativedates.dev" }
@@ -30,10 +30,11 @@ export function versionMenu(site, code = DEFAULT_LOCALE) {
   const other = onStaging
     ? { label: t(code, 'version.released'), url: LATEST_ORIGIN }
     : { label: t(code, 'version.unreleased'), url: UNRELEASED_ORIGIN };
+  const changelogHref = localePath('/changelog/', code);
   return `<div class="version-menu" data-version-menu data-latest="${LATEST_ORIGIN}">
   <button class="version-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="${t(code, 'version.button', { version: esc(current) })}">v${esc(current)}${CHEVRON}</button>
   <div class="pop-menu" role="menu" aria-label="${t(code, 'version.menu')}" hidden>
-    <a class="pop-item" role="menuitem" href="${CHANGELOG_URL}" target="_blank" rel="noopener"><span>${t(code, 'version.changelog')}</span>${OUT}</a>
+    <a class="pop-item" role="menuitem" href="${esc(changelogHref)}"><span>${t(code, 'version.changelog')}</span></a>
     <a class="pop-item" role="menuitem" href="${other.url}"><span>${other.label}</span>${OUT}</a>
     <div class="pop-archived" data-archived${archived.length ? '' : ' hidden'}>${archivedItems(archived, code)}</div>
   </div>

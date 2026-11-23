@@ -11,6 +11,7 @@ export async function GET({ site }) {
     { path: '/' },
     { path: '/plugins/' },
     { path: '/examples/' },
+    { path: '/changelog/' },
     ...entries.map((e) => ({ path: `/${e.id}/`, updated: e.data.updated })),
     ...examples.map((e) => ({ path: `/examples/${e.id}/` })),
   ];
