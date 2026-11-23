@@ -77,9 +77,10 @@ export class CalendarDate {
     ).withCalendar('iso8601');
     this.text = undefined; // keep text first in console previews
     const plain = this.#plain;
+    const year = plain.year;
     this.month = plain.month;
     this.day = plain.day;
-    this.year = plain.year;
+    this.year = year;
     this.dayOfWeek = plain.dayOfWeek;
     this.text = this.format();
     Object.freeze(this);
