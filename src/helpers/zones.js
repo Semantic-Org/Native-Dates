@@ -1,7 +1,7 @@
 import { each, isPlainObject, isString, remember } from './utils.js';
 
 import { isDevelopment } from './environment.js';
-import { guard, refuse, requireLoose } from './errors.js';
+import { fail, guard, refuse, requireLoose } from './errors.js';
 import { nameCache, weekdayWidths } from './tokens.js';
 import { dayOfWeek } from './units.js';
 
@@ -43,9 +43,9 @@ export const setZoneExtension = (resolver) => {
   resolved.clear();
 };
 
-// plugins may read a name by the caller's locale ('CST' is Shanghai in zh-CN), so results cache per locale
+// plugins may read a name by the caller's locale ('CST' is Shanghai in zh-CN), so plugin results cache per locale
 export const zoneId = (id, tag) => {
-  if (id === undefined || id === null) {
+  if (id == null) {
     return settings.zone ?? Temporal.Now.timeZoneId();
   }
   if (!isString(id)) {
@@ -55,23 +55,21 @@ export const zoneId = (id, tag) => {
         : 0,
     });
   }
-  const activeLocale = locale(tag);
-  const key = `${id}|${activeLocale ?? ''}`;
-  const known = resolved.get(key);
-  if (known) {
-    return known;
-  }
-  const found = zoneExtension ? zoneExtension(id, settings.zoneAliases, activeLocale) : canonicalZone(id.trim());
-  if (!found) {
-    refuse('unknownZone', id, {
-      explanation: isDevelopment
-        ? zoneExtension
-          ? "expected an IANA time zone like 'America/New_York', a city like 'Berlin', an abbreviation like 'PT', a fixed offset like '+05:30', or 'UTC'. To add custom names, call `configure({ zoneAliases: { hq: 'Europe/Berlin' } })`"
-          : "expected an IANA time zone like 'America/New_York', a fixed offset like '+05:30', or 'UTC'. Import '@native-dates/plugins/zones' to use city names like 'Berlin', abbreviations like 'PT', or `zoneAliases`"
-        : 0,
-    });
-  }
-  return remember(resolved, key, found);
+  const activeLocale = (zoneExtension || tag !== undefined) && locale(tag);
+  const key = zoneExtension ? `${id}|${activeLocale ?? ''}` : id;
+  return resolved.get(key)
+    ?? remember(
+      resolved,
+      key,
+      (zoneExtension ? zoneExtension(id, settings.zoneAliases, activeLocale) : canonicalZone(id.trim()))
+        || refuse('unknownZone', id, {
+          explanation: isDevelopment
+            ? zoneExtension
+              ? "expected an IANA time zone like 'America/New_York', a city like 'Berlin', an abbreviation like 'PT', a fixed offset like '+05:30', or 'UTC'. To add custom names, call `configure({ zoneAliases: { hq: 'Europe/Berlin' } })`"
+              : "expected an IANA time zone like 'America/New_York', a fixed offset like '+05:30', or 'UTC'. Import '@native-dates/plugins/zones' to use city names like 'Berlin', abbreviations like 'PT', or `zoneAliases`"
+            : 0,
+        }),
+    );
 };
 
 export const configure = (options) => {
@@ -178,45 +176,42 @@ const canonicalTag = (name) => {
 const validObjects = new WeakSet();
 const knownLocales = new Map();
 export const checkedLocale = (tag) => {
+  if (knownLocales.has(tag)) {
+    return knownLocales.get(tag);
+  }
   if (!tag || (isString(tag) && !tag.trim())) {
     return undefined;
   }
   if (validObjects.has(tag)) {
     return tag;
   }
-  const explanation = isDevelopment
-    ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
-    : 0;
-  if (!isString(tag)) {
-    guard(
-      () => (Array.isArray(tag) || tag instanceof Intl.Locale ? Intl.getCanonicalLocales(tag) : fail()),
-      'unknownLocale',
-      tag,
-      explanation,
-    );
-    validObjects.add(tag);
-    return tag;
-  }
-  if (!knownLocales.has(tag)) {
-    const kept = /[_,;*]/.test(tag)
-      && tag.replace(/_/g, '-').split(',')
-        .map((part) => part.trim().split(/(?<!\s)\s*;\s*q=/i))
-        .filter(([name, weight]) => name && name !== '*' && weight != 0)
-        .sort((a, b) => (b[1] ?? 1) - (a[1] ?? 1));
-    const tags = kept && kept.flatMap(([name]) => canonicalTag(name) ?? []);
-    guard(
-      () => (kept ? kept.length && !tags.length && fail() : Intl.getCanonicalLocales(tag.trim())),
-      'unknownLocale',
-      tag,
-      explanation,
-    );
-    remember(
+  const kept = isString(tag) && /[_,;*]/.test(tag)
+    && tag.replace(/_/g, '-').split(',')
+      .map((part) => part.trim().split(/(?<!\s)\s*;\s*q=/i))
+      .filter(([name, weight]) => name && name !== '*' && weight != 0)
+      .sort((a, b) => (b[1] ?? 1) - (a[1] ?? 1));
+  const tags = kept && kept.flatMap(([name]) => canonicalTag(name) ?? []);
+  guard(
+    () => (
+      !isString(tag)
+        ? (Array.isArray(tag) || tag instanceof Intl.Locale ? Intl.getCanonicalLocales(tag) : fail())
+        : kept
+        ? kept.length && !tags.length && fail()
+        : Intl.getCanonicalLocales(tag.trim())
+    ),
+    'unknownLocale',
+    tag,
+    isDevelopment
+      ? "expected a locale tag like 'en-US' or 'de', an array of tags, or an HTTP `Accept-Language` header"
+      : 0,
+  );
+  return !isString(tag)
+    ? (validObjects.add(tag), tag)
+    : remember(
       knownLocales,
       tag,
       kept ? (tags.length > 1 ? (validObjects.add(tags), Object.freeze(tags)) : tags[0]) : tag.trim(),
     );
-  }
-  return knownLocales.get(tag);
 };
 
 // checked before built-in presets so apps can redefine names like 'short'

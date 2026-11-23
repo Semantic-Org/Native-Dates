@@ -87,6 +87,12 @@ export class CalendarDate {
     if (settings.loose || settings.dayFirst !== undefined) {
       requireLoose(settings.loose ? 'loose' : 'dayFirst');
     }
+    if (isString(input) && input.length === 10 && input[4] === '-') {
+      try {
+        return Temporal.PlainDate.from(input);
+      }
+      catch {}
+    }
     if (input === undefined || input === null) {
       return refuseType('missingDate', String(input), {
         explanation: isDevelopment

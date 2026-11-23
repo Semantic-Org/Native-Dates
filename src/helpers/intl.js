@@ -2,7 +2,7 @@ import { cached } from './utils.js';
 
 import { guard } from './errors.js';
 
-// DateTime passes options.timeZone ?? zone in format.js, while plainDateTimeFormat always pins 'UTC' to match epochOf()
+// DateTime passes options.timeZone ?? zone in format.js, while plainDateTimeFormat uses 'UTC' to match epochOf()
 export const zonedDateTimeFormat = cached((locale, options, timeZone) =>
   guard(
     () => new Intl.DateTimeFormat(locale, { ...options, timeZone }),
@@ -10,7 +10,13 @@ export const zonedDateTimeFormat = cached((locale, options, timeZone) =>
     options,
   )
 );
-export const plainDateTimeFormat = (locale, options) => zonedDateTimeFormat(locale, options, 'UTC');
+export const plainDateTimeFormat = cached((locale, options) =>
+  guard(
+    () => new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }),
+    'unknownFormat',
+    options,
+  )
+);
 export const durationFormat = cached((locale, style, hoursDisplay) =>
   new Intl.DurationFormat(locale, { style, hoursDisplay })
 );

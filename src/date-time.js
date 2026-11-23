@@ -103,17 +103,10 @@ export class DateTime {
           : 0,
       });
     }
-    if (input instanceof DateTime) {
-      return zone === undefined ? input.toTemporal() : input.toTemporal().withTimeZone(timeZone);
+    if (isString(input)) {
+      return DateTime.#parse(input, settings, timeZone, disambiguation);
     }
-    if (input instanceof CalendarDate) {
-      return guard(
-        () => input.toTemporal().toZonedDateTime({ timeZone }),
-        'invalidDateTime',
-        input,
-      );
-    }
-    if (isDate(input) || isNumber(input)) {
+    if (isNumber(input) || isDate(input)) {
       const epoch = isNumber(input) ? input : input.getTime();
       if (!Number.isFinite(epoch)) {
         refuse('invalidNumber', String(input), {
@@ -123,8 +116,15 @@ export class DateTime {
       // performance.now() and arithmetic can produce fractional ms, which Date truncates and Temporal rejects
       return Temporal.Instant.fromEpochMilliseconds(Math.trunc(epoch)).toZonedDateTimeISO(timeZone);
     }
-    if (isString(input)) {
-      return DateTime.#parse(input, settings, timeZone, disambiguation);
+    if (input instanceof DateTime) {
+      return zone === undefined ? input.toTemporal() : input.toTemporal().withTimeZone(timeZone);
+    }
+    if (input instanceof CalendarDate) {
+      return guard(
+        () => input.toTemporal().toZonedDateTime({ timeZone }),
+        'invalidDateTime',
+        input,
+      );
     }
     if (isZonedDateTime(input)) {
       return zone === undefined ? input : input.withTimeZone(timeZone);
@@ -153,6 +153,12 @@ export class DateTime {
   }
 
   static #parse(text, settings, timeZone, disambiguation) {
+    if (text[4] === '-' && text.endsWith('Z')) {
+      try {
+        return Temporal.Instant.from(text).toZonedDateTimeISO(timeZone);
+      }
+      catch {}
+    }
     const trimmed = yearFirst(text.trim());
     const isoStart = settings.loose ? opensOnDate(trimmed) : false;
     if (settings.loose && !isoStart) {
@@ -162,36 +168,27 @@ export class DateTime {
       }
     }
     try {
-      return guard(
-        () => {
-          if (hasZoneName.test(trimmed)) {
-            const zoned = Temporal.ZonedDateTime.from(trimmed, { disambiguation });
-            return settings.zone === undefined ? zoned : zoned.withTimeZone(timeZone);
-          }
-          if (hasTime.test(trimmed)) {
-            return hasOffset.test(trimmed)
-              ? Temporal.Instant.from(trimmed).toZonedDateTimeISO(timeZone)
-              : Temporal.PlainDateTime.from(trimmed).toZonedDateTime(timeZone, { disambiguation });
-          }
-          return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone });
-        },
-        'invalidDateTime',
-        text,
-        // separate out-of-range fields (like Feb 30) from malformed string syntax
-        isDevelopment
+      if (trimmed.endsWith(']') && hasZoneName.test(trimmed)) {
+        const zoned = Temporal.ZonedDateTime.from(trimmed, { disambiguation });
+        return settings.zone === undefined ? zoned : zoned.withTimeZone(timeZone);
+      }
+      if (hasTime.test(trimmed)) {
+        return hasOffset.test(trimmed)
+          ? Temporal.Instant.from(trimmed).toZonedDateTimeISO(timeZone)
+          : Temporal.PlainDateTime.from(trimmed).toZonedDateTime(timeZone, { disambiguation });
+      }
+      return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone });
+    }
+    catch {
+      // separate out-of-range fields (like Feb 30) from malformed string syntax
+      return (isoStart && parseLoose(trimmed, settings)) || refuse('invalidDateTime', text, {
+        explanation: isDevelopment
           ? /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:[zZ]|[+-](?:[01]\d|2[0-3]):[0-5]\d)?)?$/
               .test(trimmed)
             ? 'this date or time does not exist. Check the year, month, day, and time fields'
             : "expected an ISO string like '2026-09-06T14:30:00Z', '2026-09-06T14:30', or '2026-09-06'. Pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
           : 0,
-      );
-    }
-    catch (error) {
-      const zoned = isoStart && error.code === 'invalidDateTime' && parseLoose(trimmed, settings);
-      if (!zoned) {
-        throw error;
-      }
-      return zoned;
+      });
     }
   }
 
