@@ -52,8 +52,32 @@ const isParsedValue = (value) => isDate(value) || Object.hasOwn(constructors, ki
 
 const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const choice = (items) =>
-  `(?i:${[...new Set(items)].filter(Boolean).sort((a, b) => b.length - a.length).map(escapeRegExp).join('|')})`;
+// expand case variants into ES2018 classes instead of ES2025 (?i:...) modifiers so Node 20/22 and Safari < 26 work
+const caselessChar = (char, locale) => {
+  const forms = new Set([
+    char,
+    char.toLocaleLowerCase(locale),
+    char.toLocaleUpperCase(locale),
+    char.toLowerCase(),
+    char.toUpperCase(),
+  ]);
+  if (forms.size === 1) {
+    return escapeRegExp(char);
+  }
+  const list = [...forms];
+  return list.every((form) => [...form].length === 1)
+    ? `[${list.map(escapeRegExp).join('')}]`
+    : `(?:${list.map(escapeRegExp).join('|')})`;
+};
+
+const caseless = (text, locale) => [...text].map((char) => caselessChar(char, locale)).join('');
+
+const choice = (items, locale) =>
+  `(?:${
+    [...new Set(items)].filter(Boolean).sort((a, b) => b.length - a.length).map((item) => caseless(item, locale)).join(
+      '|',
+    )
+  })`;
 
 const lookupMap = (lists, locale) => {
   const map = new Map();
@@ -68,6 +92,16 @@ const lookupMap = (lists, locale) => {
   return map;
 };
 
+// bitmask keeps all colliding narrow weekday labels (such as pt-BR 'Q' for Wed and Thu)
+const weekdayMaskMap = (list, locale) => {
+  const map = new Map();
+  list.forEach((word, index) => {
+    const key = word.toLocaleLowerCase(locale);
+    map.set(key, (map.get(key) ?? 0) | (1 << (index + 1)));
+  });
+  return map;
+};
+
 const englishOrdinalSuffix = (day) => {
   const tens = day % 100;
   return tens >= 11 && tens <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][day % 10] ?? 'th';
@@ -77,6 +111,10 @@ const englishOrdinalSuffix = (day) => {
 const record = (fields, key, value) => {
   if (value === undefined || Number.isNaN(value)) {
     return false;
+  }
+  if (key === 'weekdayMask' && key in fields) {
+    fields[key] &= value;
+    return fields[key] !== 0;
   }
   if (key in fields && fields[key] !== value) {
     return false;
@@ -101,12 +139,17 @@ const readSixty = numberIn(0, 59);
 const monthSpec = (token) => (table, locale) => {
   const lists = [table[token], table.besideDay[token]];
   const map = lookupMap(lists, locale);
-  return ['month', `(${choice(lists.flat())})`, 'month', (raw) => map.get(raw.toLocaleLowerCase(locale))];
+  return ['month', `(${choice(lists.flat(), locale)})`, 'month', (raw) => map.get(raw.toLocaleLowerCase(locale))];
 };
 
 const weekdaySpec = (token) => (table, locale) => {
-  const map = lookupMap([table[token]], locale);
-  return ['dayOfWeek', `(${choice(table[token])})`, 'dayOfWeek', (raw) => map.get(raw.toLocaleLowerCase(locale))];
+  const map = weekdayMaskMap(table[token], locale);
+  return [
+    'dayOfWeek',
+    `(${choice(table[token], locale)})`,
+    'weekdayMask',
+    (raw) => map.get(raw.toLocaleLowerCase(locale)),
+  ];
 };
 
 const meridiemSpec = (table, locale) => {
@@ -115,11 +158,11 @@ const meridiemSpec = (table, locale) => {
     [periods[0].toLocaleLowerCase(locale), 0],
     [periods[1].toLocaleLowerCase(locale), 1],
   ]);
-  return ['hour', `(${choice(periods)})`, 'meridiem', (raw) => map.get(raw.toLocaleLowerCase(locale))];
+  return ['hour', `(${choice(periods, locale)})`, 'meridiem', (raw) => map.get(raw.toLocaleLowerCase(locale))];
 };
 
 const ordinalSpec = (table) => {
-  const suffix = table.isEnglish ? '(?i:st|nd|rd|th)' : escapeRegExp(table.dayMark);
+  const suffix = table.isEnglish ? '(?:[sS][tT]|[nN][dD]|[rR][dD]|[tT][hH])' : escapeRegExp(table.dayMark);
   return [
     'day',
     `(\\d{1,2}${suffix})`,
@@ -193,8 +236,8 @@ const tokenSpecs = {
 const hasCompletePattern = (kind, seen) => {
   const hasDate = seen.has('year')
     && ((seen.has('month') && seen.has('day')) || seen.has('dayOfYear') || seen.has('weekOfYear'));
-  const hasSubHour = seen.has('minute') || seen.has('second') || seen.has('millisecond');
-  if (hasSubHour && !seen.has('hour')) {
+  const hasClockDependent = seen.has('minute') || seen.has('second') || seen.has('millisecond') || seen.has('meridiem');
+  if (hasClockDependent && !seen.has('hour')) {
     return false;
   }
   if (kind === 'date') {
@@ -259,7 +302,7 @@ const compile = (pattern, kind, locale, table) => {
           : 0,
       });
     }
-    seen.add(field);
+    seen.add(key === 'meridiem' ? 'meridiem' : field);
     source += fragment;
     readers.push([key, read]);
   }
@@ -285,6 +328,17 @@ const compile = (pattern, kind, locale, table) => {
   });
 };
 
+const uniqueWeekday = (fields) => {
+  if ('dayOfWeek' in fields) {
+    return fields.dayOfWeek;
+  }
+  if (!('weekdayMask' in fields)) {
+    return 1;
+  }
+  const mask = fields.weekdayMask;
+  return (mask & (mask - 1)) === 0 ? Math.log2(mask) : undefined;
+};
+
 const resolveDate = (fields) => {
   let plain;
   if ('month' in fields && 'day' in fields) {
@@ -300,9 +354,13 @@ const resolveDate = (fields) => {
     plain = jan1.add({ days: fields.dayOfYear - 1 });
   }
   else {
+    const isoDay = uniqueWeekday(fields);
+    if (!isoDay) {
+      return undefined;
+    }
     const jan4 = Temporal.PlainDate.from({ year: fields.year, month: 1, day: 4 }, { overflow: 'reject' });
     const week1Monday = jan4.subtract({ days: jan4.dayOfWeek - 1 });
-    plain = week1Monday.add({ days: (fields.weekOfYear - 1) * 7 + ((fields.dayOfWeek ?? 1) - 1) });
+    plain = week1Monday.add({ days: (fields.weekOfYear - 1) * 7 + (isoDay - 1) });
     if (plain.yearOfWeek !== fields.year || plain.weekOfYear !== fields.weekOfYear) {
       return undefined;
     }
@@ -314,6 +372,9 @@ const resolveDate = (fields) => {
     return undefined;
   }
   if ('dayOfWeek' in fields && plain.dayOfWeek !== fields.dayOfWeek) {
+    return undefined;
+  }
+  if ('weekdayMask' in fields && !(fields.weekdayMask & (1 << plain.dayOfWeek))) {
     return undefined;
   }
   return plain;
@@ -412,14 +473,35 @@ export const parseFormatted = (kind, input, settings = {}) => {
     }
 
     if ('epoch' in fields) {
-      const zoned = Temporal.Instant.fromEpochMilliseconds(fields.epoch).toZonedDateTimeISO(timeZone);
-      if ('year' in fields) {
-        const expected = resolveDate(fields);
-        if (!expected || !zoned.toPlainDate().equals(expected)) {
+      const parsedZone = 'zone' in fields ? zoneId(fields.zone, settings.locale) : undefined;
+      const instant = Temporal.Instant.fromEpochMilliseconds(fields.epoch);
+      const checked = instant.toZonedDateTimeISO(parsedZone ?? timeZone);
+      const isWeekYearOnly = 'weekOfYear' in fields && !('month' in fields) && !('dayOfYear' in fields);
+      if (
+        ('year' in fields && (isWeekYearOnly ? checked.yearOfWeek : checked.year) !== fields.year)
+        || ('month' in fields && checked.month !== fields.month)
+        || ('day' in fields && checked.day !== fields.day)
+        || ('dayOfYear' in fields && checked.dayOfYear !== fields.dayOfYear)
+        || ('weekOfYear' in fields && checked.weekOfYear !== fields.weekOfYear)
+        || ('dayOfWeek' in fields && checked.dayOfWeek !== fields.dayOfWeek)
+        || ('weekdayMask' in fields && !(fields.weekdayMask & (1 << checked.dayOfWeek)))
+        || ('offset' in fields && checked.offset !== (fields.offset === 'Z' ? '+00:00' : fields.offset))
+      ) {
+        return refuseInvalid(kind, input, pattern);
+      }
+      if (compiled.hasClock) {
+        const plainTime = resolveTime(fields);
+        if (
+          !plainTime
+          || checked.hour !== plainTime.hour
+          || ('minute' in fields && checked.minute !== plainTime.minute)
+          || ('second' in fields && checked.second !== plainTime.second)
+          || ('millisecond' in fields && checked.millisecond !== plainTime.millisecond)
+        ) {
           return refuseInvalid(kind, input, pattern);
         }
       }
-      return zoned;
+      return settings.zone === undefined ? checked : instant.toZonedDateTimeISO(timeZone);
     }
 
     const plainDate = resolveDate(fields);
