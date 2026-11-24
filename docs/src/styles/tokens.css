@@ -197,6 +197,12 @@ code, kbd, pre { font-family: var(--font-mono); font-variant-ligatures: none; fo
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;
 }
+.skip-link:focus-visible {
+  position: fixed; z-index: 100; top: 12px; inset-inline-start: 12px;
+  width: auto; height: auto; padding: 8px 14px; overflow: visible; clip: auto;
+  border: 1px solid var(--accent-line); border-radius: var(--r-2); background: var(--bg);
+  color: var(--text); font-size: var(--fs-sm); line-height: var(--lh-sm); font-weight: 500; text-decoration: none;
+}
 
 /* ---------- shared chrome ---------- */
 
@@ -377,6 +383,7 @@ dialog.search::backdrop { background: oklch(0 0 0 / 0.6); backdrop-filter: blur(
 }
 .code-tab[lang] { font-family: var(--font-sans); }
 .code-tab:hover { color: var(--text-2); }
+.code-tab:focus-visible { outline-offset: -2px; }
 .code-tab[aria-selected='true'] { color: var(--text); background: var(--surface-3); }
 .code-file { padding: 0 8px; color: var(--text-3); font: 400 var(--fs-xs)/1 var(--font-mono); }
 .code-head .copy { flex: none; margin-inline-start: auto; }
@@ -406,7 +413,9 @@ dialog.search::backdrop { background: oklch(0 0 0 / 0.6); backdrop-filter: blur(
   --shiki-token-link: var(--c-blue);
 }
 pre.astro-code { background: transparent; color: var(--shiki-foreground); }
-pre.astro-code:focus-visible { outline-offset: -2px; }
+pre.astro-code:focus-visible { outline-offset: -2px; border-radius: calc(var(--r-3) - 1px); }
+.code-head ~ pre.astro-code:focus-visible,
+.code-head ~ .swap > pre.astro-code:focus-visible { border-start-start-radius: 0; border-start-end-radius: 0; }
 pre.astro-code .line.highlighted {
   display: inline-block; width: calc(100% + 40px); margin: 0 -20px; padding: 0 17px;
   border-inline-start: 3px solid var(--accent); background: var(--accent-wash);

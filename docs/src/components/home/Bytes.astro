@@ -25,7 +25,7 @@ const plugins = PLUGINS.map((p, i) => ({
   </div>
   <div class="bytes" data-bytes data-sizes={JSON.stringify(subsets)} style={`--full: ${full}`}>
     <div class="bytes-total">
-      <span class="bytes-number"><bdi data-bytes-total>{formatSize(core)}</bdi></span>
+      <span class="bytes-number" aria-live="polite" aria-atomic="true"><bdi data-bytes-total>{formatSize(core)}</bdi></span>
       <span class="bytes-unit"><abbr title={t(locale, 'page.minBr')}>min+br</abbr></span>
       <div class="bytes-presets" role="group" aria-label={t(locale, 'plugins.presets.label')}>
         {PRESETS.map((preset) => <button class="preset" type="button" aria-pressed="false" data-preset={preset.plugins.join(',')}><code>{preset.name}</code></button>)}
