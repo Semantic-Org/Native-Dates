@@ -4,6 +4,7 @@ import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, refuse, unreadable } from './helpers/errors.js';
 import {
   addFields,
+  calendarFieldNames,
   carriedMonths,
   clockFields,
   fieldNames,
@@ -308,7 +309,7 @@ export class Duration {
     }
     const written = this.toFields();
     const clock = fieldsOf(temporalDurationOf(clockFields(written)).round({ largestUnit: 'hour' }));
-    const fields = { ...written, ...Object.fromEntries(fieldNames.slice(4).map((field) => [field, clock[field]])) };
+    const fields = { ...fieldsOf(written, calendarFieldNames), ...clock };
     const large = fieldNames.slice(0, subsecond).some((field) => fields[field]);
     // hoursDisplay: 'auto' omits zero hours so digital zero formats as '00:00'
     const shown = {};
@@ -319,10 +320,9 @@ export class Duration {
     });
     // Intl.DurationFormat omits zero fields by default (returning '' for { seconds: 0 } and throwing on {})
     if (this.isZero() && style !== 'digital') {
-      const unitDisplay = style === 'long' ? 'long' : style === 'narrow' ? 'narrow' : 'short';
-      return unitFormat(pickLocale(locale), 'second', unitDisplay).format(0);
+      return unitFormat(pickLocale(locale), 'second', style).format(0);
     }
-    return durationFormat(pickLocale(locale), style, 'auto').format(shown);
+    return durationFormat(pickLocale(locale), style).format(shown);
   }
 
   toString() {

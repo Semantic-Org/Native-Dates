@@ -5,7 +5,7 @@ import { DateTime } from './date-time.js';
 import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
-import { durationLike, fieldNames, fieldsFrom } from './helpers/fields.js';
+import { calendarFieldNames, durationLike, fieldsFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
 import { formatTokens } from './helpers/tokens.js';
@@ -223,7 +223,7 @@ export class Time {
   // Temporal.PlainTime.add({ days: 1 }) silently wraps to a no-op, so reject calendar units explicitly
   static #clockFields(amount, name) {
     const fields = fieldsFrom(amount, name);
-    const calendar = fieldNames.slice(0, 4).find((field) => fields[field]);
+    const calendar = calendarFieldNames.find((field) => fields[field]);
     if (calendar) {
       refuse('unsupportedUnit', calendar, {
         explanation: isDevelopment

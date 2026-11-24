@@ -4,7 +4,7 @@ import { DateTime, now } from './date-time.js';
 import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
-import { durationLike, fieldNames, fieldsFrom } from './helpers/fields.js';
+import { clockFieldNames, durationLike, fieldsFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
 import { yearFirst } from './helpers/parts.js';
@@ -247,7 +247,7 @@ export class CalendarDate {
 
   static #dateFields(amount, name) {
     const fields = fieldsFrom(amount, name);
-    const clock = fieldNames.slice(4).find((field) => fields[field]);
+    const clock = clockFieldNames.find((field) => fields[field]);
     if (clock) {
       refuse('unsupportedUnit', clock, {
         explanation: isDevelopment

@@ -17,8 +17,8 @@ export const plainDateTimeFormat = cached((locale, options) =>
     options,
   )
 );
-export const durationFormat = cached((locale, style, hoursDisplay) =>
-  new Intl.DurationFormat(locale, { style, hoursDisplay })
+export const durationFormat = cached((locale, style) =>
+  new Intl.DurationFormat(locale, { style, hoursDisplay: 'auto' })
 );
 export const unitFormat = cached((locale, unit, unitDisplay) =>
   new Intl.NumberFormat(locale, { style: 'unit', unit, unitDisplay })
