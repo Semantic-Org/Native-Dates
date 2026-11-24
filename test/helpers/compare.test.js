@@ -88,6 +88,8 @@ describe('compare()', () => {
 
   it('parses two timestamp strings as DateTimes and orders same-day values by time', () => {
     expect(compare('2026-11-16T09:00:00Z', '2026-11-16T17:30:00Z')).toBe(-1);
+    expect(compare('2026-11-16t09:00:00z', '2026-11-16t17:30:00z')).toBe(-1);
+    expect(compare('2026-11-16t09:00:00', '2026-11-16t17:30:00')).toBe(-1);
     expect(compare('2026-11-16 17:30:00', '2026-11-16 09:00:00')).toBe(1);
     const written = ['2026-11-16T17:30:00Z', '2026-11-15T23:00:00Z', '2026-11-16T09:00:00Z'];
     expect(written.sort(compare)).toEqual(['2026-11-15T23:00:00Z', '2026-11-16T09:00:00Z', '2026-11-16T17:30:00Z']);

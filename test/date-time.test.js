@@ -19,6 +19,22 @@ describe('datetime() string parsing', () => {
     expect(standup).toMatchObject({ zone: 'America/Los_Angeles', hour: 9, minute: 30 });
   });
 
+  it('parses lowercase t time separators and lowercase z UTC suffixes', () => {
+    const standup = datetime('2026-11-24t09:30:00z', 'America/Los_Angeles');
+    expect(standup.toString()).toBe('2026-11-24T09:30:00.000Z');
+    expect(standup).toMatchObject({ zone: 'America/Los_Angeles', hour: 1, minute: 30 });
+    expect(datetime('2026-11-24T09:30:00z', 'UTC').toString()).toBe('2026-11-24T09:30:00.000Z');
+    expect(datetime('2026-11-24t09:30:00Z', 'UTC').toString()).toBe('2026-11-24T09:30:00.000Z');
+    expect(datetime('2026-11-24t09:30:00-05:00', 'UTC').toString()).toBe('2026-11-24T14:30:00.000Z');
+    expect(datetime('2026-11-24t09:30', 'America/Los_Angeles').toString()).toBe('2026-11-24T17:30:00.000Z');
+    expect(datetime('2026-11-24t9:30:00z', 'UTC').toString()).toBe('2026-11-24T09:30:00.000Z');
+    expect(datetime('2026-11-24t09:30[America/New_York]')).toMatchObject({
+      zone: 'America/New_York',
+      hour: 9,
+      minute: 30,
+    });
+  });
+
   it('parses numeric UTC offsets after a T or space separator', () => {
     expect(datetime('2026-11-16T12:30:00-05:00', 'Asia/Tokyo').toString()).toBe('2026-11-16T17:30:00.000Z');
     expect(datetime('2026-11-16 12:30-05:00', 'Asia/Tokyo').toString()).toBe('2026-11-16T17:30:00.000Z');
@@ -263,6 +279,22 @@ describe('datetime() validation errors', () => {
     expect(() => datetime({ year: 2026, month: 2, day: 30 }, 'UTC')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'invalidDateTime', at: '{"year":2026,"month":2,"day":30}' }),
     );
+    let upper;
+    let lower;
+    try {
+      datetime('2026-02-30T10:00:00Z', 'UTC');
+    }
+    catch (error) {
+      upper = error;
+    }
+    try {
+      datetime('2026-02-30t10:00:00z', 'UTC');
+    }
+    catch (error) {
+      lower = error;
+    }
+    expect(lower).toMatchObject({ name: 'RangeError', code: 'invalidDateTime', at: '2026-02-30t10:00:00z' });
+    expect(lower.message.split('\n')[1]).toBe(upper.message.split('\n')[1]);
   });
 
   it('throws invalidDateTime when day is omitted from a fields object', () => {
@@ -298,8 +330,6 @@ describe('datetime() validation errors', () => {
       expect.objectContaining({ name: 'RangeError', code: 'unknownZone', at: '5' }),
     );
   });
-
-  it.todo('parses the time component after a lowercase "t" separator');
 });
 
 describe('now(), startOfToday(), and endOfToday()', () => {

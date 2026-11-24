@@ -153,6 +153,8 @@ describe('time() from instants and DateTimes', () => {
   it('resolves the wall-clock time of an ISO instant string in the target timezone', () => {
     expect(time('2026-11-16T17:30:00Z', 'America/New_York').toString()).toBe('12:30:00');
     expect(time('2026-11-16T17:30:00Z', { zone: 'Asia/Tokyo' }).toString()).toBe('02:30:00');
+    expect(time('2026-11-16t17:30:00z', 'America/New_York').toString()).toBe('12:30:00');
+    expect(time('2026-11-16t17:30:00z', 'Asia/Tokyo').toString()).toBe('02:30:00');
   });
 
   it('applies both the input UTC offset and the target timezone', () => {
