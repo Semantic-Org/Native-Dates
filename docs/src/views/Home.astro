@@ -111,15 +111,11 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
     <section class="ribbon">
       <div class="container">
         <div class="ribbon-head">
-          <h2>{t(locale, 'home.prims.title')}</h2>
-          <p>{t(locale, 'home.prims.lede')}</p>
+          <Verdict />
+          <p set:html={t(locale, 'home.consoles.lede')} />
         </div>
-        <Primitives />
+        <Consoles />
       </div>
-    </section>
-
-    <section class="ribbon" id="agent-reads">
-      <AgentReads />
     </section>
 
     <section class="ribbon" id="benchmark">
@@ -128,17 +124,17 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
 
     <section class="ribbon">
       <div class="container">
-        <div class="ribbon-head">
-          <Verdict />
-          <p set:html={t(locale, 'home.consoles.lede')} />
-        </div>
-        <Consoles />
+        <YearStrip />
       </div>
     </section>
 
     <section class="ribbon">
       <div class="container">
-        <YearStrip />
+        <div class="ribbon-head">
+          <h2>{t(locale, 'home.prims.title')}</h2>
+          <p>{t(locale, 'home.prims.lede')}</p>
+        </div>
+        <Primitives />
       </div>
     </section>
 
@@ -152,6 +148,10 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
       </div>
     </section>
 
+    <section class="ribbon" id="plugins">
+      <Bytes />
+    </section>
+
     <section class="ribbon ribbon-try">
       <div class="container">
         <div class="ribbon-head">
@@ -163,8 +163,8 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
       </div>
     </section>
 
-    <section class="ribbon" id="plugins">
-      <Bytes />
+    <section class="ribbon" id="agent-reads">
+      <AgentReads />
     </section>
 
     <section class="closer">

@@ -50,6 +50,7 @@ Run `npx --workspace docs astro sync --force && npm -w docs run build` before co
 | Syntax | Output |
 |---|---|
 | `:::note[Title]` ... `:::` | Callout (`note`, `tip`, `warning`, `danger`). |
+| `:::details[Title]` ... `:::` | Collapsible disclosure block (pass `{open}` to expand by default). |
 | `:::steps` | Styled ordered walkthrough list (start each item with `**Bold title**`). |
 | `:::entry` | API reference entry opened by `` ### `plus()` :kind[method] ``. |
 | `:::truth` | Table where `true` / `false` cells render as tinted status words. |
