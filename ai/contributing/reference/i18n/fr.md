@@ -142,9 +142,9 @@ Desktop `.say-words` uses `white-space: nowrap`; keep every chip short so every 
    - `format.{narrow,short,digital}`: `format compact`, `format court`, `format numérique`
    - Sample check: `2 jours 6 heures` | `plus 45 minutes` | `fois 2` | `format numérique`
 4. **`range`** (`range.*` + `count.*`):
-   - `range.{may,jan,nov}`: `du 1er mai sur 2 semaines`, `du 1er au 14 janvier`, `tout le mois de novembre`
+   - `range.{may,jan,nov}`: `2 semaines à partir du 1er mai`, `du 1er au 14 janvier`, `tout le mois de novembre`
    - `count.{weekdays,weekends,mondays,days}`: `combien de jours ouvrés`, `combien de jours de week-end`, `combien de lundis`, `combien de jours`
-   - Sample check: `du 1er mai sur 2 semaines` | `combien de jours de week-end`
+   - Sample check: `2 semaines à partir du 1er mai` | `combien de jours de week-end`
 5. **`birthday`** (`birthday.{oct17,feb29,dec25}` + `birthday.{next,in2028,prev}` + `{birthday.fromNow, format.full, birthday.weekday}`):
    - `birthday.{oct17,feb29,dec25}`: `17 octobre`, `29 février`, `25 décembre`
    - `birthday.{next,in2028,prev}`: `le prochain`, `en 2028`, `le dernier`

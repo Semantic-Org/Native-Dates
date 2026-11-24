@@ -148,8 +148,8 @@ Desktop `.say-words` uses `white-space: nowrap`; keep every chip concise, use na
 5. **`birthday`** (`birthday.{oct17,feb29,dec25}` + `birthday.{next,in2028,prev}` + `{birthday.fromNow, format.full, birthday.weekday}`):
    - Dates: `17 октября` / `29 февраля` / `25 декабря`
    - Step 2 (gender-neutral across all dates): `birthday.next`: `в следующий раз`; `birthday.in2028`: `в 2028 году`; `birthday.prev`: `в прошлый раз`
-   - Step 3: `birthday.fromNow`: `как далеко` (works cleanly for both past and future!); `format.full`: `полной датой` (used ONLY in `birthday` step 3); `birthday.weekday`: `какой день недели`
-   - Check: *«29 февраля · в 2028 году · полной датой»*, *«17 октября · в прошлый раз · как далеко»*.
+   - Step 3: `birthday.fromNow`: `относительно сегодня` (works cleanly for both past and future!); `format.full`: `полной датой` (used ONLY in `birthday` step 3); `birthday.weekday`: `какой день недели`
+   - Check: *«29 февраля · в 2028 году · полной датой»*, *«17 октября · в прошлый раз · относительно сегодня»*.
 
 ---
 

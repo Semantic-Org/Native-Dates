@@ -135,14 +135,14 @@ Apply **all 6 fixes** when updating the `ar` block in `docs/src/data/home-locale
    - **`time`** (`time.*` + `plus.*` + `round.*` + `format.{24h,short}`):
      - `time.{920am,10pm,640am}`: `9:20 ص` / `10:00 م` / `6:40 ص`
      - `plus.{8.hours,45.minutes,3.hours,1.day}` (shared with `length`): `زائد 8 ساعات` / `زائد 45 دقيقة` / `زائد 3 ساعات` / `زائد يوم واحد`
-     - `round.{15m,hour}`: `تقريب لأقرب 15 د` / `تقريب لأقرب ساعة` (noun phrase avoids gender clash)
+     - `round.{15m,hour}`: `تقريب لأقرب 15 دقيقة` / `تقريب لأقرب ساعة` (noun phrase avoids gender clash)
      - `format.{24h,short}`: `بتنسيق 24 ساعة` / `بتنسيق مختصر`
    - **`length`** (`duration.*` + `plus.*` + `times.{2,3}` + `format.{narrow,short,digital}`):
      - `duration.{90m,45m,2d6h}`: `ساعة و30 دقيقة` / `45 دقيقة` / `يومان و6 ساعات`
      - `times.{2,3}`: `الضعف` / `ثلاثة أضعاف`
      - `format.{narrow,short,digital}`: `بتنسيق مضغوط` / `بتنسيق مختصر` / `بتنسيق رقمي`
    - **`range`** (`range.{may,jan,nov}` + `count.{weekdays,weekends,mondays,days}`):
-     - `range.{jan,may,nov}`: `1 إلى 14 يناير` / `1 مايو لمدة أسبوعين` / `شهر نوفمبر كاملًا`
+     - `range.{jan,may,nov}`: `من 1 إلى 14 يناير` / `من 1 مايو لمدة أسبوعين` / `شهر نوفمبر كاملًا`
      - `count.{weekdays,weekends,mondays,days}`: `كم يوم عمل` / `كم يوم عطلة` / `كم يوم اثنين` / `كم يومًا`
    - **`birthday`** (`birthday.{oct17,feb29,dec25}` + `birthday.{next,in2028,prev}` + `{birthday.fromNow, format.full, birthday.weekday}`):
      - `birthday.{oct17,feb29,dec25}`: `17 أكتوبر` / `29 فبراير` / `25 ديسمبر`
