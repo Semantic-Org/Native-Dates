@@ -2,6 +2,7 @@ import { ui } from '../strings.js';
 import { read, sentencesFor } from './sentences.js';
 
 const still = matchMedia('(prefers-reduced-motion: reduce)');
+const active = new WeakMap();
 
 // re-run hero chains in the browser so values reflect the visitor's local day and zone
 export function mountSay(root, library) {
@@ -23,7 +24,13 @@ export function mountSay(root, library) {
         cell.querySelector('[data-noun]').textContent = value.noun;
         text.textContent = value.text;
         if (flash && step >= from && !still.matches) {
-          cell.animate([{ backgroundColor: 'var(--accent-wash)' }, { backgroundColor: 'transparent' }], { duration: 700, easing: 'ease-out' });
+          // cancel before reading resting text color so rapid clicks return cleanly without exposing the reserved cell height
+          active.get(text)?.cancel();
+          const rest = getComputedStyle(text).color;
+          active.set(
+            text,
+            text.animate([{ color: 'var(--accent-strong)' }, { color: rest }], { duration: 550, easing: 'ease-out' }),
+          );
         }
       });
     };
@@ -61,6 +68,8 @@ export function mountSay(root, library) {
       other.tabIndex = on ? 0 : -1;
       document.getElementById(other.getAttribute('aria-controls')).hidden = !on;
     });
+    // slide a partially faded edge tab clear of the mobile scroll mask when chosen
+    tab.scrollIntoView({ block: 'nearest', inline: 'center', behavior: still.matches ? 'auto' : 'smooth' });
   };
   tabs.forEach((tab) => tab.addEventListener('click', () => show(tab)));
   root.querySelector('[role=tablist]').addEventListener('keydown', (event) => {
@@ -69,7 +78,6 @@ export function mountSay(root, library) {
     event.preventDefault();
     const tab = tabs[(tabs.indexOf(document.activeElement) + by + tabs.length) % tabs.length];
     tab.focus();
-    tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     show(tab);
   });
 

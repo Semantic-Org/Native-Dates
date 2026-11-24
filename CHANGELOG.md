@@ -2,7 +2,7 @@
 
 Note: To simplify versioning all subpackages like the polyfill and plugins are published in lockstep with `native-dates`.
 
-## v1.0.0 (2026-11-23)
+## v1.0.0 (2026-11-24)
 
 This is the initial release of `native-dates`.
 

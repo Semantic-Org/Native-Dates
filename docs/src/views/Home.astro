@@ -170,7 +170,7 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
       <div class="container closer-inner">
         <div class="closer-now">
           <h2 set:html={t(locale, 'home.closer.title', { call: nowCall })} />
-          <p class="closer-clock" data-now></p>
+          <p class="closer-clock" data-now aria-live="polite"></p>
         </div>
         <div class="closer-actions">
           <div class="install-cmd solo">

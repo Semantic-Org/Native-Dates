@@ -142,7 +142,7 @@ const offer = JSON.stringify(languageOffer(Astro.url.pathname, locale.code, writ
   <slot name="head" />
 </head>
 <body {...Astro.props.bodyAttrs}>
-  <a class="visually-hidden" href="#content">{t(locale.code, 'nav.skip')}</a>
+  <a class="visually-hidden skip-link" href="#content">{t(locale.code, 'nav.skip')}</a>
   <slot />
 </body>
 </html>

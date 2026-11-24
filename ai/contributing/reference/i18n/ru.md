@@ -139,8 +139,8 @@ Desktop `.say-words` uses `white-space: nowrap`; keep every chip concise, use na
 3. **`length`** (`duration.*` + `plus.*` + `times.*` + `format.{narrow,short,digital}`):
    - `duration.*`: `1 час 30 минут` / `45 минут` / `2 дня 6 часов`
    - `times.2`: `удвоить`; `times.3`: `утроить` (gender-neutral infinitives matching `округлить`)
-   - `format.narrow`: `в узком формате`; `format.short`: `в кратком формате`; `format.digital`: `в цифровом формате`
-   - Check: *«1 час 30 минут · плюс 45 минут · удвоить · в узком формате»*.
+   - `format.narrow`: `в компактном формате`; `format.short`: `в кратком формате`; `format.digital`: `в цифровом формате`
+   - Check: *«1 час 30 минут · плюс 45 минут · удвоить · в компактном формате»*.
 4. **`range`** (`range.*` + `count.*`):
    - `range.may`: `с 1 мая на 2 недели`; `range.jan`: `с 1 по 14 января`; `range.nov`: `весь ноябрь`
    - `count.*`: `сколько будней` / `сколько выходных` / `сколько понедельников` / `сколько дней`
@@ -148,8 +148,8 @@ Desktop `.say-words` uses `white-space: nowrap`; keep every chip concise, use na
 5. **`birthday`** (`birthday.{oct17,feb29,dec25}` + `birthday.{next,in2028,prev}` + `{birthday.fromNow, format.full, birthday.weekday}`):
    - Dates: `17 октября` / `29 февраля` / `25 декабря`
    - Step 2 (gender-neutral across all dates): `birthday.next`: `в следующий раз`; `birthday.in2028`: `в 2028 году`; `birthday.prev`: `в прошлый раз`
-   - Step 3: `birthday.fromNow`: `как далеко` (works cleanly for both past and future!); `format.full`: `полной датой` (used ONLY in `birthday` step 3); `birthday.weekday`: `какой день недели`
-   - Check: *«29 февраля · в 2028 году · полной датой»*, *«17 октября · в прошлый раз · как далеко»*.
+   - Step 3: `birthday.fromNow`: `относительно сегодня` (works cleanly for both past and future!); `format.full`: `полной датой` (used ONLY in `birthday` step 3); `birthday.weekday`: `какой день недели`
+   - Check: *«29 февраля · в 2028 году · полной датой»*, *«17 октября · в прошлый раз · относительно сегодня»*.
 
 ---
 

@@ -41,7 +41,7 @@ const sentences = sentencesFor(locale).map((sentence) => ({ ...sentence, values:
           <code class="say-cell say-code" style={`--col: ${step}; --row: 2`} data-step={step}>
             <span class="swap">{options.map((o, k) => <span data-option={k} hidden={k > 0} set:html={highlight(o.code)} />)}</span>
           </code>
-          <span class="say-cell say-value" style={`--col: ${step}; --row: 3`} data-step={step} data-value>
+          <span class="say-cell say-value" style={`--col: ${step}; --row: 3`} data-step={step} data-value data-final={step === s.steps.length - 1 ? '' : undefined} aria-live={step === s.steps.length - 1 ? 'polite' : undefined} aria-atomic={step === s.steps.length - 1 ? 'true' : undefined}>
             <span class="say-noun" data-noun>{s.values[step].noun}</span>
             <span class="say-text" data-text lang={textLang} dir={textDir}>{s.values[step].text}</span>
           </span>
