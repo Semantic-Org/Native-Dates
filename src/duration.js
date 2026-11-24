@@ -130,7 +130,7 @@ export class Duration {
   balance(largest) {
     if (!this.#anchor) {
       if (largest === undefined) {
-        return Duration.#balancedClock(this);
+        return this.#balancedClock();
       }
       const whole = Duration.#wholeMonths(this);
       const into = unit(largest);
@@ -143,7 +143,7 @@ export class Duration {
       }
       Duration.#requireAnchor(this, 'balance');
       if (into === 'week') {
-        return Duration.#balancedWeeks(this);
+        return this.#balancedWeeks();
       }
       if (into === 'month' || into === 'quarter' || into === 'year') {
         refuse('missingAnchor', `balance to ${into}`, {
@@ -188,30 +188,24 @@ export class Duration {
     return temporalDurationOf(addFields({ ...duration.toFields(), weeks: 0 }, { days: temporal.weeks * 7 }, 1));
   }
 
-  static #balancedClock(duration) {
-    const { years, months, days, ...clock } = fieldsOf(Duration.#fixed(duration));
+  #balancedClock() {
+    const { years, months, days, ...clock } = fieldsOf(Duration.#fixed(this));
     const balanced = fieldsOf(temporalDurationOf(clock).round({ largestUnit: 'hour' }));
-    return new Duration(
+    return this.#next(
       temporalDurationOf({
         ...carriedMonths(years, months),
         ...(days && { days }),
         ...balanced,
       }),
-      undefined,
-      { locale: duration.locale() },
     );
   }
 
   // convert back from days in sevens since Temporal.Duration.round({ largestUnit: 'week' }) requires relativeTo
-  static #balancedWeeks(duration) {
-    const { days = 0, ...clock } = fieldsOf(Duration.#fixed(duration).round({ largestUnit: 'day' }));
+  #balancedWeeks() {
+    const { days = 0, ...clock } = fieldsOf(Duration.#fixed(this).round({ largestUnit: 'day' }));
     const weeks = Math.trunc(days / 7);
     const rest = days - weeks * 7;
-    return new Duration(
-      temporalDurationOf({ ...(weeks && { weeks }), ...(rest && { days: rest }), ...clock }),
-      undefined,
-      { locale: duration.locale() },
-    );
+    return this.#next(temporalDurationOf({ ...(weeks && { weeks }), ...(rest && { days: rest }), ...clock }));
   }
 
   // pure year/month durations convert 12:1 without an anchor, returning undefined when sub-month fields exist
