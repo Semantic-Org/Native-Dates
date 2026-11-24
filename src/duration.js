@@ -305,7 +305,7 @@ export class Duration {
     const clock = fieldsOf(temporalDurationOf(clockFields(written)).round({ largestUnit: 'hour' }));
     const fields = { ...fieldsOf(written, calendarFieldNames), ...clock };
     const large = fieldNames.slice(0, subsecond).some((field) => fields[field]);
-    // hoursDisplay: 'auto' omits zero hours so digital zero formats as '00:00'
+    // hours are always passed, and durationFormat's hoursDisplay: 'auto' omits them when zero so digital zero formats as '00:00'
     const shown = {};
     each(fieldNames, (field, index) => {
       if (field === 'hours' || (fields[field] && (!large || index < subsecond))) {

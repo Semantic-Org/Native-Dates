@@ -83,11 +83,13 @@ export const names = (locale) => {
   return nameCache.get(key);
 };
 
-const monthName = (month, locale, token, besideDay) =>
+const monthName = (token) => (month, locale, besideDay) =>
   (besideDay ? names(locale).besideDay : names(locale))[token][month - 1];
 
+const weekdayName = (token) => (dayOfWeek, locale) => names(locale)[token][dayOfWeek - 1];
+
 // honor a/A casing in English while preserving native script/casing elsewhere (e.g. 午後)
-const dayPeriod = (hour, locale, cased) => {
+const dayPeriod = (cased) => (hour, locale) => {
   const { dayPeriods, isEnglish } = names(locale);
   const period = dayPeriods[hour < 12 ? 0 : 1];
   return isEnglish ? period[cased]() : period;
@@ -110,11 +112,12 @@ const zoneNameOptions = {
   short: Object.freeze({ timeZoneName: 'short' }),
   long: Object.freeze({ timeZoneName: 'long' }),
 };
-const zoneName = (parts, locale, style) =>
-  zonedDateTimeFormat(locale, zoneNameOptions[style], parts.zone)
-    .formatToParts(parts.epochMilliseconds)
+const zoneName = (style) => (zone, locale, besideDay, subject) =>
+  zonedDateTimeFormat(locale, zoneNameOptions[style], zone)
+    .formatToParts(subject.epochMilliseconds)
     .find((part) => part.type === 'timeZoneName')?.value;
 
+// readers are also passed the locale, which a bare pad would take as its width
 const twoDigits = (value) => pad(value);
 
 // pair each token with the property it prints so unsupported tokens (e.g. 'HH' on CalendarDate) fail fast
@@ -123,18 +126,18 @@ const tokenReaders = {
   YY: ['year', (year) => pad(year % 100)],
   M: ['month', String],
   MM: ['month', twoDigits],
-  MMM: ['month', (month, locale, subject, besideDay) => monthName(month, locale, 'MMM', besideDay)],
-  MMMM: ['month', (month, locale, subject, besideDay) => monthName(month, locale, 'MMMM', besideDay)],
+  MMM: ['month', monthName('MMM')],
+  MMMM: ['month', monthName('MMMM')],
   D: ['day', String],
   DD: ['day', twoDigits],
   Do: ['day', ordinal],
   DDD: ['dayOfYear', String],
-  DDDD: ['dayOfYear', (day) => pad(day, 3)],
-  d: ['dayOfWeek', (day) => String(day % 7)], // Sunday = 0 (Moment/Day.js convention)
+  DDDD: ['dayOfYear', (dayOfYear) => pad(dayOfYear, 3)],
+  d: ['dayOfWeek', (dayOfWeek) => String(dayOfWeek % 7)], // Sunday = 0 (Moment/Day.js convention)
   E: ['dayOfWeek', String],
-  dd: ['dayOfWeek', (day, locale) => names(locale).dd[day - 1]],
-  ddd: ['dayOfWeek', (day, locale) => names(locale).ddd[day - 1]],
-  dddd: ['dayOfWeek', (day, locale) => names(locale).dddd[day - 1]],
+  dd: ['dayOfWeek', weekdayName('dd')],
+  ddd: ['dayOfWeek', weekdayName('ddd')],
+  dddd: ['dayOfWeek', weekdayName('dddd')],
   H: ['hour', String],
   HH: ['hour', twoDigits],
   h: ['hour', (hour) => String(hour % 12 || 12)],
@@ -146,14 +149,14 @@ const tokenReaders = {
   S: ['millisecond', (millisecond) => String(Math.floor(millisecond / 100))],
   SS: ['millisecond', (millisecond) => pad(Math.floor(millisecond / 10))],
   SSS: ['millisecond', (millisecond) => pad(millisecond, 3)],
-  A: ['hour', (hour, locale) => dayPeriod(hour, locale, 'toUpperCase')],
-  a: ['hour', (hour, locale) => dayPeriod(hour, locale, 'toLowerCase')],
+  A: ['hour', dayPeriod('toUpperCase')],
+  a: ['hour', dayPeriod('toLowerCase')],
   Z: ['offset', String],
   ZZ: ['offset', (offset) => offset.replace(':', '')],
-  z: ['zone', (zone, locale, subject) => zoneName(subject, locale, 'short')],
-  zz: ['zone', (zone, locale, subject) => zoneName(subject, locale, 'short')],
-  zzz: ['zone', (zone, locale, subject) => zoneName(subject, locale, 'long')],
-  zzzz: ['zone', (zone, locale, subject) => zoneName(subject, locale, 'long')],
+  z: ['zone', zoneName('short')],
+  zz: ['zone', zoneName('short')],
+  zzz: ['zone', zoneName('long')],
+  zzzz: ['zone', zoneName('long')],
   X: ['epochSeconds', String],
   x: ['epochMilliseconds', String],
   Q: ['month', (month) => String(Math.ceil(month / 3))],
@@ -213,6 +216,6 @@ export const formatTokens = (subject, kind, named, locale) => {
           : 0,
       });
     }
-    return read(value, resolved, subject, besideDay);
+    return read(value, resolved, besideDay, subject);
   });
 };
