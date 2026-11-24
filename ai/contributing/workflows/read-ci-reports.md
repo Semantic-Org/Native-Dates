@@ -80,6 +80,7 @@ Each row in `tools/size.js` models a consumer import (`import { now }`, `native-
 
 | Workflow | Load when |
 |---|---|
+| [`manage-benchmarks`](manage-benchmarks.md) | Profiling `Perf:` PRs, running `Semantic-Org/Date-Benchmark`, and publishing `bench.nativedates.dev` |
 | [`extend-bench-suite`](extend-bench-suite.md) | Adding or lengthening operations in `bench/` |
 | [`errors-and-logs`](../standards/legibility/errors-and-logs.md) | Fixing unstripped development prose in a production bundle |
 | [`contribute`](contribute.md) | Preparing a pull request |

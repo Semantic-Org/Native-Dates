@@ -11,6 +11,7 @@ Skills published with the package belong in [skills](../../skills/). Design ruli
 | [`clean-room-dx-review.md`](clean-room-dx-review.md) | Commissioning a quarantined fresh-reader DX review over candidate public API surface |
 | [`read-ci-reports.md`](read-ci-reports.md) | Reviewing or acting on Bundle Size and Bench pull request comments |
 | [`extend-bench-suite.md`](extend-bench-suite.md) | Adding or modifying benchmark operations in `bench/` or tuning `bench/tachometer.json` |
+| [`manage-benchmarks.md`](manage-benchmarks.md) | Shipping `Perf:` PRs, running `Semantic-Org/Date-Benchmark`, deploying `bench.nativedates.dev`, or syncing `docs/src/data/bench.json` |
 | [`docs-writing.md`](docs-writing.md) | Authoring or editing guides, API pages, or plugin pages under `docs/src/content/` |
 | [`docs-authoring.md`](docs-authoring.md) | Modifying the Astro documentation site, required UI features, or design conventions |
 | [`docs-i18n.md`](docs-i18n.md) | Translating finalized documentation before a release or changing locale routing |
