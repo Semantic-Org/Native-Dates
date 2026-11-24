@@ -49,6 +49,7 @@
   "nav.lang.german": "德语",
   "toc.label": "本页目录",
   "page.copyImport": "复制导入语句",
+  "page.copyCode": "复制代码",
   "page.minBr": "最小化并经 Brotli 压缩",
   "page.readTime": "阅读约 {minutes} 分钟",
   "page.copy": "复制本页",
