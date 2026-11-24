@@ -2,7 +2,7 @@
   "name": "native-dates",
   "version": "1.0.0",
   "title": "Native Dates",
-  "description": "Natural-language dates, times, durations, and ranges built on the browser's Temporal and Intl APIs",
+  "description": "Human-friendly dates, times, durations, and ranges built on the browser's Temporal and Intl APIs",
   "author": "Jack Lukic",
   "license": "ISC",
   "homepage": "https://nativedates.dev",

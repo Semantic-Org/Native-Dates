@@ -118,7 +118,7 @@ yearMonth('2026-11').format('MMM YYYY', 'en-US'); // 'Nov 2026'
 monthDay('11-16').format('MMMM Do', 'en-US'); // 'November 16th'
 ```
 
-Month and weekday names inside token patterns come from `Intl` in the active locale. Digits and years stay in Western ISO form so patterns like `'YYYY-MM-DD'` stay machine-readable everywhere.
+Month and weekday names inside token patterns come from `Intl` in the active locale. Digits and years stay in Western ISO form so patterns like `'YYYY-MM-DD'` stay machine-readable everywhere. Tokens follow Moment and Day.js casing (`YYYY` and `DD` are uppercase, unlike LDML/date-fns lowercase `yyyy` and `dd`, where `dd` is the two-letter weekday).
 
 :::details[All format tokens]
 | Token | Example | Output |
