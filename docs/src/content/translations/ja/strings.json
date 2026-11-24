@@ -186,7 +186,7 @@
   "home.prims.range": "日付範囲",
   "home.prims.timeRange": "時刻範囲",
   "home.prims.plugin": "{name} プラグイン",
-  "home.consoles.title": "Date は答えを<em class=\"is-wrong\">間違える</em>。Temporal は<em class=\"is-right\">正しく返す</em>。",
+  "home.consoles.title": "Date は答えを<em class=\"is-wrong\">間違える</em>。<br>Temporal は<em class=\"is-right\">正しく返す</em>。",
   "home.consoles.lede": "1995年のまま残る <code>Date</code> のバグやエッジケースを、いまさら覚え込む必要はありません。",
   "home.consoles.pick": "試してみる質問",
   "home.consoles.date.since": "1995年から",

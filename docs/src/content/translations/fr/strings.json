@@ -188,7 +188,7 @@
   "home.prims.range": "Une plage de dates",
   "home.prims.timeRange": "Une plage horaire",
   "home.prims.plugin": "plugin {name}",
-  "home.consoles.title": "Date se <em class=\"is-wrong\">trompe</em>. Temporal voit <em class=\"is-right\">juste</em>.",
+  "home.consoles.title": "Date se <em class=\"is-wrong\">trompe</em>.<br>Temporal voit <em class=\"is-right\">juste</em>.",
   "home.consoles.lede": "Ne perdez plus de temps à retenir tous les bugs et cas limites de <code>Date</code> comme en 1995.",
   "home.consoles.pick": "Questions à tester",
   "home.consoles.date.since": "depuis 1995",

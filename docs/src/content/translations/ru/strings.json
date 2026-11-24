@@ -189,7 +189,7 @@
   "home.prims.range": "Диапазон дат",
   "home.prims.timeRange": "Диапазон времени суток",
   "home.prims.plugin": "плагин {name}",
-  "home.consoles.title": "Date <em class=\"is-wrong\">ошибается</em>. Temporal отвечает <em class=\"is-right\">точно</em>.",
+  "home.consoles.title": "Date <em class=\"is-wrong\">ошибается</em>.<br>Temporal отвечает <em class=\"is-right\">точно</em>.",
   "home.consoles.lede": "Не тратьте время на заучивание ошибок и подводных камней <code>Date</code>, будто на дворе всё ещё 1995 год.",
   "home.consoles.pick": "Вопросы для проверки",
   "home.consoles.date.since": "с 1995 года",

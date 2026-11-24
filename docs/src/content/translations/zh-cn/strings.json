@@ -186,7 +186,7 @@
   "home.prims.range": "日期范围",
   "home.prims.timeRange": "时钟时间范围",
   "home.prims.plugin": "{name} 插件",
-  "home.consoles.title": "Date 总会<em class=\"is-wrong\">算错</em>，Temporal 始终<em class=\"is-right\">算对</em>。",
+  "home.consoles.title": "Date 总会<em class=\"is-wrong\">算错</em>，<br>Temporal 始终<em class=\"is-right\">算对</em>。",
   "home.consoles.lede": "别再像 1995 年那样，花时间死记 <code>Date</code> 的各种缺陷和边界情况。",
   "home.consoles.pick": "选择一个问题",
   "home.consoles.date.since": "始于 1995 年",

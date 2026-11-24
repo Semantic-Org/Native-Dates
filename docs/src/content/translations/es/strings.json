@@ -188,7 +188,7 @@
   "home.prims.range": "Un rango de fechas",
   "home.prims.timeRange": "Un rango de horas",
   "home.prims.plugin": "plugin {name}",
-  "home.consoles.title": "Date se <em class=\"is-wrong\">equivoca</em>. Temporal <em class=\"is-right\">acierta</em>.",
+  "home.consoles.title": "Date se <em class=\"is-wrong\">equivoca</em>.<br>Temporal <em class=\"is-right\">acierta</em>.",
   "home.consoles.lede": "No pierdas tiempo aprendiendo todos los errores y casos límite de <code>Date</code> como si todavía fuera 1995.",
   "home.consoles.pick": "Preguntas para probar",
   "home.consoles.date.since": "desde 1995",
