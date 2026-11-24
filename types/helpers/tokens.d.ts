@@ -7,8 +7,9 @@ import type { Locale } from './zones.js';
  *
  * @param style - Label width: `'short'` (default, `'Mon'`), `'long'` (`'Monday'`), or `'narrow'` (`'Mo'`, `'月'`)
  * @param firstDay - Starting day of the week, overriding `configure()` and the locale
- * @param locale - BCP 47 locale tag overriding the configured default
+ * @param locale - BCP 47 tag, `Accept-Language` header, tag list, or `Intl.Locale` overriding the configured default
  * @returns Seven localized weekday labels starting on the resolved first day of the week
+ * @throws {RangeError} When `style` is unrecognized (`unknownFormat`), `firstDay` is invalid (`unknownDayOfWeek`), or `locale` is invalid (`unknownLocale`)
  *
  * @example
  * ```ts
@@ -26,8 +27,9 @@ export function weekdayNames(style?: 'short' | 'long' | 'narrow', firstDay?: Day
  * Returns a fresh 12-element array of localized Gregorian month names from January through December.
  *
  * @param style - Label width: `'long'` (default, `'January'`) or `'short'` (`'Jan'`)
- * @param locale - BCP 47 locale tag overriding the configured default
+ * @param locale - BCP 47 tag, `Accept-Language` header, tag list, or `Intl.Locale` overriding the configured default
  * @returns Twelve month labels ordered from index `0` (January) through 11 (December)
+ * @throws {RangeError} When `style` is unrecognized (`unknownFormat`) or `locale` is invalid (`unknownLocale`)
  *
  * @example
  * ```ts

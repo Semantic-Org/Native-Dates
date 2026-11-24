@@ -55,7 +55,10 @@ declare abstract class BaseRange<Point, Input> {
    */
   isEmpty(): boolean;
 
-  /** Full length of the range anchored at `start`, counting the last day on `DateRange` and wrapping overnight on `TimeRange`. */
+  /**
+   * Full length of the range, counting the final day on `DateRange` and wrapping overnight on `TimeRange`.
+   * Anchored at `start` on `DateRange` and `DateTimeRange`, and unanchored on `TimeRange` (`anchor` is `undefined`).
+   */
   readonly duration: Duration;
 
   /**
@@ -124,6 +127,7 @@ declare abstract class BaseRange<Point, Input> {
    *
    * @param other - Range instance or interval string of the same kind
    * @returns Overlapping range of the same kind, or `null` when disjoint
+   * @throws {RangeError} When two `TimeRange` values overlap in two separate windows across midnight (`unsupportedIntersection`)
    *
    * @example
    * ```ts
@@ -187,7 +191,7 @@ declare abstract class BaseRange<Point, Input> {
    *
    * @example
    * ```ts
-   * dateRange('2026-09-01', '2026-09-10').split(4, 'days').map(String);
+   * dateRange('2026-09-01', '2026-09-10').split('4d').map(String);
    * // ['2026-09-01/2026-09-04', '2026-09-05/2026-09-08', '2026-09-09/2026-09-10']
    * ```
    *
@@ -352,19 +356,33 @@ export class DateRange extends BaseRange<CalendarDate, CalendarDateInput> {
    *
    * @see {@link https://nativedates.dev/api/ranges/#daterange DateRange}
    */
-  constructor(start: CalendarDateInput, end: CalendarDateInput | DurationInput, options?: Zone | ReadOptions);
+  constructor(
+    start: CalendarDateInput,
+    end: CalendarDateInput | Exclude<DurationInput, number>,
+    options?: Zone | ReadOptions,
+  );
   /**
    * Creates an inclusive `DateRange` from an interval string (`'2026-09-01/2026-09-07'`).
    *
    * @param interval - Interval string joined by `/`, ` - `, ` – `, or ` to `
-   * @param options - Time zone or `ReadOptions` used when parsing endpoints
+   * @param options - `ReadOptions` such as `zone` and `locale` used when parsing endpoints
    *
    * @see {@link https://nativedates.dev/api/ranges/#daterange DateRange}
    */
-  constructor(interval: string, options?: Zone | ReadOptions);
+  constructor(interval: string, options?: ReadOptions);
+  /**
+   * Returns an existing `DateRange` unchanged.
+   *
+   * @param range - Existing `DateRange` instance
+   *
+   * @see {@link https://nativedates.dev/api/ranges/#daterange DateRange}
+   */
+  constructor(range: DateRange);
 
   /**
    * Counts days in this `DateRange`, optionally filtered to weekdays, weekends, or a specific weekday.
+   * `'weekdays'` and `'weekends'` follow the active locale's weekend days, such as Friday and Saturday
+   * in `'ar-SA'`, Friday alone in `'fa-IR'`, and Saturday and Sunday in most locales.
    *
    * @param kind - `'days'` (default), `'weekdays'`, `'weekends'`, or a weekday name such as `'mondays'`
    * @returns Number of matching calendar days in this range
@@ -434,16 +452,24 @@ export class DateTimeRange extends BaseRange<DateTime, DateTimeInput> {
    * Creates a half-open `DateTimeRange` from an interval string.
    *
    * @param interval - Interval string joined by `/`, ` - `, ` – `, or ` to `
-   * @param options - Time zone or `ReadOptions` for both endpoints
+   * @param options - `ReadOptions` such as `zone` and `locale` for both endpoints
    *
    * @see {@link https://nativedates.dev/api/ranges/#datetimerange DateTimeRange}
    */
-  constructor(interval: string, options?: Zone | ReadOptions);
+  constructor(interval: string, options?: ReadOptions);
+  /**
+   * Returns an existing `DateTimeRange` unchanged.
+   *
+   * @param range - Existing `DateTimeRange` instance
+   *
+   * @see {@link https://nativedates.dev/api/ranges/#datetimerange DateTimeRange}
+   */
+  constructor(range: DateTimeRange);
 
   /**
    * Returns a new `DateTimeRange` with both endpoints viewed in `zone`.
    *
-   * @param zone - Target IANA time zone, fixed offset, or `'UTC'`
+   * @param zone - Target IANA time zone, fixed offset, or `'UTC'`, defaulting to the configured or system time zone
    * @returns Half-open `DateTimeRange` in `zone`
    *
    * @example
@@ -486,16 +512,28 @@ export class TimeRange extends BaseRange<Time, TimeInput> {
    *
    * @see {@link https://nativedates.dev/api/ranges/#timerange TimeRange}
    */
-  constructor(start: TimeInput, end: TimeInput | DurationInput, options?: Zone | ReadOptions);
+  constructor(
+    start: TimeInput,
+    end: TimeInput | Exclude<DurationInput, number>,
+    options?: Zone | ReadOptions,
+  );
   /**
    * Creates a half-open `TimeRange` from an interval string (`'9am - 5pm'`, `'09:00/17:00'`).
    *
    * @param interval - Interval string joined by `/`, ` - `, ` – `, or ` to `
-   * @param options - Time zone (for timestamp inputs) or `ReadOptions`
+   * @param options - `ReadOptions` such as `zone` (for timestamp inputs) and `locale`
    *
    * @see {@link https://nativedates.dev/api/ranges/#timerange TimeRange}
    */
-  constructor(interval: string, options?: Zone | ReadOptions);
+  constructor(interval: string, options?: ReadOptions);
+  /**
+   * Returns an existing `TimeRange` unchanged.
+   *
+   * @param range - Existing `TimeRange` instance
+   *
+   * @see {@link https://nativedates.dev/api/ranges/#timerange TimeRange}
+   */
+  constructor(range: TimeRange);
 }
 
 /**
@@ -519,19 +557,28 @@ export class TimeRange extends BaseRange<Time, TimeInput> {
  */
 export function dateRange(
   start: CalendarDateInput,
-  end: CalendarDateInput | DurationInput,
+  end: CalendarDateInput | Exclude<DurationInput, number>,
   options?: Zone | ReadOptions,
 ): DateRange;
 /**
  * Creates an inclusive `DateRange` from a single interval string (`'2026-09-01/2026-09-07'`).
  *
  * @param interval - Interval string joined by `/`, ` - `, ` – `, or ` to `
- * @param options - Time zone or `ReadOptions` used when parsing endpoints
+ * @param options - `ReadOptions` such as `zone` and `locale` used when parsing endpoints
  * @returns An inclusive `DateRange`
  *
  * @see {@link https://nativedates.dev/api/range-fn/#daterange dateRange}
  */
-export function dateRange(interval: string, options?: Zone | ReadOptions): DateRange;
+export function dateRange(interval: string, options?: ReadOptions): DateRange;
+/**
+ * Returns an existing `DateRange` unchanged.
+ *
+ * @param range - Existing `DateRange` instance
+ * @returns The same `DateRange` instance
+ *
+ * @see {@link https://nativedates.dev/api/range-fn/#daterange dateRange}
+ */
+export function dateRange(range: DateRange): DateRange;
 
 /**
  * Creates a half-open `DateTimeRange` that includes `start` and excludes `end`.
@@ -561,12 +608,21 @@ export function datetimeRange(
  * Creates a half-open `DateTimeRange` from a single interval string.
  *
  * @param interval - Interval string joined by `/`, ` - `, ` – `, or ` to `
- * @param options - Time zone or `ReadOptions` for both endpoints
+ * @param options - `ReadOptions` such as `zone` and `locale` for both endpoints
  * @returns A half-open `DateTimeRange`
  *
  * @see {@link https://nativedates.dev/api/range-fn/#datetimerange datetimeRange}
  */
-export function datetimeRange(interval: string, options?: Zone | ReadOptions): DateTimeRange;
+export function datetimeRange(interval: string, options?: ReadOptions): DateTimeRange;
+/**
+ * Returns an existing `DateTimeRange` unchanged.
+ *
+ * @param range - Existing `DateTimeRange` instance
+ * @returns The same `DateTimeRange` instance
+ *
+ * @see {@link https://nativedates.dev/api/range-fn/#datetimerange datetimeRange}
+ */
+export function datetimeRange(range: DateTimeRange): DateTimeRange;
 
 /**
  * Creates a half-open `TimeRange` between two times of day, wrapping across midnight when `end` is earlier.
@@ -588,19 +644,28 @@ export function datetimeRange(interval: string, options?: Zone | ReadOptions): D
  */
 export function timeRange(
   start: TimeInput,
-  end: TimeInput | DurationInput,
+  end: TimeInput | Exclude<DurationInput, number>,
   options?: Zone | ReadOptions,
 ): TimeRange;
 /**
  * Creates a half-open `TimeRange` from a single interval string (`'9am - 5pm'`, `'09:00/17:00'`).
  *
  * @param interval - Interval string joined by `/`, ` - `, ` – `, or ` to `
- * @param options - Time zone (for timestamp inputs) or `ReadOptions`
+ * @param options - `ReadOptions` such as `zone` (for timestamp inputs) and `locale`
  * @returns A half-open `TimeRange`
  *
  * @see {@link https://nativedates.dev/api/range-fn/#timerange timeRange}
  */
-export function timeRange(interval: string, options?: Zone | ReadOptions): TimeRange;
+export function timeRange(interval: string, options?: ReadOptions): TimeRange;
+/**
+ * Returns an existing `TimeRange` unchanged.
+ *
+ * @param range - Existing `TimeRange` instance
+ * @returns The same `TimeRange` instance
+ *
+ * @see {@link https://nativedates.dev/api/range-fn/#timerange timeRange}
+ */
+export function timeRange(range: TimeRange): TimeRange;
 
 /**
  * Returns true when `value` is a `DateRange` instance, working across realms and duplicate bundles.

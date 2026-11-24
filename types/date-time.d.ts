@@ -96,10 +96,10 @@ export class DateTime {
    */
   constructor(input: DateTimeInput, zone?: Zone);
   /**
-   * Creates a new `DateTime` with options such as `zone` and `locale`.
+   * Creates a new `DateTime` with options such as `zone`, `locale`, and `disambiguation`.
    *
    * @param input - ISO string, epoch milliseconds, `Date`, `CalendarDate`, fields object, or `Temporal` value
-   * @param options - Zone and locale options for reading the value
+   * @param options - Zone, locale, and `disambiguation` options for reading the value
    *
    * @see {@link https://nativedates.dev/api/date-time/#creating-a-datetime Creating a DateTime}
    */
@@ -149,7 +149,7 @@ export class DateTime {
   readonly daysInMonth: number;
   /** Number of days in the current local year (365 or 366). */
   readonly daysInYear: number;
-  /** Length of the local calendar day in hours (`23`, `24`, or 25 across daylight saving transitions). */
+  /** Length of the local calendar day in hours: `24` normally, `23` or `25` across one-hour daylight saving shifts, or `23.5` / `24.5` in zones with 30-minute shifts such as `Australia/Lord_Howe`. */
   readonly hoursInDay: number;
 
   /**
@@ -380,7 +380,7 @@ export class DateTime {
    * Moves back to the start of a calendar or clock unit in this time zone.
    * Week boundaries start on `firstDay`, the configured `weekStart`, or this moment's active locale.
    *
-   * @param unit - Calendar or clock unit from `'year'` down to `'millisecond'`
+   * @param unit - Calendar or clock unit from `'year'` down to `'nanosecond'`
    * @param firstDay - First day of the week when `unit` is `'week'`, such as `'sunday'` or 7
    * @returns A new `DateTime` at the start of `unit`
    *
@@ -397,12 +397,13 @@ export class DateTime {
   startOf(unit: Unit, firstDay?: DayOfWeek): DateTime;
 
   /**
-   * Moves to the final millisecond of a calendar or clock unit in this time zone.
+   * Moves to the final millisecond of a calendar or clock unit for `'year'` down to `'millisecond'`,
+   * or the final nanosecond for `'microsecond'` and `'nanosecond'`, in this time zone.
    * For timestamp query bounds, prefer `range(unit)` so the end boundary is exclusive.
    *
    * @param unit - Calendar or clock unit from `'year'` down to `'nanosecond'`
    * @param firstDay - First day of the week when `unit` is `'week'`
-   * @returns A new `DateTime` at the last millisecond of `unit`
+   * @returns A new `DateTime` at the last moment of `unit`
    *
    * @example
    * ```ts
@@ -608,7 +609,7 @@ export class DateTime {
   /**
    * Creates a half-open `DateTimeRange` starting at this moment and running for `count` of `unit`.
    *
-   * @param count - Positive span count
+   * @param count - Non-negative span count (`0` returns an empty half-open range; negative counts throw a `RangeError`)
    * @param unit - Unit name for `count`, such as `'minutes'` or `'hours'`
    * @returns A half-open `DateTimeRange` in this moment's time zone
    *
@@ -634,7 +635,7 @@ export class DateTime {
   /**
    * Creates a half-open `DateTimeRange` starting at this moment and lasting for `count` of `unit`.
    *
-   * @param count - Positive span count
+   * @param count - Non-negative span count (`0` returns an empty half-open range; negative counts throw a `RangeError`)
    * @param unit - Unit name for `count`, such as `'minutes'` or `'hours'`
    * @returns A half-open `DateTimeRange` in this moment's time zone
    *
@@ -1023,10 +1024,10 @@ export class DateTime {
  */
 export function datetime(input: DateTimeInput, zone?: Zone): DateTime;
 /**
- * Reads an input into a `DateTime` with options such as `zone` and `locale`.
+ * Reads an input into a `DateTime` with options such as `zone`, `locale`, and `disambiguation`.
  *
  * @param input - Timestamp, string, `Date`, `CalendarDate`, fields object, or `Temporal` value
- * @param options - Zone and locale options for reading the moment
+ * @param options - Zone, locale, and `disambiguation` options for reading the moment
  * @returns An immutable `DateTime` in the resolved time zone
  *
  * @see {@link https://nativedates.dev/api/datetime-fn/#datetime datetime}
@@ -1052,7 +1053,8 @@ export function datetime(input: DateTimeInput, options?: ReadOptions): DateTime;
 export function now(zone?: Zone): DateTime;
 
 /**
- * Returns the start of today (`00:00:00.000`) in the given or configured time zone.
+ * Returns the start of today in the given or configured time zone: `00:00:00.000`,
+ * or the first local instant on skipped-midnight daylight saving days.
  *
  * @param zone - Time zone whose current day to measure
  * @returns A `DateTime` at the start of today in `zone`

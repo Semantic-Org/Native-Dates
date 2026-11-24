@@ -95,8 +95,8 @@ export class Duration {
   readonly microseconds: number;
   /** Signed nanoseconds stored on this duration. */
   readonly nanoseconds: number;
-  /** Overall direction of the duration: 1 for positive, 0 for zero, or `-1` for negative. */
-  readonly sign: number;
+  /** Overall direction of the duration: `1` for positive, `0` for zero, or `-1` for negative. */
+  readonly sign: -1 | 0 | 1;
 
   /**
    * Returns true when every unit field on this duration is zero.
@@ -240,6 +240,7 @@ export class Duration {
    *
    * @param largest - Largest target unit to roll values up into, such as `'hour'`, `'day'`, or `'week'`
    * @returns A new balanced `Duration`
+   * @throws {RangeError} When balancing an anchored duration or one with sub-month units to `'quarter'`
    *
    * @example
    * ```ts
@@ -254,6 +255,7 @@ export class Duration {
 
   /**
    * Rounds the duration to the nearest whole `smallest` unit, with half-way ties rounding away from zero.
+   * `'quarter'` is not a valid rounding target.
    *
    * @param smallest - Smallest unit to keep after rounding, such as `'minute'` or `'hour'`
    * @returns A new rounded `Duration`
@@ -265,11 +267,12 @@ export class Duration {
    *
    * @see {@link https://nativedates.dev/api/duration/#round round}
    */
-  round(smallest: Unit): Duration;
+  round(smallest: Exclude<Unit, 'quarter' | 'quarters' | 'q' | 'Q' | 'qtr'>): Duration;
 
   /**
    * Returns the entire length of the duration as a single floating-point number in `unit`.
-   * Converting months or years to smaller units requires a starting point from `until()` or `since()`.
+   * A starting point from `until()` or `since()` is required in both directions: converting months or years
+   * to smaller units, or totaling fixed units (weeks, days, or clock units) into `'month'`, `'quarter'`, or `'year'`.
    *
    * @param unit - Target unit to express the total length in, such as `'hours'` or `'days'`
    * @returns Total length in `unit`, including any fractional part
@@ -303,7 +306,7 @@ export class Duration {
    * Orders this duration against `other` by total length for `Array.prototype.sort()`.
    *
    * @param other - Duration to compare against
-   * @returns `-1` when shorter, `0` when equal, or 1 when longer
+   * @returns `-1` when shorter, `0` when equal, or `1` when longer
    *
    * @example
    * ```ts
@@ -312,7 +315,7 @@ export class Duration {
    *
    * @see {@link https://nativedates.dev/api/duration/#compare compare}
    */
-  compare(other: DurationInput): number;
+  compare(other: DurationInput): -1 | 0 | 1;
 
   /**
    * Returns true when both durations represent the same total length, so `hours(1)` equals `minutes(60)`.

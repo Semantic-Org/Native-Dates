@@ -81,6 +81,15 @@ export class Time {
    * @see {@link https://nativedates.dev/api/time/#creating-a-time Creating a Time}
    */
   constructor(hour: number, minute?: number, second?: number);
+  /**
+   * Creates a new `Time` by extracting the local time of day of an instant or timestamp in `zone`.
+   *
+   * @param input - Time or timestamp input
+   * @param zone - Time zone used to extract the local time of day
+   *
+   * @see {@link https://nativedates.dev/api/time/#creating-a-time Creating a Time}
+   */
+  constructor(input: TimeInput, zone: Zone);
 
   /** Locale-formatted time of day, such as `'5:30 PM'`. */
   readonly text: string;
@@ -197,10 +206,11 @@ export class Time {
   startOf(unit: TimeUnit): Time;
 
   /**
-   * Moves to the final millisecond of the given clock unit.
+   * Moves to the final millisecond of the given clock unit for `'hour'` down to `'millisecond'`,
+   * or the final nanosecond for `'microsecond'` and `'nanosecond'`.
    *
    * @param unit - Clock unit from `'hour'` down to `'nanosecond'`
-   * @returns A new `Time` at the last millisecond of `unit`
+   * @returns A new `Time` at the end of `unit`
    *
    * @example
    * ```ts
@@ -468,11 +478,11 @@ export class Time {
    *
    * @see {@link https://nativedates.dev/api/time/#to to}
    */
-  to(end: TimeInput | DurationInput): TimeRange;
+  to(end: TimeInput | Exclude<DurationInput, number>): TimeRange;
   /**
    * Creates a half-open `TimeRange` starting at this time and lasting for `count` of `unit`.
    *
-   * @param count - Positive span count
+   * @param count - Span count (`end` wraps modulo 24 hours, forming an overnight `TimeRange` whenever `end` lands earlier than `start`, or an empty range when equal)
    * @param unit - Clock unit name for `count`, such as `'hours'` or `'minutes'`
    * @returns A half-open `TimeRange` starting at this time
    *
@@ -497,7 +507,7 @@ export class Time {
   /**
    * Creates a half-open `TimeRange` starting at this time and lasting for `count` of `unit`.
    *
-   * @param count - Positive span count
+   * @param count - Span count (`end` wraps modulo 24 hours, forming an overnight `TimeRange` whenever `end` lands earlier than `start`, or an empty range when equal)
    * @param unit - Clock unit name for `count`, such as `'hours'` or `'minutes'`
    * @returns A half-open `TimeRange` starting at this time
    *

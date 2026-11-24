@@ -27,7 +27,7 @@ export type YearMonthInput = YearMonth | YearMonthFields | TemporalPlainYearMont
 
 /**
  * Format specification accepted by `YearMonth.prototype.format()`: any preset, custom format name,
- * `Intl.DateTimeFormatOptions` object, or token pattern, printing only the year and month.
+ * `Intl.DateTimeFormatOptions` object, or token pattern, printing only the year, month, and optional era.
  *
  * @see {@link https://nativedates.dev/api/year-month/#format format}
  */
@@ -67,9 +67,9 @@ export class YearMonth {
    */
   constructor(input: YearMonthInput, options?: Zone | ReadOptions);
   /**
-   * Creates a new `YearMonth` from 1-indexed year and month numbers.
+   * Creates a new `YearMonth` from whole-number ISO year and 1-indexed month arguments.
    *
-   * @param year - Calendar year, such as 2026
+   * @param year - Whole-number ISO year, such as `2026`, `0`, or `-44`
    * @param month - Calendar month from 1 for January through 12 for December
    *
    * @see {@link https://nativedates.dev/api/year-month/#creating-a-yearmonth Creating a YearMonth}
@@ -228,7 +228,7 @@ export class YearMonth {
    * Passing a full date or timestamp compares against the month it falls in.
    *
    * @param other - Another `YearMonth` or any input accepted by `yearMonth()`
-   * @returns `-1` when earlier, `0` when equal, or 1 when later
+   * @returns `-1` when earlier, `0` when equal, or `1` when later
    *
    * @example
    * ```ts
@@ -238,7 +238,7 @@ export class YearMonth {
    *
    * @see {@link https://nativedates.dev/api/year-month/#compare compare}
    */
-  compare(other: YearMonthInput): number;
+  compare(other: YearMonthInput): -1 | 0 | 1;
 
   /**
    * Returns true when both values represent the same calendar year and month.
@@ -522,7 +522,7 @@ export function yearMonth(input: YearMonthInput, options?: Zone | ReadOptions): 
 /**
  * Creates a `YearMonth` from whole-number year and 1-indexed month arguments.
  *
- * @param year - Calendar year, such as 2026
+ * @param year - Whole-number ISO year, such as `2026`, `0`, or `-44`
  * @param month - Calendar month from 1 for January through 12 for December
  * @returns An immutable `YearMonth`
  *
