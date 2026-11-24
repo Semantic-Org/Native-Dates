@@ -66,7 +66,7 @@ booking.overlaps(holiday); // true
 booking.intersection(holiday).toString(); // '2026-11-15/2026-11-18'
 ```
 
-`intersection()` returns `null` when two ranges do not overlap. That makes it easy to branch on availability or scheduling conflicts.
+`intersection()` returns `null` when two ranges do not overlap.
 
 ## Walking, counting, and splitting spans
 
@@ -97,7 +97,7 @@ slots[0].toString(); // '09:00:00/09:30:00'
 
 ## Formatting and serializing
 
-Formatting a range with a preset collapses shared months and years automatically through the runtime's locale rules. Pass a token pattern to format both endpoints explicitly:
+Formatting a range with a preset collapses shared months and years through the runtime's locale rules. Pass a token pattern to format both endpoints explicitly:
 
 ```js
 import { dateRange, timeRange } from 'native-dates';

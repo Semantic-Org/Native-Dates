@@ -139,7 +139,7 @@ yearMonth('Nov 2026', { loose: true }); // 2026-11
 monthDay('17 février', { loose: true, locale: 'fr' }); // 02-17
 ```
 
-Numeric slash and dot dates follow the active locale's order automatically. Pass `dayFirst` per call or set it in [app configuration](/api/configure/) when an input uses a different order than the active locale.
+Numeric slash and dot dates follow the active locale's order. Pass `dayFirst` per call or set it in [app configuration](/api/configure/) when an input uses a different order than the active locale.
 
 ```js
 date('03/05/2026', { loose: true, locale: 'en-US' }); // 2026-03-05
@@ -147,7 +147,7 @@ date('03/05/2026', { loose: true, locale: 'fr' }); // 2026-05-03
 date('03/05/2026', { loose: true, locale: 'en-US', dayFirst: true }); // 2026-05-03
 ```
 
-Under loose parsing, unreadable inputs return `null` instead of throwing across every factory and range, keeping form validation to a simple check. Invalid option values like an unknown time zone name still throw immediately.
+Under loose parsing, unreadable inputs return `null` instead of throwing across every factory and range. Invalid option values like an unknown time zone name still throw.
 
 ```js
 import { duration } from 'native-dates';

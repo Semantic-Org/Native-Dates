@@ -82,6 +82,8 @@ Use plain developer speech rather than specification jargon:
 6. **Avoid tautological openings** under headings (do not follow `` ### `balance()` `` with *"`balance()` balances the duration"*).
 7. **Cut filler intensifiers and clichés:** `seamlessly`, `effortlessly`, `powerful`, `first-class`, `under the hood`, `it is worth noting that`, `let's take a look at`.
 8. **Do not copy terse source-comment shorthand** into user-facing prose.
+9. **Never perform or announce baseline patterns.** Do not sell standard modern practices as features (*"Import only the functions you call so your bundler tree-shakes the rest"*, *"with no extra setup call"*, *"with no registration ceremony"*). State the usage plainly and expect readers to assume baseline quality. Preserve **non-obvious, worthwhile distinctions** that genuinely change behavior or performance (such as automatic `Intl` formatter caching, zero-copy `toTemporal()` unwrapping, or skipping polyfill downloads on native runtimes).
+10. **Give each example one canonical home.** Avoid repeating multi-line setup blocks (polyfilling, plugin imports, `configure()` tables) across multiple guides—keep the full walkthrough in one page and link to it from related guides so updates and translations do not multiply.
 
 ---
 
@@ -111,6 +113,22 @@ Ask whether changing time zones should change what the user sees.
 :::
 ```
 
+## Collapsible Disclosures (`:::details[Title]`)
+
+Use `:::details[Title]` ... `:::` (pass `{open}` only when expanded by default) to fold secondary material that is not necessary on a first read, keeping the happy path short and scannable while leaving deep-dive details one click away:
+
+- **Collapse:** long mid-guide reference tables (such as a full token dictionary or legacy preset aliases), niche escape-hatch options (such as DST `disambiguation` modes), and older-toolchain compatibility notes (`/sync` polyfill loading, older Node caveats).
+- **Keep open:** Day-1 requirements that most readers need immediately (such as the primary Safari polyfill command on `Installation`) and primary reference tables on migration guides (`Coming from Day.js`, `Coming from Moment`).
+- **Keep titles plain and code narrow:** Use a short sentence-case title with no backticks. Wrap long lines in code blocks inside `:::details` so they fit inside the padded body without horizontal scrollbars. A single table inside `:::details` renders flush without a double border.
+
+```markdown
+:::details[Compatibility notes for older runtimes]
+- **Synchronous loading:** Import `@native-dates/polyfill/sync` if a module evaluates dates before top-level `await` settles.
+:::
+```
+
+When two commands or snippets represent **mutually exclusive choices** (such as `npm i` vs. `npx` agent setup), group consecutive fenced blocks with `label="..."` into a single tabbed code block instead of stacking them under separate headings that read like sequential steps.
+
 ---
 
 ## Astro Markdown and Layout Constraints (`docs/`)
@@ -124,7 +142,7 @@ Ask whether changing time zones should change what the user sees.
 4. **Headings and tables:**
    - Never put backticks in `##` headings or `<th>` cells (`docs.css` strips code-chip backgrounds only inside `h1` and `.entry > h3`).
    - In 3+ column tables (`.stacks`), the final column **must** be prose because narrow screens (`<= 600px`) render the last cell full-width without a column label. Separate grouped identifiers in earlier columns with commas (`year, month, day`).
-   - Use `:::truth` around 2-column expression/result tables where `true` and `false` cells render as tinted status words.
+   - Use `:::truth` around 2-column expression/result tables where `true` and `false` cells render as tinted status words, `:::details[Title]` for collapsible deep-dive blocks, and consecutive `label="..."` code fences for tabbed alternatives.
 5. **Inline formatting limits:** Keep inline `` `code` `` spans under ~32 characters (`white-space: nowrap` overflows on `390px` mobile viewports) and avoid attaching suffixes directly onto closing backticks (write `` `DateTime` instances `` rather than `` `DateTime`s ``). In frontmatter `lede` and YAML `description` strings, `inline.js` parses only `` `code` ``, `**strong**`, and `[text](href)` (never `*italic*`).
 6. **Verify before finishing:**
    - Execute standalone `js` code samples in Node against `src/index.js` and `packages/plugins/src/*.js`.

@@ -16,12 +16,12 @@ export function samplesFor(locale = 'en') {
   const [homeZone, homeCity, inviteZone] = SAMPLE_ZONES[locale] ?? SAMPLE_ZONES.en;
   return [
     {
-      id: 'standup',
-      ours: `const standup = today().next('monday').at('9:30am', '${homeZone}');`,
+      id: 'meeting',
+      ours: `const meeting = today().next('monday').at('9:30am', '${homeZone}');`,
       temporal: `const today = Temporal.Now.plainDateISO();
 // the next Monday after today
 const ahead = (8 - today.dayOfWeek) % 7 || 7;
-const standup = today.add({ days: ahead }).toZonedDateTime({
+const meeting = today.add({ days: ahead }).toZonedDateTime({
   timeZone: '${homeZone}',
   plainTime: '09:30',
 });`,
@@ -36,15 +36,15 @@ const zone = { timeZone: '${homeZone}' };
 // the swedish locale prints dates the way Date.parse reads them
 const there = new Date(utc).toLocaleString('sv-SE', zone);
 const offset = utc - Date.parse(there.replace(' ', 'T') + 'Z');
-const standup = new Date(utc + offset);`,
+const meeting = new Date(utc + offset);`,
     },
     {
       id: 'invite',
-      ours: `const invite = standup.in('${inviteZone}').format('full');`,
-      temporal: `const invite = standup
+      ours: `const invite = meeting.in('${inviteZone}').format('full');`,
+      temporal: `const invite = meeting
   .withTimeZone('${inviteZone}')
   .toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'short' });`,
-      legacy: `const invite = standup.toLocaleString(undefined, {
+      legacy: `const invite = meeting.toLocaleString(undefined, {
   dateStyle: 'full',
   timeStyle: 'short',
   timeZone: '${inviteZone}',
@@ -61,22 +61,22 @@ const due = new Date(today.getFullYear(), today.getMonth() + 2, 0);`,
     },
     {
       id: 'wait',
-      ours: "const wait = now().until(standup).round('minute').format();",
+      ours: "const wait = now().until(meeting).round('minute').format();",
       temporal: `// Temporal.until() throws across time zones when largestUnit >= 'day'
 const here = Temporal.Now.zonedDateTimeISO();
-const until = here.until(standup.withTimeZone(here.timeZoneId), {
+const until = here.until(meeting.withTimeZone(here.timeZoneId), {
   largestUnit: 'year',
   smallestUnit: 'minute',
   roundingMode: 'halfExpand',
 });
 const wait = until.toLocaleString(undefined, { style: 'long' });`,
       legacy: `// round to the minute, then step day-by-day across any DST transition
-const minutes = Math.round((standup - Date.now()) / 60_000);
-const from = new Date(standup - minutes * 60_000);
+const minutes = Math.round((meeting - Date.now()) / 60_000);
+const from = new Date(meeting - minutes * 60_000);
 const after = (days) => new Date(from).setDate(from.getDate() + days);
 let days = 0;
-while (after(days + 1) <= standup) { days++; }
-const rest = (standup - after(days)) / 60_000;
+while (after(days + 1) <= meeting) { days++; }
+const rest = (meeting - after(days)) / 60_000;
 const hours = Math.floor(rest / 60);
 const words = new Intl.DurationFormat(undefined, { style: 'long' });
 const wait = words.format({ days, hours, minutes: rest % 60 });`,

@@ -4,7 +4,7 @@ lede: How Native Dates maps onto JavaScript's Temporal API and interops with raw
 updated: 2026-11-23
 ---
 
-Native Dates is a thin, ergonomic layer over JavaScript's built-in `Temporal` and Intl APIs.
+Native Dates wraps JavaScript's built-in `Temporal` and `Intl` APIs.
 
 Temporal provides exact calendar and time-zone primitives with explicit options objects. Native Dates wraps everyday callsites in concise methods while interoperating freely with raw Temporal instances.
 
@@ -25,7 +25,7 @@ Temporal leaves ranges out of its specification. Core adds [`DateRange`, `DateTi
 
 ## Passing Temporal objects in
 
-Every factory, arithmetic method, and comparison accepts raw `Temporal` values directly without manual conversion steps.
+Every factory, arithmetic method, and comparison accepts raw `Temporal` values directly.
 
 ```js
 import { date, datetime, time, yearMonth } from 'native-dates';
@@ -45,7 +45,7 @@ ym.daysInMonth; // 30
 
 Passing a `Temporal.ZonedDateTime` to [`datetime()`](/api/datetime-fn/) preserves its time zone unless you pass a new one. Passing an instant or plain date-time places that value into the zone you specify or your configured default.
 
-Temporal values and strings using non-ISO calendars like Japanese or Persian convert to the same ISO day automatically without calling `withCalendar()` first.
+Temporal values and strings using non-ISO calendars like Japanese or Persian convert to the same ISO day without calling `withCalendar()` first.
 
 Comparisons and span measurements accept Temporal inputs directly too:
 
@@ -77,21 +77,6 @@ Each instance holds a real Temporal object internally, so `toTemporal()` returns
 
 ## Polyfilling older runtimes
 
-Current Chrome, Edge, Firefox, Node 26+, Deno, and Bun ship `Temporal` natively, so core includes zero polyfill code in its bundle.
+Current Chrome, Edge, Firefox, Node 26+, Deno, and Bun ship `Temporal` natively, so core includes zero polyfill code.
 
-Safari, older browsers, and Node 24–25 need `@native-dates/polyfill` alongside `temporal-polyfill`. Server code calling [`Duration.format()`](/api/duration/#format) requires Node 24+ because older Node releases lack `Intl.DurationFormat`:
-
-```sh
-npm install @native-dates/polyfill temporal-polyfill
-```
-
-Import `@native-dates/polyfill` once at your application entry point before importing from Native Dates:
-
-```js
-import '@native-dates/polyfill';
-import { today } from 'native-dates';
-
-today().plus(1, 'week');
-```
-
-The default entry checks `globalThis.Temporal` first and dynamically imports the polyfill only when needed, so modern browsers skip downloading it. Import `'@native-dates/polyfill/sync'` instead if another module evaluates dates at load time, such as `export const start = today()`, or if your environment lacks top-level await.
+For Safari, older browsers, or Node 24–25, load `@native-dates/polyfill` alongside `temporal-polyfill` at startup. See [Supporting Safari and older Node](/guides/installation/#supporting-safari-and-older-node) for setup and synchronous loading options.

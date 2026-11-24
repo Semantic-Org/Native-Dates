@@ -15,7 +15,7 @@ const standup = date('2026-11-16')
   .in('Europe/Berlin');
 ```
 
-Because the runtime already carries the IANA time-zone database and locale rules, every region and language works out of the box. Your bundle never downloads extra zone or locale tables.
+Because the runtime already carries the IANA time-zone database and locale rules, every region and language works without shipping extra zone or locale tables.
 
 ## Separate types for separate jobs
 
@@ -74,19 +74,10 @@ time('9:30am').text; // '9:30 AM'
 Because methods return new instances, `===` checks object references rather than value equality. Call [`equals()`](/api/date-time/#equals) to check whether two instances represent the same date, time, or moment.
 :::
 
-## Lean core and opt-in plugins
+## Core and plugins
 
-The core [`native-dates`](/guides/installation/) package stays small. It covers creation, time zones, calendar math, partial dates, ranges, durations, relative phrases, localized presets, and token patterns.
+The core [`native-dates`](/guides/installation/) package covers creation, time zones, calendar math, partial dates, ranges, durations, relative phrases, localized presets, and token patterns.
 
-Optional additions like city and abbreviation lookups, loose parsing, and legacy `Date` methods live in [`@native-dates/plugins`](/plugins/) as individual subpath imports:
-
-```js
-import '@native-dates/plugins/loose';
-import '@native-dates/plugins/zones';
-import { date, datetime } from 'native-dates';
-
-datetime('2026-11-16T09:30', 'Berlin').zone; // 'Europe/Berlin'
-date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
-```
+Optional plugins for city and abbreviation lookups, loose parsing, and legacy `Date` methods live in [`@native-dates/plugins`](/plugins/) as individual subpath imports. See [Customization](/guides/customization/#adding-plugins) to add plugins or configure app-wide defaults.
 
 Head to [Installation](/guides/installation/) to add the package to your project and set up polyfilling if you support Safari.

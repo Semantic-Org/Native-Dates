@@ -8,7 +8,7 @@ Native Dates uses the platform's built-in `Intl` formatters and caches them auto
 
 ## Quick output with text and presets
 
-Every instance has a `.text` property formatted in your active locale, which is handy for templates, logs, and console debugging. Calling [`format()`](/api/date-time/#format) with no arguments uses each type's default preset:
+Every instance has a `.text` property formatted in your active locale. Calling [`format()`](/api/date-time/#format) with no arguments uses each type's default preset:
 
 ```js
 import { date, datetime, duration, time } from 'native-dates';
@@ -35,6 +35,7 @@ Pass a preset name to `format()` to choose how much detail to display:
 | `'month'` | `'May 2026'` | Full month name and year on `DateTime`, `CalendarDate`, and [`YearMonth`](/api/year-month/). |
 | `'text'` | `'May 4, 2026, 9:30 AM PDT'` | Date, time, and short zone name on `DateTime`, or each type's own fields elsewhere. |
 
+:::details[Moment and Day.js preset names]
 Core also accepts the localized preset names used in Moment and Day.js:
 
 | Preset | Example | Localized fields |
@@ -44,6 +45,7 @@ Core also accepts the localized preset names used in Moment and Day.js:
 | `'LL'`, `'ll'` | `'May 4, 2026'` | Long or abbreviated month name with day and year. |
 | `'LLL'`, `'lll'` | `'May 4, 2026 at 9:30 AM'` | Long or abbreviated date paired with short clock time. |
 | `'LLLL'`, `'llll'` | `'Monday, May 4, 2026 at 9:30 AM'` | Full or abbreviated weekday, date, and short clock time. |
+:::
 
 Dates, times, [year-months](/api/year-month/), and [month-days](/api/month-day/) accept every preset above and keep only the fields they carry. [Durations](/api/duration/) also support compact and digital styles:
 
@@ -102,7 +104,7 @@ Reserve `format()` for text shown to people. When storing values or sending them
 
 ## Token patterns
 
-When you need a fixed layout, pass a token pattern directly to `format()` with no plugins required. Wrap literal words in square brackets so they are copied as written:
+When you need a fixed layout, pass a token pattern to `format()`. Wrap literal words in square brackets so they are copied as written:
 
 ```js
 import { datetime, monthDay, yearMonth } from 'native-dates';
@@ -118,6 +120,7 @@ monthDay('11-16').format('MMMM Do', 'en-US'); // 'November 16th'
 
 Month and weekday names inside token patterns come from `Intl` in the active locale. Digits and years stay in Western ISO form so patterns like `'YYYY-MM-DD'` stay machine-readable everywhere.
 
+:::details[All format tokens]
 | Token | Example | Output |
 |---|---|---|
 | `YYYY` | `'2026'` | Four-digit year, signed for negative years. |
@@ -144,8 +147,9 @@ Month and weekday names inside token patterns come from `Intl` in the active loc
 | `X` | `'1794850200'` | Unix timestamp in whole seconds. |
 | `x` | `'1794850200000'` | Unix timestamp in milliseconds. |
 | `[text]` | `'[at]'` | Escaped literal text copied straight to the output. |
+:::
 
-Unrecognized letters outside square brackets throw an [`unknownFormat`](/api/errors/#units-zones-and-formats) error so a misspelled preset or unbracketed word fails right away instead of printing raw letters. Tokens glued to accented letters like `'às'` or mixed clock letters like `'HHhmm'` throw too, while bare T passes through unescaped for ISO timestamps.
+Unrecognized letters outside square brackets throw an [`unknownFormat`](/api/errors/#units-zones-and-formats) error instead of printing raw letters. Tokens glued to accented letters like `'às'` or mixed clock letters like `'HHhmm'` throw too. Bare `T` passes through unescaped for ISO timestamps.
 
 Asking for a field a type does not carry throws an [`unsupportedToken`](/api/errors/#units-zones-and-formats) error instead of inventing midnight. Formatting clock tokens like `'HH:mm'` on a calendar date fails immediately.
 
@@ -161,26 +165,7 @@ weekdayNames('narrow', 'monday', 'en-US'); // ['Mo', 'Tu', 'We', ...]
 
 ## Naming your own formats
 
-Register reusable format names in [`configure()`](/api/configure/) when your app uses the same date or time layout in multiple places. Each named format can be a token pattern or an `Intl` options object:
-
-```js
-import { configure, date, dateRange } from 'native-dates';
-
-configure({
-  formats: {
-    invoice: 'YYYY-MM-DD',
-    receipt: { dateStyle: 'long' },
-  },
-});
-
-date('2026-11-06').format('invoice'); // '2026-11-06'
-date('2026-11-06').format('receipt'); // 'November 6, 2026'
-dateRange('2026-11-06', '2026-11-20').format('invoice'); // '2026-11-06 – 2026-11-20'
-
-configure({ formats: null });
-```
-
-Named formats take precedence over built-in presets, so registering `'short'` overrides that preset across the app. Custom named formats apply to dates, times, partial dates, and ranges, while durations use only their built-in styles.
+Register reusable format names in [`configure()`](/api/configure/) when your app reuses a token pattern or `Intl` options object across views. Custom names work on dates, times, partial dates, and ranges, and take precedence over built-in presets. See [Named formats](/guides/customization/#named-formats).
 
 ## Formatting ranges
 
@@ -199,7 +184,7 @@ shift.format('short', 'en-US'); // '9:00 AM – 5:00 PM'
 
 ## Relative phrases
 
-Moments and calendar dates include [`from()`](/api/date-time/#from) and [`fromNow()`](/api/date-time/#fromnow) directly in core, with [`formatRelative()`](/api/date-time/#formatrelative) as an alias. Phrases are localized automatically through the runtime's relative time formatter:
+Call [`from()`](/api/date-time/#from) or [`fromNow()`](/api/date-time/#fromnow) on moments and calendar dates for localized phrases through the runtime's relative time formatter. [`formatRelative()`](/api/date-time/#formatrelative) works as an alias:
 
 ```js
 import { date, datetime, now, today } from 'native-dates';

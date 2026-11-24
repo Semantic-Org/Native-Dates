@@ -88,7 +88,7 @@ saturday.plus(1, 'day').hoursInDay; // 23
 ```
 
 :::warning[Times skipped by spring-forward]
-When clocks jump from 2:00 AM to 3:00 AM, local times like 2:30 AM never happen in that zone. Asking for a skipped local time moves forward cleanly by the length of the gap instead of throwing.
+When clocks jump from 2:00 AM to 3:00 AM, local times like 2:30 AM never happen in that zone. Asking for a skipped local time moves forward by the length of the gap instead of throwing.
 :::
 
 ```js
@@ -96,12 +96,22 @@ const skipped = datetime('2026-03-08T02:30', 'America/New_York');
 skipped.text; // 'Mar 8, 2026, 3:30 AM EDT'
 ```
 
-When scheduling or auditing requires a different rule across spring-forward gaps or fall-back folds, pass `disambiguation` (`'compatible'`, `'earlier'`, `'later'`, or `'reject'`) to [`datetime()`](/api/datetime-fn/), `date.at()`, `dt.at()`, or `time.on()`:
+:::details[Controlling spring-forward gaps and fall-back folds]
+Pass `disambiguation` to [`datetime()`](/api/datetime-fn/) or `at()` when scheduling or auditing needs a different rule across gaps and folds. It defaults to compatible and also accepts earlier, later, or reject:
 
 ```js
-datetime('2026-11-01T01:30', { zone: 'America/New_York', disambiguation: 'later' }).offset; // '-05:00'
-datetime('2026-03-08T02:30', { zone: 'America/New_York', disambiguation: 'reject' }); // throws RangeError [invalidDateTime]
+const fallBack = datetime('2026-11-01T01:30', {
+  zone: 'America/New_York',
+  disambiguation: 'later',
+});
+fallBack.offset; // '-05:00'
+
+datetime('2026-03-08T02:30', {
+  zone: 'America/New_York',
+  disambiguation: 'reject',
+}); // throws RangeError [invalidDateTime]
 ```
+:::
 
 ## City names and abbreviations
 

@@ -48,7 +48,7 @@ const placed = datetime('2026-11-06T09:05', 'Europe/Berlin');
 placed.format('receipt'); // 'Friday, November 6'
 ```
 
-Named formats work on every type that supports [`format()`](/guides/formatting/), and custom names take precedence over built-in presets.
+Named formats apply to dates, times, partial dates, and ranges, while durations use only their built-in styles. Custom names take precedence over built-in presets, so registering `'short'` overrides it across the app.
 
 ## Adding plugins
 

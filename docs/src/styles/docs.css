@@ -249,9 +249,11 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
 .details[open] > summary { border-bottom: 1px solid var(--line); }
 .details > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .details-body { padding: 14px 16px; color: var(--text-2); }
+.details-body:has(> .table-wrap:only-child) { padding: 0; }
+.details-body > .table-wrap:only-child { border: 0; border-radius: 0; }
 .doc .details-body > :first-child { margin-top: 0; }
 .details-body p + p { margin-top: 12px; }
-.details-body .code { margin-top: 14px; }
+.details-body .code, .details-body .table-wrap { margin-top: 14px; }
 @media (prefers-reduced-motion: reduce) {
   .details > summary::before { transition: none; }
 }
