@@ -39,19 +39,19 @@ By maintainer decision, the 1.0 rollout ships localized pages in the **Reviewed*
 ### Updating a Stale Page
 
 1. Run `npm -w docs run check:i18n` to list stale `source` hashes and the expected hash for each file.
-2. **Code-only English edits:** If only code fences changed (import path, option rename, return value), copy the code edit into every translated twin and update its `source` hash without re-translating prose.
-3. **Prose edits:** Check `git log` for the English file to isolate what changed, read the locale's glossary at `ai/contributing/reference/i18n/<locale>.md`, update only the affected sections plus the `source` hash, run a targeted blind review pass on the diff, and run the verification gates below.
+2. **Code-only English edits:** Even code-only edits change `sourceHash` (`source-hash.js` hashes the full trimmed body). Copy the code edit into every translated twin and update its `source` hash without re-translating prose.
+3. **Prose edits:** Run `git log -p <english-file>` to isolate what changed since the previous sync, read the locale's glossary at `ai/contributing/reference/i18n/<locale>.md`, update only the affected sections plus the `source` hash, run a targeted blind review pass on the diff, and run the verification gates below.
 
 ### Adding or Changing `strings.json` Keys
 
 1. Update `docs/src/content/strings.json`. When English wording changes meaningfully, rename the key rather than mutating copy in place so untranslated locales fall back safely.
 2. If a key renders via `set:html`/`innerHTML` or `inline()`, register it in `HTML_KEYS` or `INLINE_KEYS` in `docs/scripts/check-i18n.mjs`, and document non-obvious DOM or grammatical constraints in [`slots.md`](../reference/i18n/slots.md).
 3. Update every shipped locale's `strings.json` (providing all CLDR plural forms for any plural family) and sync `docs/src/data/home-locales.js` if homepage slots changed.
-4. Run `npm -w docs run prune:i18n` if keys or English pages were removed, then run `npm -w docs run check:i18n -- --complete`.
+4. Run `npm -w docs run prune:i18n` if keys or English pages were removed, then run `npm -w docs run check:i18n -- --complete --locale=<shipped>` (omit `--locale` once all locales ship).
 
 ### Adding a New Locale
 
-Touch `docs/src/lib/locales.js`, `docs/src/data/home-locales.js`, `docs/src/scripts/home/{sentences,consoles,samples,primitives}.js`, `docs/src/scripts/language-globe.js`, an English `docs/src/content/docs/guides/<lang>.md` guide, `docs/src/content/translations/<locale>/`, and a checked-in glossary at `ai/contributing/reference/i18n/<locale>.md`.
+Touch `docs/src/lib/locales.js`, `docs/src/lib/nav.js` (`LANGUAGE_GUIDES` and examples), `docs/src/content/strings.json` (`nav.lang.<lang>`), `docs/src/data/home-locales.js`, `docs/src/scripts/home/{sentences,consoles,samples,primitives}.js`, `docs/src/scripts/language-globe.js`, an English `docs/src/content/docs/guides/<lang>.md` guide, `docs/src/content/translations/<locale>/`, and a checked-in glossary at `ai/contributing/reference/i18n/<locale>.md`.
 
 ---
 
@@ -61,7 +61,7 @@ Run a full backfill only once English docs settle so pre-release copy edits do n
 
 1. **Lock glossary and title map:** Write `ai/contributing/reference/i18n/<locale>.md` before translating any file. Lock canonical terms for every core class and concept (`CalendarDate`, `Time`, `DateTime`, `Duration`, `YearMonth`, `MonthDay`, `Range`, `partial date`, `time zone`, `offset`, `preset`, `token pattern`, `loose mode`, `immutable`, `daylight saving time`), **every translated page `title` and `nav.*` label** so cross-page links match destination titles, MDN-standard verbs (`call`, `throw`, `return`), `params`/`returns` grammatical form, H2 style, and script/numeral/BiDi/punctuation rules.
 2. **Dedicated UI & homepage copywriter:** Holding the glossary and [`slots.md`](../reference/i18n/slots.md), translate `strings.json` with complete CLDR plural forms and update that locale's section in `docs/src/data/home-locales.js` in lockstep (switching `year.lede`/`caption` to `{changes}` and `{days}`). Serialize `home-locales.js` edits across concurrent locale waves so parallel runs do not collide. Verify all 5 `home.say.*` chains end to end.
-3. **Focused Markdown batches (`<= 10k` English words per batch):** Split guides, core API classes, remaining API functions, plugins, and examples into small batches so neither translator nor reviewer skims tail-end files. Never trust an existing stale twin blindly — diff it against current English. After drafting each file, run a **mandatory target-language-only rewrite pass** without looking at English to strip syntactic calques.
+3. **Focused Markdown batches (`<= 10k` English words per batch):** Split guides into 2–3 batches, core API classes into 2 batches, and remaining API functions, plugins, and examples into 2 batches so neither translator nor reviewer skims tail-end files. Never trust an existing stale twin blindly — diff it against current English. After drafting each file, run a **mandatory target-language-only rewrite pass** without looking at English to strip syntactic calques.
 4. **Matched-scope blind native review:** Assign one fresh read-only reviewer per batch holding only the English source, glossary, [`slots.md`](../reference/i18n/slots.md) (for UI), and translated output. Audit for English calques, SVO/OVS ambiguity, glossary drift, case/gender agreement, self-language-guide awkwardness, BiDi inversion, and Markdown/YAML issues.
 5. **Adjudication, pushback, and sign-off (max 2 cycles):** Orchestrator filters false positives against the glossary and codebase rules, sends blocking findings back to the batch's original translator via `send_message` (translators may push back with evidence when a reviewer edit hurts accuracy or clarity), and sends revisions back to the same blind reviewer for sign-off. Cap revision loops at 2 cycles per batch so unattended runs do not thrash.
 
@@ -93,7 +93,7 @@ Run a full backfill only once English docs settle so pre-release copy edits do n
 - Use CSS logical properties everywhere (`margin-inline`, `padding-inline`, `inset-inline-start`, `border-inline-start`).
 - Keep code blocks, sandboxes, and timeline strips (`year-strip`, `console`, `say-code`, `xr`) `dir="ltr"`, while keeping prose captions inside them (`xr-count`, `pg-status`, `console-miss`) in the page's direction.
 - Wrap inline numeric measurements and symbols (`14.9 kB`, `now()`) in `<bdi>` only inside HTML-rendered keys (`HTML_KEYS`) or Markdown prose — never inside plain-text `strings.json` keys.
-- Lock one consistent numeral policy per RTL locale (`ar` uses Western `0-9` in technical prose to match code and Latin metrics) and disable positive `letter-spacing` on joined scripts.
+- Lock one consistent numeral policy per RTL locale: `ar` technical prose uses Western `0-9` to match code and Latin metrics (normalize existing Eastern prose digits in `home-locales.js` and `translations/ar/docs/guides/arabic.md` during the `ar` wave, separate from live `ar-EG` Intl widget output). Disable positive `letter-spacing` on joined scripts.
 - Verify rendered `/ar/` pages at `1440px` and `390px` in headless Chromium.
 
 ---
