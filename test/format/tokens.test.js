@@ -89,6 +89,7 @@ describe('year, quarter, month, and day tokens', () => {
     expect(date('2026-02-14').format('DDD')).toBe('45');
     expect(date('2026-02-14').format('DDDD')).toBe('045');
     expect(date('2024-12-31').format('DDD')).toBe('366');
+    expect(date('2026-01-05').format('DDD DDDD')).toBe('5 005');
   });
 });
 
@@ -131,6 +132,8 @@ describe('time tokens', () => {
     expect(time('00:05').format('h:mm A', 'en-US')).toBe('12:05 AM');
     expect(time('12:05').format('h:mm A', 'en-US')).toBe('12:05 PM');
     expect(time('13:05').format('hh:mm A', 'en-US')).toBe('01:05 PM');
+    expect(time('00:05').format('hh')).toBe('12');
+    expect(time('12:05').format('hh')).toBe('12');
   });
 
   it('formats uppercase A and lowercase a day periods in English', () => {
@@ -202,6 +205,11 @@ describe('localized token patterns', () => {
     expect(friday.format('MMMM YYYY', 'el')).toBe('Νοέμβριος 2026');
   });
 
+  it('uses the abbreviated month form written beside a day for MMM and the standalone abbreviation otherwise', () => {
+    expect(friday.format('D. MMM', 'de')).toBe('6. Nov.');
+    expect(friday.format('MMM YYYY', 'de')).toBe('Nov 2026');
+  });
+
   it('uses standalone month names when an explicit case suffix follows MMMM in brackets', () => {
     expect(friday.format('D. MMMM[ta] YYYY', 'fi')).toBe('6. marraskuuta 2026');
   });
@@ -242,6 +250,14 @@ describe('localized token patterns', () => {
     expect(friday.format('dd', 'pt-BR')).toBe('S');
     expect(friday.format('dd', 'ja')).toBe('金');
   });
+
+  // Intl answers a narrow weekday in these locales with an English initial or a digit
+  it.each(['ur', 'az', 'sw', 'ps'])(
+    'formats dd in %s as a weekday name instead of an English initial or digit',
+    (locale) => {
+      expect(date('2026-11-16').format('dd', locale)).not.toMatch(/^[MTWFS\d]$/);
+    },
+  );
 });
 
 describe('invalid patterns and unsupported tokens', () => {

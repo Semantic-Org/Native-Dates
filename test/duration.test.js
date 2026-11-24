@@ -100,6 +100,32 @@ describe('duration()', () => {
     expect(duration(2, unit).toString()).toBe(iso);
   });
 
+  it.each([
+    ['year', ['y', 'yr', 'yrs', 'year', 'years'], 'P2Y'],
+    ['quarter', ['q', 'qtr', 'quarter', 'quarters'], 'P6M'],
+    ['month', ['mo', 'mos', 'month', 'months'], 'P2M'],
+    ['week', ['w', 'wk', 'wks', 'week', 'weeks'], 'P2W'],
+    ['day', ['d', 'day', 'days'], 'P2D'],
+    ['hour', ['h', 'hr', 'hrs', 'hour', 'hours'], 'PT2H'],
+    ['minute', ['m', 'min', 'mins', 'minute', 'minutes'], 'PT2M'],
+    ['second', ['s', 'sec', 'secs', 'second', 'seconds'], 'PT2S'],
+    ['millisecond', ['ms', 'msec', 'msecs', 'millisecond', 'milliseconds'], 'PT0.002S'],
+    ['microsecond', ['us', 'µs', 'microsecond', 'microseconds'], 'PT0.000002S'],
+    ['nanosecond', ['ns', 'nanosecond', 'nanoseconds'], 'PT0.000000002S'],
+  ])('accepts every spelling of %s', (name, spellings, iso) => {
+    for (const spelling of spellings) {
+      expect(duration(2, spelling).toString(), spelling).toBe(iso);
+    }
+  });
+
+  // only a unit's full name takes a plural 's', never its shorthand
+  it.each(['ys', 'qs', 'ws', 'ds', 'hs', 'ss', 'yrss', 'wkss', 'hrss', 'mss', 'uss', 'nss'])(
+    'throws unknownUnit for pluralized shorthand %j',
+    (spelling) => {
+      expect(() => duration(2, spelling)).toThrowError(expect.objectContaining({ code: 'unknownUnit', at: spelling }));
+    },
+  );
+
   it('parses a numeric string count when a unit is provided', () => {
     expect(duration('90', 'minutes').toString()).toBe('PT90M');
   });
@@ -860,6 +886,12 @@ describe('Duration format() and text', () => {
     expect(ninety.format('long', 'en-US')).toBe('1 hour, 30 minutes');
     expect(ninety.format('digital', 'en-US')).toBe('1:30:00');
     expect(ninety.toString()).toBe('PT90M');
+  });
+
+  it('omits a written clock unit that balances to zero', () => {
+    expect(minutes(60).format('long', 'en-US')).toBe('1 hour');
+    expect(seconds(3600).format('long', 'en-US')).toBe('1 hour');
+    expect(duration({ minutes: 120, seconds: 60 }).format('long', 'en-US')).toBe('2 hours, 1 minute');
   });
 
   it('formats hours, days, and months using their stored unbalanced counts', () => {

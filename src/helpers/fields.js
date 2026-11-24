@@ -6,6 +6,8 @@ import { IS_DURATION } from './identity.js';
 import { isDigits, isTemporalDuration, plural, unit, units } from './units.js';
 
 export const fieldNames = units.map(plural);
+export const calendarFieldNames = fieldNames.slice(0, 4);
+export const clockFieldNames = fieldNames.slice(4);
 
 // cascade fractional units downward (1.5 days -> 1d 12h). Months vary in length so factor 0 rejects them
 // below, and toFixed(9) strips IEEE-754 float residue so 0.1h doesn't leak stray nanoseconds
@@ -40,11 +42,11 @@ export const spill = (fields, name, value) => {
   return fields;
 };
 
-export const fieldsOf = (temporal) => {
+export const fieldsOf = (source, names = fieldNames) => {
   const fields = {};
-  each(fieldNames, (field) => {
-    if (temporal[field]) {
-      fields[field] = temporal[field];
+  each(names, (field) => {
+    if (source[field]) {
+      fields[field] = source[field];
     }
   });
   return fields;
@@ -141,21 +143,13 @@ export const fieldsFrom = (input, name) => {
   });
 };
 
-export const clockFields = (fields) => {
-  const clock = {};
-  each(fieldNames.slice(4), (field) => {
-    if (fields[field]) {
-      clock[field] = fields[field];
-    }
-  });
-  return clock;
-};
+export const clockFields = (fields) => fieldsOf(fields, clockFieldNames);
 
 // sum calendar units field-wise so 25h never folds into a day (which would shift deadlines across DST),
 // while sub-day clock units combine through Temporal so 2h minus 30m resolves to 1h 30m
 export const addFields = (a, b, sign, anchor) => {
   const fields = {};
-  each(fieldNames.slice(0, 4), (field) => {
+  each(calendarFieldNames, (field) => {
     const sum = (a[field] ?? 0) + sign * (b[field] ?? 0);
     if (sum) {
       fields[field] = sum;

@@ -4,6 +4,7 @@ import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, refuse, unreadable } from './helpers/errors.js';
 import {
   addFields,
+  calendarFieldNames,
   carriedMonths,
   clockFields,
   fieldNames,
@@ -129,7 +130,7 @@ export class Duration {
   balance(largest) {
     if (!this.#anchor) {
       if (largest === undefined) {
-        return Duration.#balancedClock(this);
+        return this.#balancedClock();
       }
       const whole = Duration.#wholeMonths(this);
       const into = unit(largest);
@@ -142,7 +143,7 @@ export class Duration {
       }
       Duration.#requireAnchor(this, 'balance');
       if (into === 'week') {
-        return Duration.#balancedWeeks(this);
+        return this.#balancedWeeks();
       }
       if (into === 'month' || into === 'quarter' || into === 'year') {
         refuse('missingAnchor', `balance to ${into}`, {
@@ -187,30 +188,24 @@ export class Duration {
     return temporalDurationOf(addFields({ ...duration.toFields(), weeks: 0 }, { days: temporal.weeks * 7 }, 1));
   }
 
-  static #balancedClock(duration) {
-    const { years, months, days, ...clock } = fieldsOf(Duration.#fixed(duration));
+  #balancedClock() {
+    const { years, months, days, ...clock } = fieldsOf(Duration.#fixed(this));
     const balanced = fieldsOf(temporalDurationOf(clock).round({ largestUnit: 'hour' }));
-    return new Duration(
+    return this.#next(
       temporalDurationOf({
         ...carriedMonths(years, months),
         ...(days && { days }),
         ...balanced,
       }),
-      undefined,
-      { locale: duration.locale() },
     );
   }
 
   // convert back from days in sevens since Temporal.Duration.round({ largestUnit: 'week' }) requires relativeTo
-  static #balancedWeeks(duration) {
-    const { days = 0, ...clock } = fieldsOf(Duration.#fixed(duration).round({ largestUnit: 'day' }));
+  #balancedWeeks() {
+    const { days = 0, ...clock } = fieldsOf(Duration.#fixed(this).round({ largestUnit: 'day' }));
     const weeks = Math.trunc(days / 7);
     const rest = days - weeks * 7;
-    return new Duration(
-      temporalDurationOf({ ...(weeks && { weeks }), ...(rest && { days: rest }), ...clock }),
-      undefined,
-      { locale: duration.locale() },
-    );
+    return this.#next(temporalDurationOf({ ...(weeks && { weeks }), ...(rest && { days: rest }), ...clock }));
   }
 
   // pure year/month durations convert 12:1 without an anchor, returning undefined when sub-month fields exist
@@ -308,9 +303,9 @@ export class Duration {
     }
     const written = this.toFields();
     const clock = fieldsOf(temporalDurationOf(clockFields(written)).round({ largestUnit: 'hour' }));
-    const fields = { ...written, ...Object.fromEntries(fieldNames.slice(4).map((field) => [field, clock[field]])) };
+    const fields = { ...fieldsOf(written, calendarFieldNames), ...clock };
     const large = fieldNames.slice(0, subsecond).some((field) => fields[field]);
-    // hoursDisplay: 'auto' omits zero hours so digital zero formats as '00:00'
+    // hours are always passed, and durationFormat's hoursDisplay: 'auto' omits them when zero so digital zero formats as '00:00'
     const shown = {};
     each(fieldNames, (field, index) => {
       if (field === 'hours' || (fields[field] && (!large || index < subsecond))) {
@@ -319,10 +314,9 @@ export class Duration {
     });
     // Intl.DurationFormat omits zero fields by default (returning '' for { seconds: 0 } and throwing on {})
     if (this.isZero() && style !== 'digital') {
-      const unitDisplay = style === 'long' ? 'long' : style === 'narrow' ? 'narrow' : 'short';
-      return unitFormat(pickLocale(locale), 'second', unitDisplay).format(0);
+      return unitFormat(pickLocale(locale), 'second', style).format(0);
     }
-    return durationFormat(pickLocale(locale), style, 'auto').format(shown);
+    return durationFormat(pickLocale(locale), style).format(shown);
   }
 
   toString() {
@@ -343,7 +337,7 @@ export class Duration {
 
   // '+' sends hint 'default', which would return ms instead of toString() without this
   [Symbol.toPrimitive](hint) {
-    return hint === 'number' ? this.toMilliseconds() : this.toString();
+    return hint === 'number' ? this.valueOf() : this.toString();
   }
 
   [inspect]() {
