@@ -4,7 +4,7 @@ import { DateTime, now } from './date-time.js';
 import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
-import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
+import { durationLike, fieldNames, fieldsFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
 import { yearFirst } from './helpers/parts.js';
@@ -23,12 +23,10 @@ import {
   isZonedDateTime,
   localeOf,
   namesInstant,
-  plural,
   quarterStart,
   singularKeys,
   stepArguments,
   stepOf,
-  timeUnits,
   unit,
   weekdayNamed,
   wholeNumbers,
@@ -249,15 +247,15 @@ export class CalendarDate {
 
   static #dateFields(amount, name) {
     const fields = fieldsFrom(amount, name);
-    const clock = timeUnits.find((time) => fields[plural(time)]);
+    const clock = fieldNames.slice(4).find((field) => fields[field]);
     if (clock) {
-      refuse('unsupportedUnit', `${clock}s`, {
+      refuse('unsupportedUnit', clock, {
         explanation: isDevelopment
           ? "a `CalendarDate` has no time of day, so it only accepts calendar units like days, weeks, months, or years. Attach a time first with `.at('00:00', zone)` to add or subtract clock units"
           : 0,
       });
     }
-    return isNumber(amount) && (amount | 0) === amount ? fields : temporalDurationOf(fields);
+    return durationLike(fields, amount);
   }
 
   set(fields, value) {

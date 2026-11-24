@@ -1,4 +1,4 @@
-import { isNumber, isPlainObject, isString } from './helpers/utils.js';
+import { isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate } from './calendar-date.js';
 import { DateTime } from './date-time.js';
@@ -8,16 +8,7 @@ import { isUnreadable, loosely, readAs, refuse, refuseType, unreadable } from '.
 import { isDurationFields } from './helpers/fields.js';
 import { epochOf, formatter, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_RANGE, IS_DATE_TIME_RANGE, IS_DURATION, IS_RANGE, IS_TIME_RANGE } from './helpers/identity.js';
-import {
-  alias,
-  inspect,
-  isDigits,
-  isTemporalDuration,
-  stepOf,
-  unit,
-  weekdayNamed,
-  zoneOptions,
-} from './helpers/units.js';
+import { alias, inspect, isTemporalDuration, weekdayNamed, zoneOptions } from './helpers/units.js';
 import { cachedText, weekendDays } from './helpers/zones.js';
 import { Time } from './time.js';
 
@@ -29,6 +20,7 @@ import { Time } from './time.js';
 */
 
 const dayLength = 86_400e9; // 24h in nanoseconds
+const raw = {};
 
 class Range {
   // brand range
@@ -43,32 +35,36 @@ class Range {
   constructor(start, end, options) {
     const kind = this.constructor.kind;
     this.kind = kind;
-    if (Range.isOptions(end)) {
-      [end, options] = [undefined, end];
-    }
-    const settings = zoneOptions(options);
-    if (start instanceof Range && end === undefined) {
-      if (start.kind !== kind) {
-        const [from, to] = [`${start.kind}Range`, `${kind}Range`];
-        refuseType('conflictingRanges', `${from} as ${to}`, {
+    this.start = start;
+    this.end = end;
+    if (options !== raw) {
+      if (Range.isOptions(end)) {
+        [end, options] = [undefined, end];
+      }
+      const settings = zoneOptions(options);
+      if (start instanceof Range && end === undefined) {
+        if (start.kind !== kind) {
+          const [from, to] = [`${start.kind}Range`, `${kind}Range`];
+          refuseType('conflictingRanges', `${from} as ${to}`, {
+            explanation: isDevelopment
+              ? 'cannot pass one range type directly into another range factory. Convert a `DateRange` to a `DateTimeRange` with `.in(zone)`, or build a new range from converted `start` and `end` endpoints'
+              : 0,
+          });
+        }
+        return start;
+      }
+      if (isString(start) && end === undefined) {
+        [start, end] = Range.#splitInterval(start, kind);
+      }
+      this.start = Range.#read(kind, start, undefined, settings);
+      this.end = Range.#readEnd(kind, end, this.start, settings);
+      if (kind !== 'time' && this.end.isBefore(this.start)) {
+        refuse('invalidRange', `${this.start} to ${this.end}`, {
           explanation: isDevelopment
-            ? 'cannot pass one range type directly into another range factory. Convert a `DateRange` to a `DateTimeRange` with `.in(zone)`, or build a new range from converted `start` and `end` endpoints'
+            ? 'range end cannot be earlier than its start. Swap the start and end arguments, or order unknown endpoints with `earliest(a, b)` and `latest(a, b)`'
             : 0,
         });
       }
-      return start;
-    }
-    if (isString(start) && end === undefined) {
-      [start, end] = Range.#splitInterval(start, kind);
-    }
-    this.start = Range.#read(kind, start, undefined, settings);
-    this.end = Range.#readEnd(kind, end, this.start, settings);
-    if (kind !== 'time' && this.end.isBefore(this.start)) {
-      refuse('invalidRange', `${this.start} to ${this.end}`, {
-        explanation: isDevelopment
-          ? 'range end cannot be earlier than its start. Swap the start and end arguments, or order unknown endpoints with `earliest(a, b)` and `latest(a, b)`'
-          : 0,
-      });
     }
     Object.freeze(this);
   }
@@ -248,18 +244,17 @@ class Range {
           : 0,
       });
     }
-    return this.#make('time', Range.#timeAt(pieces[0][0]), Range.#timeAt(pieces[0][1]));
+    const timeAt = (ns) =>
+      new Time(new Temporal.PlainTime().add({ nanoseconds: ((ns % dayLength) + dayLength) % dayLength }));
+    return this.#make('time', timeAt(pieces[0][0]), timeAt(pieces[0][1]));
   }
 
   // unwrap circular times onto a linear timeline and test shifts of -24h, 0h, and +24h in #besides()
   static #spanOf(range) {
-    const start = Range.#sinceMidnight(range.start);
-    const end = Range.#sinceMidnight(range.end);
+    const since = (time) => new Temporal.PlainTime().until(time.toTemporal()).total('nanosecond');
+    const start = since(range.start);
+    const end = since(range.end);
     return [start, end < start ? end + dayLength : end];
-  }
-
-  static #sinceMidnight(time) {
-    return new Temporal.PlainTime().until(time.toTemporal()).total('nanosecond');
   }
 
   static #besides(range) {
@@ -267,35 +262,8 @@ class Range {
     return [-dayLength, 0, dayLength].map((shift) => [start + shift, end + shift]);
   }
 
-  static #timeAt(nanoseconds) {
-    const day = dayLength;
-    return new Time(new Temporal.PlainTime().add({ nanoseconds: ((nanoseconds % day) + day) % day }));
-  }
-
   every(step, name) {
-    const size = Range.#step(step, name);
-    // validate step unit against start's kind upfront so empty ranges and TimeRange reject mismatched units immediately
-    this.start.plus(size);
-    const points = [];
-    if (this.kind === 'time') {
-      const length = this.duration.total('nanosecond');
-      for (let i = 0; size.times(i).total('nanosecond') < length; i++) {
-        points.push(this.start.plus(size.times(i)));
-      }
-      return points;
-    }
-    // step from start (start + i * size) rather than chaining .plus() so Jan 31 monthly hits Mar 31 instead of sticking on the 28th
-    for (let i = 0;; i++) {
-      const next = this.start.plus(size.times(i));
-      if (!this.#holds(next)) {
-        return points;
-      }
-      points.push(next);
-    }
-  }
-
-  // bare unit names like 'month' mean 1 unit, while strings with digits like '30m' parse as durations
-  static #step(step, name) {
+    // bare unit names like 'month' mean 1 unit, while strings with digits like '30m' parse as durations
     const size = name !== undefined
       ? duration(step, name)
       : isString(step) && !/\d/.test(step)
@@ -306,17 +274,34 @@ class Range {
         explanation: isDevelopment ? 'step duration for `every()` and `split()` must be greater than zero' : 0,
       });
     }
-    return size;
+    const fields = size.toFields();
+    const [key, extra] = Object.keys(fields);
+    // validate step unit against start's kind upfront so empty ranges and TimeRange reject mismatched units immediately
+    this.start.plus(size);
+    const each = this.kind === 'time' ? size.total('nanosecond') : 0;
+    const length = each ? this.duration.total('nanosecond') : Infinity;
+    const points = [];
+    // step from start (start + i * size) rather than chaining .plus() so Jan 31 monthly hits Mar 31 instead of sticking on the 28th
+    for (let i = 0; i * each < length; i++) {
+      const next = i
+        ? this.start.plus(extra ? size.times(i) : fields[key] * i, extra ? undefined : key)
+        : this.start;
+      if (!each && !this.#holds(next)) {
+        return points;
+      }
+      points.push(next);
+    }
+    return points;
   }
 
   split(step, name) {
     const points = this.every(step, name);
     return points.map((start, i) => {
       const following = points[i + 1];
-      return this.#make(
-        this.kind,
+      return new byKind[this.kind](
         start,
-        following === undefined ? this.end : this.#inclusive() ? following.minus(days(1)) : following,
+        following ? (this.#inclusive() ? following.minus(1, 'day') : following) : this.end,
+        raw,
       );
     });
   }
@@ -356,11 +341,8 @@ class Range {
       return `${this.start.format(spec, locale)} – ${this.end.format(spec, locale)}`;
     }
     // Intl.DateTimeFormat.formatRange() natively formats reversed same-day times (22:00 -> 06:00) as overnight ranges
-    const [start, end] = this.kind === 'datetime'
-      ? [this.start.epochMilliseconds, this.end.epochMilliseconds]
-      : [this.start.toTemporal(), this.end.toTemporal()];
-    return formatter(this.kind, options, locale, this.start.zone)
-      .formatRange(epochOf(this.kind, start), epochOf(this.kind, end));
+    const point = (end) => epochOf(this.kind, this.kind === 'datetime' ? end.epochMilliseconds : end.toTemporal());
+    return formatter(this.kind, options, locale, this.start.zone).formatRange(point(this.start), point(this.end));
   }
 
   toString() {

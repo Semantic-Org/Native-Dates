@@ -8,7 +8,12 @@ import {
   DateTimeRange,
   datetimeRange,
   days,
+  duration,
   hours,
+  IS_RANGE,
+  isDateRange,
+  isDateTimeRange,
+  isTimeRange,
   time,
   TimeRange,
   timeRange,
@@ -931,8 +936,38 @@ describe('Range every()', () => {
   });
 
   it('anchors monthly steps to the start date and clamps to shorter month ends', () => {
-    expect(dateRange('2026-01-31', '2026-04-30').every('month').map(String))
-      .toEqual(['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30']);
+    expect(dateRange('2026-01-31', '2026-05-31').every(1, 'month').map(String))
+      .toEqual(['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30', '2026-05-31']);
+    expect(dateRange('2026-01-31', '2026-05-31').every(duration({ months: 1 })).map(String))
+      .toEqual(['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30', '2026-05-31']);
+  });
+
+  it('produces identical points across single-unit, fractional, and multi-field Duration steps', () => {
+    const window = datetimeRange('2026-09-01T09:00', '2026-09-01T15:00', 'America/New_York');
+    const expected = window.every(90, 'minutes').map(String);
+    expect(window.every(1.5, 'hours').map(String)).toEqual(expected);
+    expect(window.every('1.5h').map(String)).toEqual(expected);
+    expect(window.every('1h 30m').map(String)).toEqual(expected);
+    expect(window.every(duration({ hours: 1, minutes: 30 })).map(String)).toEqual(expected);
+    expect(window.every(0.5, 'hours').map(String)).toEqual(window.every(30, 'minutes').map(String));
+
+    const night = timeRange('22:00', '02:00');
+    expect(night.every(0.5, 'hours').map(String)).toEqual(night.every(30, 'minutes').map(String));
+    expect(night.every(duration({ hours: 1, minutes: 30 })).map(String)).toEqual(['22:00:00', '23:30:00', '01:00:00']);
+
+    const span = dateRange('2026-01-31', '2026-06-30');
+    expect(span.every(duration({ months: 1, days: 2 })).map(String))
+      .toEqual(['2026-01-31', '2026-03-02', '2026-04-04', '2026-05-06', '2026-06-08']);
+  });
+
+  it('steps past 32-bit integer nanosecond totals without overflow', () => {
+    const fourSeconds = datetimeRange('2026-09-01T00:00:00Z', '2026-09-01T00:00:04Z', 'UTC');
+    expect(fourSeconds.every(1_000_000_000, 'nanoseconds').map(String)).toEqual([
+      '2026-09-01T00:00:00.000Z',
+      '2026-09-01T00:00:01.000Z',
+      '2026-09-01T00:00:02.000Z',
+      '2026-09-01T00:00:03.000Z',
+    ]);
   });
 
   it('iterates DateTimeRange points in the range timezone and excludes end', () => {
@@ -980,11 +1015,19 @@ describe('Range every()', () => {
     expect(() => dateRange('2026-09-01', '2026-09-07').every('hour')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnit', at: 'hours' }),
     );
+    expect(() => dateRange('2026-09-01', '2026-09-01').every(30, 'minutes')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnit', at: 'minutes' }),
+    );
     expect(() => timeRange('09:00', '17:00').every('day')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnit', at: 'days' }),
     );
     expect(() => timeRange('09:00', '09:00').every('day')).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnit', at: 'days' }),
+    );
+    const instant = datetime('2026-09-01T09:00Z');
+    expect(datetimeRange(instant, instant).every(30, 'minutes')).toEqual([]);
+    expect(() => datetimeRange(instant, instant).every('fortnight')).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'unknownUnit', at: 'fortnight' }),
     );
   });
 });
@@ -1102,6 +1145,100 @@ describe('Range split() and splitBy()', () => {
   it('splits a DateTimeRange by day across spring-forward DST into 24h, 23h, and 24h slices', () => {
     const weekend = datetimeRange('2026-03-07T00:00', '2026-03-10T00:00', 'America/New_York');
     expect(weekend.split('day').map((day) => day.duration.total('hours'))).toEqual([24, 23, 24]);
+  });
+
+  it('splits 30-minute slots cleanly across spring-forward and fall-back DST transitions', () => {
+    const spring = datetimeRange('2026-03-08T01:00', '2026-03-08T04:00', 'America/New_York').split(30, 'minutes');
+    expect(spring.map((slot) => `${slot.start.format('HH:mm')}..${slot.end.format('HH:mm')}`)).toEqual([
+      '01:00..01:30',
+      '01:30..03:00',
+      '03:00..03:30',
+      '03:30..04:00',
+    ]);
+    expect(spring.map((slot) => slot.duration.total('minutes'))).toEqual([30, 30, 30, 30]);
+
+    const fall = datetimeRange('2026-11-01T00:30', '2026-11-01T02:30', 'America/New_York').split(30, 'minutes');
+    expect(fall).toHaveLength(6);
+    expect(fall.map((slot) => slot.duration.total('minutes'))).toEqual([30, 30, 30, 30, 30, 30]);
+    for (let i = 0; i < fall.length - 1; i++) {
+      expect(fall[i].overlaps(fall[i + 1])).toBe(false);
+    }
+  });
+
+  it('splits a midnight-wrapping TimeRange by 30 minutes and supports overlaps() and contains() on every slice', () => {
+    const slots = timeRange('22:00', '02:00').split(30, 'minutes');
+    expect(slots.map(String)).toEqual([
+      '22:00:00/22:30:00',
+      '22:30:00/23:00:00',
+      '23:00:00/23:30:00',
+      '23:30:00/00:00:00',
+      '00:00:00/00:30:00',
+      '00:30:00/01:00:00',
+      '01:00:00/01:30:00',
+      '01:30:00/02:00:00',
+    ]);
+    expect(slots[3].contains('23:45')).toBe(true);
+    expect(slots[3].contains('00:00')).toBe(false);
+    expect(slots[3].overlaps('23:45/00:15')).toBe(true);
+    expect(slots[3].overlaps(slots[4])).toBe(false);
+  });
+
+  it('returns frozen, branded sub-ranges preserving zone, locale, and range methods across all kinds', () => {
+    const singleDay = dateRange('2026-03-01', '2026-03-01', { locale: 'de-DE' }).split('day');
+    expect(singleDay.map(String)).toEqual(['2026-03-01/2026-03-01']);
+    expect(Object.isFrozen(singleDay[0])).toBe(true);
+    expect(singleDay[0][IS_RANGE]).toBe(true);
+    expect(isDateRange(singleDay[0])).toBe(true);
+
+    const monthSpan = dateRange('2026-01-31', '2026-05-31', { locale: 'de-DE' });
+    const monthSlices = monthSpan.split(1, 'month');
+    expect(monthSlices.map(String)).toEqual([
+      '2026-01-31/2026-02-27',
+      '2026-02-28/2026-03-30',
+      '2026-03-31/2026-04-29',
+      '2026-04-30/2026-05-30',
+      '2026-05-31/2026-05-31',
+    ]);
+    expect(monthSlices.map(String)).toEqual(monthSpan.split(duration({ months: 1 })).map(String));
+    for (const slice of monthSlices) {
+      expect(Object.isFrozen(slice)).toBe(true);
+      expect(isDateRange(slice)).toBe(true);
+      expect(slice.locale()).toBe('de-DE');
+      expect(slice.start.locale()).toBe('de-DE');
+      expect(slice.end.locale()).toBe('de-DE');
+      expect(slice.contains(slice.start)).toBe(true);
+      expect(slice.contains(slice.end)).toBe(true);
+    }
+
+    const workSlots = datetimeRange('2026-09-01T09:00', '2026-09-01T10:30', {
+      zone: 'Europe/Berlin',
+      locale: 'fr-FR',
+    }).split(0.5, 'hours');
+    expect(workSlots).toHaveLength(3);
+    for (const slot of workSlots) {
+      expect(Object.isFrozen(slot)).toBe(true);
+      expect(slot[IS_RANGE]).toBe(true);
+      expect(isDateTimeRange(slot)).toBe(true);
+      expect(slot.start.zone).toBe('Europe/Berlin');
+      expect(slot.end.zone).toBe('Europe/Berlin');
+      expect(slot.locale()).toBe('fr-FR');
+      expect(slot.end.locale()).toBe('fr-FR');
+      expect(slot.equals(slot.toString())).toBe(true);
+      expect(slot.format('HH:mm')).toContain('–');
+    }
+
+    const shiftSlots = timeRange('22:00', '02:00', { locale: 'es-ES' })
+      .split(duration({ hours: 1, minutes: 30 }));
+    expect(shiftSlots.map(String)).toEqual(['22:00:00/23:30:00', '23:30:00/01:00:00', '01:00:00/02:00:00']);
+    for (const slot of shiftSlots) {
+      expect(Object.isFrozen(slot)).toBe(true);
+      expect(isTimeRange(slot)).toBe(true);
+      expect(slot.locale()).toBe('es-ES');
+      expect(slot.end.locale()).toBe('es-ES');
+    }
+
+    const emptyMoment = datetime('2026-09-01T09:00Z');
+    expect(datetimeRange(emptyMoment, emptyMoment).split(30, 'minutes')).toEqual([]);
   });
 
   it('splits a midnight-wrapping TimeRange into contiguous non-wrapping slices', () => {
