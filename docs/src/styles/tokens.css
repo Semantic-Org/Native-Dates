@@ -140,6 +140,8 @@ html {
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  /* disable double-tap zoom on rapid taps while keeping pinch-zoom */
+  touch-action: manipulation;
 }
 
 body {
@@ -158,6 +160,7 @@ h1, h2, h3, h4, h5, h6, caption, legend { text-wrap: balance; }
 p, li, dd, dt, figcaption, blockquote, td, th,
 .pt-row > span { text-wrap: pretty; }
 button, kbd, .btn, .code-tab, .version, .url { text-wrap: nowrap; }
+button, a, summary, select, [role='tab'], [role='radio'], [role='button'] { touch-action: manipulation; }
 abbr[title] { text-decoration: underline dotted var(--line-3); text-underline-offset: 4px; cursor: help; }
 
 /* inline code in prose: scale Fragment Mono to 0.86em rounded to whole pixels, using :where() for zero specificity */
