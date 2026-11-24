@@ -1,5 +1,5 @@
 ---
-source: 326d94af83a9
+source: e9bb1a6e9b54
 title: التحليل
 lede: اقرأ نصوص ISO والمدد الزمنية والنطاقات ومدخلات المستخدمين المرنة دون تخمين صامت.
 ---
@@ -163,5 +163,5 @@ import '@native-dates/plugins/parse';
 import { date, datetime } from 'native-dates';
 
 date('24112026', { format: 'DDMMYYYY' }); // 2026-11-24
-datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ' });
+datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ', locale: 'en-US' });
 ```

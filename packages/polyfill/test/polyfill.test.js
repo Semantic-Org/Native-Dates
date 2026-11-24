@@ -161,6 +161,12 @@ describe.each([
     expect(
       new Intl.DurationFormat('en', { style: 'digital', hours: 'long' }).format({ hours: 1, minutes: 5, seconds: 7 }),
     ).toBe('1 hour, 5:07');
+    expect(
+      new Intl.DurationFormat('fr-CA', { style: 'digital' }).format({ hours: 1, minutes: 30, seconds: 5 }),
+    ).toBe('1:30:05');
+    expect(
+      new Intl.DurationFormat('fi', { style: 'digital' }).format({ hours: 1, minutes: 30, seconds: 5 }),
+    ).toBe('1.30.05');
 
     expect(() => new Intl.DurationFormat('not_a_valid_locale_123')).toThrow(RangeError);
     expect(() => new Intl.DurationFormat('en-US', { style: 'medium' })).toThrow(RangeError);
