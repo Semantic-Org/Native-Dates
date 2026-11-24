@@ -50,6 +50,7 @@ export type ErrorCode =
   | 'unsupportedZone'
   | 'unsupportedCalendar'
   | 'unsupportedIntersection'
+  | 'unsupportedUnion'
   | 'conflictingSigns'
   | 'conflictingKinds'
   | 'conflictingRanges'
