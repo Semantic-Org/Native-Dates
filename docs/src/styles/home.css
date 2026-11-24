@@ -565,9 +565,9 @@
   .bytes-presets { margin-inline-start: 0; flex-basis: 100%; }
 }
 @media (max-width: 600px) {
-  .topbar-inner { gap: 8px; }
-  .topbar-tools { gap: 4px; }
-  .topbar .icon-btn, .topbar .search-trigger, .topbar .language-menu .version-button { width: 32px; }
+  .topbar-inner { gap: 6px; padding-inline: 12px; }
+  .topbar-tools { gap: 2px; }
+  .topbar .menu-toggle, .topbar .icon-btn, .topbar .search-trigger, .topbar .language-menu .version-button { width: 32px; }
   .prim { padding: 14px 16px; }
   .prim-code code { font-size: var(--fs-sm); line-height: var(--lh-sm); }
   .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { font-size: var(--fs-2xs); line-height: var(--lh-2xs); }

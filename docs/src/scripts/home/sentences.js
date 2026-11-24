@@ -129,6 +129,26 @@ export function sentencesFor(locale = 'en') {
       ],
     },
     {
+      id: 'month',
+      steps: [
+        [
+          { say: 'month.dec26', code: "monthYear('12/26')", run: (_, { monthYear }, tag) => localize(monthYear('12/26'), tag) },
+          { say: 'month.nov27', code: "monthYear('11/27')", run: (_, { monthYear }, tag) => localize(monthYear('11/27'), tag) },
+          { say: 'month.apr26', code: "monthYear('04/26')", run: (_, { monthYear }, tag) => localize(monthYear('04/26'), tag) },
+        ],
+        [
+          { say: 'add.3.months', code: ".add(3, 'months')", run: (value) => value.add(3, 'months') },
+          { say: 'add.1.year', code: ".add(1, 'year')", run: (value) => value.add(1, 'year') },
+          { say: 'minus.1.month', code: ".minus(1, 'month')", run: (value) => value.minus(1, 'month') },
+        ],
+        [
+          { say: 'month.end', code: '.end', run: (value) => value.end },
+          { say: 'month.days', code: '.daysInMonth', run: (value) => value.daysInMonth },
+          { say: 'month.isPast', code: '.isPast()', run: (value) => value.isPast() },
+        ],
+      ],
+    },
+    {
       id: 'annual',
       steps: [
         [
@@ -159,11 +179,13 @@ const NOUN = {
   time: 'Time',
   duration: 'Duration',
   dateRange: 'DateRange',
+  yearMonth: 'YearMonth',
   monthDay: 'MonthDay',
 };
 export const describe = (value, { kindOf }) => {
   if (typeof value === 'string') { return { noun: 'string', text: `'${value}'` }; }
   if (typeof value === 'number') { return { noun: 'number', text: String(value) }; }
+  if (typeof value === 'boolean') { return { noun: 'boolean', text: String(value) }; }
   if (Array.isArray(value)) {
     const first = value[0];
     const kind = first ? NOUN[kindOf(first)] : 'value';
