@@ -3,6 +3,12 @@
 export const PLUGINS = [
   { name: 'zones', category: 'zones', uses: ['now'], line: "now().in('Berlin');" },
   { name: 'loose', category: 'reading', uses: ['date'], line: "date('March 5, 2026', { loose: true });" },
+  {
+    name: 'ranges',
+    category: 'ranges',
+    uses: ['dateRange'],
+    line: "dateRange('2026-11-01', '2026-11-10').subtract('2026-11-04/2026-11-06');",
+  },
   { name: 'legacy-date', category: 'migration', uses: ['now'], line: 'now().getFullYear();' },
 ];
 

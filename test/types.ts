@@ -1,8 +1,10 @@
 import '@native-dates/plugins/legacy-date';
 import '@native-dates/plugins/loose';
+import '@native-dates/plugins/ranges';
 import '@native-dates/plugins/zones';
 import { datetime as coreDatetime } from '@native-dates/core';
 import { looseZoned } from '@native-dates/plugins/loose';
+import { mergeRanges } from '@native-dates/plugins/ranges';
 import { timezones } from '@native-dates/plugins/zones';
 import {
   type ActiveSettings,
@@ -317,3 +319,23 @@ due.split(3_600_000, 'UTC');
 due.splitBy(3_600_000, 'UTC');
 // @ts-expect-error Duration.round() rejects quarter
 elapsed.round('quarter');
+
+// ranges plugin adds subtract(), union(), and mergeRanges()
+export const dateDiff: DateRange[] = week.subtract('2026-09-03/2026-09-04');
+export const dateUnion: DateRange | null = week.union(stay);
+export const dtDiff: DateTimeRange[] = slots[0].subtract(slots[1]);
+export const dtUnion: DateTimeRange | null = slots[0].union('2026-09-06T15:00/2026-09-06T16:00');
+export const timeDiff: TimeRange[] = shift.subtract('12:00 - 13:00');
+export const timeUnion: TimeRange | null = shift.union(timeRange('17:00', '19:00'));
+export const mergedDates: DateRange[] = mergeRanges([stay, week]);
+export const mergedMoments: DateTimeRange[] = mergeRanges(slots);
+export const mergedTimes: TimeRange[] = mergeRanges(new Set([shift]));
+
+// @ts-expect-error subtract() rejects mismatched range kinds
+week.subtract(shift);
+// @ts-expect-error union() rejects mismatched range kinds
+shift.union(week);
+// @ts-expect-error mergeRanges() rejects mixed range kinds
+mergeRanges([week, shift]);
+// @ts-expect-error mergeRanges() rejects raw strings
+mergeRanges(['2026-09-01/2026-09-07']);
