@@ -148,6 +148,8 @@ export const appWide: ActiveSettings = configure({ locale: languages });
 export const inFrench: string = due.format('long', ['fr-CH', 'fr']);
 export const fromHeader: Locale | undefined = due.locale('fr-CH;q=0.8, de;q=0.9').locale();
 export const rangeDays: CalendarDate[] = dateRange('2026-05-01', '2 weeks').every('day');
+export const spreadDays: CalendarDate[] = [...stay];
+export const dayCursor: IterableIterator<CalendarDate> = week[Symbol.iterator]();
 export const daySlots: DateTime[] = due.every(6, 'hours', 'UTC');
 export const totalDays: number = dateRange('2026-05-01', '2 weeks').count();
 export const workdays: number = dateRange('2026-05-01', '2 weeks').count('weekdays');
@@ -159,6 +161,10 @@ dateRange('2026-05-01', '2 weeks').points('day');
 datetimeRange('2026-05-01T09:00', '2h', 'UTC').count('days');
 // @ts-expect-error count() is only defined on DateRange
 timeRange('09:00', '17:00').count('days');
+// @ts-expect-error DateTimeRange is not iterable without an explicit step unit
+export const invalidDateTimeSpread = [...slots[0]];
+// @ts-expect-error TimeRange is not iterable without an explicit step unit
+export const invalidTimeSpread = [...shift];
 
 // @ts-expect-error instance locale may be a string[] without toUpperCase()
 due.locale()?.toUpperCase();

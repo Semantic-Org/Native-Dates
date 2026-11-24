@@ -384,6 +384,15 @@ export class DateRange extends Range {
   }
   static kind = 'date';
 
+  *[Symbol.iterator]() {
+    for (let day = this.start;; day = day.plus(1, 'day')) {
+      yield day;
+      if (day.equals(this.end)) {
+        return;
+      }
+    }
+  }
+
   count(kind = 'days') {
     const key = String(kind).trim().toLowerCase().replace(/s$/, '');
     const total = this.duration.days;

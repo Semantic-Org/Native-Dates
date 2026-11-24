@@ -380,6 +380,25 @@ export class DateRange extends BaseRange<CalendarDate, CalendarDateInput> {
   constructor(range: DateRange);
 
   /**
+   * Lazily yields each `CalendarDate` in this range from `start` through `end` inclusively,
+   * preserving any carried locale.
+   *
+   * @returns Lazy iterator yielding each inclusive `CalendarDate` day by day
+   *
+   * @example
+   * ```ts
+   * for (const day of dateRange('2026-09-01', '2026-09-03')) {
+   *   day.toString();
+   * }
+   * [...dateRange('2026-09-01', '2026-09-03')].map(String);
+   * // ['2026-09-01', '2026-09-02', '2026-09-03']
+   * ```
+   *
+   * @see {@link https://nativedates.dev/api/ranges/#daterange DateRange}
+   */
+  [Symbol.iterator](): IterableIterator<CalendarDate>;
+
+  /**
    * Counts days in this `DateRange`, optionally filtered to weekdays, weekends, or a specific weekday.
    * `'weekdays'` and `'weekends'` follow the active locale's weekend days, such as Friday and Saturday
    * in `'ar-SA'`, Friday alone in `'fa-IR'`, and Saturday and Sunday in most locales.
