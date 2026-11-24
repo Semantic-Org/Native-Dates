@@ -15,58 +15,6 @@ import { checkedLocale } from './zones.js';
 
 export const inspect = Symbol.for('nodejs.util.inspect.custom');
 
-const spellings = {
-  __proto__: null,
-  y: 'year',
-  yr: 'year',
-  yrs: 'year',
-  year: 'year',
-  years: 'year',
-  q: 'quarter',
-  qtr: 'quarter',
-  quarter: 'quarter',
-  quarters: 'quarter',
-  mo: 'month',
-  mos: 'month',
-  month: 'month',
-  months: 'month',
-  w: 'week',
-  wk: 'week',
-  wks: 'week',
-  week: 'week',
-  weeks: 'week',
-  d: 'day',
-  day: 'day',
-  days: 'day',
-  h: 'hour',
-  hr: 'hour',
-  hrs: 'hour',
-  hour: 'hour',
-  hours: 'hour',
-  m: 'minute',
-  min: 'minute',
-  mins: 'minute',
-  minute: 'minute',
-  minutes: 'minute',
-  s: 'second',
-  sec: 'second',
-  secs: 'second',
-  second: 'second',
-  seconds: 'second',
-  ms: 'millisecond',
-  msec: 'millisecond',
-  msecs: 'millisecond',
-  millisecond: 'millisecond',
-  milliseconds: 'millisecond',
-  us: 'microsecond',
-  'µs': 'microsecond',
-  microsecond: 'microsecond',
-  microseconds: 'microsecond',
-  ns: 'nanosecond',
-  nanosecond: 'nanosecond',
-  nanoseconds: 'nanosecond',
-};
-
 export const units = [
   'year',
   'month',
@@ -79,7 +27,29 @@ export const units = [
   'microsecond',
   'nanosecond',
 ];
-export const timeUnits = units.slice(4);
+
+export const plural = (name) => `${name}s`;
+
+// every unit also answers to its own name and plural ('year', 'years')
+const shorthand = {
+  year: ['y', 'yr', 'yrs'],
+  quarter: ['q', 'qtr'],
+  month: ['mo', 'mos'],
+  week: ['w', 'wk', 'wks'],
+  day: ['d'],
+  hour: ['h', 'hr', 'hrs'],
+  minute: ['m', 'min', 'mins'],
+  second: ['s', 'sec', 'secs'],
+  millisecond: ['ms', 'msec', 'msecs'],
+  microsecond: ['us', 'µs'],
+  nanosecond: ['ns'],
+};
+const spellings = { __proto__: null };
+each(shorthand, (words, name) => {
+  each([name, plural(name), ...words], (word) => {
+    spellings[word] = name;
+  });
+});
 
 export const isDigits = (value) => isString(value) && /^\s*[-+]?\d+(?:\.\d+)?\s*$/.test(value);
 
@@ -96,8 +66,6 @@ export const unit = (input) => {
       : 0,
   });
 };
-
-export const plural = (name) => `${name}s`;
 
 const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
