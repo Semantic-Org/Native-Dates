@@ -1,6 +1,6 @@
 // scrub the year strip playhead on pointer or keyboard input, with a single initial sweep on scroll into view
 
-import { ui } from '../strings.js';
+import { plural } from '../strings.js';
 
 export function mountYear(root) {
   const days = JSON.parse(root.querySelector('[data-year-days]').textContent);
@@ -20,7 +20,7 @@ export function mountYear(root) {
     dayLabel.style.setProperty('--at', at);
     dayLabel.textContent = label;
     berlin.textContent = time;
-    gap.textContent = ui('home.year.gap', { hours });
+    gap.textContent = plural('home.year.gap', hours, { hours });
     root.classList.toggle('is-shifted', hours !== usual);
     strip.setAttribute('aria-valuenow', at + 1);
     strip.setAttribute('aria-valuetext', `${label}: ${time}`);

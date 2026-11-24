@@ -61,15 +61,19 @@ const keysIn = (call) => [...new Set(
 const SCRIPT_KEYS = keysIn('ui');
 const SCRIPT_PLURALS = keysIn('plural');
 export function scriptStrings(code, { home = false } = {}) {
-  // take all plural forms from one locale so English forms are not mixed into partial translations
+  // take all plural forms from one locale and record that locale so CJK fallbacks pick English singulars
   const own = stringsOf(code);
-  const forms = SCRIPT_PLURALS.flatMap((family) => {
+  const pluralLocales = {};
+  const forms = SCRIPT_PLURALS.filter((family) => home || !family.startsWith('home.')).flatMap((family) => {
     const of = (strings) => Object.keys(strings).filter((key) => key.startsWith(`${family}.`));
-    return of(own).length ? of(own) : of(english);
+    const ownForms = of(own);
+    pluralLocales[family] = ownForms.length ? code : DEFAULT_LOCALE;
+    return ownForms.length ? ownForms : of(english);
   });
-  return Object.fromEntries([...SCRIPT_KEYS, ...forms]
+  const entries = [...SCRIPT_KEYS, ...forms]
     .filter((key) => home || !key.startsWith('home.'))
-    .map((key) => [key, text(code, key)]));
+    .map((key) => [key, text(code, key)]);
+  return { ...Object.fromEntries(entries), $pluralLocales: pluralLocales };
 }
 
 export const formatDate = (code, date) =>
@@ -88,12 +92,33 @@ export async function inLanguage(entry, code) {
   return { page: { ...twin, id: entry.id, data: { ...entry.data, ...own } }, translated: true, stale: source !== sourceHash(entry), draft: reviewed === false };
 }
 
+const titleCache = new Map();
 export async function titlesIn(code) {
   if (code === DEFAULT_LOCALE) { return new Map(); }
+  if (titleCache.has(code)) { return titleCache.get(code); }
   const titled = async (collection, slug) =>
     (await Promise.all((await getCollection(collection)).map((entry) => inLanguage(entry, code))))
       .filter((p) => p.translated).map((p) => [slug(p.page.id), p.page.data.title]);
-  return new Map([...await titled('docs', (id) => id), ...await titled('examples', (id) => `examples/${id}`)]);
+  const map = new Map([...await titled('docs', (id) => id), ...await titled('examples', (id) => `examples/${id}`)]);
+  titleCache.set(code, map);
+  return map;
+}
+
+const SEARCH_SUGGESTED = [
+  { section: 'nav.guides', slug: 'guides/types-of-time', title: 'Types of time' },
+  { section: 'nav.guides', slug: 'guides/time-zones', title: 'Time zones' },
+  { section: 'nav.api', slug: 'api/date-time', title: 'DateTime', symbol: true },
+  { section: 'nav.api', slug: 'api/ranges', title: 'Ranges' },
+];
+
+export async function searchSuggested(code) {
+  const titles = await titlesIn(code);
+  return SEARCH_SUGGESTED.map((item) => ({
+    section: t(code, item.section),
+    title: titles.get(item.slug) ?? item.title,
+    url: localePath(`/${item.slug}/`, code),
+    ...(item.symbol ? { symbol: true } : {}),
+  }));
 }
 
 const CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';

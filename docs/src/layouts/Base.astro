@@ -1,5 +1,5 @@
 ---
-import { DEFAULT_LOCALE, languageOffer, localeOf, localePath, scriptStrings, t, unlocalized } from '../lib/i18n.js';
+import { DEFAULT_LOCALE, languageOffer, localeOf, localePath, scriptStrings, searchSuggested, t, unlocalized } from '../lib/i18n.js';
 import { LATEST_ORIGIN } from '../lib/versions.js';
 import '@fontsource-variable/schibsted-grotesk/wght.css';
 import '@fontsource/fragment-mono/400.css';
@@ -12,7 +12,10 @@ import monoLatin from '@fontsource/fragment-mono/files/fragment-mono-latin-400-n
 const { title, description = t(DEFAULT_LOCALE, 'home.description'), share = true, writtenIn = [DEFAULT_LOCALE], translatedIn = [DEFAULT_LOCALE] } = Astro.props;
 const locale = localeOf(Astro.currentLocale);
 // escape < so localized UI strings cannot close the script tag
-const strings = JSON.stringify(scriptStrings(locale.code, { home: unlocalized(Astro.url.pathname) === '/' })).replace(/</g, '\\u003c');
+const strings = JSON.stringify({
+  ...scriptStrings(locale.code, { home: unlocalized(Astro.url.pathname) === '/' }),
+  $suggested: await searchSuggested(locale.code),
+}).replace(/</g, '\\u003c');
 // share cards are generated at build time from English routes until localized OG images exist
 const path = unlocalized(Astro.url.pathname);
 const image = new URL(`/og/${path.replace(/^\/|\/$/g, '') || 'index'}.png`, Astro.site);

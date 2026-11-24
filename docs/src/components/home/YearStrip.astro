@@ -62,7 +62,7 @@ const caption = captionTemplate
       <span class="year-city">{fromCity}</span>
       <span class="year-time">{date(year, 1, 1).at('9:30am', FROM).format('time', uiLocale)}</span>
     </div>
-    <div class="year-gap" aria-live="off"><span data-year-gap>{t(uiLocale, 'home.year.gap', { hours: first.gap })}</span></div>
+    <div class="year-gap" aria-live="off"><span data-year-gap>{plural(uiLocale, 'home.year.gap', first.gap, { hours: first.gap })}</span></div>
     <div class="year-clock is-there">
       <span class="year-city">{toCity}</span>
       <span class="year-time" data-year-berlin>{first.berlin}</span>

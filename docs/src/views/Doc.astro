@@ -62,7 +62,7 @@ const ICON = {
       <a class="crumb" href={section.href}>{section.label}</a>{group && group.label !== section.label && <> / {group.label}</>}
     </p>
     <h1>{kind ? <><code>{title}</code> <span class="kind" data-pagefind-ignore>{kind}</span></> : title}</h1>
-    <p class="doc-lede" set:html={inline(lede)} />
+    <p class="doc-lede" set:html={inline(lede, locale)} />
 
     <div class="doc-meta" data-pagefind-ignore>
       {importLine && <span class="import-chip"><code id="import-line">{importLine}</code><button class="copy" type="button" data-copy="#import-line" aria-label={t(locale, 'page.copyImport')}></button></span>}

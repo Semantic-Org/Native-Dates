@@ -36,8 +36,8 @@ const lede = t(locale, 'examples.lede');
             <li>
               <a class="example-card" href={localePath(`/${it.slug}/`, locale)}>
                 <h3>{it.entry.data.title}</h3>
-                <p set:html={inline(it.entry.data.description)} />
-                <p class="example-card-try"><span>{t(locale, 'examples.try')}</span> <span set:html={inline(it.entry.data.try[0])} /></p>
+                <p set:html={inline(it.entry.data.description, locale)} />
+                <p class="example-card-try"><span>{t(locale, 'examples.try')}</span> <span set:html={inline(it.entry.data.try[0], locale)} /></p>
               </a>
             </li>
           ))}

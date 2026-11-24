@@ -41,11 +41,11 @@ const links = new Intl.ListFormat(locale, { type: 'unit', style: 'short' })
 
     <p class="doc-crumb" data-pagefind-ignore><a class="crumb" href={localePath('/examples/', locale)}>{t(locale, 'nav.examples')}</a> / {groupLabel}</p>
     <h1>{title}</h1>
-    <p class="doc-lede" set:html={inline(description)} />
+    <p class="doc-lede" set:html={inline(description, locale)} />
 
     <div class="example-try" data-pagefind-ignore>
       <p class="example-try-label">{t(locale, 'examples.tryThis')}</p>
-      <ol>{steps.map((s) => <li set:html={inline(s)} />)}</ol>
+      <ol>{steps.map((s) => <li set:html={inline(s, locale)} />)}</ol>
     </div>
 
     <div data-pagefind-ignore><Playground files={files} tabs={tabs} label={t(locale, 'examples.live', { title })} /></div>
