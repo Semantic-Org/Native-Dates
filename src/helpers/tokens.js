@@ -82,13 +82,13 @@ export const names = (locale) => {
   return nameCache.get(key);
 };
 
-const monthName = (subject, locale, token, besideDay) =>
-  (besideDay ? names(locale).besideDay : names(locale))[token][subject.month - 1];
+const monthName = (month, locale, token, besideDay) =>
+  (besideDay ? names(locale).besideDay : names(locale))[token][month - 1];
 
 // honor a/A casing in English while preserving native script/casing elsewhere (e.g. 午後)
-const dayPeriod = (subject, locale, cased) => {
+const dayPeriod = (hour, locale, cased) => {
   const { dayPeriods, isEnglish } = names(locale);
-  const period = dayPeriods[subject.hour < 12 ? 0 : 1];
+  const period = dayPeriods[hour < 12 ? 0 : 1];
   return isEnglish ? period[cased]() : period;
 };
 
@@ -114,48 +114,50 @@ const zoneName = (parts, locale, style) =>
     .formatToParts(parts.epochMilliseconds)
     .find((part) => part.type === 'timeZoneName')?.value;
 
-// pair each token with its required property so unsupported tokens (e.g. 'HH' on CalendarDate) fail fast
+const twoDigits = (value) => pad(value);
+
+// pair each token with the property it prints so unsupported tokens (e.g. 'HH' on CalendarDate) fail fast
 const tokenReaders = {
-  YYYY: ['year', (subject) => (subject.year < 0 ? '-' : '') + pad(subject.year, 4)],
-  YY: ['year', (subject) => pad(subject.year % 100)],
-  M: ['month', (subject) => String(subject.month)],
-  MM: ['month', (subject) => pad(subject.month)],
-  MMM: ['month', (subject, locale, besideDay) => monthName(subject, locale, 'MMM', besideDay)],
-  MMMM: ['month', (subject, locale, besideDay) => monthName(subject, locale, 'MMMM', besideDay)],
-  D: ['day', (subject) => String(subject.day)],
-  DD: ['day', (subject) => pad(subject.day)],
-  Do: ['day', (subject, locale) => ordinal(subject.day, locale)],
-  DDD: ['dayOfYear', (subject) => String(subject.dayOfYear)],
-  DDDD: ['dayOfYear', (subject) => pad(subject.dayOfYear, 3)],
-  d: ['dayOfWeek', (subject) => String(subject.dayOfWeek % 7)], // Sunday = 0 (Moment/Day.js convention)
-  E: ['dayOfWeek', (subject) => String(subject.dayOfWeek)],
-  dd: ['dayOfWeek', (subject, locale) => names(locale).dd[subject.dayOfWeek - 1]],
-  ddd: ['dayOfWeek', (subject, locale) => names(locale).ddd[subject.dayOfWeek - 1]],
-  dddd: ['dayOfWeek', (subject, locale) => names(locale).dddd[subject.dayOfWeek - 1]],
-  H: ['hour', (subject) => String(subject.hour)],
-  HH: ['hour', (subject) => pad(subject.hour)],
-  h: ['hour', (subject) => String(subject.hour % 12 || 12)],
-  hh: ['hour', (subject) => pad(subject.hour % 12 || 12)],
-  m: ['minute', (subject) => String(subject.minute)],
-  mm: ['minute', (subject) => pad(subject.minute)],
-  s: ['second', (subject) => String(subject.second)],
-  ss: ['second', (subject) => pad(subject.second)],
-  S: ['millisecond', (subject) => String(Math.floor(subject.millisecond / 100))],
-  SS: ['millisecond', (subject) => pad(Math.floor(subject.millisecond / 10))],
-  SSS: ['millisecond', (subject) => pad(subject.millisecond, 3)],
-  A: ['hour', (subject, locale) => dayPeriod(subject, locale, 'toUpperCase')],
-  a: ['hour', (subject, locale) => dayPeriod(subject, locale, 'toLowerCase')],
-  Z: ['offset', (subject) => subject.offset],
-  ZZ: ['offset', (subject) => subject.offset.replace(':', '')],
-  z: ['zone', (subject, locale) => zoneName(subject, locale, 'short')],
-  zz: ['zone', (subject, locale) => zoneName(subject, locale, 'short')],
-  zzz: ['zone', (subject, locale) => zoneName(subject, locale, 'long')],
-  zzzz: ['zone', (subject, locale) => zoneName(subject, locale, 'long')],
-  X: ['epochSeconds', (subject) => String(subject.epochSeconds)],
-  x: ['epochMilliseconds', (subject) => String(subject.epochMilliseconds)],
-  Q: ['month', (subject) => String(Math.ceil(subject.month / 3))],
-  W: ['weekOfYear', (subject) => String(subject.weekOfYear)],
-  WW: ['weekOfYear', (subject) => pad(subject.weekOfYear)],
+  YYYY: ['year', (year) => (year < 0 ? '-' : '') + pad(year, 4)],
+  YY: ['year', (year) => pad(year % 100)],
+  M: ['month', String],
+  MM: ['month', twoDigits],
+  MMM: ['month', (month, locale, subject, besideDay) => monthName(month, locale, 'MMM', besideDay)],
+  MMMM: ['month', (month, locale, subject, besideDay) => monthName(month, locale, 'MMMM', besideDay)],
+  D: ['day', String],
+  DD: ['day', twoDigits],
+  Do: ['day', ordinal],
+  DDD: ['dayOfYear', String],
+  DDDD: ['dayOfYear', (day) => pad(day, 3)],
+  d: ['dayOfWeek', (day) => String(day % 7)], // Sunday = 0 (Moment/Day.js convention)
+  E: ['dayOfWeek', String],
+  dd: ['dayOfWeek', (day, locale) => names(locale).dd[day - 1]],
+  ddd: ['dayOfWeek', (day, locale) => names(locale).ddd[day - 1]],
+  dddd: ['dayOfWeek', (day, locale) => names(locale).dddd[day - 1]],
+  H: ['hour', String],
+  HH: ['hour', twoDigits],
+  h: ['hour', (hour) => String(hour % 12 || 12)],
+  hh: ['hour', (hour) => pad(hour % 12 || 12)],
+  m: ['minute', String],
+  mm: ['minute', twoDigits],
+  s: ['second', String],
+  ss: ['second', twoDigits],
+  S: ['millisecond', (millisecond) => String(Math.floor(millisecond / 100))],
+  SS: ['millisecond', (millisecond) => pad(Math.floor(millisecond / 10))],
+  SSS: ['millisecond', (millisecond) => pad(millisecond, 3)],
+  A: ['hour', (hour, locale) => dayPeriod(hour, locale, 'toUpperCase')],
+  a: ['hour', (hour, locale) => dayPeriod(hour, locale, 'toLowerCase')],
+  Z: ['offset', String],
+  ZZ: ['offset', (offset) => offset.replace(':', '')],
+  z: ['zone', (zone, locale, subject) => zoneName(subject, locale, 'short')],
+  zz: ['zone', (zone, locale, subject) => zoneName(subject, locale, 'short')],
+  zzz: ['zone', (zone, locale, subject) => zoneName(subject, locale, 'long')],
+  zzzz: ['zone', (zone, locale, subject) => zoneName(subject, locale, 'long')],
+  X: ['epochSeconds', String],
+  x: ['epochMilliseconds', String],
+  Q: ['month', (month) => String(Math.ceil(month / 3))],
+  W: ['weekOfYear', String],
+  WW: ['weekOfYear', twoDigits],
 };
 
 // match full single-letter runs so overlong tokens like 'SSSSSS' and typos like 'meduim' throw unknownFormat,
@@ -201,13 +203,14 @@ export const formatTokens = (subject, kind, named, locale) => {
       });
     }
     const [field, read] = tokenReaders[token];
-    if (subject[field] === undefined) {
+    const value = subject[field];
+    if (value === undefined) {
       refuse('unsupportedToken', `${token} in '${pattern}'`, {
         explanation: isDevelopment
           ? `a ${kind} does not include ${field} information. Remove that token from the format pattern`
           : 0,
       });
     }
-    return read(subject, resolved, besideDay);
+    return read(value, resolved, subject, besideDay);
   });
 };
