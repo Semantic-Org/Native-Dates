@@ -4,7 +4,7 @@ lede: Extend Native Dates with opt-in prototype methods and TypeScript module au
 updated: 2026-11-12
 ---
 
-Plugins install by importing a module, with no registration ceremony or wrapper calls.
+Plugins activate when imported.
 
 You can publish reusable packages or add domain helpers inside your own app using the same pattern as [`zones`](/plugins/zones/) and [`legacy-date`](/plugins/legacy-date/) in [`@native-dates/plugins`](/plugins/).
 

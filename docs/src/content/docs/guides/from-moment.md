@@ -91,16 +91,16 @@ quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 | `m.day()`, `m.isoWeekday()` | `d.dayOfWeek` | ISO 1 on Monday to 7 on Sunday, with tokens `'E'` for 1–7 and `'d'` for 0–6 |
 | `m.unix()`, `m.valueOf()` | `dt.epochSeconds`, `dt.epochMilliseconds` | Each count since 1970 names its unit |
 | `b.diff(a, 'hours', true)` | `a.until(b, 'hours')` | Fractional total in the requested unit |
-| `moment.duration(2, 'h')` | `hours(2)` or `duration('2h')` | Built into core |
-| `m.format('LLL')` | `dt.format('LLL')` | Localized presets from `'LT'` to `'llll'` with zero locale files |
-| `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) built directly into core |
-| `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) built into core with `to()`, `for()`, and `overlaps()` |
-| `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [Relative phrases](/guides/formatting/#relative-phrases) built into core |
+| `moment.duration(2, 'h')` | `hours(2)` or `duration('2h')` | Duration helpers in core |
+| `m.format('LLL')` | `dt.format('LLL')` | Localized presets from `'LT'` to `'llll'` without locale files |
+| `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) |
+| `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) with `to()`, `for()`, and `overlaps()` |
+| `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [Relative phrases](/guides/formatting/#relative-phrases) |
 | Non-ISO string parsing | `{ loose: true }` | Load [`@native-dates/plugins/loose`](/plugins/loose/) for locale-aware and informal string parsing |
 
 ## Migrating incrementally
 
-Large codebases rarely convert in a single pull request. Call [`toJSDate()`](/api/date-time/#tojsdate) at boundaries that still expect a native JavaScript date, and pass dates straight back into [`datetime()`](/api/datetime-fn/) on the way in.
+Large codebases rarely convert in a single pull request. Call [`toJSDate()`](/api/date-time/#tojsdate) at boundaries that still expect a native JavaScript date, and pass dates back into [`datetime()`](/api/datetime-fn/) on the way in.
 
 ```js
 import { datetime } from 'native-dates';

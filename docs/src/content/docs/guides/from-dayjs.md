@@ -82,7 +82,7 @@ dt.format('YYYY-MM-DD HH:mm'); // '2026-11-16 12:30'
 
 ## Opt-in plugins
 
-Only non-ISO text parsing, city and abbreviation lookups, and legacy date getters live in [`@native-dates/plugins`](/plugins/). Import each subpath once with no global registration call needed:
+Only non-ISO text parsing, city and abbreviation lookups, and legacy date getters live in [`@native-dates/plugins`](/plugins/). Import each subpath once at startup:
 
 ```js
 import '@native-dates/plugins/loose';
@@ -102,13 +102,13 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `d.day()`, `d.isoWeekday()` | `d.dayOfWeek` | ISO 1 on Monday to 7 on Sunday, with tokens `'E'` for 1–7 and `'d'` for 0–6 |
 | `d.unix()`, `d.valueOf()` | `dt.epochSeconds`, `dt.epochMilliseconds` | Each count since 1970 names its unit |
 | `d.add(2, 'day')` | `d.plus(2, 'days')` | `add()` and `subtract()` aliases also work |
-| `dayjs.tz(x, zone)` | `datetime(x, zone)` | Built into core with no `timezone` plugin |
+| `dayjs.tz(x, zone)` | `datetime(x, zone)` | In core, no `timezone` plugin |
 | `d.tz(zone)` | `dt.in(zone)` | Views the same moment in another IANA zone |
-| `dayjs.utc(x)` | `datetime(x, 'UTC')` | Built into core with no `utc` plugin |
+| `dayjs.utc(x)` | `datetime(x, 'UTC')` | In core, no `utc` plugin |
 | `b.diff(a, 'day', true)` | `a.until(b, 'days')` | Fractional total in the requested unit |
-| `dayjs.duration(90, 'm')` | `minutes(90)` or `duration('90m')` | Built into core with no `duration` plugin |
-| `d.format('LLL')` | `dt.format('LLL')` | Localized presets from `'LT'` to `'llll'` in core |
-| `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) built directly into core |
-| `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) built into core with `to()`, `for()`, and `overlaps()` |
-| `d.fromNow()`, `d.from(other)` | `d.fromNow()`, `d.from(other)` | Built into core with no `relativeTime` plugin |
+| `dayjs.duration(90, 'm')` | `minutes(90)` or `duration('90m')` | In core, no `duration` plugin |
+| `d.format('LLL')` | `dt.format('LLL')` | Localized presets from `'LT'` to `'llll'` |
+| `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) in core |
+| `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) with `to()`, `for()`, and `overlaps()` |
+| `d.fromNow()`, `d.from(other)` | `d.fromNow()`, `d.from(other)` | In core, no `relativeTime` plugin |
 | `customParseFormat` | `{ loose: true }` | Provided by [`@native-dates/plugins/loose`](/plugins/loose/) |

@@ -78,7 +78,7 @@ Without an argument, standalone durations carry months into years and clock unit
 
 Pass `'day'` or `'week'` when you want fixed 24-hour days or 7-day weeks.
 
-Call [`total()`](/api/duration/#total) or its chain-friendly alias [`as()`](/api/duration/#as) to collapse the entire span into a single floating-point number in one unit:
+Call [`total()`](/api/duration/#total) or its alias [`as()`](/api/duration/#as) to collapse the entire span into a single floating-point number in one unit:
 
 ```js
 import { duration } from 'native-dates';
