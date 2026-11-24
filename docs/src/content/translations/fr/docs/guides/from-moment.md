@@ -1,5 +1,5 @@
 ---
-source: 5365132bf9e2
+source: f7719b9dc227
 title: Migrer depuis Moment
 lede: Quittez Moment et moment-timezone pour des valeurs immuables, des jetons intégrés et aucune donnée de fuseaux horaires embarquée.
 ---
@@ -96,7 +96,7 @@ quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Motifs de jetons](/guides/formatting/#token-patterns) |
 | `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Plages](/api/ranges/) avec `to()`, `for()` et `overlaps()` |
 | `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [Expressions relatives](/guides/formatting/#relative-phrases) |
-| Analyse de chaînes non ISO | `{ loose: true }` | Chargez [`@native-dates/plugins/loose`](/plugins/loose/) pour l’analyse sensible à la locale et aux formats informels |
+| Analyse de chaînes non ISO | `{ format }` ou `{ loose: true }` | Chargez [`@native-dates/plugins/parse`](/plugins/parse/) pour les motifs de format fixes, ou [`@native-dates/plugins/loose`](/plugins/loose/) pour les saisies informelles et l’analyse sensible à la locale |
 
 ## Migrer progressivement
 

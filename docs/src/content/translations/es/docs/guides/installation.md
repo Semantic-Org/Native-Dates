@@ -1,5 +1,5 @@
 ---
-source: "f1aec8a13183"
+source: "84e8bf9a4705"
 title: Instalación
 lede: Instala Native Dates con un solo comando y añade un polyfill opcional para Safari y versiones anteriores de Node.
 ---
@@ -33,7 +33,7 @@ standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
 
 Native Dates se ejecuta directamente sobre las APIs integradas `Temporal` e `Intl` de la plataforma. Las versiones actuales de Chrome, Edge, Firefox, Node 26+, Deno y Bun no necesitan nada más.
 
-En Safari, navegadores antiguos o Node 24–25, instala el polyfill junto con `temporal-polyfill`:
+En Safari, navegadores antiguos o Node 22–25, instala el polyfill junto con `temporal-polyfill`:
 
 ```bash
 npm i @native-dates/polyfill temporal-polyfill
@@ -49,12 +49,12 @@ const launch = today().plus(30, 'days');
 ```
 
 :::tip[Sin costo en navegadores modernos]
-Los entornos con `Temporal` nativo ni siquiera descargan `temporal-polyfill`.
+Los entornos con `Temporal` e `Intl.DurationFormat` nativos ni siquiera descargan ninguno de los dos polyfills.
 :::
 
 :::details[Notas de compatibilidad para entornos antiguos]
 - **Carga síncrona:** si un módulo importado evalúa fechas al cargarse, antes de que finalice un `await` de nivel superior, importa `@native-dates/polyfill/sync` en su lugar.
-- **Formateo de duraciones en Node:** el código de servidor que llama a [`Duration.format()`](/api/duration/#format) requiere Node 24+ por `Intl.DurationFormat`. Los paquetes para navegador se compilan sin problemas en versiones anteriores de Node.
+- **Formateo de duraciones en Node 22–23:** `@native-dates/polyfill` incluye un respaldo sin dependencias de `Intl.DurationFormat` para que [`Duration.format()`](/api/duration/#format) y `Duration.text` también funcionen en Node 22–23 (los navegadores y Node 24+ lo traen de forma nativa y nunca lo descargan).
 :::
 
 A continuación, lee [Personalización](/guides/customization/) para ajustar los valores predeterminados y añadir plugins opcionales.

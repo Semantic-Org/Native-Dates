@@ -1,5 +1,5 @@
 ---
-source: 450f88efed26
+source: 3f7711941af9
 title: الانتقال من Day.js
 lede: استعِض عن كائنات dayjs وسلاسل الإضافات بأنواع مخصّصة ومناطق زمنية مدمجة في النواة.
 ---
@@ -111,4 +111,4 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [أنماط الرموز](/guides/formatting/#token-patterns) في النواة |
 | `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [النطاقات](/api/ranges/) مع `to()` و`for()` و`overlaps()` |
 | `d.fromNow()`، `d.from(other)` | `d.fromNow()`، `d.from(other)` | في النواة دون إضافة `relativeTime` |
-| `customParseFormat` | `{ loose: true }` | توفّرها [`@native-dates/plugins/loose`](/plugins/loose/) |
+| `customParseFormat` | `{ format }` أو `{ loose: true }` | الأنماط الثابتة عبر [`@native-dates/plugins/parse`](/plugins/parse/)، والمدخلات الحرّة عبر [`@native-dates/plugins/loose`](/plugins/loose/) |

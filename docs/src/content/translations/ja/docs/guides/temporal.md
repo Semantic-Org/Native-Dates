@@ -1,5 +1,5 @@
 ---
-source: "f19636049929"
+source: "ed93e959dec0"
 title: Temporal との連携
 lede: Native Dates が JavaScript の Temporal API にどう対応し、生の Temporal の値と相互運用するかを解説します。
 ---
@@ -79,4 +79,4 @@ japanese.eraYear; // 8
 
 最新の Chrome・Edge・Firefox、Node 26 以降、Deno、Bun には `Temporal` が標準搭載されているため、コアにはポリフィルコードが含まれていません。
 
-Safari・古いブラウザ・Node 24〜25 に対応する場合は、アプリ起動時に `temporal-polyfill` とあわせて `@native-dates/polyfill` を読み込んでください。セットアップ手順と同期読み込みのオプションは、[Safari および古い Node への対応](/guides/installation/#supporting-safari-and-older-node)を参照してください。
+Safari・古いブラウザ・Node 22〜25 に対応する場合は、アプリ起動時に `temporal-polyfill` とあわせて `@native-dates/polyfill` を読み込んでください（Node 22〜23 向けの `Intl.DurationFormat` フォールバックも含まれます）。セットアップ手順と同期読み込みのオプションは、[Safari と旧バージョンの Node への対応](/guides/installation/#supporting-safari-and-older-node)を参照してください。

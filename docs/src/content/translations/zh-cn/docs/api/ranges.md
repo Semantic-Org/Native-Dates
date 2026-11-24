@@ -1,5 +1,5 @@
 ---
-source: "556537c8ff45"
+source: "9606dd7fa967"
 title: 范围
 lede: 两个日历日期、具体时刻或时钟时间之间的跨度，支持包含检测、重叠判断与步进遍历。
 ---
@@ -22,6 +22,8 @@ new DateRange(interval, options?)
 
 跨越两个[日历日期](/api/calendar-date/)，并包含起止两端点。若结束日期早于开始日期，则抛出 `RangeError`。
 
+`DateRange` 支持使用 `for...of` 或展开语法按天惰性迭代，从起始日到结束日逐日产出每个日历日期。
+
 ```js title="ranges.js"
 import { dateRange } from 'native-dates';
 
@@ -30,6 +32,10 @@ const week = dateRange('2026-09-01', '7 days');
 
 trip.duration.days; // 7
 week.toString(); // '2026-09-01/2026-09-07'
+for (const day of trip) {
+  day.toString(); // '2026-09-01', '2026-09-02', ...
+}
+[...dateRange('2026-09-01', '2026-09-03')].map(String); // ['2026-09-01', '2026-09-02', '2026-09-03']
 ```
 :::
 
@@ -319,6 +325,8 @@ range.every(count, unit): Point[]
 ```
 
 从 `start` 出发，按正数单位或时长依次递增步进，返回落在范围内的所有时间点。每一步都相对于起点直接计算，而不是在前一步结果上累进相加，因此从 1 月 31 日按月步进时会依次落到每个月的最后一天。
+
+如果希望按天惰性遍历 [`DateRange`](#daterange) 而不一次性分配整个数组，可直接用 `for...of` 或展开语法进行迭代。
 
 **参数**
 

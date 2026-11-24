@@ -1,5 +1,5 @@
 ---
-source: "f19636049929"
+source: "ed93e959dec0"
 title: 与 Temporal 协作
 lede: Native Dates 如何映射 JavaScript 的 Temporal API，并与原生 Temporal 值自由互操作。
 ---
@@ -79,4 +79,4 @@ japanese.eraYear; // 8
 
 新版 Chrome、Edge、Firefox、Node 26+、Deno 和 Bun 均已原生内置 `Temporal`，因此核心库不包含任何 polyfill 代码。
 
-如需兼容 Safari、旧版浏览器或 Node 24–25，请在启动时搭配 `temporal-polyfill` 加载 `@native-dates/polyfill`。安装与同步加载方案请参见[支持 Safari 和旧版 Node](/guides/installation/#supporting-safari-and-older-node)。
+如需兼容 Safari、旧版浏览器或 Node 22–25，请在启动时搭配 `temporal-polyfill` 加载 `@native-dates/polyfill`（该包同时在 Node 22–23 上提供 `Intl.DurationFormat` 回退实现）。安装与同步加载方案请参见[兼容 Safari 与旧版 Node](/guides/installation/#supporting-safari-and-older-node)。

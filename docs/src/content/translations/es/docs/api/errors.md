@@ -1,5 +1,5 @@
 ---
-source: "91f647c820ea"
+source: "cd25f69b961f"
 title: Errores
 lede: Toda entrada no válida u operación no admitida lanza un Error estándar con un código legible por máquina.
 ---
@@ -82,7 +82,8 @@ Los errores de tipo indican que falta una entrada obligatoria, tiene un tipo de 
 | `unsupportedCalendar` | `yearMonth()`, `monthDay()`, `YearMonth`, `MonthDay` | La entrada es un `Temporal.PlainYearMonth` o `PlainMonthDay` con un calendario que no es ISO. |
 | `invalidPoint` | `compare()`, `earliest()`, `latest()` | El valor no es un `DateTime`, `CalendarDate`, `Time`, `YearMonth`, `Date`, marca de tiempo Unix, punto de Temporal ni cadena interpretable. |
 | `conflictingKinds` | `compare()`, `earliest()`, `latest()` | Comparación de valores de tipos distintos, como una `CalendarDate` con un `DateTime`. |
-| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange` | Paso de un rango de un tipo a un constructor o función de fábrica de otro tipo de rango. |
+| `invalidRange` | `mergeRanges()` | Paso de un valor no iterable o de un elemento que no es una instancia de rango cuando está cargado [`@native-dates/plugins/ranges`](/plugins/ranges/). |
+| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange`, `subtract()`, `union()`, `mergeRanges()` | Paso de un rango de un tipo a un constructor, función de fábrica u operación de conjuntos de otro tipo de rango. |
 
 ## Códigos de RangeError
 
@@ -142,11 +143,13 @@ Los errores de rango indican que un valor no se puede interpretar, queda fuera d
 | `invalidRange` | `DateRange`, `DateTimeRange`, `to()` | El extremo `end` del rango es anterior a `start`. |
 | `invalidStep` | `every()`, `split()` | La duración de paso pasada a `every()` o `split()` es cero o negativa. |
 | `unsupportedIntersection` | `TimeRange.intersection()` | Dos rangos de horas que cruzan la medianoche se superponen en dos franjas separadas. |
+| `unsupportedUnion` | `TimeRange.union()`, `mergeRanges()` | Los rangos de horas cubren las 24 horas completas, algo que un único `TimeRange` no puede representar. |
 | `unsupportedZone` | `TimeRange.in()` | Llamada a `in()` sobre un `TimeRange`, que no tiene una fecha de calendario para situarse en una zona horaria. |
 
 ### Plugins
 
 | Código | Lanzado por | Causa |
 |---|---|---|
-| `missingPlugin` | Funciones de fábrica, `configure()` | Uso de `loose`, `dayFirst` o `zoneAliases` antes de importar el plugin correspondiente. |
+| `missingPlugin` | Funciones de fábrica, `configure()` | Uso de `loose`, `dayFirst`, `format` o `zoneAliases` antes de importar el plugin correspondiente. |
+| `missingTemporal` | Funciones de fábrica, constructores, `configure({ zone })` | Aviso exclusivo de desarrollo cuando `globalThis.Temporal` no está disponible y no se ha cargado `@native-dates/polyfill` (las compilaciones de producción eliminan esta comprobación y lanzan el `ReferenceError` nativo del entorno). |
 | `immutable` | Setters heredados de `DateTime` | Llamada a un setter de `Date` que muta la instancia, como `setHours()`, cuando está cargado [`@native-dates/plugins/legacy-date`](/plugins/legacy-date/). |

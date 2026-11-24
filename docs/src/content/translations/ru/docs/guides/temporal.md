@@ -1,5 +1,5 @@
 ---
-source: f19636049929
+source: ed93e959dec0
 title: Работа с Temporal
 lede: Как Native Dates опирается на стандартный API Temporal в JavaScript и взаимодействует с его нативными объектами.
 ---
@@ -79,4 +79,4 @@ japanese.eraYear; // 8
 
 Актуальные версии Chrome, Edge, Firefox, Node 26+, Deno и Bun поддерживают `Temporal` нативно, поэтому в ядре нет ни байта полифила.
 
-Для Safari, старых браузеров или Node 24–25 подключите `@native-dates/polyfill` вместе с `temporal-polyfill` на старте приложения. Варианты настройки и синхронной загрузки описаны в разделе [Поддержка Safari и старых версий Node](/guides/installation/#supporting-safari-and-older-node).
+Для Safari, старых браузеров или Node 22–25 подключите `@native-dates/polyfill` вместе с `temporal-polyfill` на старте приложения (в Node 22–23 он также добавляет резервную реализацию `Intl.DurationFormat`). Варианты настройки и синхронной загрузки описаны в разделе [Поддержка Safari и старых версий Node](/guides/installation/#supporting-safari-and-older-node).

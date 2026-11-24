@@ -1,5 +1,5 @@
 ---
-source: c532ba117dba
+source: 326d94af83a9
 title: Analyse
 lede: Analysez des chaînes ISO, des durées, des plages et des saisies utilisateur en mode souple sans approximation silencieuse.
 ---
@@ -154,4 +154,14 @@ import { duration } from 'native-dates';
 
 date('not a date', { loose: true }); // null
 duration('soon', { loose: true }); // null
+```
+
+Lorsque vos entrées suivent un format non ISO connu comme des exports CSV (`'24112026'`), des journaux serveur ou des dates par semaine ou jour de l’année, importez [`@native-dates/plugins/parse`](/plugins/parse/) et passez `{ format }` pour appliquer une correspondance stricte par jetons plutôt qu’une analyse heuristique.
+
+```js
+import '@native-dates/plugins/parse';
+import { date, datetime } from 'native-dates';
+
+date('24112026', { format: 'DDMMYYYY' }); // 2026-11-24
+datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ' });
 ```

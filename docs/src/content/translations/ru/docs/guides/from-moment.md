@@ -1,5 +1,5 @@
 ---
-source: 5365132bf9e2
+source: f7719b9dc227
 title: Переход с Moment
 lede: Переходите с Moment и moment-timezone на неизменяемые значения со встроенными шаблонами токенов и нулевым весом базы часовых поясов.
 ---
@@ -96,7 +96,7 @@ quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Шаблоны токенов](/guides/formatting/#token-patterns) |
 | `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Диапазоны](/api/ranges/) с методами `to()`, `for()` и `overlaps()` |
 | `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [Относительные фразы](/guides/formatting/#relative-phrases) |
-| Разбор строк вне формата ISO | `{ loose: true }` | Подключите [`@native-dates/plugins/loose`](/plugins/loose/) для разбора произвольных и локализованных строк |
+| Разбор строк вне формата ISO | `{ format }` или `{ loose: true }` | Подключите [`@native-dates/plugins/parse`](/plugins/parse/) для фиксированных шаблонов формата или [`@native-dates/plugins/loose`](/plugins/loose/) для произвольных и локализованных строк |
 
 ## Постепенный переход
 

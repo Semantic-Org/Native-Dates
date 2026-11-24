@@ -1,5 +1,5 @@
 ---
-source: "f19636049929"
+source: "ed93e959dec0"
 title: Trabalhando com Temporal
 lede: Como o Native Dates mapeia a API Temporal do JavaScript e interopera diretamente com valores Temporal.
 ---
@@ -79,4 +79,4 @@ Cada instância guarda internamente um objeto `Temporal` real, portanto `toTempo
 
 Versões atuais de Chrome, Edge, Firefox, Node 26+, Deno e Bun já trazem `Temporal` nativamente, por isso o núcleo não embute nenhum polyfill.
 
-Para Safari, navegadores antigos ou Node 24–25, carregue `@native-dates/polyfill` junto com `temporal-polyfill` na inicialização. Veja [Suporte ao Safari e a versões antigas do Node](/guides/installation/#supporting-safari-and-older-node) para a configuração e opções de carregamento síncrono.
+Para Safari, navegadores antigos ou Node 22–25, carregue `@native-dates/polyfill` junto com `temporal-polyfill` na inicialização (ele também fornece um fallback para `Intl.DurationFormat` no Node 22–23). Veja [Suporte ao Safari e a versões mais antigas do Node](/guides/installation/#supporting-safari-and-older-node) para a configuração e opções de carregamento síncrono.

@@ -1,5 +1,5 @@
 ---
-source: "556537c8ff45"
+source: "9606dd7fa967"
 title: Intervalos
 lede: Intervalos entre duas datas, instantes ou horas do dia, com verificação de inclusão, sobreposição e iteração.
 ---
@@ -22,6 +22,8 @@ new DateRange(interval, options?)
 
 Representa um intervalo entre duas [datas de calendário](/api/calendar-date/), incluindo ambas as extremidades. Passar uma data final anterior à inicial lança `RangeError`. Strings de duração como `'7 days'` aceitam apenas unidades em inglês.
 
+Um `DateRange` itera sob demanda dia a dia com `for...of` ou sintaxe spread, produzindo cada data de calendário do início ao fim.
+
 ```js title="ranges.js"
 import { dateRange } from 'native-dates';
 
@@ -30,6 +32,10 @@ const week = dateRange('2026-09-01', '7 days');
 
 trip.duration.days; // 7
 week.toString(); // '2026-09-01/2026-09-07'
+for (const day of trip) {
+  day.toString(); // '2026-09-01', '2026-09-02', ...
+}
+[...dateRange('2026-09-01', '2026-09-03')].map(String); // ['2026-09-01', '2026-09-02', '2026-09-03']
 ```
 :::
 
@@ -319,6 +325,8 @@ range.every(count, unit): Point[]
 ```
 
 Avança a partir de `start` em passos de uma unidade ou duração positiva e retorna todos os pontos dentro do intervalo. Cada passo é calculado diretamente a partir do ponto inicial, em vez de encadear somas sucessivas; assim, avançar de mês em mês a partir de 31 de janeiro cai no último dia de cada mês.
+
+Para percorrer um [`DateRange`](#daterange) sob demanda um dia de cada vez sem alocar um array, itere diretamente sobre ele com `for...of` ou sintaxe spread.
 
 **Parâmetros**
 

@@ -1,5 +1,5 @@
 ---
-source: "91f647c820ea"
+source: "cd25f69b961f"
 title: エラー
 lede: 不正な入力や未対応の操作は、機械判読可能なコードを持つ標準の Error をスローします。
 ---
@@ -82,7 +82,8 @@ loose モードが `null` を返すのは、入力値そのものを読み取れ
 | `unsupportedCalendar` | `yearMonth()`, `monthDay()`, `YearMonth`, `MonthDay` | ISO 以外の暦を持つ `Temporal.PlainYearMonth` または `PlainMonthDay` が渡された。 |
 | `invalidPoint` | `compare()`, `earliest()`, `latest()` | `DateTime`、`CalendarDate`、`Time`、`YearMonth`、`Date`、エポックタイムスタンプ、Temporal の日付・時刻・日時オブジェクト、または解析可能な文字列のいずれでもない。 |
 | `conflictingKinds` | `compare()`, `earliest()`, `latest()` | `CalendarDate` と `DateTime` のように異なる種類同士を比較した。 |
-| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange` | ある種類の範囲を別の種類の範囲コンストラクターやファクトリーに渡した。 |
+| `invalidRange` | `mergeRanges()` | [`@native-dates/plugins/ranges`](/plugins/ranges/) を読み込んだ状態で、反復可能でない値や範囲インスタンス以外の要素を渡した。 |
+| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange`, `subtract()`, `union()`, `mergeRanges()` | ある種類の範囲を別の種類の範囲コンストラクター、ファクトリー、または集合演算に渡した。 |
 
 ## RangeError コード一覧
 
@@ -142,11 +143,13 @@ loose モードが `null` を返すのは、入力値そのものを読み取れ
 | `invalidRange` | `DateRange`, `DateTimeRange`, `to()` | 範囲の `end` が `start` より前になっている。 |
 | `invalidStep` | `every()`, `split()` | `every()` または `split()` に渡されたステップ期間が0または負。 |
 | `unsupportedIntersection` | `TimeRange.intersection()` | 深夜0時をまたぐ2つの時刻範囲が、2つの離れた区間で重なっている。 |
+| `unsupportedUnion` | `TimeRange.union()`, `mergeRanges()` | 時刻範囲の結合結果が24時間全体におよび、単一の `TimeRange` では表現できない。 |
 | `unsupportedZone` | `TimeRange.in()` | タイムゾーンに配置するためのカレンダー日付を持たない `TimeRange` に対して `in()` を呼び出した。 |
 
 ### プラグイン
 
 | コード | スロー元 | 原因 |
 |---|---|---|
-| `missingPlugin` | ファクトリー関数、`configure()` | 対応するプラグインをインポートする前に `loose`、`dayFirst`、`zoneAliases` を使用した。 |
+| `missingPlugin` | ファクトリー関数、`configure()` | 対応するプラグインをインポートする前に `loose`、`dayFirst`、`format`、`zoneAliases` を使用した。 |
+| `missingTemporal` | ファクトリー関数、コンストラクター、`configure({ zone })` | `globalThis.Temporal` が存在せず `@native-dates/polyfill` も未読み込みの場合に出る開発環境限定のヒント（本番ビルドではこのチェックが省かれ、ランタイム標準の `ReferenceError` をスロー）。 |
 | `immutable` | `DateTime` のレガシーセッター | [`@native-dates/plugins/legacy-date`](/plugins/legacy-date/) を読み込んだ状態で、`setHours()` など破壊的な `Date` セッターを呼び出した。 |

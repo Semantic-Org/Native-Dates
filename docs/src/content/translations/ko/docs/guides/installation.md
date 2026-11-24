@@ -1,5 +1,5 @@
 ---
-source: f1aec8a13183
+source: 84e8bf9a4705
 title: 설치
 lede: 명령 한 줄로 Native Dates를 설치하고, 필요하면 Safari와 구버전 Node용 폴리필을 추가합니다.
 ---
@@ -33,7 +33,7 @@ standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
 
 Native Dates는 플랫폼에 내장된 `Temporal`과 `Intl` API 위에서 직접 동작합니다. 최신 Chrome, Edge, Firefox, Node 26 이상, Deno, Bun에서는 추가 설정이 필요 없습니다.
 
-Safari, 구버전 브라우저, 또는 Node 24–25를 지원해야 한다면 `temporal-polyfill`과 함께 폴리필 패키지를 설치하세요.
+Safari, 구버전 브라우저, 또는 Node 22–25를 지원해야 한다면 `temporal-polyfill`과 함께 폴리필 패키지를 설치하세요.
 
 ```bash
 npm i @native-dates/polyfill temporal-polyfill
@@ -49,12 +49,12 @@ const launch = today().plus(30, 'days');
 ```
 
 :::tip[최신 브라우저에서는 추가 비용 없음]
-네이티브 `Temporal`을 지원하는 런타임은 `temporal-polyfill`을 아예 내려받지 않습니다.
+네이티브 `Temporal`과 `Intl.DurationFormat`을 지원하는 런타임은 어느 폴리필도 내려받지 않습니다.
 :::
 
 :::details[구버전 런타임 호환성 참고 사항]
 - **동기 로딩:** 불러온 모듈이 최상위 `await` 완료 전에 로드 시점에서 바로 날짜를 계산한다면 대신 `@native-dates/polyfill/sync`를 불러오세요.
-- **Node에서의 기간 포맷:** 서버 코드에서 [`Duration.format()`](/api/duration/#format)을 호출하려면 `Intl.DurationFormat`을 지원하는 Node 24 이상이 필요합니다. 브라우저 번들은 더 오래된 Node 버전에서도 문제없이 빌드됩니다.
+- **Node 22–23에서의 기간 포맷:** `@native-dates/polyfill`에는 의존성이 없는 `Intl.DurationFormat` 폴백이 포함되어 있어 Node 22–23에서도 [`Duration.format()`](/api/duration/#format)과 `Duration.text`가 동작합니다(브라우저와 Node 24 이상에는 기본 내장되어 있어 내려받지 않습니다).
 :::
 
 다음으로 [커스터마이징](/guides/customization/)을 읽고 앱 전역 기본값 설정과 선택적 플러그인 추가 방법을 살펴보세요.

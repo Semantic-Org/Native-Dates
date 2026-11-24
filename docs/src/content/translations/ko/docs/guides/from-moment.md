@@ -1,5 +1,5 @@
 ---
-source: 5365132bf9e2
+source: f7719b9dc227
 title: Moment에서 전환하기
 lede: Moment와 moment-timezone에서 벗어나 번들 tzdata 없이 내장 토큰을 지원하는 불변 날짜 값으로 이전합니다.
 ---
@@ -96,7 +96,7 @@ quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [토큰 패턴](/guides/formatting/#token-patterns) |
 | `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | `to()`, `for()`, `overlaps()`를 갖춘 [범위](/api/ranges/) 타입 |
 | `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [상대 표현](/guides/formatting/#relative-phrases) |
-| 비ISO 문자열 파싱 | `{ loose: true }` | 로케일 기반·비정형 문자열 파싱은 [`@native-dates/plugins/loose`](/plugins/loose/) 로드 |
+| 비ISO 문자열 파싱 | `{ format }` 또는 `{ loose: true }` | 고정 포맷 패턴은 [`@native-dates/plugins/parse`](/plugins/parse/), 로케일 기반·비정형 입력은 [`@native-dates/plugins/loose`](/plugins/loose/) 로드 |
 
 ## 점진적 마이그레이션
 

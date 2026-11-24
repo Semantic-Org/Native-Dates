@@ -1,5 +1,5 @@
 ---
-source: "c532ba117dba"
+source: "326d94af83a9"
 title: 解析
 lede: 将 ISO 字符串、时长、范围及宽松用户输入准确解析为对应类型，拒绝静默猜测。
 ---
@@ -154,4 +154,14 @@ import { duration } from 'native-dates';
 
 date('not a date', { loose: true }); // null
 duration('soon', { loose: true }); // null
+```
+
+如果输入采用已知的固定非 ISO 格式（例如 CSV 导出的 `'24112026'`、服务端日志、ISO 周日期或序数日期），可导入 [`@native-dates/plugins/parse`](/plugins/parse/) 并传入 `{ format }`，以确定的占位符匹配替代启发式解析。
+
+```js
+import '@native-dates/plugins/parse';
+import { date, datetime } from 'native-dates';
+
+date('24112026', { format: 'DDMMYYYY' }); // 2026-11-24
+datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ' });
 ```

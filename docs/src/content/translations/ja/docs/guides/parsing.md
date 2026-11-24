@@ -1,5 +1,5 @@
 ---
-source: "c532ba117dba"
+source: "326d94af83a9"
 title: 解析
 lede: ISO 文字列、期間、範囲、自由形式のユーザー入力を、あいまいな推測なしに読み取ります。
 ---
@@ -154,4 +154,14 @@ import { duration } from 'native-dates';
 
 date('not a date', { loose: true }); // null
 duration('soon', { loose: true }); // null
+```
+
+CSV エクスポート（`'24112026'`）、サーバーログ、ISO 週日付や通算日など、書式が決まった非 ISO 入力を扱う場合は、[`@native-dates/plugins/parse`](/plugins/parse/) をインポートして `{ format }` を渡してください。ヒューリスティックな推測ではなく、トークンによる確定的な照合で解析できます。
+
+```js
+import '@native-dates/plugins/parse';
+import { date, datetime } from 'native-dates';
+
+date('24112026', { format: 'DDMMYYYY' }); // 2026-11-24
+datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ' });
 ```

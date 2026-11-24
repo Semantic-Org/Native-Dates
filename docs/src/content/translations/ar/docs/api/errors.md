@@ -1,5 +1,5 @@
 ---
-source: 91f647c820ea
+source: cd25f69b961f
 title: الأخطاء
 lede: كل مدخل غير صالح أو عملية غير مدعومة ترمي كائن Error قياسيًا يحمل رمز خطأ ثابتًا مقروءًا برمجيًا.
 ---
@@ -82,7 +82,8 @@ duration('whenever', { loose: true }); // null
 | `unsupportedCalendar` | `yearMonth()`، `monthDay()`، `YearMonth`، `MonthDay` | المدخل كائن `Temporal.PlainYearMonth` أو `PlainMonthDay` بتقويم غير ISO. |
 | `invalidPoint` | `compare()`، `earliest()`، `latest()` | القيمة ليست `DateTime` ولا `CalendarDate` ولا `Time` ولا `YearMonth` ولا `Date` ولا طابع عصر Unix ولا نقطة Temporal ولا سلسلة قابلة للتحليل. |
 | `conflictingKinds` | `compare()`، `earliest()`، `latest()` | مقارنة قيم من أنواع مختلفة، مثل `CalendarDate` مع `DateTime`. |
-| `conflictingRanges` | `DateRange`، `DateTimeRange`، `TimeRange` | تمرير نطاق من نوع إلى باني صنف أو دالة مصنعية لنطاق من نوع آخر. |
+| `invalidRange` | `mergeRanges()` | تمرير قيمة غير قابلة للتكرار أو عنصر ليس كائن نطاق عند تحميل [`@native-dates/plugins/ranges`](/plugins/ranges/). |
+| `conflictingRanges` | `DateRange`، `DateTimeRange`، `TimeRange`، `subtract()`، `union()`، `mergeRanges()` | تمرير نطاق من نوع إلى باني صنف أو دالة مصنعية أو عملية مجموعات لنطاق من نوع آخر. |
 
 ## رموز RangeError
 
@@ -142,11 +143,13 @@ duration('whenever', { loose: true }); // null
 | `invalidRange` | `DateRange`، `DateTimeRange`، `to()` | وقوع نهاية النطاق (`end`) قبل بدايته (`start`). |
 | `invalidStep` | `every()`، `split()` | مدة الخطوة المُمرَّرة إلى `every()` أو `split()` تساوي صفرًا أو سالبة. |
 | `unsupportedIntersection` | `TimeRange.intersection()` | تداخل نطاقَي أوقات يعبر أحدهما على الأقل منتصف الليل في نافذتين منفصلتين. |
+| `unsupportedUnion` | `TimeRange.union()`، `mergeRanges()` | تغطية نطاقات الأوقات لليوم كاملًا (24 ساعة)، وهو ما لا يستطيع كائن `TimeRange` واحد تمثيله. |
 | `unsupportedZone` | `TimeRange.in()` | استدعاء `in()` على `TimeRange`، وهو نوع بلا تاريخ تقويمي يوضَع في منطقة زمنية. |
 
 ### الإضافات
 
 | الرمز | المصدر | السبب |
 |---|---|---|
-| `missingPlugin` | الدوال المصنعية، `configure()` | استخدام `loose` أو `dayFirst` أو `zoneAliases` قبل استيراد الإضافة المطابقة. |
+| `missingPlugin` | الدوال المصنعية، `configure()` | استخدام `loose` أو `dayFirst` أو `format` أو `zoneAliases` قبل استيراد الإضافة المطابقة. |
+| `missingTemporal` | الدوال المصنعية، بناة الأصناف، `configure({ zone })` | تلميح لوضع التطوير فقط عند غياب `globalThis.Temporal` وعدم تحميل `@native-dates/polyfill` (تحذف بناءات الإنتاج هذا الفحص وترمي خطأ `ReferenceError` الأصلي من بيئة التشغيل). |
 | `immutable` | دوال الضبط القديمة على `DateTime` | استدعاء دالة ضبط مُعدِّلة من دوال `Date` مثل `setHours()` عند تحميل [`@native-dates/plugins/legacy-date`](/plugins/legacy-date/). |

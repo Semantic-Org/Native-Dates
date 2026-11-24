@@ -1,5 +1,5 @@
 ---
-source: "2716034cf571"
+source: "fb90df20f99e"
 title: Formatação
 lede: Formate datas, horários e durações com presets localizados, padrões de tokens ou frases de tempo relativo.
 ---
@@ -118,7 +118,7 @@ yearMonth('2026-11').format('MMM YYYY', 'en-US'); // 'Nov 2026'
 monthDay('11-16').format('MMMM Do', 'en-US'); // 'November 16th'
 ```
 
-Os nomes de meses e dias da semana dentro de padrões de tokens vêm do `Intl` no locale ativo. Já os dígitos e anos permanecem em algarismos ocidentais ISO para que padrões como `'YYYY-MM-DD'` continuem legíveis por máquina em qualquer lugar.
+Os nomes de meses e dias da semana dentro de padrões de tokens vêm do `Intl` no locale ativo. Já os dígitos e anos permanecem em algarismos ocidentais ISO para que padrões como `'YYYY-MM-DD'` continuem legíveis por máquina em qualquer lugar. Os tokens seguem o padrão de maiúsculas e minúsculas do Moment e do Day.js (`YYYY` e `DD` são maiúsculos, diferentemente do `yyyy` e `dd` minúsculos de LDML/date-fns, pois aqui `dd` representa o dia da semana com duas letras).
 
 :::details[Todos os tokens de formatação]
 | Token | Exemplo | Saída |

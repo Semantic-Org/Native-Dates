@@ -1,5 +1,5 @@
 ---
-source: c532ba117dba
+source: 326d94af83a9
 title: 파싱
 lede: 임의 추측 없이 ISO 문자열, 기간, 범위, 느슨한 사용자 입력을 정확하게 읽어 들입니다.
 ---
@@ -154,4 +154,14 @@ import { duration } from 'native-dates';
 
 date('not a date', { loose: true }); // null
 duration('soon', { loose: true }); // null
+```
+
+CSV 내보내기(`'24112026'`), 서버 로그, ISO 주차·연중 일수 날짜처럼 정해진 비ISO 형식을 파싱할 때는 [`@native-dates/plugins/parse`](/plugins/parse/)를 가져와 `{ format }`을 전달하세요. 휴리스틱 추측 대신 토큰 패턴과 정확히 대조해 일관되게 파싱합니다.
+
+```js
+import '@native-dates/plugins/parse';
+import { date, datetime } from 'native-dates';
+
+date('24112026', { format: 'DDMMYYYY' }); // 2026-11-24
+datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ' });
 ```
