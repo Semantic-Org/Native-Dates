@@ -208,7 +208,7 @@
   "home.consoles.start.why": "<code>setDate()</code> mutates the <code>Date</code> instance in place. <code>native-dates</code> values are immutable, so <code>plus()</code> returns a new instance.",
   "home.consoles.start.miss": "mutated in place",
   "home.year.title": "Avoid learning the entire world’s confusing relationship with time",
-  "home.year.lede": "Los Angeles and Berlin switch DST on different weekends, changing their offset {changes} a year. Temporal’s <a href=\"https://www.iana.org/time-zones/tz-how-to\" target=\"_blank\" rel=\"noopener\">IANA database</a> calculates those offsets for free with zero bytes shipped.",
+  "home.year.lede": "Los Angeles and Berlin switch DST on different weekends, changing their offset {changes} a year. Temporal’s <a href=\"https://www.iana.org/time-zones\" target=\"_blank\" rel=\"noopener\">IANA database</a> calculates those offsets for free with zero bytes shipped.",
   "home.year.changes.one": "{count} time",
   "home.year.changes.other": "{count} times",
   "home.year.gap": "{hours} hours apart",
