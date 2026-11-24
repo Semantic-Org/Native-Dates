@@ -242,7 +242,7 @@ configure({
 
 | Error codes | Thrown when |
 |---|---|
-| `missingDateTime`, `missingDate`, `missingTime`, `missingMonthDay`, `missingYearMonth`, `missingDay`, `missingPoints`, `missingAnchor`, `missingPlugin` | Nullish input, `date(2026, 11)`, unanchored `months(2).total('days')`, or unloaded plugin option |
+| `missingDateTime`, `missingDate`, `missingTime`, `missingMonthDay`, `missingYearMonth`, `missingDay`, `missingPoints`, `missingAnchor`, `missingPlugin`, `missingTemporal` | Nullish input, `date(2026, 11)`, unanchored `months(2).total('days')`, unloaded plugin option, or missing `globalThis.Temporal` in development (`RangeError`; production throws native `ReferenceError`) |
 | `invalidDateTime`, `invalidDate`, `invalidTime`, `invalidDuration`, `invalidMonthDay`, `invalidYearMonth`, `invalidRange`, `invalidStep`, `invalidNumber`, `invalidFraction`, `invalidYear`, `invalidDay`, `invalidPoint` | Malformed input, `Feb 30`, rejected DST gap/fold, non-positive step, or `end < start` |
 | `cannotAdd`, `cannotSubtract`, `cannotSet`, `cannotRound`, `cannotBalance`, `cannotTotal` | Overflow, invalid `set()` field, or bad rounding increment (`round(7, 'minutes')`) |
 | `unknownZone`, `unknownLocale`, `unknownDisambiguation`, `unknownUnit`, `unknownDayOfWeek`, `unknownFormat`, `unknownKind`, `unknownSetting`, `unknownWidth` | Bad zone, BCP 47 tag, `disambiguation`, unit, weekday, token/preset (`'yyyy'`), `as()`/`count()` target, or `configure()` key |
