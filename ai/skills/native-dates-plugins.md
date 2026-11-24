@@ -13,7 +13,7 @@ metadata:
 > **Skill:** `native-dates-plugins`
 > **Purpose:** Guide to `@native-dates/plugins/{zones,loose,legacy-date}`, `@native-dates/polyfill`, and custom prototype plugins
 
-Each `@native-dates/plugins/*` subpath mutates `native-dates` hooks or prototypes once process-wide when imported (with no per-instance scoping or unload), and `@native-dates/polyfill` installs `temporal-polyfill` only when `globalThis.Temporal` is absent. Point factories (`datetime`, `date`, `time`, `monthDay`, `dayMonth`, `yearMonth`, `monthYear`) take `(input, zoneOrOpts?)`, `duration` takes `(input, unitOrOpts?)`, range factories (`dateRange`, `datetimeRange`, `timeRange`) take `(start, end, zoneOrOpts?)` or `(intervalString, zoneOrOpts?)` where `zoneOrOpts` is a bare `zone` string or `{ zone, locale, disambiguation, loose, dayFirst }`, and `now(zone?)`, `today(zone?)`, `dt.in(zone)`, and `d.at(time?, zone?)` take a bare `zone` string.
+Each `@native-dates/plugins/*` subpath mutates `native-dates` hooks or prototypes once process-wide when imported (with no per-instance scoping or unload), and `@native-dates/polyfill` installs `temporal-polyfill` and an `Intl.DurationFormat` fallback only when missing. Point factories (`datetime`, `date`, `time`, `monthDay`, `dayMonth`, `yearMonth`, `monthYear`) take `(input, zoneOrOpts?)`, `duration` takes `(input, unitOrOpts?)`, range factories (`dateRange`, `datetimeRange`, `timeRange`) take `(start, end, zoneOrOpts?)` or `(intervalString, zoneOrOpts?)` where `zoneOrOpts` is a bare `zone` string or `{ zone, locale, disambiguation, loose, dayFirst }`, and `now(zone?)`, `today(zone?)`, `dt.in(zone)`, and `d.at(time?, zone?)` take a bare `zone` string.
 
 **Golden rule: Import plugin subpaths once at startup without `.use()`, pass `{ loose: true }` per call, and remember `{ loose: true }` returns `null` for unreadable data while still throwing on bad options (and `invalidRange` when `end < start`).**
 
@@ -68,7 +68,7 @@ tokyo.getMonth(); // 10 (0-indexed; tokyo.month is 11)
 tokyo.setHours(12); // RangeError [immutable] — use tokyo.set('hour', 12)
 ```
 
-**5. Node 24–25 and Safari require both `@native-dates/polyfill` AND `"temporal-polyfill": ">=0.3.0"` in your app's `dependencies`.** (Node `<24` also lacks `Intl.DurationFormat`, so `Duration.format()` requires Node 24+ on the server; browser builds still bundle fine on older Node.) Bundlers statically resolve `import('temporal-polyfill')`, so omitting `"temporal-polyfill"` from `package.json` breaks builds even when targeting Chrome. Use `'@native-dates/polyfill/sync'` in CommonJS, build targets without top-level `await`, or when sibling static imports call `today()`/`now()` at module top level.
+**5. Node 22–25 and Safari require both `@native-dates/polyfill` AND `"temporal-polyfill": ">=0.3.0"` in your app's `dependencies`.** On Node 22–23, `@native-dates/polyfill` also installs a zero-dependency `Intl.DurationFormat` fallback so `Duration.text` and `Duration.format()` work end-to-end (browsers and Node 24+ ship `Intl.DurationFormat` natively and skip downloading it). Bundlers statically resolve `import('temporal-polyfill')`, so omitting `"temporal-polyfill"` from `package.json` breaks builds even when targeting Chrome. Use `'@native-dates/polyfill/sync'` in CommonJS, build targets without top-level `await`, or when sibling static imports call `today()`/`now()` at module top level.
 
 ---
 
@@ -126,8 +126,8 @@ Shims `Date.prototype` onto `DateTime.prototype` (`valueOf()` / `+dt` and `toJSD
 
 | Entrypoint | Mechanism | When to use |
 |---|---|---|
-| `import '@native-dates/polyfill'` | `if (!globalThis.Temporal) await import('temporal-polyfill')` | ESM browser entrypoints (0 B downloaded on Chrome/Firefox/Edge; dynamic chunk on Safari) & async ESM on Node 24–25 |
-| `import '@native-dates/polyfill/sync'` | Sync `import { Temporal } from 'temporal-polyfill'` + `if (!globalThis.Temporal)` | CommonJS, test setups, targets without top-level `await`, or when sibling static imports call `today()`/`now()` during module evaluation |
+| `import '@native-dates/polyfill'` | Lazy `await import()` for `temporal-polyfill` and `Intl.DurationFormat` fallback when missing | ESM browser entrypoints (0 B downloaded on Chrome/Firefox/Edge; dynamic chunks on Safari / Node 22–25) |
+| `import '@native-dates/polyfill/sync'` | Sync installs of `temporal-polyfill` and `Intl.DurationFormat` fallback when missing | CommonJS, test setups, targets without top-level `await`, or when sibling static imports call `today()`/`now()` during module evaluation |
 
 ---
 

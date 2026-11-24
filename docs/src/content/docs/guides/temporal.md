@@ -79,4 +79,4 @@ Each instance holds a real Temporal object internally, so `toTemporal()` returns
 
 Current Chrome, Edge, Firefox, Node 26+, Deno, and Bun ship `Temporal` natively, so core includes zero polyfill code.
 
-For Safari, older browsers, or Node 24–25, load `@native-dates/polyfill` alongside `temporal-polyfill` at startup. See [Supporting Safari and older Node](/guides/installation/#supporting-safari-and-older-node) for setup and synchronous loading options.
+For Safari, older browsers, or Node 22–25, load `@native-dates/polyfill` alongside `temporal-polyfill` at startup (it also provides an `Intl.DurationFormat` fallback on Node 22–23). See [Supporting Safari and older Node](/guides/installation/#supporting-safari-and-older-node) for setup and synchronous loading options.
