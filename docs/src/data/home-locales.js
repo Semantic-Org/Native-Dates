@@ -161,16 +161,16 @@ export const HOME_LOCALES = {
   ko: {
     exampleSlug: 'examples/korean',
     guideSlug: 'guides/korean',
-    guideLabel: '한국어 날짜와 시간 가이드 읽기',
+    guideLabel: '한국어 날짜와 시각 가이드 읽기',
     configuredLocale: 'ko',
-    setupNote: '앱 시작 시 한 번 설정(생략 시 브라우저 언어), 서버 요청별로는 <code>.locale(tag)</code>',
+    setupNote: '앱 시작 시 한 번 설정(생략 시 브라우저 로케일), 서버 요청별로는 <code>.locale(tag)</code>',
     title: '한국어 띄어쓰기, 괄호 요일, 음력 표기까지 기본 내장',
-    lede: '한 번의 로케일 설정(또는 브라우저 기본 언어)만으로 년·월·일 뒤의 띄어쓰기, 양쪽 ‘일’을 유지하는 범위 표기, ‘오전/오후’ 위치와 음력 명절 표기까지 별도 로케일 파일 없이 0 kB로 처리합니다.',
-    linkLabel: '한국어 대화형 예제 보기',
+    lede: '한 번의 로케일 설정(또는 브라우저 기본 로케일)만으로 년·월·일 뒤의 띄어쓰기, 양쪽 ‘일’을 유지하는 범위 표기, ‘오전’·‘오후’ 위치와 음력 명절 표기까지 별도 로케일 파일 없이 0 kB로 처리합니다.',
+    linkLabel: '한국어 인터랙티브 예제 보기',
     proofs: [
       {
         label: '공통 연·월 생략과 양쪽 ‘일’ 유지',
-        note: '매번 로케일을 넘기지 않아도 연도와 월을 한 번만 쓰면서 양쪽 날짜에 ‘일’을 남깁니다.',
+        note: '매번 로케일을 전달하지 않아도 연도와 월을 한 번만 쓰면서 양쪽 날짜에 ‘일’을 남깁니다.',
         code: "dateRange('2026-05-01', '2026-05-05').format('long')",
         run: ({ dateRange }) => dateRange('2026-05-01', '2026-05-05').format('long'),
       },
@@ -181,7 +181,7 @@ export const HOME_LOCALES = {
         run: ({ date }) => date('2026-05-01').format('llll'),
       },
       {
-        label: '오전·오후 선행 표기',
+        label: '시각 앞 오전·오후 표기',
         note: '시각 앞에 ‘오전’과 ‘오후’를 자연스럽게 배치합니다.',
         code: "time('14:30').format('A h:mm')",
         run: ({ time }) => time('14:30').format('A h:mm'),
@@ -196,13 +196,13 @@ export const HOME_LOCALES = {
     consoles: {
       day: {
         ask: '서울의 <code>2026-09-01</code> 자정을 ISO 문자열로 바꾸면 며칠일까요?',
-        miss: '하루 밀림',
+        miss: '하루 빠름',
         why: '한국 표준시(UTC+9) 자정에 <code>toISOString()</code>을 호출하면 전날 15:00 UTC로 바뀌어 <code>2026-08-31</code>이 됩니다. <code>CalendarDate</code>는 시간대 변환 없이 날짜 자체를 보존합니다.',
       },
       clocks: {
         ask: '런던 서머타임 시작 전날 오전 9시에서 하루 뒤는 몇 시일까요?',
-        miss: '1시간 오차',
-        why: '한국은 서머타임을 쓰지 않지만 유럽·북미 지사와 일할 때는 시차가 바뀝니다. 24시간을 더하면 10시가 되지만 <code>plus(1, \'day\')</code>는 현지 오전 9시를 지킵니다.',
+        miss: '1시간 늦음',
+        why: '한국은 서머타임을 쓰지 않지만, 런던은 3월 마지막 일요일에 시계를 한 시간 앞당겨 그날 하루가 23시간이 됩니다. 그래서 24시간을 더하면 오전 10시가 되지만, <code>plus(1, \'day\')</code>는 현지 오전 9시를 그대로 유지합니다.',
       },
     },
     consolesEn: {
@@ -222,9 +222,9 @@ export const HOME_LOCALES = {
       toZone: 'Asia/Seoul',
       toCity: '서울',
       toCityEn: 'Seoul',
-      lede: '한국은 서머타임이 없지만 유럽·북미와 협업할 때 일 년에 {changeCount}번 시차가 달라집니다. Temporal의 IANA 데이터베이스로 번들 추가 없이 정확히 계산합니다.',
+      lede: '한국은 서머타임이 없지만 유럽·북미와 협업할 때 일 년에 {changes} 시차가 달라집니다. Temporal의 IANA 데이터베이스로 번들 추가 없이 정확히 계산합니다.',
       ledeEn: 'Korea never switches clocks, while Europe and North America observe DST, changing their offset {changes} a year. Temporal’s IANA database tracks every shift with zero bytes shipped in your bundle.',
-      caption: '{year}년 런던 오전 9:30 회의를 서울 시간으로 변환한 결과입니다. 동절기 {dayCount}일 동안 시차가 {far}시간에서 {near}시간으로 벌어져 {time}에 열립니다.',
+      caption: '{year}년 런던 오전 9:30 회의를 서울 시간으로 변환한 결과입니다. 동절기 {days} 동안 시차가 {far}시간에서 {near}시간으로 벌어져 {time}에 열립니다.',
       captionEn: 'A 9:30 AM London standup converted to Seoul time across {year}. For {days} in winter, the offset widens from {far} hours to {near}, moving the meeting to {time}.',
     },
     xray: { inviteCity: '시드니', inviteCityEn: 'Sydney' },
