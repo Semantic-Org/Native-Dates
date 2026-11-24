@@ -11,8 +11,8 @@ export const HOME_LOCALES = {
     configuredLocale: 'ja',
     setupNote: 'アプリ起動時に一度設定（未指定ならブラウザの言語）、サーバーのリクエスト単位は <code>.locale(tag)</code>',
     title: '日本語の暦と表記の落とし穴まで、追加ロケールなしで対応',
-    lede: '改元初年の「令和元年」が「令和1年」になってしまう不具合や、深夜をまたぐシフトに不要な日付が混ざる問題も、一度の設定（またはブラウザの言語）だけでブラウザ標準の Intl と Temporal が解決します。追加ロケールは 0 kB です。',
-    linkLabel: '日本語のインタラクティブ例を開く',
+    lede: '改元初年の「令和元年」が「令和1年」になってしまう不具合や、深夜をまたぐシフトに不要な日付が混ざる問題も、ブラウザ標準の Intl と Temporal が追加ロケール 0 kB で解決します。',
+    linkLabel: '日本語の動作サンプルを開く',
     proofs: [
       {
         label: 'ゼロ埋めしない年月日と括弧付きの曜日',
@@ -27,8 +27,8 @@ export const HOME_LOCALES = {
         run: ({ timeRange }) => timeRange('22:00', '06:00').text,
       },
       {
-        label: '「一昨日・明後日」までの自然な相対日',
-        note: '英語の昨日・明日よりも広い 2 日前後の日本語語彙を、辞書なしでそのまま返します。',
+        label: '「一昨日・明後日」までの自然な相対日付',
+        note: '「昨日・明日」より広い2日前後の表現を、辞書なしで返します。',
         code: "date('2026-04-29').from('2026-05-01') + ' · ' + date('2026-05-03').from('2026-05-01')",
         run: ({ date }) => `${date('2026-04-29').from('2026-05-01')} · ${date('2026-05-03').from('2026-05-01')}`,
       },
@@ -43,7 +43,7 @@ export const HOME_LOCALES = {
       day: {
         ask: '東京の <code>2026-09-01</code> 0時を ISO 文字列にすると何日？',
         miss: '1日ずれる',
-        why: '東半球ではローカル0時を <code>toISOString()</code> に渡すと UTC の前日 15:00 に変換され、<code>2026-08-31</code> になります。<code>CalendarDate</code> は時刻もタイムゾーンも持たないため日付がずれません。',
+        why: '東京（UTC+9）の0時は UTC の前日 15:00 にあたるため、<code>toISOString()</code> を呼ぶと <code>2026-08-31</code> になります。<code>CalendarDate</code> は時刻もタイムゾーンも持たないため日付がずれません。',
       },
       clocks: {
         ask: 'ロンドン支社の夏時間開始前日、9時の1日後は何時？',
@@ -68,9 +68,9 @@ export const HOME_LOCALES = {
       toZone: 'Asia/Tokyo',
       toCity: '東京',
       toCityEn: 'Tokyo',
-      lede: '日本には夏時間がありませんが、欧州や北米との定例会議は年に {changeCount} 回、時差が変わります。Temporal の IANA データベースにより、追加バンドル 0 バイトで正確な現地時刻を追跡できます。',
+      lede: '日本には夏時間がありませんが、ロンドンでは年に{changes}、夏時間の切り替えによって時差が変わります。Temporal の IANA データベースにより、追加バンドル 0バイトで正確な現地時刻を追跡できます。',
       ledeEn: 'Japan never changes its clocks, while London switches DST twice a year, shifting their offset {changes} a year. Temporal’s IANA database tracks every transition with zero bytes shipped in your bundle.',
-      caption: '{year}年のロンドン 9:30 の定例を東京時間で表示。冬時間の {dayCount} 日間は時差が {far} 時間から {near} 時間に広がり、開始が {time} に変わります。',
+      caption: '{year}年のロンドン 9:30 の定例を東京時間で表示。冬時間の{days}は時差が{far}時間から{near}時間に広がり、開始が {time} に変わります。',
       captionEn: 'A 9:30 AM London standup converted to Tokyo time across {year}. For {days} in winter, the offset widens from {far} hours to {near}, moving the meeting to {time}.',
     },
     xray: { inviteCity: 'シドニー', inviteCityEn: 'Sydney' },
