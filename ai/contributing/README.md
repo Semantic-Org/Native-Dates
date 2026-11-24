@@ -10,6 +10,7 @@ Internal records and workflows for developing `native-dates`. Application develo
 | Fix a bug, add a feature, or file a bug report | [`CONTRIBUTING.md`](../../CONTRIBUTING.md), then [`workflows/contribute.md`](workflows/contribute.md) |
 | Check or record design and process decisions | [`decisions.md`](decisions.md) for the topic index, [`decisions/README.md`](decisions/README.md) before adding or reopening an entry, [`decisions/package.md`](decisions/package.md) (`D1`..`Dn`), and [`decisions/project.md`](decisions/project.md) (`P1`..`Pn`) |
 | Check bundle size limits | [`budget.md`](budget.md), checked by `npm run size` |
+| Optimize performance or update `bench.nativedates.dev` | [`workflows/manage-benchmarks.md`](workflows/manage-benchmarks.md) and [`workflows/extend-bench-suite.md`](workflows/extend-bench-suite.md) |
 | Configure GitHub secrets, bots, and Vercel deploys | [`reference/setup.md`](reference/setup.md) |
 | View project roadmap and completed milestones | [`plan/roadmap.md`](plan/roadmap.md) and [`plan/landed.md`](plan/landed.md) |
 | Design a class, method signature, or public name | [`naming-lessons.md`](standards/lessons/naming-lessons.md), [`simplicity-lessons.md`](standards/lessons/simplicity-lessons.md), and [`name-public-api.md`](standards/name-public-api.md) |

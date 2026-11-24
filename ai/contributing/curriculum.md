@@ -37,4 +37,4 @@ Load only the guides relevant to your current task, then read the target source 
 - **Decisions:** [`decisions/README.md`](decisions/README.md) (what belongs vs. normal features and bug fixes)
 - **Documentation and i18n (`docs/`):** [`workflows/docs-writing.md`](workflows/docs-writing.md), [`workflows/docs-authoring.md`](workflows/docs-authoring.md), and [`workflows/docs-i18n.md`](workflows/docs-i18n.md)
 - **Skills (`ai/skills/`):** [`workflows/author-skill.md`](workflows/author-skill.md) and [`standards/ai-author-context.md`](standards/ai-author-context.md)
-- **Benchmarks (`bench/`):** [`workflows/extend-bench-suite.md`](workflows/extend-bench-suite.md)
+- **Benchmarks and performance (`bench/`, `date-benchmark`):** [`workflows/manage-benchmarks.md`](workflows/manage-benchmarks.md) and [`workflows/extend-bench-suite.md`](workflows/extend-bench-suite.md)

@@ -122,5 +122,6 @@ Requires Chrome (`tools/bench.js` automatically installs the matching major vers
 
 | Workflow | Load when |
 |---|---|
+| [`manage-benchmarks`](manage-benchmarks.md) | Shipping `Perf:` PRs, running `Semantic-Org/Date-Benchmark`, and updating `bench.nativedates.dev` |
 | [`read-ci-reports`](read-ci-reports.md) | Interpreting Bench PR comments |
 | [`contribute`](contribute.md) | Preparing a `Perf:` pull request |
