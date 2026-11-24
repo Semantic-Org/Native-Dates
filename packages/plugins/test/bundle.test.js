@@ -24,6 +24,7 @@ describe('@native-dates/plugins production bundle sideEffects retention', () => 
     withPlugins = await buildBundle(`
       import '@native-dates/plugins/legacy-date';
       import '@native-dates/plugins/loose';
+      import '@native-dates/plugins/parse';
       import '@native-dates/plugins/ranges';
       import '@native-dates/plugins/zones';
       export { mergeRanges } from '@native-dates/plugins/ranges';
@@ -66,6 +67,17 @@ describe('@native-dates/plugins production bundle sideEffects retention', () => 
     );
   });
 
+  it('keeps @native-dates/plugins/parse side-effect imports when minified', () => {
+    expect(withPlugins.date('24112026', { format: 'DDMMYYYY' }).toString()).toBe('2026-11-24');
+    expect(
+      withPlugins.datetime('24/Nov/2026:12:40:01 -0500', {
+        format: 'DD/MMM/YYYY:HH:mm:ss ZZ',
+        zone: 'America/New_York',
+        locale: 'en-US',
+      }).toString(),
+    ).toBe('2026-11-24T17:40:01.000Z');
+  });
+
   it('keeps @native-dates/plugins/ranges side-effect imports when minified', () => {
     const trip = withPlugins.dateRange('2026-11-01', '2026-11-10');
     expect(trip.subtract('2026-11-04/2026-11-06').map(String)).toEqual([
@@ -86,6 +98,9 @@ describe('@native-dates/plugins production bundle sideEffects retention', () => 
   it('throws missingPlugin in a production bundle that omits plugin imports', () => {
     expect(() => withoutPlugins.date('Sep 6, 2026', { loose: true })).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'missingPlugin', at: 'loose' }),
+    );
+    expect(() => withoutPlugins.date('24112026', { format: 'DDMMYYYY' })).toThrowError(
+      expect.objectContaining({ name: 'RangeError', code: 'missingPlugin', at: 'format' }),
     );
     expect(() => withoutPlugins.configure({ zoneAliases: { hq: 'Europe/Berlin' } })).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'missingPlugin', at: 'zoneAliases' }),

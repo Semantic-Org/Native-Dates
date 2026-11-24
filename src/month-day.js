@@ -2,7 +2,7 @@ import { isObject, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today, tomorrow, yesterday } from './calendar-date.js';
 import { isDevelopment } from './helpers/environment.js';
-import { guard, loosely, parseLooseParts, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLooseParts, readAs, readPlugins, refuse, refuseType } from './helpers/errors.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_MONTH_DAY } from './helpers/identity.js';
 import { opensOnDate, wholeParts } from './helpers/parts.js';
@@ -70,8 +70,9 @@ export class MonthDay {
     if (settings.zone !== undefined) {
       zoneId(settings.zone);
     }
-    if (settings.loose) {
-      requireLoose('loose');
+    const formatted = readPlugins('monthDay', input, settings, 1);
+    if (formatted) {
+      return formatted;
     }
     if (input === undefined || input === null) {
       return refuseType('missingMonthDay', String(input), {
