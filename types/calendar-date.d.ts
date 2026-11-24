@@ -68,15 +68,24 @@ export class CalendarDate {
    */
   constructor(input: CalendarDateInput, options?: ReadOptions);
   /**
-   * Creates a new `CalendarDate` from 1-indexed year, month, and day numbers.
+   * Creates a new `CalendarDate` from a whole-number ISO year and 1-indexed month and day.
    *
-   * @param year - Four-digit calendar year, such as 2026
+   * @param year - Whole-number ISO year, such as `2026`, `0`, or `-44`
    * @param month - Calendar month from 1 for January through 12 for December
    * @param day - Day of the month from 1 through 31
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#creating-a-calendardate Creating a CalendarDate}
    */
   constructor(year: number, month: number, day: number);
+  /**
+   * Creates a new `CalendarDate` by extracting the calendar day of an instant or timestamp in `zone`.
+   *
+   * @param input - Date or timestamp input
+   * @param zone - Time zone used to determine the calendar day
+   *
+   * @see {@link https://nativedates.dev/api/calendar-date/#creating-a-calendardate Creating a CalendarDate}
+   */
+  constructor(input: CalendarDateInput, zone: Zone);
 
   /** Locale-formatted calendar date, such as `'Nov 16, 2026'`. */
   readonly text: string;
@@ -328,7 +337,7 @@ export class CalendarDate {
   previous(dayOfWeek: DayOfWeek): CalendarDate;
 
   /**
-   * Moves forward to the next occurrence of a recurring `MonthDay` strictly after this date.
+   * Moves forward to the next occurrence of a recurring `MonthDay` after this date.
    *
    * @param monthDay - Recurring annual month and day, such as `monthDay(12, 25)`
    * @returns A new `CalendarDate` on the next occurrence
@@ -338,7 +347,7 @@ export class CalendarDate {
   next(monthDay: MonthDay): CalendarDate;
 
   /**
-   * Moves back to the most recent occurrence of a recurring `MonthDay` strictly before this date.
+   * Moves back to the most recent occurrence of a recurring `MonthDay` before this date.
    *
    * @param monthDay - Recurring annual month and day, such as `monthDay(10, 31)`
    * @returns A new `CalendarDate` on the previous occurrence
@@ -361,7 +370,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#to to}
    */
-  to(end: CalendarDateInput | DurationInput): DateRange;
+  to(end: CalendarDateInput | Exclude<DurationInput, number>): DateRange;
   /**
    * Creates an inclusive `DateRange` starting on this date and spanning `count` of `unit`.
    *
@@ -412,7 +421,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#to to}
    */
-  through(end: CalendarDateInput | DurationInput): DateRange;
+  through(end: CalendarDateInput | Exclude<DurationInput, number>): DateRange;
   /**
    * Alias for `to()` creating an inclusive `DateRange` across `count` calendar units.
    *
@@ -422,7 +431,7 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#to to}
    */
-  through(count: number, unit: Unit): DateRange;
+  through(count: number, unit: DateUnit): DateRange;
 
   /**
    * Returns an inclusive `DateRange` covering every day of the calendar unit containing this date,
@@ -443,7 +452,7 @@ export class CalendarDate {
 
   /**
    * Walks across this calendar day by `step` in the given or configured time zone,
-   * returning an array of `DateTime` moments starting at midnight.
+   * starting at midnight or the first local instant on skipped-midnight daylight saving days.
    *
    * @param step - Unit name such as `'hour'` or duration such as `'30m'`
    * @param zone - Time zone for the day's boundaries, defaulting to the configured zone
@@ -451,14 +460,23 @@ export class CalendarDate {
    *
    * @example
    * ```ts
-   * const slots = date('2026-11-16').every(6, 'hours', 'UTC');
+   * const slots = date('2026-11-16').every('6h', 'UTC');
    * slots.length; // 4
    * slots[1].toString(); // '2026-11-16T06:00:00.000Z'
    * ```
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#every every}
    */
-  every(step: Unit | DurationInput, zone?: Zone): DateTime[];
+  every(step: Unit | Exclude<DurationInput, number>, zone?: Zone): DateTime[];
+  /**
+   * Walks across this calendar day by a millisecond duration step in the configured time zone.
+   *
+   * @param step - Positive step length in milliseconds
+   * @returns Ordered `DateTime` moments across this day
+   *
+   * @see {@link https://nativedates.dev/api/calendar-date/#every every}
+   */
+  every(step: number): DateTime[];
   /**
    * Walks across this calendar day by `count` of `unit` in the given or configured time zone.
    *
@@ -480,13 +498,23 @@ export class CalendarDate {
    *
    * @example
    * ```ts
-   * date('2026-11-16').split(12, 'hours', 'UTC').map(String);
+   * date('2026-11-16').split('12h', 'UTC').map(String);
    * // ['2026-11-16T00:00:00.000Z/2026-11-16T12:00:00.000Z', '2026-11-16T12:00:00.000Z/2026-11-17T00:00:00.000Z']
    * ```
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#split split}
    */
-  split(step: Unit | DurationInput, zone?: Zone): DateTimeRange[];
+  split(step: Unit | Exclude<DurationInput, number>, zone?: Zone): DateTimeRange[];
+  /**
+   * Divides this calendar day into contiguous half-open `DateTimeRange` slices of `step` milliseconds
+   * in the configured time zone.
+   *
+   * @param step - Positive step length in milliseconds
+   * @returns Contiguous `DateTimeRange` slices covering this day
+   *
+   * @see {@link https://nativedates.dev/api/calendar-date/#split split}
+   */
+  split(step: number): DateTimeRange[];
   /**
    * Divides this calendar day into contiguous half-open `DateTimeRange` slices of `count` `unit`s.
    *
@@ -508,7 +536,17 @@ export class CalendarDate {
    *
    * @see {@link https://nativedates.dev/api/calendar-date/#split split}
    */
-  splitBy(step: Unit | DurationInput, zone?: Zone): DateTimeRange[];
+  splitBy(step: Unit | Exclude<DurationInput, number>, zone?: Zone): DateTimeRange[];
+  /**
+   * Alias for `split()` that divides this calendar day into slices of `step` milliseconds
+   * in the configured time zone.
+   *
+   * @param step - Positive step length in milliseconds
+   * @returns Contiguous `DateTimeRange` slices covering this day
+   *
+   * @see {@link https://nativedates.dev/api/calendar-date/#split split}
+   */
+  splitBy(step: number): DateTimeRange[];
   /**
    * Alias for `split()` that divides this day into slices of `count` `unit`s.
    *
@@ -950,9 +988,9 @@ export class CalendarDate {
  */
 export function date(input: CalendarDateInput, options?: ReadOptions): CalendarDate;
 /**
- * Creates a `CalendarDate` from 1-indexed year, month, and day numbers.
+ * Creates a `CalendarDate` from a whole-number ISO year and 1-indexed month and day.
  *
- * @param year - Four-digit calendar year, such as 2026
+ * @param year - Whole-number ISO year, such as `2026`, `0`, or `-44`
  * @param month - Calendar month from 1 for January through 12 for December
  * @param day - Day of the month from 1 through 31
  * @returns An immutable `CalendarDate`

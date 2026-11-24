@@ -25,7 +25,7 @@ export interface MonthDayFields {
 export type MonthDayInput = MonthDay | MonthDayFields | TemporalPlainMonthDay | CalendarDateInput;
 
 /**
- * Options accepted as the second argument to `monthDay()` and `dayMonth()`.
+ * Options accepted as the second argument to `monthDay()` and `new MonthDay()`.
  *
  * @see {@link https://nativedates.dev/api/month-day-fn/#monthday monthDay}
  */
@@ -117,11 +117,11 @@ export class MonthDay {
   in(year: number | string): CalendarDate;
 
   /**
-   * Returns the next occurrence strictly after a required reference date.
+   * Returns the next occurrence after a required reference date.
    * When `day` already falls on this month and day, advances to the following year.
    *
    * @param day - Reference date to step forward past
-   * @returns First `CalendarDate` occurrence strictly after `day`
+   * @returns First `CalendarDate` occurrence after `day`
    *
    * @example
    * ```ts
@@ -133,10 +133,11 @@ export class MonthDay {
   after(day: CalendarDateInput): CalendarDate;
 
   /**
-   * Returns the most recent occurrence strictly before a required reference date.
+   * Returns the most recent occurrence before a required reference date.
+   * When `day` already falls on this month and day, steps back to the previous year.
    *
    * @param day - Reference date to step backward from
-   * @returns Most recent `CalendarDate` occurrence strictly before `day`
+   * @returns Most recent `CalendarDate` occurrence before `day`
    *
    * @example
    * ```ts
@@ -148,11 +149,11 @@ export class MonthDay {
   before(day: CalendarDateInput): CalendarDate;
 
   /**
-   * Returns the next occurrence strictly after `day`, defaulting to `today()`.
+   * Returns the next occurrence after `day`, defaulting to `today()`.
    * When `day` already falls on this month and day, advances to the following year.
    *
    * @param day - Starting date to count forward from, defaulting to `today()`
-   * @returns Upcoming `CalendarDate` strictly after `day`
+   * @returns Upcoming `CalendarDate` after `day`
    *
    * @example
    * ```ts
@@ -166,10 +167,11 @@ export class MonthDay {
   next(day?: CalendarDateInput): CalendarDate;
 
   /**
-   * Returns the most recent occurrence strictly before `day`, defaulting to `today()`.
+   * Returns the most recent occurrence before `day`, defaulting to `today()`.
+   * When `day` already falls on this month and day, steps back to the previous year.
    *
    * @param day - Reference date to count backward from, defaulting to `today()`
-   * @returns Most recent `CalendarDate` strictly before `day`
+   * @returns Most recent `CalendarDate` before `day`
    *
    * @example
    * ```ts
@@ -181,10 +183,10 @@ export class MonthDay {
   previous(day?: CalendarDateInput): CalendarDate;
 
   /**
-   * Alias for `previous()` that returns the most recent occurrence strictly before `day` (or `today()`).
+   * Alias for `previous()` that returns the most recent occurrence before `day`, defaulting to `today()`.
    *
    * @param day - Reference date to count backward from, defaulting to `today()`
-   * @returns Most recent `CalendarDate` strictly before `day`
+   * @returns Most recent `CalendarDate` before `day`
    *
    * @see {@link https://nativedates.dev/api/month-day/#previous previous}
    */
@@ -203,7 +205,8 @@ export class MonthDay {
   /**
    * Returns `true` when both values have the exact same month and day numbers,
    * extracting the month and day when given a full date or timestamp.
-   * Ambiguous slash or dot strings like `'05/10'` throw a `RangeError`.
+   * Slash, dot, and non-two-digit hyphen strings such as `'10/17'`, `'05/10'`, or `'5-6'`
+   * throw a `RangeError` (`invalidMonthDay`).
    *
    * @param other - Another `MonthDay`, ISO `'10-17'` string, fields object, or date value
    * @returns `true` if both values have the exact same month and day numbers
@@ -425,7 +428,7 @@ export function monthDay(month: number | string, day: number | string): MonthDay
  * Two-digit ISO strings with a hyphen (`'10-17'`) still read month-first so JSON output round-trips cleanly.
  *
  * @param input - Day-first string, fields object, `MonthDay`, or date/timestamp value
- * @param options - Time zone (for timestamps) or `MonthDayOptions`
+ * @param options - Time zone (for timestamps) or `ReadOptions`
  * @returns An immutable `MonthDay`
  *
  * @example
@@ -439,7 +442,7 @@ export function monthDay(month: number | string, day: number | string): MonthDay
  *
  * @see {@link https://nativedates.dev/api/month-day-fn/#daymonth dayMonth}
  */
-export function dayMonth(input: MonthDayInput, options?: Zone | MonthDayOptions): MonthDay;
+export function dayMonth(input: MonthDayInput, options?: Zone | ReadOptions): MonthDay;
 /**
  * Creates a `MonthDay` from whole-number day and month arguments in day-first order.
  *

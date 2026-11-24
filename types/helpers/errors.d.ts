@@ -2,7 +2,7 @@
  * Structured error codes attached to every `RangeError` or `TypeError` thrown by `native-dates`
  * and `@native-dates/plugins`.
  *
- * @see {@link https://nativedates.dev/guides/parsing/ Parsing}
+ * @see {@link https://nativedates.dev/api/errors/ Errors}
  */
 export type ErrorCode =
   | 'missingDateTime'
@@ -55,8 +55,10 @@ export type ErrorCode =
   | 'immutable';
 
 /**
- * Structured refusal error (`RangeError` or `TypeError`) thrown by `native-dates` with machine-readable
- * `code` and `at` properties.
+ * Structured refusal error (`RangeError` or `TypeError`) thrown by `native-dates` and
+ * `@native-dates/plugins` with machine-readable `code` and `at` properties.
+ *
+ * @see {@link https://nativedates.dev/api/errors/ Errors}
  */
 export interface NativeDatesError extends Error {
   /** Machine-readable refusal code stable across development and production builds. */

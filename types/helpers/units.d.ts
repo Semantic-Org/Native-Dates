@@ -333,7 +333,7 @@ export type DayOfWeek =
  * Converts a weekday name, three-letter prefix, or ISO number into an integer
  * from 1 for Monday through 7 for Sunday. Throws a `RangeError` for unrecognized inputs.
  *
- * @param day - Weekday name such as `'monday'`, prefix such as `'Fri'`, or integer from 1 to 7
+ * @param day - Weekday name such as `'monday'`, prefix such as `'Fri'`, or integer from 1 to 7 (`0` is also accepted as `7` for Sunday)
  * @returns ISO day of the week from 1 for Monday through 7 for Sunday
  *
  * @example

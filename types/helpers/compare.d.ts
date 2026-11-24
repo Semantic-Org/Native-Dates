@@ -4,14 +4,35 @@ import type { Duration } from '../duration.js';
 import type { DateRange, DateTimeRange, TimeRange } from '../range.js';
 import type { Time } from '../time.js';
 import type { YearMonth, YearMonthInput } from '../year-month.js';
+import type {
+  TemporalInstant,
+  TemporalPlainDate,
+  TemporalPlainDateTime,
+  TemporalPlainTime,
+  TemporalPlainYearMonth,
+  TemporalZonedDateTime,
+} from './units.js';
 
 /**
  * Ordered point value accepted by `compare()` and boundary helpers: a moment, calendar date,
- * time of day, native `Date`, ISO string, or epoch millisecond timestamp.
+ * time of day, year-month, native `Date`, `Temporal` point value, ISO string, or epoch millisecond timestamp.
  *
  * @see {@link https://nativedates.dev/api/compare/ compare}
  */
-export type Point = DateTime | CalendarDate | Time | Date | string | number;
+export type Point =
+  | DateTime
+  | CalendarDate
+  | Time
+  | YearMonth
+  | Date
+  | string
+  | number
+  | TemporalZonedDateTime
+  | TemporalInstant
+  | TemporalPlainDateTime
+  | TemporalPlainDate
+  | TemporalPlainTime
+  | TemporalPlainYearMonth;
 
 /**
  * Maps each range `kind` tag to its concrete range class.
@@ -40,9 +61,11 @@ export type Range = RangeMap[keyof RangeMap];
  * `DateTime` values compare by exact instant regardless of time zone, durations compare by total length,
  * and ranges sort by start point first and end point second. Comparing mismatched kinds throws a `TypeError`.
  *
- * @param a - First point, duration, or range (or a raw string, `Date`, or epoch millisecond number)
+ * @param a - First point, duration, or range (or a raw string, `Date`, `Temporal` point, or epoch millisecond number)
  * @param b - Second value of the same kind, or a raw input matching `a`
- * @returns `-1` when `a` comes earlier or is shorter, `0` when equal, or 1 when later or longer
+ * @returns `-1` when `a` comes earlier or is shorter, `0` when equal, or `1` when later or longer
+ * @throws {TypeError} When an input cannot be read as a point (`invalidPoint`) or the two arguments have different kinds (`conflictingKinds`)
+ * @throws {RangeError} When comparing unanchored month or year durations against fixed units (`missingAnchor`)
  *
  * @example
  * ```ts
@@ -60,29 +83,44 @@ export function compare(a: Point | Duration | Range, b: Point | Duration | Range
  *
  * @param a - First `YearMonth` to compare
  * @param b - Second `YearMonth` or any input accepted by `yearMonth()`
- * @returns `-1` when `a` is earlier, `0` when equal, or 1 when later
+ * @returns `-1` when `a` is earlier, `0` when equal, or `1` when later
+ * @throws {TypeError} When `b` is a library value of a different kind (`conflictingKinds`)
  *
  * @see {@link https://nativedates.dev/api/compare/#compare compare}
  */
 export function compare(a: YearMonth, b: YearMonthInput): -1 | 0 | 1;
 
 /**
- * Returns the earliest `YearMonth` from one or more arguments or a non-empty array.
- * Throws a `RangeError` when given an empty list.
+ * Returns the earliest `YearMonth` from one or more arguments.
  *
- * @param months - One or more `YearMonth` values, or a non-empty array of them
+ * @param first - Leading `YearMonth` value
+ * @param rest - Additional `YearMonth` values or inputs accepted by `yearMonth()`
  * @returns The `YearMonth` that comes first chronologically
+ * @throws {RangeError} When an argument is an unreadable year-month (`invalidYearMonth`)
+ * @throws {TypeError} When an argument is missing (`missingYearMonth`), has an invalid type (`invalidYearMonth`), or mixes kinds (`conflictingKinds`)
  *
  * @see {@link https://nativedates.dev/api/compare/#earliest earliest}
  */
 export function earliest(first: YearMonth, ...rest: YearMonthInput[]): YearMonth;
+/**
+ * Returns the earliest `YearMonth` from a non-empty array.
+ *
+ * @param months - Non-empty array of `YearMonth` values (or inputs accepted by `yearMonth()` after the first)
+ * @returns The `YearMonth` that comes first chronologically
+ * @throws {RangeError} When given an empty array (`missingPoints`) or an unreadable year-month element (`invalidYearMonth`)
+ * @throws {TypeError} When an element is missing (`missingYearMonth`), has an invalid type (`invalidYearMonth`), or mixes kinds (`conflictingKinds`)
+ *
+ * @see {@link https://nativedates.dev/api/compare/#earliest earliest}
+ */
 export function earliest(months: readonly [YearMonth, ...YearMonthInput[]] | readonly YearMonth[]): YearMonth;
 /**
  * Returns the earliest point from one or more arguments or a non-empty array of the same kind.
- * Raw `Date` and epoch millisecond inputs return a `DateTime`. Throws a `RangeError` when given an empty list.
+ * Raw `Date`, epoch millisecond, and `Temporal` inputs return the matching library type (`DateTime`, `CalendarDate`, `Time`, or `YearMonth`).
  *
- * @param points - One or more dates, moments, epoch timestamps, or clock times of the same kind
+ * @param points - One or more dates, moments, epoch timestamps, `Temporal` points, or clock times of the same kind
  * @returns The value that comes first, keeping the earlier list item on ties
+ * @throws {RangeError} When given an empty list (`missingPoints`)
+ * @throws {TypeError} When an input cannot be read as a point (`invalidPoint`) or values have different kinds (`conflictingKinds`)
  *
  * @example
  * ```ts
@@ -96,25 +134,44 @@ export function earliest(months: readonly [YearMonth, ...YearMonthInput[]] | rea
  */
 export function earliest<T extends Point>(
   ...points: T[] | [T[]]
-): T extends string ? DateTime | CalendarDate | Time : T extends number | Date ? DateTime : T;
+): T extends string ? DateTime | CalendarDate | Time
+  : T extends number | Date | TemporalZonedDateTime | TemporalInstant | TemporalPlainDateTime ? DateTime
+  : T extends TemporalPlainDate ? CalendarDate
+  : T extends TemporalPlainTime ? Time
+  : T extends TemporalPlainYearMonth | YearMonth ? YearMonth
+  : T;
 
 /**
- * Returns the latest `YearMonth` from one or more arguments or a non-empty array.
- * Throws a `RangeError` when given an empty list.
+ * Returns the latest `YearMonth` from one or more arguments.
  *
- * @param months - One or more `YearMonth` values, or a non-empty array of them
+ * @param first - Leading `YearMonth` value
+ * @param rest - Additional `YearMonth` values or inputs accepted by `yearMonth()`
  * @returns The `YearMonth` that comes last chronologically
+ * @throws {RangeError} When an argument is an unreadable year-month (`invalidYearMonth`)
+ * @throws {TypeError} When an argument is missing (`missingYearMonth`), has an invalid type (`invalidYearMonth`), or mixes kinds (`conflictingKinds`)
  *
  * @see {@link https://nativedates.dev/api/compare/#latest latest}
  */
 export function latest(first: YearMonth, ...rest: YearMonthInput[]): YearMonth;
+/**
+ * Returns the latest `YearMonth` from a non-empty array.
+ *
+ * @param months - Non-empty array of `YearMonth` values (or inputs accepted by `yearMonth()` after the first)
+ * @returns The `YearMonth` that comes last chronologically
+ * @throws {RangeError} When given an empty array (`missingPoints`) or an unreadable year-month element (`invalidYearMonth`)
+ * @throws {TypeError} When an element is missing (`missingYearMonth`), has an invalid type (`invalidYearMonth`), or mixes kinds (`conflictingKinds`)
+ *
+ * @see {@link https://nativedates.dev/api/compare/#latest latest}
+ */
 export function latest(months: readonly [YearMonth, ...YearMonthInput[]] | readonly YearMonth[]): YearMonth;
 /**
  * Returns the latest point from one or more arguments or a non-empty array of the same kind.
- * Raw `Date` and epoch millisecond inputs return a `DateTime`. Throws a `RangeError` when given an empty list.
+ * Raw `Date`, epoch millisecond, and `Temporal` inputs return the matching library type (`DateTime`, `CalendarDate`, `Time`, or `YearMonth`).
  *
- * @param points - One or more dates, moments, epoch timestamps, or clock times of the same kind
+ * @param points - One or more dates, moments, epoch timestamps, `Temporal` points, or clock times of the same kind
  * @returns The value that comes last, keeping the earlier list item on ties
+ * @throws {RangeError} When given an empty list (`missingPoints`)
+ * @throws {TypeError} When an input cannot be read as a point (`invalidPoint`) or values have different kinds (`conflictingKinds`)
  *
  * @example
  * ```ts
@@ -128,7 +185,12 @@ export function latest(months: readonly [YearMonth, ...YearMonthInput[]] | reado
  */
 export function latest<T extends Point>(
   ...points: T[] | [T[]]
-): T extends string ? DateTime | CalendarDate | Time : T extends number | Date ? DateTime : T;
+): T extends string ? DateTime | CalendarDate | Time
+  : T extends number | Date | TemporalZonedDateTime | TemporalInstant | TemporalPlainDateTime ? DateTime
+  : T extends TemporalPlainDate ? CalendarDate
+  : T extends TemporalPlainTime ? Time
+  : T extends TemporalPlainYearMonth | YearMonth ? YearMonth
+  : T;
 
 /**
  * Returns a string tag naming which type `value` belongs to, or `undefined`

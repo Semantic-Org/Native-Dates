@@ -12,20 +12,20 @@ import type { DayOfWeek } from './units.js';
 export type Zone = string;
 
 /**
- * BCP 47 locale tag such as `'en-US'` or `'de-DE'`, underscore tag, `Accept-Language` header,
+ * BCP 47 locale tag such as `'en-US'` or `'de-DE'`, underscore tag, `Intl.Locale`, `Accept-Language` header,
  * or list of tags in order of preference such as `navigator.languages`.
  *
  * @see {@link https://nativedates.dev/guides/localization/ Localization}
  */
-export type Locale = string | readonly string[];
+export type Locale = string | Intl.Locale | readonly (string | Intl.Locale)[];
 
 /**
- * Rule used when a local wall-clock time is skipped in a spring-forward gap or repeated in a fall-back fold.
+ * Rule used when a local time of day is skipped in a spring-forward gap or repeated in a fall-back fold.
  *
  * - `'compatible'` (default): advances past spring-forward gaps and picks the earlier pass on fall-back folds
  * - `'earlier'`: steps back across spring-forward gaps and picks the first pass on folds
  * - `'later'`: advances past spring-forward gaps and picks the second pass on folds
- * - `'reject'`: throws a `RangeError` (`invalidDateTime`) when the local time is nonexistent or ambiguous
+ * - `'reject'`: throws a `RangeError` (`invalidDateTime`) in strict mode, or returns `null` in `{ loose: true }` factories, when the local time does not exist or happens twice
  *
  * @see {@link https://nativedates.dev/guides/time-zones/ Time zones}
  */
@@ -44,13 +44,13 @@ export interface ReadOptions {
   zone?: Zone;
 
   /**
-   * BCP 47 locale tag carried on the returned value and every value derived from it.
+   * Locale (BCP 47 tag, `Intl.Locale`, or list of tags and `Intl.Locale` objects) carried on the returned value and every value derived from it.
    * Defaults to the configured `locale`, or the runtime's default locale.
    */
   locale?: Locale;
 
   /**
-   * How to resolve local wall-clock times across daylight-saving gaps and folds.
+   * How to resolve local times across daylight saving gaps and folds.
    *
    * @default 'compatible'
    */
@@ -83,7 +83,8 @@ export interface Settings {
   weekStart?: DayOfWeek | null;
 
   /**
-   * Custom weekday labels keyed by language tag, width (narrow, short, or long), and three-letter day name.
+   * Custom weekday labels keyed by language tag, width (narrow, short, or long), and any weekday name or
+   * three-or-more-letter prefix such as `'fri'` or `'friday'`.
    * Regional tags inherit from their base language, and `null` restores runtime labels.
    *
    * @example
@@ -133,7 +134,7 @@ export interface Settings {
 export interface ActiveSettings {
   /** Active default IANA time zone or offset, or `undefined` when using the runtime's local zone. */
   zone: string | undefined;
-  /** Active default locale, a tag or a list of tags, or `undefined` when using the runtime's default locale. */
+  /** Active default locale (a BCP 47 tag, `Intl.Locale`, or list of tags and `Intl.Locale` objects), or `undefined` when using the runtime's default locale. */
   locale: Locale | undefined;
   /** Active ISO week-start number (1–7), or `undefined` when following the locale. */
   weekStart: number | undefined;
@@ -142,10 +143,10 @@ export interface ActiveSettings {
   /** Active custom zone alias map registered via `@native-dates/plugins/zones`. */
   zoneAliases: Record<string, string>;
   /** Custom weekday label overrides, if configured. */
-  weekdayNames?: Settings['weekdayNames'];
+  weekdayNames?: Exclude<Settings['weekdayNames'], null>;
   /** Custom `Do` ordinal formatters by language, if configured. */
-  ordinals?: Settings['ordinals'];
-  /** Custom named format definitions, if configured. */
+  ordinals?: Exclude<Settings['ordinals'], null>;
+  /** Custom named format definitions, or `null` after clearing. */
   formats?: Settings['formats'];
 }
 
@@ -158,7 +159,7 @@ export interface ActiveSettings {
  *
  * @param settings - Process-wide defaults to update, leaving omitted keys unchanged
  * @returns A shallow copy of the active settings after applying any updates
- * @throws {RangeError} When an unrecognized setting key (`unknownSetting`), time zone (`unknownZone`), locale (`unknownLocale`), weekday (`unknownDayOfWeek`), width (`unknownWidth`), or unimported plugin option (`missingPlugin`) is passed
+ * @throws {RangeError} When an unrecognized setting key (`unknownSetting`), time zone (`unknownZone`), locale (`unknownLocale`), weekday (`unknownDayOfWeek`), width (`unknownWidth`), invalid alias map (`invalidZoneAliases`), or unimported plugin option (`missingPlugin`) is passed
  *
  * @example
  * ```ts

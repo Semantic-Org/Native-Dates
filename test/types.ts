@@ -10,11 +10,13 @@ import {
   compare,
   configure,
   date,
-  type DateRange,
+  DateRange,
   dateRange,
   DateTime,
   datetime,
-  type DateTimeRange,
+  DateTimeRange,
+  datetimeRange,
+  dayMonth,
   dayOfWeek,
   type Duration,
   earliest,
@@ -25,6 +27,8 @@ import {
   IS_RANGE,
   isDateTime,
   kindOf,
+  latest,
+  type Locale,
   type MonthDay,
   monthDay,
   monthNames,
@@ -34,9 +38,10 @@ import {
   type Range,
   type ReadOptions,
   type Settings,
-  type Time,
+  Time,
   time,
-  type TimeRange,
+  TimeRange,
+  timeRange,
   today,
   type Unit,
   weekdayNames,
@@ -139,7 +144,7 @@ declare const languages: readonly string[];
 export const fromBrowser: CalendarDate = due.locale(languages);
 export const appWide: ActiveSettings = configure({ locale: languages });
 export const inFrench: string = due.format('long', ['fr-CH', 'fr']);
-export const fromHeader: string | readonly string[] | undefined = due.locale('fr-CH;q=0.8, de;q=0.9').locale();
+export const fromHeader: Locale | undefined = due.locale('fr-CH;q=0.8, de;q=0.9').locale();
 export const rangeDays: CalendarDate[] = dateRange('2026-05-01', '2 weeks').every('day');
 export const daySlots: DateTime[] = due.every(6, 'hours', 'UTC');
 export const totalDays: number = dateRange('2026-05-01', '2 weeks').count();
@@ -244,3 +249,71 @@ opening.for(2);
 due.for(3);
 // @ts-expect-error point.for() rejects point endpoints
 meeting.for(viaCore);
+
+// 1.0 type true-ups: positive checks
+export const constructedDayInZone: CalendarDate = new CalendarDate(meeting, 'UTC');
+export const constructedTimeInZone: Time = new Time(meeting, 'UTC');
+export const passthroughDateRange: DateRange = dateRange(week);
+export const passthroughDateRangeCtor: DateRange = new DateRange(week);
+export const passthroughDateTimeRange: DateTimeRange = datetimeRange(slots[0]);
+export const passthroughDateTimeRangeCtor: DateTimeRange = new DateTimeRange(slots[0]);
+export const passthroughTimeRange: TimeRange = timeRange(shift);
+export const passthroughTimeRangeCtor: TimeRange = new TimeRange(shift);
+declare const unknownVal: unknown;
+export const looseUnknownDateRange: DateRange | null = dateRange(unknownVal, { loose: true });
+export const looseUnknownDateTimeRange: DateTimeRange | null = datetimeRange(unknownVal, { loose: true });
+export const looseUnknownTimeRange: TimeRange | null = timeRange(unknownVal, { loose: true });
+export const intlLocaleValue: DateTime = now().locale(new Intl.Locale('fr-FR'));
+export const intlLocaleList: CalendarDate = due.locale([new Intl.Locale('fr-FR'), 'en-US']);
+export const durationSign: -1 | 0 | 1 = elapsed.sign;
+export const durationOrder: -1 | 0 | 1 = elapsed.compare(hours(1));
+export const ymOrder: -1 | 0 | 1 = expiry.compare('2026-12');
+export const latestTemporalDate: CalendarDate = latest(due.toTemporal(), due.toTemporal());
+export const earliestTemporalDateTime: DateTime = earliest(meeting.toTemporal(), meeting.toTemporal());
+export const earliestTemporalTime: Time = earliest(opening.toTemporal(), opening.toTemporal());
+export const activeWeekdays:
+  | Record<string, Partial<Record<'narrow' | 'short' | 'long', Record<string, string>>>>
+  | undefined = active.weekdayNames;
+export const activeOrdinals: Record<string, (day: number) => string | number> | undefined = active.ordinals;
+export const dayMonthInZone: MonthDay = dayMonth('17/10', 'UTC');
+export const intervalWithOptions: DateTimeRange = datetimeRange('2026-09-01T09:00/2026-09-01T10:00', {
+  zone: 'America/New_York',
+});
+export const dateIntervalWithOptions: DateRange = dateRange('2026-09-01/2026-09-07', { locale: 'fr-FR' });
+export const timeIntervalWithOptions: TimeRange = new TimeRange('09:00/17:00', { locale: 'de-DE' });
+export const temporalYmOrder: -1 | 0 | 1 = compare(expiry.toTemporal(), expiry);
+export const earliestTemporalYm: YearMonth = earliest(expiry.toTemporal(), expiry);
+export const latestTemporalYm: YearMonth = latest(expiry.toTemporal(), expiry);
+export const daySlotsMs: DateTime[] = due.every(3_600_000);
+export const daySlicesMs: DateTimeRange[] = due.split(3_600_000);
+export const daySlicesByMs: DateTimeRange[] = due.splitBy(3_600_000);
+
+// 1.0 type true-ups: compile-time rejections
+// @ts-expect-error range passthrough rejects a second Zone argument
+dateRange(week, 'UTC');
+// @ts-expect-error range passthrough rejects a second Zone argument on DateTimeRange
+datetimeRange(slots[0], 'America/New_York');
+// @ts-expect-error range passthrough rejects a second Zone argument on TimeRange constructor
+new TimeRange(shift, 'UTC');
+// @ts-expect-error CalendarDate.through() rejects clock units
+due.through(2, 'hours');
+// @ts-expect-error CalendarDate.to() rejects bare numeric end
+due.to(86_400_000);
+// @ts-expect-error CalendarDate.through() rejects bare numeric end
+due.through(86_400_000);
+// @ts-expect-error Time.to() rejects bare numeric end
+opening.to(3_600_000);
+// @ts-expect-error DateRange rejects bare numeric end
+dateRange('2026-09-01', 86_400_000);
+// @ts-expect-error DateRange constructor rejects bare numeric end
+new DateRange('2026-09-01', 86_400_000);
+// @ts-expect-error TimeRange rejects bare numeric end
+timeRange('09:00', 3_600_000);
+// @ts-expect-error CalendarDate.every() rejects bare numeric step paired with a Zone string
+due.every(3_600_000, 'UTC');
+// @ts-expect-error CalendarDate.split() rejects bare numeric step paired with a Zone string
+due.split(3_600_000, 'UTC');
+// @ts-expect-error CalendarDate.splitBy() rejects bare numeric step paired with a Zone string
+due.splitBy(3_600_000, 'UTC');
+// @ts-expect-error Duration.round() rejects quarter
+elapsed.round('quarter');
