@@ -312,6 +312,8 @@ export function init() {
     let loading;
     const load = () => (loading ??= import('./language-globe.js').then(({ mountLanguageGlobe }) => mountLanguageGlobe(host)));
     host.addEventListener('pointerenter', load);
+    host.addEventListener('pointerdown', load);
+    host.addEventListener('click', load);
     host.addEventListener('focusin', load);
   });
   document.querySelectorAll('[data-language-select]').forEach((select) =>

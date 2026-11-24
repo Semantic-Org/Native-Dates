@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 
 import '../styles/docs.css';
-import { languageSelect, localePath, t, titlesIn } from '../lib/i18n.js';
+import { localePath, t, titlesIn } from '../lib/i18n.js';
 import { navFor } from '../lib/nav.js';
 import DocsTopbar from '../components/DocsTopbar.astro';
 import Base from './Base.astro';
@@ -27,7 +27,6 @@ const section = nav.find((s) => s.key === sectionKey) ?? nav[0];
         <nav class="drawer-sections" aria-label={t(locale, 'nav.sections')}>
           {nav.map((s) => <a href={s.href} aria-current={s.key === sectionKey ? 'page' : undefined}>{s.label}</a>)}
         </nav>
-        <Fragment set:html={languageSelect(Astro.url.pathname, locale)} />
         {section.groups.map((g) => (
           <div class="nav-group">
             <h2 class="nav-group-label">{g.label}</h2>
