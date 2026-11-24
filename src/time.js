@@ -27,6 +27,7 @@ import {
   isDigits,
   isInstant,
   isPlainDateTime,
+  isPlainRead,
   isPlainTime,
   isUnzoned,
   isZonedDateTime,
@@ -73,11 +74,9 @@ export class Time {
     }
     const settings = zoneOptions(isNumber(minuteOrOptions) ? undefined : minuteOrOptions);
     this.#locale = localeOf(settings, input);
-    this.#plain =
-      isPlainTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
-        && settings.format === undefined
-        ? input
-        : Time.#read(input, isNumber(minuteOrOptions) ? minuteOrOptions : undefined, second, settings);
+    this.#plain = isPlainTime(input) && isPlainRead(settings)
+      ? input
+      : Time.#read(input, isNumber(minuteOrOptions) ? minuteOrOptions : undefined, second, settings);
     const plain = this.#plain;
     this.hour = plain.hour;
     this.minute = plain.minute;

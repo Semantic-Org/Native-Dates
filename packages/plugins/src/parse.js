@@ -1,14 +1,15 @@
+import { CalendarDate, DateTime, kindOf, MonthDay, Time, YearMonth } from 'native-dates';
 import { isDevelopment } from 'native-dates/helpers/environment';
 import { refuse, refuseType, setFormatExtension } from 'native-dates/helpers/errors';
 import { names, tokenPattern } from 'native-dates/helpers/tokens';
 import { pad } from 'native-dates/helpers/units';
-import { cached, isString } from 'native-dates/helpers/utils';
+import { isDate, isString, remember } from 'native-dates/helpers/utils';
 import { checkedDisambiguation, locale as pickLocale, namedFormat, zoneId } from 'native-dates/helpers/zones';
 
 /*
-  deterministic format-mask parser for core factories (`{ format: 'DDMMYYYY' }`).
+  deterministic format-pattern parser for core factories (`{ format: 'DDMMYYYY' }`).
   Reuses core's token grammar and localized Intl month/weekday/meridiem tables,
-  compiles each (pattern, kind, locale) triple once, and rejects impossible dates
+  compiles each pattern once per locale table, and rejects impossible dates
   or mismatched weekdays rather than rolling forward
 */
 
@@ -20,6 +21,14 @@ const codes = {
   monthDay: ['missingMonthDay', 'invalidMonthDay'],
 };
 
+const constructors = {
+  datetime: DateTime,
+  date: CalendarDate,
+  time: Time,
+  yearMonth: YearMonth,
+  monthDay: MonthDay,
+};
+
 const dateFields = ['year', 'month', 'day', 'dayOfYear', 'weekOfYear', 'dayOfWeek'];
 const timeFields = ['hour', 'minute', 'second', 'millisecond'];
 const allowedFields = {
@@ -29,6 +38,17 @@ const allowedFields = {
   yearMonth: new Set(['year', 'month']),
   monthDay: new Set(['month', 'day']),
 };
+
+const isTemporalValue = (value) =>
+  value instanceof Temporal.ZonedDateTime
+  || value instanceof Temporal.Instant
+  || value instanceof Temporal.PlainDateTime
+  || value instanceof Temporal.PlainDate
+  || value instanceof Temporal.PlainTime
+  || value instanceof Temporal.PlainYearMonth
+  || value instanceof Temporal.PlainMonthDay;
+
+const isParsedValue = (value) => isDate(value) || Object.hasOwn(constructors, kindOf(value)) || isTemporalValue(value);
 
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -65,135 +85,109 @@ const record = (fields, key, value) => {
   return true;
 };
 
-const numberIn = (text, min, max) => {
+const numberIn = (min, max) => (text) => {
   const value = Number(text);
   return value >= min && value <= max ? value : undefined;
 };
 
-const buildToken = (token, locale, table) => {
-  switch (token) {
-    case 'YYYY':
-      return ['year', '(\\d{4})', (raw, out) => record(out, 'year', Number(raw))];
-    case 'YY':
-      return [
-        'year',
-        '(\\d{2})',
-        (raw, out) => {
-          const two = Number(raw);
-          return record(out, 'year', two >= 70 ? 1900 + two : 2000 + two);
-        },
-      ];
-    case 'MM':
-      return ['month', '(\\d{2})', (raw, out) => record(out, 'month', numberIn(raw, 1, 12))];
-    case 'M':
-      return ['month', '(\\d{1,2})', (raw, out) => record(out, 'month', numberIn(raw, 1, 12))];
-    case 'MMM':
-    case 'MMMM': {
-      const lists = [table[token], table.besideDay[token]];
-      const map = lookupMap(lists, locale);
-      return [
-        'month',
-        `(${choice(lists.flat())})`,
-        (raw, out) => record(out, 'month', map.get(raw.toLocaleLowerCase(locale))),
-      ];
-    }
-    case 'DD':
-      return ['day', '(\\d{2})', (raw, out) => record(out, 'day', numberIn(raw, 1, 31))];
-    case 'D':
-      return ['day', '(\\d{1,2})', (raw, out) => record(out, 'day', numberIn(raw, 1, 31))];
-    case 'Do': {
-      const suffix = table.isEnglish ? '(?i:st|nd|rd|th)' : escapeRegex(table.dayMark);
-      return [
-        'day',
-        `(\\d{1,2}${suffix})`,
-        (raw, out) => {
-          const digits = raw.match(/^\d{1,2}/)[0];
-          const day = numberIn(digits, 1, 31);
-          if (!day) {
-            return false;
-          }
-          if (table.isEnglish && raw.slice(digits.length).toLowerCase() !== englishOrdinalSuffix(day)) {
-            return false;
-          }
-          return record(out, 'day', day);
-        },
-      ];
-    }
-    case 'DDDD':
-      return ['dayOfYear', '(\\d{3})', (raw, out) => record(out, 'dayOfYear', numberIn(raw, 1, 366))];
-    case 'DDD':
-      return ['dayOfYear', '(\\d{1,3})', (raw, out) => record(out, 'dayOfYear', numberIn(raw, 1, 366))];
-    case 'WW':
-      return ['weekOfYear', '(\\d{2})', (raw, out) => record(out, 'weekOfYear', numberIn(raw, 1, 53))];
-    case 'W':
-      return ['weekOfYear', '(\\d{1,2})', (raw, out) => record(out, 'weekOfYear', numberIn(raw, 1, 53))];
-    case 'E':
-      return ['dayOfWeek', '([1-7])', (raw, out) => record(out, 'dayOfWeek', Number(raw))];
-    case 'd':
-      return ['dayOfWeek', '([0-6])', (raw, out) => record(out, 'dayOfWeek', Number(raw) || 7)];
-    case 'dd':
-    case 'ddd':
-    case 'dddd': {
-      const map = lookupMap([table[token]], locale);
-      return [
-        'dayOfWeek',
-        `(${choice(table[token])})`,
-        (raw, out) => record(out, 'dayOfWeek', map.get(raw.toLocaleLowerCase(locale))),
-      ];
-    }
-    case 'HH':
-      return ['hour', '(\\d{2})', (raw, out) => record(out, 'hour24', numberIn(raw, 0, 23))];
-    case 'H':
-      return ['hour', '(\\d{1,2})', (raw, out) => record(out, 'hour24', numberIn(raw, 0, 23))];
-    case 'hh':
-      return ['hour', '(\\d{2})', (raw, out) => record(out, 'hour12', numberIn(raw, 1, 12))];
-    case 'h':
-      return ['hour', '(\\d{1,2})', (raw, out) => record(out, 'hour12', numberIn(raw, 1, 12))];
-    case 'mm':
-      return ['minute', '(\\d{2})', (raw, out) => record(out, 'minute', numberIn(raw, 0, 59))];
-    case 'm':
-      return ['minute', '(\\d{1,2})', (raw, out) => record(out, 'minute', numberIn(raw, 0, 59))];
-    case 'ss':
-      return ['second', '(\\d{2})', (raw, out) => record(out, 'second', numberIn(raw, 0, 59))];
-    case 's':
-      return ['second', '(\\d{1,2})', (raw, out) => record(out, 'second', numberIn(raw, 0, 59))];
-    case 'S':
-      return ['millisecond', '(\\d)', (raw, out) => record(out, 'millisecond', Number(raw) * 100)];
-    case 'SS':
-      return ['millisecond', '(\\d{2})', (raw, out) => record(out, 'millisecond', Number(raw) * 10)];
-    case 'SSS':
-      return ['millisecond', '(\\d{3})', (raw, out) => record(out, 'millisecond', Number(raw))];
-    case 'A':
-    case 'a': {
-      const periods = table.isEnglish ? ['AM', 'PM'] : table.dayPeriods;
-      const map = new Map([
-        [periods[0].toLocaleLowerCase(locale), 0],
-        [periods[1].toLocaleLowerCase(locale), 1],
-      ]);
-      return [
-        'hour',
-        `(${choice(periods)})`,
-        (raw, out) => record(out, 'meridiem', map.get(raw.toLocaleLowerCase(locale))),
-      ];
-    }
-    case 'Z':
-      return ['offset', '([zZ]|[+-]\\d{2}:\\d{2})', (raw, out) => record(out, 'offset', raw.toUpperCase())];
-    case 'ZZ':
-      return [
-        'offset',
-        '([zZ]|[+-]\\d{4})',
-        (raw, out) => record(out, 'offset', raw.length === 1 ? 'Z' : `${raw.slice(0, 3)}:${raw.slice(3)}`),
-      ];
-    case 'z':
-    case 'zz':
-      return ['zone', '([^\\s]+)', (raw, out) => record(out, 'zone', raw)];
-    case 'X':
-      return ['epoch', '(-?\\d+)', (raw, out) => record(out, 'epoch', Number(raw) * 1000)];
-    case 'x':
-      return ['epoch', '(-?\\d+)', (raw, out) => record(out, 'epoch', Number(raw))];
-    default:
-      return null;
-  }
+const readMonth = numberIn(1, 12);
+const readDay = numberIn(1, 31);
+const readDayOfYear = numberIn(1, 366);
+const readWeek = numberIn(1, 53);
+const readHour24 = numberIn(0, 23);
+const readHour12 = numberIn(1, 12);
+const readSixty = numberIn(0, 59);
+
+const monthSpec = (token) => (locale, table) => {
+  const lists = [table[token], table.besideDay[token]];
+  const map = lookupMap(lists, locale);
+  return ['month', `(${choice(lists.flat())})`, 'month', (raw) => map.get(raw.toLocaleLowerCase(locale))];
+};
+
+const weekdaySpec = (token) => (locale, table) => {
+  const map = lookupMap([table[token]], locale);
+  return ['dayOfWeek', `(${choice(table[token])})`, 'dayOfWeek', (raw) => map.get(raw.toLocaleLowerCase(locale))];
+};
+
+const meridiemSpec = (locale, table) => {
+  const periods = table.isEnglish ? ['AM', 'PM'] : table.dayPeriods;
+  const map = new Map([
+    [periods[0].toLocaleLowerCase(locale), 0],
+    [periods[1].toLocaleLowerCase(locale), 1],
+  ]);
+  return ['hour', `(${choice(periods)})`, 'meridiem', (raw) => map.get(raw.toLocaleLowerCase(locale))];
+};
+
+const ordinalSpec = (_locale, table) => {
+  const suffix = table.isEnglish ? '(?i:st|nd|rd|th)' : escapeRegex(table.dayMark);
+  return [
+    'day',
+    `(\\d{1,2}${suffix})`,
+    'day',
+    (raw) => {
+      const digits = raw.match(/^\d{1,2}/)[0];
+      const day = readDay(digits);
+      if (!day || (table.isEnglish && raw.slice(digits.length).toLowerCase() !== englishOrdinalSuffix(day))) {
+        return undefined;
+      }
+      return day;
+    },
+  ];
+};
+
+// each entry is [allowedField, regexFragment, outputKey, readValue] or a (locale, table) => tuple builder
+const tokenSpecs = {
+  __proto__: null,
+  YYYY: ['year', '(\\d{4})', 'year', Number],
+  YY: [
+    'year',
+    '(\\d{2})',
+    'year',
+    (raw) => {
+      const two = Number(raw);
+      return two >= 69 ? 1900 + two : 2000 + two;
+    },
+  ],
+  MM: ['month', '(\\d{2})', 'month', readMonth],
+  M: ['month', '(\\d{1,2})', 'month', readMonth],
+  MMM: monthSpec('MMM'),
+  MMMM: monthSpec('MMMM'),
+  DD: ['day', '(\\d{2})', 'day', readDay],
+  D: ['day', '(\\d{1,2})', 'day', readDay],
+  Do: ordinalSpec,
+  DDDD: ['dayOfYear', '(\\d{3})', 'dayOfYear', readDayOfYear],
+  DDD: ['dayOfYear', '(\\d{1,3})', 'dayOfYear', readDayOfYear],
+  WW: ['weekOfYear', '(\\d{2})', 'weekOfYear', readWeek],
+  W: ['weekOfYear', '(\\d{1,2})', 'weekOfYear', readWeek],
+  E: ['dayOfWeek', '([1-7])', 'dayOfWeek', Number],
+  d: ['dayOfWeek', '([0-6])', 'dayOfWeek', (raw) => Number(raw) || 7],
+  dd: weekdaySpec('dd'),
+  ddd: weekdaySpec('ddd'),
+  dddd: weekdaySpec('dddd'),
+  HH: ['hour', '(\\d{2})', 'hour24', readHour24],
+  H: ['hour', '(\\d{1,2})', 'hour24', readHour24],
+  hh: ['hour', '(\\d{2})', 'hour12', readHour12],
+  h: ['hour', '(\\d{1,2})', 'hour12', readHour12],
+  mm: ['minute', '(\\d{2})', 'minute', readSixty],
+  m: ['minute', '(\\d{1,2})', 'minute', readSixty],
+  ss: ['second', '(\\d{2})', 'second', readSixty],
+  s: ['second', '(\\d{1,2})', 'second', readSixty],
+  S: ['millisecond', '(\\d)', 'millisecond', (raw) => Number(raw) * 100],
+  SS: ['millisecond', '(\\d{2})', 'millisecond', (raw) => Number(raw) * 10],
+  SSS: ['millisecond', '(\\d{3})', 'millisecond', Number],
+  A: meridiemSpec,
+  a: meridiemSpec,
+  Z: ['offset', '([zZ]|[+-]\\d{2}:\\d{2})', 'offset', (raw) => raw.toUpperCase()],
+  ZZ: [
+    'offset',
+    '([zZ]|[+-]\\d{4})',
+    'offset',
+    (raw) => (raw.length === 1 ? 'Z' : `${raw.slice(0, 3)}:${raw.slice(3)}`),
+  ],
+  z: ['zone', '([^\\s]+)', 'zone', (raw) => raw],
+  zz: ['zone', '([^\\s]+)', 'zone', (raw) => raw],
+  X: ['epoch', '(-?\\d+)', 'epoch', (raw) => Number(raw) * 1000],
+  x: ['epoch', '(-?\\d+)', 'epoch', Number],
 };
 
 const hasCompletePattern = (kind, seen) => {
@@ -218,8 +212,21 @@ const hasCompletePattern = (kind, seen) => {
   return seen.has('month') && seen.has('day');
 };
 
-// keying on the table object auto-invalidates compiled regexes when configure() clears nameCache
-const compile = cached((pattern, kind, locale, table) => {
+// WeakMap keyed by table identity avoids serializing locale tables and clears automatically when configure() resets nameCache
+const compiledByTable = new WeakMap();
+
+const compile = (pattern, kind, locale, table) => {
+  let bucket = compiledByTable.get(table);
+  if (!bucket) {
+    bucket = new Map();
+    compiledByTable.set(table, bucket);
+  }
+  const cacheKey = `${kind}\0${pattern}`;
+  const hit = bucket.get(cacheKey);
+  if (hit) {
+    return hit;
+  }
+
   const allowed = allowedFields[kind];
   const readers = [];
   const seen = new Set();
@@ -236,15 +243,15 @@ const compile = cached((pattern, kind, locale, table) => {
       source += escapeRegex(literal);
       continue;
     }
-    const spec = buildToken(token, locale, table);
-    if (!spec) {
+    const entry = tokenSpecs[token];
+    if (!entry) {
       refuse('unknownFormat', pattern, {
         explanation: isDevelopment
           ? `'${token}' is not a parseable format token. Wrap literal text in brackets like '[at]'`
           : 0,
       });
     }
-    const [field, fragment, read] = spec;
+    const [field, fragment, key, read] = typeof entry === 'function' ? entry(locale, table) : entry;
     if (!allowed.has(field)) {
       refuse('unsupportedToken', `${token} in '${pattern}'`, {
         explanation: isDevelopment
@@ -254,7 +261,7 @@ const compile = cached((pattern, kind, locale, table) => {
     }
     seen.add(field);
     source += fragment;
-    readers.push(read);
+    readers.push([key, read]);
   }
 
   if (cursor < pattern.length) {
@@ -270,13 +277,13 @@ const compile = cached((pattern, kind, locale, table) => {
     });
   }
 
-  return {
+  return remember(bucket, cacheKey, {
     regex: new RegExp(source, 'u'),
     readers,
     trim: !/^\s|\s$/.test(pattern),
     hasClock: seen.has('hour') || seen.has('minute') || seen.has('second') || seen.has('millisecond'),
-  };
-});
+  });
+};
 
 const resolveDate = (fields) => {
   let plain;
@@ -342,19 +349,26 @@ const refuseInvalid = (kind, input, pattern) =>
 
 export const parseFormatted = (kind, input, settings = {}) => {
   const rawFormat = settings.format;
-  if (!isString(rawFormat) || !rawFormat.trim()) {
+  const pattern = isString(rawFormat) ? namedFormat(rawFormat) : rawFormat;
+  if (!isString(pattern) || !pattern.trim()) {
     refuse('unknownFormat', String(rawFormat), {
-      explanation: isDevelopment ? "expected a non-empty format pattern string such as 'DDMMYYYY'" : 0,
+      explanation: isDevelopment
+        ? isString(rawFormat) && !isString(pattern)
+          ? `named format '${rawFormat}' resolves to an \`Intl\` options object rather than a token format pattern string. Use a token string such as 'DDMMYYYY' with \`{ format }\``
+          : "expected a non-empty format pattern string such as 'DDMMYYYY'"
+        : 0,
     });
   }
-  const pattern = namedFormat(rawFormat);
   const activeLocale = pickLocale(settings.locale);
   const compiled = compile(pattern, kind, activeLocale, names(activeLocale));
 
   if (input === undefined || input === null) {
     refuseType(codes[kind][0], String(input), {
-      explanation: isDevelopment ? `a string matching '${pattern}' is required` : 0,
+      explanation: isDevelopment ? `a string matching format pattern '${pattern}' is required` : 0,
     });
+  }
+  if (isParsedValue(input)) {
+    return new constructors[kind](input, { ...settings, format: undefined }).toTemporal();
   }
   if (!isString(input)) {
     refuseType(codes[kind][1], String(input), {
@@ -370,10 +384,14 @@ export const parseFormatted = (kind, input, settings = {}) => {
 
   const fields = {};
   for (let index = 0; index < compiled.readers.length; index++) {
-    if (!compiled.readers[index](match[index + 1], fields)) {
+    const [key, read] = compiled.readers[index];
+    if (!record(fields, key, read(match[index + 1]))) {
       return refuseInvalid(kind, input, pattern);
     }
   }
+
+  const timeZone = kind === 'datetime' ? zoneId(settings.zone, settings.locale) : undefined;
+  const disambiguation = kind === 'datetime' ? checkedDisambiguation(settings.disambiguation) : undefined;
 
   try {
     if (kind === 'yearMonth') {
@@ -393,8 +411,6 @@ export const parseFormatted = (kind, input, settings = {}) => {
       return plainDate || refuseInvalid(kind, input, pattern);
     }
 
-    const timeZone = zoneId(settings.zone, settings.locale);
-    const disambiguation = checkedDisambiguation(settings.disambiguation);
     if ('epoch' in fields) {
       const zoned = Temporal.Instant.fromEpochMilliseconds(fields.epoch).toZonedDateTimeISO(timeZone);
       if ('year' in fields) {
@@ -438,8 +454,18 @@ export const parseFormatted = (kind, input, settings = {}) => {
       ? plainDateTime.toZonedDateTime(timeZone, { disambiguation })
       : plainDate.toZonedDateTime({ timeZone });
   }
-  catch {
-    return refuseInvalid(kind, input, pattern);
+  catch (error) {
+    if (error?.code && error.code !== 'unknownZone') {
+      throw error;
+    }
+    const hint = isDevelopment && error?.code === 'unknownZone' && error.message.split('\n')[1];
+    return refuse(codes[kind][1], String(input), {
+      explanation: isDevelopment
+        ? hint
+          ? `inline time zone '${fields.zone}' is not recognized: ${hint}`
+          : `input does not match format pattern '${pattern}'`
+        : 0,
+    });
   }
 };
 

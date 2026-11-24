@@ -359,7 +359,7 @@ export const monthYear = (input, yearOrOptions) => {
   if (isCount(input) && isCount(yearOrOptions)) {
     return yearMonth(inCentury(yearOrOptions), input);
   }
-  const parts = isString(input) && monthFirst.exec(input.trim());
+  const parts = isString(input) && yearOrOptions?.format === undefined && monthFirst.exec(input.trim());
   return parts
     ? yearMonth({ year: inCentury(parts[2]), month: parts[1] }, yearOrOptions)
     : yearMonth(input, yearOrOptions);

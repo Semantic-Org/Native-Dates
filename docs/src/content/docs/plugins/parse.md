@@ -1,7 +1,7 @@
 ---
 title: parse
 kind: plugin
-lede: Parse fixed-layout strings with `{ format }` using the same token patterns as `format()`.
+lede: Parse fixed-layout date and time strings strictly using token patterns with `{ format }`.
 import: import '@native-dates/plugins/parse'
 size: parse
 updated: 2026-11-24
@@ -30,7 +30,7 @@ Strict ISO parsing stays the default wherever you omit the format option. Callin
 
 ## Strict matching and named formats
 
-Patterns reuse the same tokens as [`format()`](/guides/formatting/#token-patterns). Fixed-width tokens require exact digit counts, and literal text must match the full string case-sensitively.
+Patterns use the core [token vocabulary](/guides/formatting/#token-patterns). Fixed-width tokens require exact digit counts, and literal text must match the full string case-sensitively.
 
 Impossible dates like February 30 and mismatched weekdays throw instead of rolling forward. Repeated tokens or conflicting 12-hour and 24-hour clock fields are rejected the same way.
 
@@ -77,7 +77,9 @@ English ordinal tokens validate the exact suffix, so `'24st'` is rejected, while
 
 ## ISO week and ordinal dates
 
-Ordinal day-of-year and ISO week patterns resolve straight to calendar dates or moments. Leap years and 52- vs. 53-week years are checked strictly, and omitting a weekday on an ISO week lands on Monday.
+Ordinal day-of-year and ISO week patterns resolve straight to calendar dates or moments. Beside a week token, `YYYY` reads the ISO week-year rather than the calendar year written by `format()`, so `'2026-W01-1'` resolves to December 29, 2025.
+
+Leap years and 52- or 53-week years are checked strictly, and omitting a weekday on an ISO week lands on Monday.
 
 ```js
 import { date } from 'native-dates';
@@ -90,9 +92,9 @@ date('2026-W01-1', { format: 'YYYY-[W]WW-E' }).toString(); // '2025-12-29'
 
 ## Time zones and timestamps
 
-Patterns with an offset token fix an exact instant and convert it into your target zone. Inline `z` tokens keep the parsed zone unless you pass a target zone option to convert into.
+Patterns with an offset token fix an exact instant and convert it into your target zone. Inline `z` tokens resolve IANA identifiers and, with [`@native-dates/plugins/zones`](/plugins/zones/), city names or abbreviations like JST, rather than arbitrary offset labels like GMT+2.
 
-Load [`@native-dates/plugins/zones`](/plugins/zones/) when inline zone tokens contain city names or regional abbreviations like JST or PT. If a string carries both an offset and a zone name that disagree for that instant, parsing throws.
+An inline zone stays on the result unless you pass a target zone option to convert into. If a string carries both an offset and a zone name that disagree for that instant, parsing throws.
 
 ```js
 import '@native-dates/plugins/zones';
@@ -119,7 +121,7 @@ Unix timestamps parse through `X` for whole seconds and `x` for milliseconds. Pa
 
 ## Combining with loose mode
 
-Load [`@native-dates/plugins/loose`](/plugins/loose/) alongside this plugin to return `null` instead of throwing when input text does not match the format. Missing values, non-strings, impossible dates, and rejected DST transitions all return null from factory functions.
+Load [`@native-dates/plugins/loose`](/plugins/loose/) alongside this plugin to return `null` instead of throwing when input text does not match the format. Missing values, numbers, impossible dates, and rejected DST transitions return null from factory functions, while existing date and time instances pass through unchanged.
 
 ```js
 import '@native-dates/plugins/loose';
@@ -145,8 +147,8 @@ Tokens follow the formatting vocabulary, with leading and trailing whitespace tr
 
 | Token | Example | Matches |
 |---|---|---|
-| `YYYY` | `'2026'` | Four-digit calendar year. |
-| `YY` | `'26'` | Two-digit year, reading 70 through 99 as 1970–1999 and 00 through 69 as 2000–2069. |
+| `YYYY` | `'2026'` | Four-digit calendar year, or ISO week-year when paired with `W` or `WW`. |
+| `YY` | `'26'` | Two-digit year, reading 69 through 99 as 1969–1999 and 00 through 68 as 2000–2068. |
 | `M`, `MM` | `'9'`, `'09'` | Month number from 1 through 12, unpadded or zero-padded to two digits. |
 | `MMM`, `MMMM` | `'Nov'`, `'November'` | Localized short or full Gregorian month name, including inflected forms. |
 | `D`, `DD` | `'6'`, `'06'` | Day of the month from 1 through 31, unpadded or zero-padded to two digits. |
@@ -163,7 +165,7 @@ Tokens follow the formatting vocabulary, with leading and trailing whitespace tr
 | `S`, `SS`, `SSS` | `'5'`, `'25'`, `'250'` | Fractional seconds in tenths, hundredths, or milliseconds. |
 | `A`, `a` | `'PM'`, `'pm'` | Case-insensitive AM or PM in English, or the active locale's day period. |
 | `Z`, `ZZ` | `'-05:00'`, `'-0500'` | UTC offset with or without a colon, or `Z` for UTC. |
-| `z`, `zz` | `'UTC'`, `'JST'` | Non-whitespace time zone name resolved through the same lookup as `{ zone }`. |
+| `z`, `zz` | `'UTC'`, `'JST'` | Non-whitespace IANA zone ID, or a city or abbreviation when `@native-dates/plugins/zones` is loaded. Does not parse offset labels like `'GMT+2'`. |
 | `X`, `x` | `'1795542001'` | Unix timestamp in whole seconds or milliseconds, including negative values. |
 | `[text]` | `'[W]'` | Escaped literal text matched case-sensitively. Bare `T` also passes through unescaped. |
 
@@ -187,7 +189,7 @@ datetimeRange(start, end, { format, zone?, locale?, disambiguation?, loose? }): 
 timeRange(start, end, { format, locale?, loose? }): TimeRange
 ```
 
-Parses string input against a token pattern or named format across every date, time, partial-date, and range factory. Calling class constructors like `new DateTime()` with `{ format }` parses the same way while always throwing on invalid input.
+Parses string input against a token pattern or named format across every date, time, partial-date, and range factory. Already-parsed date, time, `Date`, and `Temporal` values pass through after the pattern is validated, while numbers are rejected.
 
 **Parameters**
 

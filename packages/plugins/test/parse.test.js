@@ -22,12 +22,14 @@ import {
 import { afterEach, describe, expect, it } from 'vitest';
 
 const errorCode = (code, at) => expect.objectContaining({ name: 'RangeError', code, ...(at !== undefined && { at }) });
+const typeErrorCode = (code, at) =>
+  expect.objectContaining({ name: 'TypeError', code, ...(at !== undefined && { at }) });
 
 afterEach(() => {
   configure({ zone: null, locale: null, formats: null, weekdayNames: null, dayFirst: null });
 });
 
-describe('@native-dates/plugins/parse — CalendarDate', () => {
+describe('date() with { format }', () => {
   it('parses compact numeric bank/EDI formats deterministically', () => {
     expect(date('24112026', { format: 'DDMMYYYY' }).toString()).toBe('2026-11-24');
     expect(date('20261124', { format: 'YYYYMMDD' }).toString()).toBe('2026-11-24');
@@ -36,11 +38,11 @@ describe('@native-dates/plugins/parse — CalendarDate', () => {
     expect(date('03/05/2026', { format: 'MM/DD/YYYY' }).toString()).toBe('2026-03-05');
   });
 
-  it('parses variable-width tokens, 2-digit years, and ordinals', () => {
+  it('parses variable-width tokens, 2-digit years with 1969-2068 pivot, and ordinals', () => {
     expect(date('6/9/26', { format: 'D/M/YY' }).toString()).toBe('2026-09-06');
     expect(date('31/12/99', { format: 'DD/MM/YY' }).toString()).toBe('1999-12-31');
-    expect(date('01/01/70', { format: 'DD/MM/YY' }).toString()).toBe('1970-01-01');
-    expect(date('01/01/69', { format: 'DD/MM/YY' }).toString()).toBe('2069-01-01');
+    expect(date('01/01/69', { format: 'DD/MM/YY' }).toString()).toBe('1969-01-01');
+    expect(date('01/01/68', { format: 'DD/MM/YY' }).toString()).toBe('2068-01-01');
     expect(date('November 24th, 2026', { format: 'MMMM Do, YYYY', locale: 'en-US' }).toString()).toBe('2026-11-24');
     expect(date('6. November 2026', { format: 'Do MMMM YYYY', locale: 'de' }).toString()).toBe('2026-11-06');
     expect(date('2026年11月6日', { format: 'YYYY[年]M[月]Do', locale: 'ja' }).toString()).toBe('2026-11-06');
@@ -87,15 +89,20 @@ describe('@native-dates/plugins/parse — CalendarDate', () => {
     expect(() => date('01-02-24-2026', { format: 'MM-MM-DD-YYYY' })).toThrowError(errorCode('invalidDate'));
   });
 
-  it('supports named formats registered via configure({ formats })', () => {
-    configure({ formats: { bank: 'DDMMYYYY' } });
+  it('supports named formats registered via configure({ formats }) and rejects Intl option objects', () => {
+    configure({ formats: { bank: 'DDMMYYYY', receipt: { dateStyle: 'long' } } });
     const parsed = date('24112026', { format: 'bank' });
     expect(parsed.toString()).toBe('2026-11-24');
     expect(parsed.format('bank')).toBe('24112026');
+
+    expect(() => date('2026-11-24', { format: 'receipt' })).toThrowError(errorCode('unknownFormat', 'receipt'));
+    expect(() => date('2026-11-24', { format: 'receipt', loose: true })).toThrowError(
+      errorCode('unknownFormat', 'receipt'),
+    );
   });
 });
 
-describe('@native-dates/plugins/parse — DateTime', () => {
+describe('datetime() with { format }', () => {
   it('parses Apache/Nginx logs with compact offsets into the target zone', () => {
     const hit = datetime('24/Nov/2026:12:40:01 -0500', {
       format: 'DD/MMM/YYYY:HH:mm:ss ZZ',
@@ -150,6 +157,21 @@ describe('@native-dates/plugins/parse — DateTime', () => {
       })
     ).toThrowError(errorCode('invalidDateTime'));
 
+    // unknown inline zone throws invalidDateTime and yields null in loose mode
+    expect(() =>
+      datetime('24 Nov 2026 15:45 NotAZone', {
+        format: 'DD MMM YYYY HH:mm z',
+        locale: 'en-US',
+      })
+    ).toThrowError(errorCode('invalidDateTime'));
+    expect(
+      datetime('24 Nov 2026 15:45 NotAZone', {
+        format: 'DD MMM YYYY HH:mm z',
+        locale: 'en-US',
+        loose: true,
+      }),
+    ).toBeNull();
+
     // conflicting offset and zone token rejects
     expect(() =>
       datetime('08/03/2026 12:00 -05:00 America/New_York', {
@@ -158,7 +180,7 @@ describe('@native-dates/plugins/parse — DateTime', () => {
     ).toThrowError(errorCode('invalidDateTime'));
   });
 
-  it('parses unix epoch seconds (X) and milliseconds (x) and date-only masks', () => {
+  it('parses unix epoch seconds (X) and milliseconds (x) and date-only patterns', () => {
     expect(datetime('1795542001', { format: 'X', zone: 'UTC' }).toString()).toBe('2026-11-24T17:40:01.000Z');
     expect(datetime('1795542001250', { format: 'x', zone: 'UTC' }).toString()).toBe('2026-11-24T17:40:01.250Z');
     expect(datetime('24112026', { format: 'DDMMYYYY', zone: 'America/New_York' }).toString()).toBe(
@@ -167,8 +189,8 @@ describe('@native-dates/plugins/parse — DateTime', () => {
   });
 });
 
-describe('@native-dates/plugins/parse — Time, YearMonth, MonthDay, and Ranges', () => {
-  it('parses Time values including compact 24h, 12h, and sub-second masks', () => {
+describe('time(), yearMonth(), monthDay(), and ranges with { format }', () => {
+  it('parses Time values including compact 24h, 12h, and sub-second patterns', () => {
     expect(time('1430', { format: 'HHmm' }).toString()).toBe('14:30:00');
     expect(time('9:05:12.5 pm', { format: 'h:mm:ss.S a', locale: 'en-US' }).toString()).toBe('21:05:12.500');
     expect(() => time('14:30 AM', { format: 'HH:mm A', locale: 'en-US' })).toThrowError(errorCode('invalidTime'));
@@ -177,6 +199,8 @@ describe('@native-dates/plugins/parse — Time, YearMonth, MonthDay, and Ranges'
   it('parses YearMonth and MonthDay including leap day Feb 29', () => {
     expect(yearMonth('11/2026', { format: 'MM/YYYY' }).toString()).toBe('2026-11');
     expect(monthYear('202611', { format: 'YYYYMM' }).toString()).toBe('2026-11');
+    expect(monthYear('11/2026', { format: 'MM/YYYY' }).toString()).toBe('2026-11');
+    expect(() => monthYear('11/2026', { format: 'YYYYMM' })).toThrowError(errorCode('invalidYearMonth'));
     expect(yearMonth('février 2026', { format: 'MMMM YYYY', locale: 'fr' }).toString()).toBe('2026-02');
     expect(monthDay('29/02', { format: 'DD/MM' }).toString()).toBe('02-29');
     expect(dayMonth('6 ноября', { format: 'D MMMM', locale: 'ru' }).toString()).toBe('11-06');
@@ -186,6 +210,7 @@ describe('@native-dates/plugins/parse — Time, YearMonth, MonthDay, and Ranges'
   it('forwards { format } across dateRange, datetimeRange, and timeRange', () => {
     expect(dateRange('24112026', '30112026', { format: 'DDMMYYYY' }).toString()).toBe('2026-11-24/2026-11-30');
     expect(dateRange('24112026', '5 days', { format: 'DDMMYYYY' }).toString()).toBe('2026-11-24/2026-11-28');
+    expect(dateRange(date('2026-11-24'), '30112026', { format: 'DDMMYYYY' }).toString()).toBe('2026-11-24/2026-11-30');
     expect(
       datetimeRange('24/Nov/2026:09:00', '24/Nov/2026:10:30', {
         format: 'DD/MMM/YYYY:HH:mm',
@@ -197,15 +222,34 @@ describe('@native-dates/plugins/parse — Time, YearMonth, MonthDay, and Ranges'
   });
 });
 
-describe('@native-dates/plugins/parse — loose integration, class constructors, and error contracts', () => {
+describe('loose integration, already-parsed values, and error contracts with { format }', () => {
+  it('passes already-parsed date and time objects through after validating the format pattern', () => {
+    expect(date(date('2026-11-24'), { format: 'DDMMYYYY' }).toString()).toBe('2026-11-24');
+    expect(date(date('2026-11-24'), { format: 'DDMMYYYY', loose: true }).toString()).toBe('2026-11-24');
+    expect(date(new Date('2026-11-24T12:00Z'), { format: 'DDMMYYYY', zone: 'UTC' }).toString()).toBe('2026-11-24');
+    expect(date(Temporal.PlainDate.from('2026-11-24'), { format: 'DDMMYYYY' }).toString()).toBe('2026-11-24');
+    expect(datetime(datetime('2026-11-24T12:00Z', 'UTC'), { format: 'DDMMYYYY', zone: 'America/New_York' }).zone).toBe(
+      'America/New_York',
+    );
+    expect(date(new Date(Number.NaN), { format: 'DDMMYYYY', loose: true })).toBeNull();
+
+    // invalid patterns still throw even when input is already a date/time instance
+    expect(() => date(date('2026-11-24'), { format: '' })).toThrowError(errorCode('unknownFormat'));
+    expect(() => date(date('2026-11-24'), { format: 'DDMMYYYY HH:mm' })).toThrowError(errorCode('unsupportedToken'));
+    expect(() => date(new Date('2026-11-24T12:00Z'), { format: 'yyyy-MM-dd', loose: true })).toThrowError(
+      errorCode('unknownFormat'),
+    );
+  });
+
   it('returns null on bad input when paired with { loose: true }, while bad format options still throw', () => {
     expect(date('not-a-date', { format: 'DDMMYYYY', loose: true })).toBeNull();
     expect(date('30022026', { format: 'DDMMYYYY', loose: true })).toBeNull();
     expect(date(undefined, { format: 'DDMMYYYY', loose: true })).toBeNull();
-    expect(date(12345, { format: 'DDMMYYYY', loose: true })).toBeNull();
+    expect(date(20261124, { format: 'YYYYMMDD', loose: true })).toBeNull();
+    expect(datetime(20261124, { format: 'YYYYMMDD', loose: true })).toBeNull();
     expect(datetime('bad', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ', loose: true })).toBeNull();
 
-    // bad format masks and unsupported tokens are caller errors and still throw even in loose mode
+    // bad format patterns and unsupported tokens are caller errors and still throw even in loose mode
     expect(() => date('24112026', { format: '', loose: true })).toThrowError(errorCode('unknownFormat'));
     expect(() => date('24112026', { format: 'yyyy-MM-dd', loose: true })).toThrowError(errorCode('unknownFormat'));
     expect(() => date('24112026', { format: 'DDMMYYYY HH:mm', loose: true })).toThrowError(
@@ -218,7 +262,7 @@ describe('@native-dates/plugins/parse — loose integration, class constructors,
     );
   });
 
-  it('works with class constructors and rejects non-string inputs cleanly', () => {
+  it('works with class constructors and rejects missing values and numbers cleanly', () => {
     expect(new CalendarDate('24112026', { format: 'DDMMYYYY' }).toString()).toBe('2026-11-24');
     expect(new DateTime('24112026 0930', { format: 'DDMMYYYY HHmm', zone: 'UTC' }).toString()).toBe(
       '2026-11-24T09:30:00.000Z',
@@ -227,12 +271,9 @@ describe('@native-dates/plugins/parse — loose integration, class constructors,
     expect(new YearMonth('112026', { format: 'MMYYYY' }).toString()).toBe('2026-11');
     expect(new MonthDay('2411', { format: 'DDMM' }).toString()).toBe('11-24');
 
-    expect(() => date(null, { format: 'DDMMYYYY' })).toThrowError(
-      expect.objectContaining({ name: 'TypeError', code: 'missingDate' }),
-    );
-    expect(() => date(24112026, { format: 'DDMMYYYY' })).toThrowError(
-      expect.objectContaining({ name: 'TypeError', code: 'invalidDate' }),
-    );
+    expect(() => date(null, { format: 'DDMMYYYY' })).toThrowError(typeErrorCode('missingDate'));
+    expect(() => date(20261124, { format: 'YYYYMMDD' })).toThrowError(typeErrorCode('invalidDate'));
+    expect(() => datetime(20261124, { format: 'YYYYMMDD' })).toThrowError(typeErrorCode('invalidDateTime'));
   });
 
   it('invalidates cached weekday patterns when configure({ weekdayNames }) changes', () => {

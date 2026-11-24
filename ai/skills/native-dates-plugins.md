@@ -1,6 +1,6 @@
 ---
 name: native-dates-plugins
-description: "Companion guide for @native-dates/plugins (zones, loose, parse, legacy-date), @native-dates/polyfill, and authoring custom native-dates prototype plugins. Use whenever code parses fixed format masks ('24112026', '24/Nov/2026:12:40:01 -0500', '2026-W48-2', '2026-328', { format }), parses localized, non-ISO, or slash/dot dates and times ('06/11/2026', '17 octobre 2026', '晚上9:10', '14.30', non-ASCII digits, { loose: true, dayFirst }), resolves city names ('Berlin', 'Beijing', 'Mumbai') or locale-aware timezone abbreviations ('CST', 'IST', 'EST', 'PT', zoneAliases), shims legacy Date.prototype getters (getFullYear, getMonth, getDay), polyfills Temporal on Safari, older browsers, or Node <26, or extends native-dates class prototypes."
+description: "Companion guide for @native-dates/plugins (zones, loose, parse, legacy-date), @native-dates/polyfill, and authoring custom native-dates prototype plugins. Use whenever code parses fixed format patterns ('24112026', '24/Nov/2026:12:40:01 -0500', '2026-W48-2', '2026-328', { format }), parses localized, non-ISO, or slash/dot dates and times ('06/11/2026', '17 octobre 2026', '晚上9:10', '14.30', non-ASCII digits, { loose: true, dayFirst }), resolves city names ('Berlin', 'Beijing', 'Mumbai') or locale-aware timezone abbreviations ('CST', 'IST', 'EST', 'PT', zoneAliases), shims legacy Date.prototype getters (getFullYear, getMonth, getDay), polyfills Temporal on Safari, older browsers, or Node <26, or extends native-dates class prototypes."
 metadata:
   title: Plugins, Format Parsing, Loose Parsing, Zone Aliases, and Polyfill for native-dates
   keywords: "@native-dates/plugins, @native-dates/polyfill, temporal-polyfill, zones, loose, parse, format, legacy-date, dayFirst, zoneAliases, timezones, getFullYear, getTimezoneOffset, sideEffects, missingPlugin"
@@ -8,7 +8,7 @@ metadata:
   type: skill
 ---
 
-# Plugins, Loose Parsing, Zone Aliases, and Polyfill for native-dates
+# Plugins, Format Parsing, Loose Parsing, Zone Aliases, and Polyfill for native-dates
 
 > **Skill:** `native-dates-plugins`
 > **Purpose:** Guide to `@native-dates/plugins/{zones,loose,parse,legacy-date}`, `@native-dates/polyfill`, and custom prototype plugins
@@ -113,11 +113,11 @@ Every factory tries its strict core parser first (`'2026/11/06'`, `'2026年11月
 
 ## @native-dates/plugins/parse
 
-Adds deterministic `{ format }` mask parsing across `date()`, `datetime()`, `time()`, `yearMonth()`, `monthYear()`, `monthDay()`, `dayMonth()`, `dateRange()`, `datetimeRange()`, `timeRange()`, and their class constructors.
+Adds deterministic `{ format }` pattern parsing across `date()`, `datetime()`, `time()`, `yearMonth()`, `monthYear()`, `monthDay()`, `dayMonth()`, `dateRange()`, `datetimeRange()`, `timeRange()`, and their class constructors.
 
-- **Token vocabulary:** Reuses `format()` tokens (`YYYY`, `YY` with 1970–2069 pivot, `M`/`MM`/`MMM`/`MMMM`, `D`/`DD`/`Do`, `DDD`/`DDDD`, `W`/`WW`, `E`/`d`/`dd`/`ddd`/`dddd`, `H`/`HH`/`h`/`hh`, `m`/`mm`, `s`/`ss`, `S`/`SS`/`SSS`, `A`/`a`, `Z`/`ZZ`, `z`/`zz`, `X`/`x`, `[literal]`) and named patterns from `configure({ formats })`.
-- **Strict validation:** Fixed-width tokens enforce exact digit counts, literal characters are case-sensitive, impossible dates (`'30022026'`), mismatched weekdays (`'Mon 2026-11-24'`), and conflicting duplicate tokens throw `invalid*`. Bad or incomplete patterns throw `unknownFormat`, and tokens not valid on the target noun (e.g. `HH` on `date()`) throw `unsupportedToken`.
-- **Composable with `loose` and `zones`:** Combining `{ format, loose: true }` (with `@native-dates/plugins/loose` loaded) returns `null` on mismatched input data while still throwing on bad format masks or unsupported tokens. With `@native-dates/plugins/zones`, `z`/`zz` resolves cities and regional abbreviations (`'JST'`, `'PT'`) via `zoneId()`.
+- **Token vocabulary:** Reuses core tokens (`YYYY` reading the ISO week-year alongside `W`/`WW`, `YY` with 1969–2068 pivot, `M`/`MM`/`MMM`/`MMMM`, `D`/`DD`/`Do`, `DDD`/`DDDD`, `W`/`WW`, `E`/`d`/`dd`/`ddd`/`dddd`, `H`/`HH`/`h`/`hh`, `m`/`mm`, `s`/`ss`, `S`/`SS`/`SSS`, `A`/`a`, `Z`/`ZZ`, `z`/`zz`, `X`/`x`, `[literal]`) and named token-pattern strings from `configure({ formats })` (`Intl` options objects throw `unknownFormat`).
+- **Strict validation:** Fixed-width tokens enforce exact digit counts, literal characters are case-sensitive, impossible dates (`'30022026'`), mismatched weekdays (`'Mon 2026-11-24'`), numbers (`20261124`), and conflicting duplicate tokens throw `invalid*`. Already-parsed date/time instances (`CalendarDate`, `DateTime`, `Time`, `YearMonth`, `MonthDay`, `Date`, `Temporal.*`) pass through after the format pattern is validated. Bad or incomplete patterns throw `unknownFormat`, and tokens not valid on the target noun (e.g. `HH` on `date()`) throw `unsupportedToken`.
+- **Composable with `loose` and `zones`:** Combining `{ format, loose: true }` (with `@native-dates/plugins/loose` loaded) returns `null` on mismatched input data or numbers while still throwing on bad format patterns or unsupported tokens. Inline `z`/`zz` resolves IANA IDs and, with `@native-dates/plugins/zones`, city names and regional abbreviations (`'JST'`, `'PT'`), rather than arbitrary `Intl` offsets like `'GMT+2'`.
 
 ```js
 import '@native-dates/plugins/parse';

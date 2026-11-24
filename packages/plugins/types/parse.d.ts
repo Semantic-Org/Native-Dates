@@ -12,7 +12,7 @@ import type {
 type ParseKind = 'datetime' | 'date' | 'time' | 'yearMonth' | 'monthDay';
 
 /**
- * Parses a string strictly against a token format mask (`'DDMMYYYY'`, `'DD/MMM/YYYY:HH:mm:ss ZZ'`,
+ * Parses a string strictly against a token format pattern (`'DDMMYYYY'`, `'DD/MMM/YYYY:HH:mm:ss ZZ'`,
  * `'YYYY-[W]WW-E'`, `'YYYY-DDDD'`) into the underlying Temporal value for `kind`.
  * @internal
  */
@@ -30,10 +30,11 @@ export function parseFormatted(
 declare module 'native-dates' {
   interface ReadOptions {
     /**
-     * Strictly parse string input against a token format mask (such as `'DDMMYYYY'`,
+     * Strictly parse string input against a token format pattern (such as `'DDMMYYYY'`,
      * `'DD/MMM/YYYY:HH:mm:ss ZZ'`, `'YYYY-[W]WW-E'`, or `'YYYY-DDDD'`) or a named pattern
-     * registered in `configure({ formats })`. Uses the same token grammar as `format()`,
-     * rejecting non-matching text, impossible calendar dates, and mismatched weekdays.
+     * registered in `configure({ formats })`. Passes already-parsed date and time instances
+     * through after validating the pattern, while rejecting non-matching text, numbers,
+     * impossible calendar dates, and mismatched weekdays.
      *
      * @example
      * ```ts

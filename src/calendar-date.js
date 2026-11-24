@@ -29,6 +29,7 @@ import {
   isInstant,
   isPlainDate,
   isPlainDateTime,
+  isPlainRead,
   isUnzoned,
   isZonedDateTime,
   localeOf,
@@ -75,8 +76,7 @@ export class CalendarDate {
     const settings = zoneOptions(isNumber(monthOrOptions) ? undefined : monthOrOptions);
     this.#locale = localeOf(settings, input);
     // a Temporal value or '[u-ca=persian]' string in another calendar names the same day, read here as ISO
-    const read = isPlainDate(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
-        && settings.format === undefined
+    const read = isPlainDate(input) && isPlainRead(settings)
       ? input
       : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings);
     const plain = read.calendarId === 'iso8601' ? read : read.withCalendar('iso8601');
