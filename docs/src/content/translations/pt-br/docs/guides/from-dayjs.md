@@ -1,5 +1,5 @@
 ---
-source: "450f88efed26"
+source: "3f7711941af9"
 title: Migrando do Day.js
 lede: Substitua objetos dayjs() e cadeias de plugins por tipos dedicados e fusos horários no núcleo.
 ---
@@ -111,4 +111,4 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Padrões de tokens](/guides/formatting/#token-patterns) no núcleo |
 | `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Intervalos](/api/ranges/) com `to()`, `for()` e `overlaps()` |
 | `d.fromNow()`, `d.from(other)` | `d.fromNow()`, `d.from(other)` | No núcleo, sem plugin `relativeTime` |
-| `customParseFormat` | `{ loose: true }` | Fornecido por [`@native-dates/plugins/loose`](/plugins/loose/) |
+| `customParseFormat` | `{ format }` ou `{ loose: true }` | Padrões fixos via [`@native-dates/plugins/parse`](/plugins/parse/), entradas livres via [`@native-dates/plugins/loose`](/plugins/loose/) |

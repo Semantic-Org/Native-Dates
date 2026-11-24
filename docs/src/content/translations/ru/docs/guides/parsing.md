@@ -1,5 +1,5 @@
 ---
-source: c532ba117dba
+source: 326d94af83a9
 title: Разбор
 lede: Разбирайте строки ISO, длительности, диапазоны и произвольный пользовательский ввод без скрытых догадок.
 ---
@@ -154,4 +154,14 @@ import { duration } from 'native-dates';
 
 date('not a date', { loose: true }); // null
 duration('soon', { loose: true }); // null
+```
+
+Если входные данные приходят в известном фиксированном формате вне ISO — например, из выгрузок CSV (`'24112026'`), серверных логов либо в виде недельных и порядковых дат — импортируйте [`@native-dates/plugins/parse`](/plugins/parse/) и передайте `{ format }` для строгого сопоставления по токенам вместо эвристического разбора.
+
+```js
+import '@native-dates/plugins/parse';
+import { date, datetime } from 'native-dates';
+
+date('24112026', { format: 'DDMMYYYY' }); // 2026-11-24
+datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ' });
 ```

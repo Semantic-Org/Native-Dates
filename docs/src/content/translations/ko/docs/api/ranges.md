@@ -1,5 +1,5 @@
 ---
-source: 556537c8ff45
+source: 9606dd7fa967
 title: 범위
 lede: 포함 여부, 겹침 판별, 단위별 순회를 지원하는 두 날짜·시점·시각 사이의 구간.
 ---
@@ -22,6 +22,8 @@ new DateRange(interval, options?)
 
 두 [달력 날짜](/api/calendar-date/) 사이를 나타내며 양 끝 날짜를 모두 포함합니다. 종료 날짜가 시작 날짜보다 이르면 `RangeError`를 던집니다.
 
+`DateRange`는 `for...of` 문이나 전개 구문으로 시작일부터 종료일까지의 달력 날짜를 하루씩 지연 순회할 수 있습니다.
+
 ```js title="ranges.js"
 import { dateRange } from 'native-dates';
 
@@ -30,6 +32,10 @@ const week = dateRange('2026-09-01', '7 days');
 
 trip.duration.days; // 7
 week.toString(); // '2026-09-01/2026-09-07'
+for (const day of trip) {
+  day.toString(); // '2026-09-01', '2026-09-02', ...
+}
+[...dateRange('2026-09-01', '2026-09-03')].map(String); // ['2026-09-01', '2026-09-02', '2026-09-03']
 ```
 :::
 
@@ -319,6 +325,8 @@ range.every(count, unit): Point[]
 ```
 
 `start`에서 양수 단위나 기간 간격으로 나아가며 범위 안에 속하는 모든 지점을 반환합니다. 직전 결과에 덧셈을 누적하지 않고 시작 지점에서 배수만큼 계산하므로, 1월 31일부터 월 단위로 순회하면 각 달의 말일에 정확히 맞춰집니다.
+
+배열을 할당하지 않고 [`DateRange`](#daterange)를 하루씩 지연 순회하려면 `for...of` 문이나 전개 구문을 직접 사용하세요.
 
 **매개변수**
 

@@ -1,5 +1,5 @@
 ---
-source: 2716034cf571
+source: fb90df20f99e
 title: Formatage
 lede: Formatez des dates, des heures du jour, des instants et des durées avec des préréglages localisés, des motifs de jetons ou des expressions relatives.
 ---
@@ -118,7 +118,7 @@ yearMonth('2026-11').format('MMM YYYY', 'en-US'); // 'Nov 2026'
 monthDay('11-16').format('MMMM Do', 'en-US'); // 'November 16th'
 ```
 
-Les noms de mois et de jours dans un motif de jetons proviennent d’`Intl` pour la locale active. Les chiffres et les années restent au format occidental ISO afin que des motifs comme `'YYYY-MM-DD'` restent exploitables partout.
+Les noms de mois et de jours dans un motif de jetons proviennent d’`Intl` pour la locale active. Les chiffres et les années restent au format occidental ISO afin que des motifs comme `'YYYY-MM-DD'` restent exploitables partout. La casse des jetons suit celle de Moment et Day.js (`YYYY` et `DD` sont en majuscules, contrairement aux minuscules `yyyy` et `dd` de LDML et date-fns ; ici, `dd` désigne le jour de la semaine sur deux lettres).
 
 :::details[Tous les jetons de formatage]
 | Jeton | Exemple | Sortie |

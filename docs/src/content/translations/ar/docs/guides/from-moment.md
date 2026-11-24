@@ -1,5 +1,5 @@
 ---
-source: 5365132bf9e2
+source: f7719b9dc227
 title: الانتقال من Moment
 lede: انتقل من Moment وmoment-timezone إلى كائنات غير قابلة للتعديل بأنماط رموز مدمجة ودون حزم بيانات مناطق زمنية.
 ---
@@ -96,7 +96,7 @@ quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [أنماط الرموز](/guides/formatting/#token-patterns) |
 | `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [النطاقات](/api/ranges/) مع `to()` و`for()` و`overlaps()` |
 | `m.fromNow()`، `m.from(other)` | `dt.fromNow()`، `dt.from(other)` | [عبارات الوقت النسبي](/guides/formatting/#relative-phrases) |
-| تحليل السلاسل غير المتوافقة مع ISO | `{ loose: true }` | حمّل [`@native-dates/plugins/loose`](/plugins/loose/) لتحليل السلاسل الموطّنة وغير الرسمية |
+| تحليل السلاسل غير المتوافقة مع ISO | `{ format }` أو `{ loose: true }` | حمّل [`@native-dates/plugins/parse`](/plugins/parse/) لأنماط التنسيق الثابتة، أو [`@native-dates/plugins/loose`](/plugins/loose/) للمدخلات الموطّنة وغير الرسمية |
 
 ## الانتقال التدريجي
 

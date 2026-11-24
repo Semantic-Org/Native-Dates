@@ -1,5 +1,5 @@
 ---
-source: 91f647c820ea
+source: cd25f69b961f
 title: 오류
 lede: 유효하지 않은 입력이나 지원하지 않는 연산은 기계가 판독할 수 있는 오류 코드를 담은 표준 Error를 던집니다.
 ---
@@ -82,7 +82,8 @@ duration('whenever', { loose: true }); // null
 | `unsupportedCalendar` | `yearMonth()`, `monthDay()`, `YearMonth`, `MonthDay` | 입력이 ISO 역법이 아닌 `Temporal.PlainYearMonth` 또는 `PlainMonthDay`인 경우. |
 | `invalidPoint` | `compare()`, `earliest()`, `latest()` | 값이 `DateTime`, `CalendarDate`, `Time`, `YearMonth`, `Date`, 유닉스 에포크 타임스탬프, Temporal 시점·날짜, 파싱 가능한 문자열 중 어느 것도 아닌 경우. |
 | `conflictingKinds` | `compare()`, `earliest()`, `latest()` | `CalendarDate`와 `DateTime`처럼 서로 다른 종류의 값을 비교한 경우. |
-| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange` | 한 종류의 범위를 다른 종류의 범위 클래스 생성자나 팩토리 함수에 전달한 경우. |
+| `invalidRange` | `mergeRanges()` | [`@native-dates/plugins/ranges`](/plugins/ranges/)가 로드된 상태에서 이터러블이 아닌 값이나 범위 인스턴스가 아닌 항목을 전달한 경우. |
+| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange`, `subtract()`, `union()`, `mergeRanges()` | 한 종류의 범위를 다른 종류의 범위 클래스 생성자, 팩토리 함수 또는 집합 연산에 전달한 경우. |
 
 ## RangeError 코드
 
@@ -142,11 +143,13 @@ duration('whenever', { loose: true }); // null
 | `invalidRange` | `DateRange`, `DateTimeRange`, `to()` | 범위의 `end`가 `start`보다 앞선 경우. |
 | `invalidStep` | `every()`, `split()` | `every()`나 `split()`에 전달한 간격 기간이 0이거나 음수인 경우. |
 | `unsupportedIntersection` | `TimeRange.intersection()` | 자정을 걸치는 두 시각 범위가 두 개의 분리된 구간에서 겹치는 경우. |
+| `unsupportedUnion` | `TimeRange.union()`, `mergeRanges()` | 시각 범위의 합이 24시간 전체를 덮어 단일 `TimeRange`로 표현할 수 없는 경우. |
 | `unsupportedZone` | `TimeRange.in()` | 시간대에 배치할 달력 날짜가 없는 `TimeRange`에서 `in()`을 호출한 경우. |
 
 ### 플러그인
 
 | 코드 | 발생 위치 | 원인 |
 |---|---|---|
-| `missingPlugin` | 팩토리 함수, `configure()` | 해당 플러그인을 가져오기 전에 `loose`, `dayFirst` 또는 `zoneAliases`를 사용한 경우. |
+| `missingPlugin` | 팩토리 함수, `configure()` | 해당 플러그인을 가져오기 전에 `loose`, `dayFirst`, `format` 또는 `zoneAliases`를 사용한 경우. |
+| `missingTemporal` | 팩토리 함수, 클래스 생성자, `configure({ zone })` | `globalThis.Temporal`이 없고 `@native-dates/polyfill`도 로드되지 않은 경우 던지는 개발 모드 전용 안내 오류(프로덕션 빌드에서는 이 검사가 제거되어 런타임 기본 `ReferenceError`를 던집니다). |
 | `immutable` | `DateTime` 레거시 세터 | [`@native-dates/plugins/legacy-date`](/plugins/legacy-date/)가 로드된 상태에서 `setHours()`처럼 인스턴스를 변경하는 `Date` 세터를 호출한 경우. |

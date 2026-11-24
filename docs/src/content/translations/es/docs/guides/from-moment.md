@@ -1,5 +1,5 @@
 ---
-source: "5365132bf9e2"
+source: "f7719b9dc227"
 title: Migrar desde Moment
 lede: Deja atrás Moment y moment-timezone y pasa a valores inmutables con tokens integrados y sin tablas de zonas horarias en el paquete.
 ---
@@ -96,7 +96,7 @@ quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Patrones de tokens](/guides/formatting/#token-patterns) |
 | `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Rangos](/api/ranges/) con `to()`, `for()` y `overlaps()` |
 | `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [Expresiones relativas](/guides/formatting/#relative-phrases) |
-| Interpretación de cadenas no ISO | `{ loose: true }` | Carga [`@native-dates/plugins/loose`](/plugins/loose/) para interpretar cadenas informales y adaptadas al locale |
+| Interpretación de cadenas no ISO | `{ format }` o `{ loose: true }` | Carga [`@native-dates/plugins/parse`](/plugins/parse/) para patrones de formato fijos, o [`@native-dates/plugins/loose`](/plugins/loose/) para entradas informales y adaptadas al locale |
 
 ## Migrar de forma gradual
 

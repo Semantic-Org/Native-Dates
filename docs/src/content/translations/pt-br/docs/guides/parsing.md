@@ -1,5 +1,5 @@
 ---
-source: "c532ba117dba"
+source: "326d94af83a9"
 title: Interpretação
 lede: Interprete strings ISO, durações, intervalos e entradas livres de usuários sem suposições silenciosas.
 ---
@@ -154,4 +154,14 @@ import { duration } from 'native-dates';
 
 date('not a date', { loose: true }); // null
 duration('soon', { loose: true }); // null
+```
+
+Quando as entradas seguem um layout conhecido fora do padrão ISO, como exportações CSV (`'24112026'`), logs de servidor ou datas por semana e ordinais, importe [`@native-dates/plugins/parse`](/plugins/parse/) e passe `{ format }` para fazer correspondência determinística por tokens em vez de interpretação heurística.
+
+```js
+import '@native-dates/plugins/parse';
+import { date, datetime } from 'native-dates';
+
+date('24112026', { format: 'DDMMYYYY' }); // 2026-11-24
+datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ' });
 ```

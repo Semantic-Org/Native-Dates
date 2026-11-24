@@ -1,5 +1,5 @@
 ---
-source: "91f647c820ea"
+source: "cd25f69b961f"
 title: Erros
 lede: Toda entrada inválida ou operação sem suporte lança um Error padrão com um código legível por máquina.
 ---
@@ -82,7 +82,8 @@ Erros `TypeError` indicam que uma entrada obrigatória está ausente, tem o tipo
 | `unsupportedCalendar` | `yearMonth()`, `monthDay()`, `YearMonth`, `MonthDay` | A entrada é um `Temporal.PlainYearMonth` ou `PlainMonthDay` com calendário diferente do ISO. |
 | `invalidPoint` | `compare()`, `earliest()`, `latest()` | O valor não é `DateTime`, `CalendarDate`, `Time`, `YearMonth`, `Date`, timestamp Unix, ponto Temporal nem string interpretável. |
 | `conflictingKinds` | `compare()`, `earliest()`, `latest()` | Comparação entre valores de tipos diferentes, como `CalendarDate` com `DateTime`. |
-| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange` | Passagem de um intervalo de um tipo para o construtor ou fábrica de outro tipo de intervalo. |
+| `invalidRange` | `mergeRanges()` | Passagem de um valor não iterável ou de um item que não é instância de intervalo quando [`@native-dates/plugins/ranges`](/plugins/ranges/) está carregado. |
+| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange`, `subtract()`, `union()`, `mergeRanges()` | Passagem de um intervalo de um tipo para o construtor, fábrica ou operação de conjunto de outro tipo de intervalo. |
 
 ## Códigos de RangeError
 
@@ -142,11 +143,13 @@ Erros `RangeError` indicam que um valor não pode ser interpretado, está fora d
 | `invalidRange` | `DateRange`, `DateTimeRange`, `to()` | O `end` do intervalo é anterior ao `start`. |
 | `invalidStep` | `every()`, `split()` | A duração de passo passada para `every()` ou `split()` é zero ou negativa. |
 | `unsupportedIntersection` | `TimeRange.intersection()` | Dois intervalos noturnos de horário se sobrepõem em duas janelas separadas ao cruzar a meia-noite. |
+| `unsupportedUnion` | `TimeRange.union()`, `mergeRanges()` | Os intervalos de horário cobrem todas as 24 horas, o que um único `TimeRange` não consegue representar. |
 | `unsupportedZone` | `TimeRange.in()` | Chamada de `in()` em um `TimeRange`, que não tem data de calendário para situar em um fuso horário. |
 
 ### Plugins
 
 | Código | Lançado por | Causa |
 |---|---|---|
-| `missingPlugin` | Fábricas, `configure()` | Uso de `loose`, `dayFirst` ou `zoneAliases` antes de importar o plugin correspondente. |
+| `missingPlugin` | Fábricas, `configure()` | Uso de `loose`, `dayFirst`, `format` ou `zoneAliases` antes de importar o plugin correspondente. |
+| `missingTemporal` | Fábricas, construtores, `configure({ zone })` | Dica apenas em desenvolvimento quando `globalThis.Temporal` está ausente e `@native-dates/polyfill` não foi carregado (builds de produção removem essa verificação e lançam o `ReferenceError` nativo do runtime). |
 | `immutable` | Setters legados de `DateTime` | Chamada de um setter de `Date` que altera a instância, como `setHours()`, quando [`@native-dates/plugins/legacy-date`](/plugins/legacy-date/) está carregado. |

@@ -1,5 +1,5 @@
 ---
-source: f19636049929
+source: ed93e959dec0
 title: Temporal과 함께 쓰기
 lede: Native Dates가 JavaScript Temporal API와 어떻게 대응되며 원본 Temporal 값과 상호 운용되는지 안내합니다.
 ---
@@ -79,4 +79,4 @@ japanese.eraYear; // 8
 
 최신 Chrome, Edge, Firefox, Node 26+, Deno, Bun은 `Temporal`을 기본 내장하므로 코어에는 폴리필 코드가 전혀 포함되어 있지 않습니다.
 
-Safari, 구버전 브라우저, Node 24–25 환경에서는 앱 시작 시 `@native-dates/polyfill`과 `temporal-polyfill`을 함께 불러오세요. 자세한 설정과 동기 로딩 방식은 [Safari 및 구버전 Node 지원](/guides/installation/#supporting-safari-and-older-node)을 참고하세요.
+Safari, 구버전 브라우저, Node 22–25 환경에서는 앱 시작 시 `@native-dates/polyfill`과 `temporal-polyfill`을 함께 불러오세요(Node 22–23에서는 `Intl.DurationFormat` 폴백도 함께 제공합니다). 자세한 설정과 동기 로딩 방식은 [Safari 및 구버전 Node 지원](/guides/installation/#supporting-safari-and-older-node)을 참고하세요.

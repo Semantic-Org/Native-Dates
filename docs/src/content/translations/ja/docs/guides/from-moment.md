@@ -1,5 +1,5 @@
 ---
-source: "5365132bf9e2"
+source: "f7719b9dc227"
 title: Moment からの移行
 lede: Moment と moment-timezone から、トークン対応かつ tzdata 同梱不要のイミュータブルな値へ移行します。
 ---
@@ -96,7 +96,7 @@ quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [トークンパターン](/guides/formatting/#token-patterns) |
 | `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | `to()`・`for()`・`overlaps()` を備えた[範囲](/api/ranges/) |
 | `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [相対表現](/guides/formatting/#relative-phrases) |
-| 非 ISO 文字列の解析 | `{ loose: true }` | ロケール対応や口語的な文字列解析は [`@native-dates/plugins/loose`](/plugins/loose/) を読み込み |
+| 非 ISO 文字列の解析 | `{ format }` または `{ loose: true }` | 固定のフォーマットパターンは [`@native-dates/plugins/parse`](/plugins/parse/)、ロケール対応や口語的な入力は [`@native-dates/plugins/loose`](/plugins/loose/) を読み込み |
 
 ## 段階的な移行
 

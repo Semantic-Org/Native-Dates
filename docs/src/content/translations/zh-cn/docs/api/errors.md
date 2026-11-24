@@ -1,5 +1,5 @@
 ---
-source: "91f647c820ea"
+source: "cd25f69b961f"
 title: 错误
 lede: 所有无效输入或不支持的操作都会抛出带有机器可读错误码的标准 Error。
 ---
@@ -82,7 +82,8 @@ duration('whenever', { loose: true }); // null
 | `unsupportedCalendar` | `yearMonth()`、`monthDay()`、`YearMonth`、`MonthDay` | 输入是采用非 ISO 历法的 `Temporal.PlainYearMonth` 或 `PlainMonthDay`。 |
 | `invalidPoint` | `compare()`、`earliest()`、`latest()` | 值不是 `DateTime`、`CalendarDate`、`Time`、`YearMonth`、`Date`、Unix 时间戳、Temporal 时间点或可解析的字符串。 |
 | `conflictingKinds` | `compare()`、`earliest()`、`latest()` | 比较不同类型的值，例如将 `CalendarDate` 与 `DateTime` 进行比较。 |
-| `conflictingRanges` | `DateRange`、`DateTimeRange`、`TimeRange` | 将一种范围传给另一种范围的构造函数或工厂函数。 |
+| `invalidRange` | `mergeRanges()` | 加载 [`@native-dates/plugins/ranges`](/plugins/ranges/) 后，传入了不可迭代的值或非范围实例的条目。 |
+| `conflictingRanges` | `DateRange`、`DateTimeRange`、`TimeRange`、`subtract()`、`union()`、`mergeRanges()` | 将一种范围传给另一种范围的构造函数、工厂函数或集合运算。 |
 
 ## RangeError 错误码
 
@@ -142,11 +143,13 @@ duration('whenever', { loose: true }); // null
 | `invalidRange` | `DateRange`、`DateTimeRange`、`to()` | 范围的 `end` 早于 `start`。 |
 | `invalidStep` | `every()`、`split()` | 传给 `every()` 或 `split()` 的步长时长为零或负数。 |
 | `unsupportedIntersection` | `TimeRange.intersection()` | 两个跨午夜的时钟时间范围在午夜两侧产生两个分离的重叠区间。 |
+| `unsupportedUnion` | `TimeRange.union()`、`mergeRanges()` | 时钟时间范围覆盖了全部 24 小时，无法用单个 `TimeRange` 表示。 |
 | `unsupportedZone` | `TimeRange.in()` | 对 `TimeRange` 调用 `in()`（时钟时间范围不含日历日期，无法放入具体时区）。 |
 
 ### 插件
 
 | 错误码 | 抛出位置 | 原因 |
 |---|---|---|
-| `missingPlugin` | 工厂函数、`configure()` | 在导入对应插件前使用了 `loose`、`dayFirst` 或 `zoneAliases`。 |
+| `missingPlugin` | 工厂函数、`configure()` | 在导入对应插件前使用了 `loose`、`dayFirst`、`format` 或 `zoneAliases`。 |
+| `missingTemporal` | 工厂函数、构造函数、`configure({ zone })` | 仅在开发环境抛出的提示：缺少 `globalThis.Temporal` 且尚未加载 `@native-dates/polyfill`（生产构建会移除此检查，改由运行时直接抛出原生 `ReferenceError`）。 |
 | `immutable` | `DateTime` 旧版 `Date` setter | 加载 [`@native-dates/plugins/legacy-date`](/plugins/legacy-date/) 后调用了会修改原值的 `Date` setter（如 `setHours()`）。 |

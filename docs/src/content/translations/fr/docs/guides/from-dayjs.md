@@ -1,5 +1,5 @@
 ---
-source: 450f88efed26
+source: 3f7711941af9
 title: Migrer depuis Day.js
 lede: Remplacez les enveloppes dayjs() et les chaînes de plugins par des types dédiés et des fuseaux horaires intégrés.
 ---
@@ -111,4 +111,4 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Motifs de jetons](/guides/formatting/#token-patterns) dans le noyau |
 | `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Plages](/api/ranges/) avec `to()`, `for()` et `overlaps()` |
 | `d.fromNow()`, `d.from(other)` | `d.fromNow()`, `d.from(other)` | Intégré au noyau, sans plugin `relativeTime` |
-| `customParseFormat` | `{ loose: true }` | Fourni par [`@native-dates/plugins/loose`](/plugins/loose/) |
+| `customParseFormat` | `{ format }` ou `{ loose: true }` | Motifs fixes via [`@native-dates/plugins/parse`](/plugins/parse/), saisie libre via [`@native-dates/plugins/loose`](/plugins/loose/) |

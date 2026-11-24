@@ -1,5 +1,5 @@
 ---
-source: f19636049929
+source: ed93e959dec0
 title: العمل مع Temporal
 lede: كيف ترتبط Native Dates بواجهة Temporal في JavaScript وتتكامل مع كائناتها الأصلية.
 ---
@@ -79,4 +79,4 @@ japanese.eraYear; // 8
 
 توفّر الإصدارات الحالية من Chrome وEdge وFirefox وNode 26 وما بعده وDeno وBun واجهة `Temporal` أصليًا، لذا لا تتضمّن النواة أي شيفرة لحزمة توافق (polyfill).
 
-أما في Safari أو المتصفحات الأقدم أو Node 24 و25، فحمّل `@native-dates/polyfill` مع `temporal-polyfill` عند بدء التشغيل. راجع [دعم Safari وإصدارات Node الأقدم](/guides/installation/#supporting-safari-and-older-node) للإعداد وخيارات التحميل المتزامن.
+أما في Safari أو المتصفحات الأقدم أو إصدارات <bdi>Node 22–25</bdi>، فحمّل `@native-dates/polyfill` مع `temporal-polyfill` عند بدء التشغيل (إذ توفّر أيضًا بديلًا لـ `Intl.DurationFormat` على <bdi>Node 22–23</bdi>). راجع [دعم Safari وإصدارات Node الأقدم](/guides/installation/#supporting-safari-and-older-node) للإعداد وخيارات التحميل المتزامن.

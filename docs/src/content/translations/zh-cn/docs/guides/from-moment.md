@@ -1,5 +1,5 @@
 ---
-source: "5365132bf9e2"
+source: "f7719b9dc227"
 title: 从 Moment 迁移
 lede: 告别 Moment 与 moment-timezone，转向不可变值类型、内置占位符模板与零打包时区数据。
 ---
@@ -96,7 +96,7 @@ quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [占位符模板](/guides/formatting/#token-patterns) |
 | `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | 支持 `to()`、`for()` 和 `overlaps()` 的[范围](/api/ranges/) |
 | `m.fromNow()`、`m.from(other)` | `dt.fromNow()`、`dt.from(other)` | [相对时间短语](/guides/formatting/#relative-phrases) |
-| 非 ISO 字符串解析 | `{ loose: true }` | 加载 [`@native-dates/plugins/loose`](/plugins/loose/) 支持按区域和非规范文本解析 |
+| 非 ISO 字符串解析 | `{ format }` 或 `{ loose: true }` | 加载 [`@native-dates/plugins/parse`](/plugins/parse/) 解析固定格式模板，或加载 [`@native-dates/plugins/loose`](/plugins/loose/) 解析按区域与非规范文本 |
 
 ## 渐进式迁移
 

@@ -1,5 +1,5 @@
 ---
-source: 91f647c820ea
+source: cd25f69b961f
 title: Ошибки
 lede: Любой неверный ввод или неподдерживаемая операция выбрасывает стандартный объект Error с машиночитаемым кодом.
 ---
@@ -82,7 +82,8 @@ duration('whenever', { loose: true }); // null
 | `unsupportedCalendar` | `yearMonth()`, `monthDay()`, `YearMonth`, `MonthDay` | Передан `Temporal.PlainYearMonth` или `PlainMonthDay` с не-ISO календарём. |
 | `invalidPoint` | `compare()`, `earliest()`, `latest()` | Значение не относится к `DateTime`, `CalendarDate`, `Time`, `YearMonth`, `Date`, временным меткам эпохи Unix, точкам Temporal или разбираемым строкам. |
 | `conflictingKinds` | `compare()`, `earliest()`, `latest()` | Сравнение значений разных видов, например `CalendarDate` с `DateTime`. |
-| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange` | Передача диапазона одного вида в конструктор класса или фабричную функцию другого диапазона. |
+| `invalidRange` | `mergeRanges()` | Передача неитерируемого значения или элемента, не относящегося к диапазонам, при подключённом [`@native-dates/plugins/ranges`](/plugins/ranges/). |
+| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange`, `subtract()`, `union()`, `mergeRanges()` | Передача диапазона одного вида в конструктор класса, фабричную функцию или операцию над множествами для другого диапазона. |
 
 ## Коды RangeError
 
@@ -142,11 +143,13 @@ duration('whenever', { loose: true }); // null
 | `invalidRange` | `DateRange`, `DateTimeRange`, `to()` | Конечная граница `end` раньше начальной `start`. |
 | `invalidStep` | `every()`, `split()` | Длительность шага, переданная в `every()` или `split()`, равна нулю или отрицательна. |
 | `unsupportedIntersection` | `TimeRange.intersection()` | Два диапазона времени суток, переходящие через полночь, пересекаются в двух отдельных промежутках. |
+| `unsupportedUnion` | `TimeRange.union()`, `mergeRanges()` | Диапазоны времени суток покрывают все 24 часа, что нельзя представить одним `TimeRange`. |
 | `unsupportedZone` | `TimeRange.in()` | Вызов `in()` на `TimeRange`, у которого нет календарной даты для привязки к часовому поясу. |
 
 ### Плагины
 
 | Код | Источник | Причина |
 |---|---|---|
-| `missingPlugin` | Фабричные функции, `configure()` | Использование `loose`, `dayFirst` или `zoneAliases` до импорта соответствующего плагина. |
+| `missingPlugin` | Фабричные функции, `configure()` | Использование `loose`, `dayFirst`, `format` или `zoneAliases` до импорта соответствующего плагина. |
+| `missingTemporal` | Фабричные функции, конструкторы, `configure({ zone })` | Диагностическое пояснение только для режима разработки, если `globalThis.Temporal` отсутствует, а `@native-dates/polyfill` не подключён (в продакшн-сборке эта проверка вырезается, и среда выполнения выбрасывает нативный `ReferenceError`). |
 | `immutable` | Устаревшие сеттеры `DateTime` | Вызов мутирующего сеттера `Date` (например, `setHours()`) при подключённом [`@native-dates/plugins/legacy-date`](/plugins/legacy-date/). |

@@ -1,5 +1,5 @@
 ---
-source: "f1aec8a13183"
+source: "84e8bf9a4705"
 title: 安装
 lede: 一条命令即可安装 Native Dates，并按需为 Safari 和旧版 Node 启用 polyfill。
 ---
@@ -33,7 +33,7 @@ standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
 
 Native Dates 直接基于平台内置的 `Temporal` 和 `Intl` API 运行。最新版本的 Chrome、Edge、Firefox、Node 26+、Deno 和 Bun 均可开箱即用，无需额外依赖。
 
-如需兼容 Safari、旧版浏览器或 Node 24–25，请一并安装 polyfill 与 `temporal-polyfill`：
+如需兼容 Safari、旧版浏览器或 Node 22–25，请一并安装 polyfill 与 `temporal-polyfill`：
 
 ```bash
 npm i @native-dates/polyfill temporal-polyfill
@@ -49,12 +49,12 @@ const launch = today().plus(30, 'days');
 ```
 
 :::tip[现代浏览器零开销]
-原生支持 `Temporal` 的运行时会直接跳过下载 `temporal-polyfill`。
+原生支持 `Temporal` 与 `Intl.DurationFormat` 的运行时会直接跳过下载这两个 polyfill。
 :::
 
 :::details[旧版运行时兼容说明]
 - **同步加载：** 如果某个被导入的模块在顶层 `await` 完成前就会执行日期逻辑，请改为导入 `@native-dates/polyfill/sync`。
-- **在 Node 中格式化时长：** 服务端代码调用 [`Duration.format()`](/api/duration/#format) 依赖 `Intl.DurationFormat`，需要 Node 24+。浏览器端产物仍可在旧版 Node 中正常构建。
+- **在 Node 22–23 中格式化时长：** `@native-dates/polyfill` 内置了零依赖的 `Intl.DurationFormat` 回退实现，让 [`Duration.format()`](/api/duration/#format) 与 `Duration.text` 在 Node 22–23 上同样可用（现代浏览器与 Node 24+ 已原生内置，不会下载该回退代码）。
 :::
 
 接下来请阅读[自定义](/guides/customization/)，了解如何设置全局默认值与按需启用插件。

@@ -1,5 +1,5 @@
 ---
-source: f1aec8a13183
+source: 84e8bf9a4705
 title: التثبيت
 lede: أضف Native Dates بأمر واحد، مع حزمة توافق اختيارية لـ Safari وإصدارات Node الأقدم.
 ---
@@ -33,7 +33,7 @@ standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
 
 تعمل Native Dates مباشرةً على واجهتي `Temporal` و`Intl` المدمجتين في بيئة التشغيل. لا تحتاج الإصدارات الحالية من Chrome وEdge وFirefox و<bdi>Node 26+</bdi> وDeno وBun إلى أي حزمة إضافية.
 
-لدعم Safari أو المتصفحات الأقدم أو إصداري <bdi>Node 24–25</bdi>، ثبّت حزمة التوافق (polyfill) إلى جانب `temporal-polyfill`:
+لدعم Safari أو المتصفحات الأقدم أو إصدارات <bdi>Node 22–25</bdi>، ثبّت حزمة التوافق (polyfill) إلى جانب `temporal-polyfill`:
 
 ```bash
 npm i @native-dates/polyfill temporal-polyfill
@@ -49,12 +49,12 @@ const launch = today().plus(30, 'days');
 ```
 
 :::tip[بلا تكلفة على المتصفحات الحديثة]
-تتخطّى بيئات التشغيل الداعمة لـ `Temporal` أصليًا تنزيل `temporal-polyfill` بالكامل.
+تتخطّى بيئات التشغيل الداعمة لـ `Temporal` و`Intl.DurationFormat` أصليًا تنزيل أيٍّ من حزمتَي التوافق بالكامل.
 :::
 
 :::details[ملاحظات التوافق لبيئات التشغيل الأقدم]
 - **التحميل المتزامن:** إذا كانت إحدى الوحدات المستوردة تحسب تواريخ عند التحميل قبل اكتمال `await` في المستوى الأعلى، فاستورد `@native-dates/polyfill/sync` بدلًا من ذلك.
-- **تنسيق المدد الزمنية على Node:** تتطلب شيفرة الخادم التي تستدعي [`Duration.format()`](/api/duration/#format) إصدار <bdi>Node 24+</bdi> لدعم `Intl.DurationFormat`، بينما تُبنى حزم المتصفح بلا مشكلات على إصدارات Node الأقدم.
+- **تنسيق المدد الزمنية على <bdi>Node 22–23</bdi>:** تتضمّن حزمة `@native-dates/polyfill` بديلًا لـ `Intl.DurationFormat` بلا أي اعتماديات، فتعمل [`Duration.format()`](/api/duration/#format) و`Duration.text` على إصداري <bdi>Node 22–23</bdi> أيضًا (بينما توفره المتصفحات وإصدارات <bdi>Node 24+</bdi> أصليًا ولا تنزّله أبدًا).
 :::
 
 اقرأ تاليًا دليل [التخصيص](/guides/customization/) لضبط الإعدادات الافتراضية وتثبيت الإضافات الاختيارية.

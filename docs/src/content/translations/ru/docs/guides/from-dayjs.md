@@ -1,5 +1,5 @@
 ---
-source: 450f88efed26
+source: 3f7711941af9
 title: Переход с Day.js
 lede: Замените обёртки dayjs() и цепочки плагинов отдельными типами дат и встроенными часовыми поясами.
 ---
@@ -111,4 +111,4 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Шаблоны токенов](/guides/formatting/#token-patterns) в ядре |
 | `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Диапазоны](/api/ranges/) с методами `to()`, `for()` и `overlaps()` |
 | `d.fromNow()`, `d.from(other)` | `d.fromNow()`, `d.from(other)` | В ядре, плагин `relativeTime` не нужен |
-| `customParseFormat` | `{ loose: true }` | Добавляется плагином [`@native-dates/plugins/loose`](/plugins/loose/) |
+| `customParseFormat` | `{ format }` или `{ loose: true }` | Фиксированные шаблоны через [`@native-dates/plugins/parse`](/plugins/parse/), произвольный ввод через [`@native-dates/plugins/loose`](/plugins/loose/) |

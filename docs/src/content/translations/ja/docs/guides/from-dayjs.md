@@ -1,5 +1,5 @@
 ---
-source: "450f88efed26"
+source: "3f7711941af9"
 title: Day.js からの移行
 lede: dayjs() のラッパーやプラグインチェーンを、用途別の専用型と組み込みタイムゾーンへ置き換えます。
 ---
@@ -111,4 +111,4 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | コア標準の[トークンパターン](/guides/formatting/#token-patterns) |
 | `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | `to()`・`for()`・`overlaps()` を備えた[範囲](/api/ranges/) |
 | `d.fromNow()`, `d.from(other)` | `d.fromNow()`, `d.from(other)` | コア標準対応（`relativeTime` プラグイン不要） |
-| `customParseFormat` | `{ loose: true }` | [`@native-dates/plugins/loose`](/plugins/loose/) で提供 |
+| `customParseFormat` | `{ format }` または `{ loose: true }` | 固定パターンは [`@native-dates/plugins/parse`](/plugins/parse/)、自由形式の入力は [`@native-dates/plugins/loose`](/plugins/loose/) で対応 |

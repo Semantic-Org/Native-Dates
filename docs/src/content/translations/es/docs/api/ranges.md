@@ -1,5 +1,5 @@
 ---
-source: "556537c8ff45"
+source: "9606dd7fa967"
 title: Rangos
 lede: Intervalos entre dos fechas, instantes u horas del día, con comprobación de inclusión, solapamiento e iteración por pasos.
 ---
@@ -22,6 +22,8 @@ new DateRange(interval, options?)
 
 Abarca dos [fechas de calendario](/api/calendar-date/) e incluye ambos extremos. Pasar una fecha final anterior a la fecha inicial lanza un `RangeError`.
 
+Un `DateRange` se itera de forma diferida día a día con `for...of` o la sintaxis de propagación, produciendo cada fecha de calendario desde el inicio hasta el final.
+
 ```js title="ranges.js"
 import { dateRange } from 'native-dates';
 
@@ -30,6 +32,10 @@ const week = dateRange('2026-09-01', '7 days');
 
 trip.duration.days; // 7
 week.toString(); // '2026-09-01/2026-09-07'
+for (const day of trip) {
+  day.toString(); // '2026-09-01', '2026-09-02', ...
+}
+[...dateRange('2026-09-01', '2026-09-03')].map(String); // ['2026-09-01', '2026-09-02', '2026-09-03']
 ```
 :::
 
@@ -319,6 +325,8 @@ range.every(count, unit): Point[]
 ```
 
 Avanza desde `start` en incrementos positivos de una unidad o duración y devuelve todos los puntos que caen dentro del rango. Cada paso se calcula a partir del punto inicial en lugar de encadenar sumas sucesivas, de modo que avanzar por meses desde el 31 de enero cae en el último día de cada mes.
+
+Para recorrer un [`DateRange`](#daterange) de forma diferida día a día sin asignar un array en memoria, itéralo directamente con `for...of` o la sintaxis de propagación.
 
 **Parámetros**
 

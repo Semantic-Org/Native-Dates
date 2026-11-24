@@ -1,5 +1,5 @@
 ---
-source: 556537c8ff45
+source: 9606dd7fa967
 title: Plages
 lede: Des plages entre deux dates, deux instants ou deux heures du jour, avec inclusion, chevauchement et itération par pas.
 ---
@@ -22,6 +22,8 @@ new DateRange(interval, options?)
 
 S’étend entre deux [dates calendaires](/api/calendar-date/), bornes incluses. Passer une date de fin antérieure à la date de début lève une `RangeError`.
 
+Une `DateRange` se parcourt paresseusement jour par jour avec `for...of` ou la syntaxe de décomposition, en produisant chaque date calendaire du début à la fin.
+
 ```js title="ranges.js"
 import { dateRange } from 'native-dates';
 
@@ -30,6 +32,10 @@ const week = dateRange('2026-09-01', '7 days');
 
 trip.duration.days; // 7
 week.toString(); // '2026-09-01/2026-09-07'
+for (const day of trip) {
+  day.toString(); // '2026-09-01', '2026-09-02', ...
+}
+[...dateRange('2026-09-01', '2026-09-03')].map(String); // ['2026-09-01', '2026-09-02', '2026-09-03']
 ```
 :::
 
@@ -319,6 +325,8 @@ range.every(count, unit): Point[]
 ```
 
 Avance depuis `start` par pas positifs (unité ou durée) et renvoie tous les points compris dans la plage. Chaque pas est compté à partir du point de départ plutôt qu’en enchaînant des additions successives : ainsi, avancer de mois en mois depuis le 31 janvier retombe sur le dernier jour de chaque mois.
+
+Pour parcourir paresseusement une [`DateRange`](#daterange) jour après jour sans allouer de tableau, itérez directement dessus avec `for...of` ou la syntaxe de décomposition.
 
 **Paramètres**
 

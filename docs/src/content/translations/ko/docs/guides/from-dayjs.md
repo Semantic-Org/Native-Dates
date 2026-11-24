@@ -1,5 +1,5 @@
 ---
-source: 450f88efed26
+source: 3f7711941af9
 title: Day.js에서 전환하기
 lede: dayjs() 래퍼와 플러그인 체인을 전용 날짜 타입과 내장 시간대 기능으로 대체합니다.
 ---
@@ -111,4 +111,4 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | 코어에서 [토큰 패턴](/guides/formatting/#token-patterns) 지원 |
 | `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | `to()`, `for()`, `overlaps()`를 갖춘 [범위](/api/ranges/) 타입 |
 | `d.fromNow()`, `d.from(other)` | `d.fromNow()`, `d.from(other)` | 코어 기본 내장(`relativeTime` 플러그인 불필요) |
-| `customParseFormat` | `{ loose: true }` | [`@native-dates/plugins/loose`](/plugins/loose/) 플러그인으로 제공 |
+| `customParseFormat` | `{ format }` 또는 `{ loose: true }` | 고정 패턴은 [`@native-dates/plugins/parse`](/plugins/parse/), 자유 형식 입력은 [`@native-dates/plugins/loose`](/plugins/loose/) 사용 |

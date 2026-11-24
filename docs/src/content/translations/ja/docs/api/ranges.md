@@ -1,5 +1,5 @@
 ---
-source: "556537c8ff45"
+source: "9606dd7fa967"
 title: 範囲
 lede: 2つの日付・時点・時刻の間の範囲。包含判定、重複判定、反復処理に対応します。
 ---
@@ -22,6 +22,8 @@ new DateRange(interval, options?)
 
 2つの[カレンダー日付](/api/calendar-date/)の間を表し、両端の日付を含みます。開始日より前の終了日を渡すと `RangeError` をスローします。
 
+`DateRange` は `for...of` やスプレッド構文で1日ずつ遅延反復でき、開始日から終了日までの各カレンダー日付を順番に生成します。
+
 ```js title="ranges.js"
 import { dateRange } from 'native-dates';
 
@@ -30,6 +32,10 @@ const week = dateRange('2026-09-01', '7 days');
 
 trip.duration.days; // 7
 week.toString(); // '2026-09-01/2026-09-07'
+for (const day of trip) {
+  day.toString(); // '2026-09-01', '2026-09-02', ...
+}
+[...dateRange('2026-09-01', '2026-09-03')].map(String); // ['2026-09-01', '2026-09-02', '2026-09-03']
 ```
 :::
 
@@ -319,6 +325,8 @@ range.every(count, unit): Point[]
 ```
 
 `start` から正の単位または期間ごとに進め、範囲内に含まれるすべての点を配列で返します。加算を順に積み上げるのではなく常に始点から数えるため、1月31日から1か月刻みで進めると各月の最終日になります。
+
+配列を割り当てずに [`DateRange`](#daterange) を1日ずつ遅延反復したい場合は、`for...of` やスプレッド構文で直接イテレートしてください。
 
 **引数**
 

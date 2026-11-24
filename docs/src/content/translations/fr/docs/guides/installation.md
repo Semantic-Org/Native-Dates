@@ -1,5 +1,5 @@
 ---
-source: f1aec8a13183
+source: 84e8bf9a4705
 title: Installation
 lede: Ajoutez Native Dates en une commande, avec un polyfill optionnel pour Safari et les anciennes versions de Node.
 ---
@@ -33,7 +33,7 @@ standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
 
 Native Dates s’appuie directement sur les API natives `Temporal` et `Intl` de la plateforme. Les versions actuelles de Chrome, Edge, Firefox, Node 26+, Deno et Bun n’ont besoin de rien d’autre.
 
-Pour Safari, les navigateurs plus anciens ou Node 24–25, installez le polyfill avec `temporal-polyfill` :
+Pour Safari, les navigateurs plus anciens ou Node 22–25, installez le polyfill avec `temporal-polyfill` :
 
 ```bash
 npm i @native-dates/polyfill temporal-polyfill
@@ -49,12 +49,12 @@ const launch = today().plus(30, 'days');
 ```
 
 :::tip[Coût nul sur les navigateurs modernes]
-Les environnements dotés d’une implémentation native de `Temporal` ne téléchargent même pas `temporal-polyfill`.
+Les environnements dotés d’une implémentation native de `Temporal` et d’`Intl.DurationFormat` ne téléchargent aucun des deux polyfills.
 :::
 
 :::details[Notes de compatibilité pour les environnements plus anciens]
 - **Chargement synchrone :** si un module importé évalue des dates dès son chargement avant la résolution du `await` de haut niveau, importez plutôt `@native-dates/polyfill/sync`.
-- **Formatage des durées sous Node :** le code serveur appelant [`Duration.format()`](/api/duration/#format) requiert Node 24+ pour `Intl.DurationFormat`. Les bundles navigateur se compilent toujours sans problème sous des versions plus anciennes de Node.
+- **Formatage des durées sous Node 22–23 :** `@native-dates/polyfill` embarque une implémentation de repli d’`Intl.DurationFormat` sans dépendance afin que [`Duration.format()`](/api/duration/#format) et `Duration.text` fonctionnent aussi sous Node 22–23 (les navigateurs et Node 24+ l’incluent nativement et ne la téléchargent jamais).
 :::
 
 Poursuivez avec [Personnalisation](/guides/customization/) pour définir vos valeurs par défaut et ajouter des plugins optionnels.

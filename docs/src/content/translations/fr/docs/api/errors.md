@@ -1,5 +1,5 @@
 ---
-source: 91f647c820ea
+source: cd25f69b961f
 title: Erreurs
 lede: Chaque entrée invalide ou opération non prise en charge lève une Error standard dotée d’un code exploitable par programme.
 ---
@@ -82,7 +82,8 @@ Les erreurs `TypeError` indiquent qu’une entrée obligatoire est absente, poss
 | `unsupportedCalendar` | `yearMonth()`, `monthDay()`, `YearMonth`, `MonthDay` | L’entrée est un `Temporal.PlainYearMonth` ou `PlainMonthDay` utilisant un calendrier non ISO. |
 | `invalidPoint` | `compare()`, `earliest()`, `latest()` | La valeur n’est ni un `DateTime`, un `CalendarDate`, un `Time`, un `YearMonth`, un `Date`, un horodatage Unix, un point Temporal ni une chaîne analysable. |
 | `conflictingKinds` | `compare()`, `earliest()`, `latest()` | Comparaison de valeurs de types différents, par exemple un `CalendarDate` avec un `DateTime`. |
-| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange` | Passage d’une plage d’un type à un constructeur de classe ou à une fonction fabrique d’un autre type de plage. |
+| `invalidRange` | `mergeRanges()` | Passage d’une valeur non itérable ou d’un élément qui n’est pas une instance de plage lorsque [`@native-dates/plugins/ranges`](/plugins/ranges/) est chargé. |
+| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange`, `subtract()`, `union()`, `mergeRanges()` | Passage d’une plage d’un type à un constructeur de classe, une fonction fabrique ou une opération ensembliste d’un autre type de plage. |
 
 ## Codes RangeError
 
@@ -142,11 +143,13 @@ Les erreurs `RangeError` indiquent qu’une valeur ne peut pas être analysée, 
 | `invalidRange` | `DateRange`, `DateTimeRange`, `to()` | La borne `end` de la plage est antérieure à `start`. |
 | `invalidStep` | `every()`, `split()` | La durée de pas passée à `every()` ou `split()` est nulle ou négative. |
 | `unsupportedIntersection` | `TimeRange.intersection()` | Deux plages horaires (dont au moins une franchit minuit) se chevauchent sur deux fenêtres distinctes qu’une seule `TimeRange` ne peut pas représenter. |
+| `unsupportedUnion` | `TimeRange.union()`, `mergeRanges()` | Les plages horaires couvrent l’ensemble des 24 heures, ce qu’une seule `TimeRange` ne peut pas représenter. |
 | `unsupportedZone` | `TimeRange.in()` | Appel de `in()` sur une `TimeRange`, qui ne possède aucune date calendaire à placer dans un fuseau horaire. |
 
 ### Plugins
 
 | Code | Levée par | Cause |
 |---|---|---|
-| `missingPlugin` | Fonctions fabriques, `configure()` | Utilisation de `loose`, `dayFirst` ou `zoneAliases` avant d’importer le plugin correspondant. |
+| `missingPlugin` | Fonctions fabriques, `configure()` | Utilisation de `loose`, `dayFirst`, `format` ou `zoneAliases` avant d’importer le plugin correspondant. |
+| `missingTemporal` | Fonctions fabriques, constructeurs de classe, `configure({ zone })` | Indication présente uniquement en développement lorsque `globalThis.Temporal` est absent et que `@native-dates/polyfill` n’a pas été chargé (les builds de production suppriment cette vérification et lèvent la `ReferenceError` native du moteur). |
 | `immutable` | Setters hérités de `DateTime` | Appel d’un setter mutateur de `Date` tel que `setHours()` lorsque [`@native-dates/plugins/legacy-date`](/plugins/legacy-date/) est chargé. |

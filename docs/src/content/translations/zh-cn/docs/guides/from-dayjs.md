@@ -1,5 +1,5 @@
 ---
-source: "450f88efed26"
+source: "3f7711941af9"
 title: 从 Day.js 迁移
 lede: 用专用的日期与时间类型和内置时区替代 dayjs() 包装对象与插件链。
 ---
@@ -111,4 +111,4 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | 核心库内置[占位符模板](/guides/formatting/#token-patterns) |
 | `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | 支持 `to()`、`for()` 和 `overlaps()` 的[范围](/api/ranges/) |
 | `d.fromNow()`、`d.from(other)` | `d.fromNow()`、`d.from(other)` | 核心库内置，无需 `relativeTime` 插件 |
-| `customParseFormat` | `{ loose: true }` | 由 [`@native-dates/plugins/loose`](/plugins/loose/) 提供 |
+| `customParseFormat` | `{ format }` 或 `{ loose: true }` | 固定模板由 [`@native-dates/plugins/parse`](/plugins/parse/) 提供，自由格式输入由 [`@native-dates/plugins/loose`](/plugins/loose/) 提供 |
