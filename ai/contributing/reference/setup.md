@@ -46,4 +46,4 @@ GitHub Actions builds the Astro site and deploys prebuilt static artifacts to Ve
    | `VERCEL_ORG_ID` | Vercel team / organization ID |
    | `VERCEL_NATIVEDATES_PROJECT_ID` | Vercel project ID |
 
-5. **Triggers:** `staging-deploy.yml` deploys on pushes to `main` touching `docs/`, `src/`, `packages/`, `ai/skills/`, or `package.json`; `release-deploy.yml` deploys to `nativedates.dev` on `v*` tags or manual `workflow_dispatch`.
+5. **Triggers:** `staging-deploy.yml` deploys on pushes to `main` touching `docs/`, `src/`, `packages/`, `ai/skills/`, `CHANGELOG.md`, or `package.json`; `release-deploy.yml` deploys to `nativedates.dev` on `v*` tags, manual `workflow_dispatch`, or pushes to `main` touching `docs/` or `CHANGELOG.md` while shipped package code still matches the latest `v*` tag.

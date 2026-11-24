@@ -1,13 +1,15 @@
 name: Release Deploy
 
-# deploys docs to production (nativedates.dev) on tagged releases so live docs match the latest tag.
-# Trigger manually via workflow_dispatch before the first release tag.
+# deploys docs to production (nativedates.dev) on v* tags, manual workflow_dispatch, or docs-only
+# pushes to main when shipped package code still matches the latest v* tag.
 # Requires: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_NATIVEDATES_PROJECT_ID
 
 on:
   push:
     tags:
       - 'v*'
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -27,12 +29,54 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_NATIVEDATES_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # full history and tags are needed to compare main against the latest v* release tag
+          fetch-depth: 0
+
+      - name: Check whether production docs should deploy
+        id: gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$REF_TYPE" = "tag" ]; then
+            echo "Deploying production docs ($EVENT_NAME / $REF_TYPE)."
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          TAG=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
+          if [ -z "$TAG" ]; then
+            echo "No v* release tag exists yet; skipping production deploy."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] \
+            && git cat-file -e "$BEFORE_SHA^{commit}" 2>/dev/null \
+            && git diff --quiet "$BEFORE_SHA" HEAD -- docs/ CHANGELOG.md; then
+            echo "Push did not touch docs/ or CHANGELOG.md; skipping production deploy."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git diff --quiet "$TAG" HEAD -- src/ types/ bin/ packages/ ai/skills/ package.json; then
+            echo "Shipped package code matches $TAG; deploying docs-only update to production."
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unreleased package changes exist since $TAG; skipping production deploy until next release tag."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/setup-node@v7
+        if: steps.gate.outputs.deploy == 'true'
         with:
           node-version-file: '.node-version'
           cache: 'npm'
 
       - uses: actions/cache@v6
+        if: steps.gate.outputs.deploy == 'true'
         with:
           path: docs/node_modules/.astro
           key: docs-astro-${{ runner.os }}-${{ github.sha }}
@@ -41,6 +85,7 @@ jobs:
 
       # from the repo root, as in staging-deploy.yml
       - name: Build and deploy docs to production
+        if: steps.gate.outputs.deploy == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
