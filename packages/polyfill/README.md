@@ -6,6 +6,8 @@ Installs `temporal-polyfill` onto `globalThis.Temporal` and an `Intl.DurationFor
 npm i @native-dates/polyfill temporal-polyfill
 ```
 
+`temporal-polyfill` is a peer dependency so your app pins its version and never bundles two copies, while still letting bundlers resolve the dynamic `import('temporal-polyfill')` at build time.
+
 ```js
 import '@native-dates/polyfill';
 import { now } from 'native-dates';
