@@ -165,7 +165,7 @@ function directivesOf(body) {
   for (const line of body.split(/\r?\n/)) {
     if (/^`{3,}/.test(line)) { inFence = !inFence; continue; }
     if (inFence) { continue; }
-    const open = line.match(/^:{3,}(entry|steps|truth|note|tip|warning|danger)\b/);
+    const open = line.match(/^:{3,}(entry|steps|truth|details|note|tip|warning|danger)\b/);
     if (open) { found.push(open[1]); }
   }
   return found;
