@@ -2,7 +2,7 @@
   "name": "@native-dates/polyfill",
   "version": "1.0.0",
   "title": "Native Dates Polyfill",
-  "description": "Loads temporal-polyfill onto globalThis only when the runtime lacks native Temporal",
+  "description": "Loads temporal-polyfill and an Intl.DurationFormat fallback onto globalThis only when missing",
   "author": "Jack Lukic",
   "license": "ISC",
   "homepage": "https://nativedates.dev",
@@ -40,6 +40,7 @@
   "files": [
     "index.js",
     "sync.js",
+    "duration-format.js",
     "index.d.ts",
     "README.md",
     "LICENSE"
