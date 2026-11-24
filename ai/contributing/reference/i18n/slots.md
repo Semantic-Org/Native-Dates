@@ -21,11 +21,11 @@ The hero `Say` widget renders three stacked rows (`You want`, `You write`, `You 
 
 Verify every combinatorial sentence in `docs/src/scripts/home/sentences.js` end to end in the target language, checking for repeated prepositions across adjacent cells and cross-chip gender or case clashes:
 
-1. **`meeting`:** `today` + `next.{monday,wednesday,friday,sunday}` + `at.<locale-cities>` + `in.<locale-cities>`
+1. **`date`:** `{today,tomorrow,yesterday}` + `{add.1.week,next.{monday,wednesday,friday,sunday}}` + `at.<locale-cities>` + `in.<locale-cities>`
 2. **`time`:** `time.{920am,10pm,640am}` + `plus.{8.hours,45.minutes,3.hours}` + `round.{15m,hour}` + `format.{24h,short}`
 3. **`length`:** `duration.{90m,45m,2d6h}` + `plus.{45.minutes,3.hours,1.day}` + `times.{2,3}` + `format.{narrow,short,digital}`
 4. **`range`:** `range.{may,jan,nov}` + `count.{weekdays,weekends,mondays,days}`
-5. **`birthday`:** `birthday.{oct17,feb29,dec25}` + `birthday.{next,in2028,prev}` + `{birthday.fromNow, format.full, birthday.weekday}` — keep `birthday.*` warm and conversational, and note that `home.say.format.full` appears only in `birthday` step 3 alongside two question chips.
+5. **`annual`:** `birthday.{oct17,feb29,dec25}` + `birthday.{next,in2028,prev}` + `{birthday.fromNow, format.full, birthday.weekday}` — keep `birthday.*` warm and conversational, and note that `home.say.format.full` appears only in `annual` step 3 alongside two question chips.
 
 ## Copywriting Context by Key
 

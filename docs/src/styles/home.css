@@ -495,40 +495,21 @@
   .hero-side { grid-column: 1; grid-row: auto; max-width: 390px; margin-top: 32px; }
 }
 @media (max-width: 1180px) {
-  .say-grid { grid-template-columns: minmax(0, 1fr); align-content: start; padding: 20px 24px 24px; overflow-x: visible; }
+  .say-grid { grid-template-columns: minmax(0, 1fr); align-content: start; padding: 24px 24px 24px; overflow-x: visible; }
   .say-grid[hidden] { display: none; }
-  .say-grid:not([hidden]) .say-cell { animation: none; }
   .say-label { display: none; }
   .say-cell { grid-column: 1; grid-row: calc(var(--col) * 3 + var(--row)); min-width: 0; }
-  .say-words { margin-bottom: 6px; font-size: var(--fs-md); line-height: var(--lh-md); white-space: normal; }
-  .say-turn {
-    gap: 7px; min-height: 36px; margin-bottom: 8px; padding-block: 6px; padding-inline: 10px 13px;
-    border: 1px solid var(--line-2); border-radius: var(--r-2); background: var(--bevel-soft), var(--surface-2);
-    font-size: var(--fs-sm); line-height: var(--lh-sm); font-weight: 500;
-    text-align: start; text-decoration: none; text-wrap: pretty;
-    transition: background-color 0.15s var(--ease), border-color 0.15s var(--ease);
-  }
-  .say-turn svg { width: 15px; height: 15px; }
-  .say-turn:hover { border-color: var(--accent-line); background: var(--accent-wash); }
-  .say-turn:active { border-color: var(--accent); background: var(--accent-wash); }
-  .say-code { padding: 2px 0; margin-inline: 0; margin-bottom: 4px; font-size: var(--fs-md); line-height: var(--lh-md); white-space: normal; overflow-wrap: anywhere; }
+  .say-words { white-space: normal; }
+  .say-turn { text-align: start; }
+  .say-code { padding-block: 2px 6px; font-size: var(--fs-md); line-height: var(--lh-md); white-space: normal; overflow-wrap: anywhere; }
+  /* move the horizontal divider below each result on stacked layouts so each step reads as one intent -> code -> value group */
   .say-value {
-    position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px;
-    min-height: 0; max-width: none; margin-inline: 0; margin-bottom: 22px; padding-block: 2px; padding-inline: 10px 0;
-    border: 0; border-inline-start: 2px solid var(--line-2); border-radius: 0; background: none;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px;
+    min-height: 0; max-width: none; margin-inline: 0; margin-bottom: 18px; padding: 0 0 18px;
+    border-top: 0; border-bottom: 1px solid var(--line); border-radius: 0;
   }
-  /* place step dividers below each result so code stays grouped with its own value */
-  .say-value:not([data-final])::after {
-    content: ''; position: absolute; inset-inline: 0; bottom: -12px; height: 1px;
-    background: var(--line); pointer-events: none;
-  }
-  .say-value .say-text { margin-top: 0; font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--text-2); }
-  .say-value[data-final] {
-    margin-bottom: 0; padding: 7px 10px;
-    border-inline-start-color: var(--accent); border-start-end-radius: var(--r-2); border-end-end-radius: var(--r-2);
-    background: var(--accent-wash);
-  }
-  .say-value[data-final] .say-text { font-size: var(--fs-sm); line-height: var(--lh-sm); font-weight: 550; color: var(--text); }
+  .say-value[data-final] { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+  .say-text { margin-top: 0; }
 }
 @media (max-width: 1240px) {
   .prim { flex-wrap: wrap; align-items: flex-start; gap: 6px 16px; }
@@ -610,8 +591,7 @@
   .say { margin-top: 28px; }
   .say-head { padding-inline: 12px 0; }
   .say-tab { padding: 0 9px; font-size: var(--fs-xs); }
-  .say-grid { padding: 18px 16px 20px; }
-  .say-code { font-size: var(--code-fs); line-height: var(--code-lh); }
+  .say-grid { padding: 20px 16px 20px; }
   .ask-tab { grid-template-columns: 24px minmax(0, 1fr); padding: 11px 14px; column-gap: 10px; }
   .console-number { width: 24px; height: 24px; }
   .console { padding: 14px 14px 56px; }
@@ -634,7 +614,7 @@
   .footer-cols { gap: 40px; flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .console-out, .ask-why, .bytes-added, .year-time, .year-gap span, .say-turn { transition: none; }
+  .console-out, .ask-why, .bytes-added, .year-time, .year-gap span { transition: none; }
   .stamp { animation: none; }
   .say-grid:not([hidden]) .say-cell { animation: none; }
 }

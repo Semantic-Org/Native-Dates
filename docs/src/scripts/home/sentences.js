@@ -59,10 +59,20 @@ export function sentencesFor(locale = 'en') {
   });
   return [
     {
-      id: 'meeting',
+      id: 'date',
       steps: [
-        [{ say: 'today', code: 'today()', run: (_, { today }, tag) => localize(today(), tag) }],
-        [next('monday'), next('wednesday'), next('friday'), next('sunday')],
+        [
+          { say: 'today', code: 'today()', run: (_, { today }, tag) => localize(today(), tag) },
+          { say: 'tomorrow', code: 'tomorrow()', run: (_, { tomorrow }, tag) => localize(tomorrow(), tag) },
+          { say: 'yesterday', code: 'yesterday()', run: (_, { yesterday }, tag) => localize(yesterday(), tag) },
+        ],
+        [
+          { say: 'add.1.week', code: ".add(1, 'week')", run: (value) => value.add(1, 'week') },
+          next('monday'),
+          next('wednesday'),
+          next('friday'),
+          next('sunday'),
+        ],
         atChoices,
         inChoices,
       ],
@@ -119,7 +129,7 @@ export function sentencesFor(locale = 'en') {
       ],
     },
     {
-      id: 'birthday',
+      id: 'annual',
       steps: [
         [
           annual('birthday.oct17', '10/17', '17/10'),
