@@ -1,6 +1,6 @@
 import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 
-import { CalendarDate, today } from './calendar-date.js';
+import { CalendarDate, today, tomorrow, yesterday } from './calendar-date.js';
 import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
@@ -447,11 +447,11 @@ export class DateTime {
   }
 
   isTomorrow() {
-    return this.date.equals(today(this.zone).plus({ days: 1 }));
+    return this.date.equals(tomorrow(this.zone));
   }
 
   isYesterday() {
-    return this.date.equals(today(this.zone).minus({ days: 1 }));
+    return this.date.equals(yesterday(this.zone));
   }
 
   /*******************************

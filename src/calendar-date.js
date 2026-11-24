@@ -391,11 +391,11 @@ export class CalendarDate {
   }
 
   isTomorrow(zone) {
-    return this.equals(today(zone).plus({ days: 1 }));
+    return this.equals(tomorrow(zone));
   }
 
   isYesterday(zone) {
-    return this.equals(today(zone).minus({ days: 1 }));
+    return this.equals(yesterday(zone));
   }
 
   /*******************************

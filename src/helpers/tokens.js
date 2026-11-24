@@ -20,6 +20,7 @@ export const names = (locale) => {
     const monthIn = (options, stamp) => parts(options, stamp).find((part) => part.type === 'month').value;
     const clock = plainDateTimeFormat(locale, { hour: 'numeric', hour12: true });
     const language = clock.resolvedOptions().locale;
+    const isEnglish = language.startsWith('en');
     // Greek ('el') is the one ICU locale where standalone { month: 'long' } returns the genitive (Νοεμβρίου).
     // Pairing with year yields the nominative (Νοέμβριος)
     const alone = (style) =>
@@ -60,12 +61,12 @@ export const names = (locale) => {
       MMM,
       MMMM,
       besideDay: { MMM: besideDay('short', MMM), MMMM: besideDay('long', MMMM) },
-      dd: cuts ? cut : /^(MTWTFSS|\d+)$/.test(narrow.join('')) && !language.startsWith('en') ? [...short] : narrow,
+      dd: cuts ? cut : /^(MTWTFSS|\d+)$/.test(narrow.join('')) && !isEnglish ? [...short] : narrow,
       ddd: short,
       dddd: long,
       dayPeriods: [periodAt(9), periodAt(15)],
       dayMark: afterDay?.type === 'literal' ? afterDay.value.match(/^[^\s,،]*/)[0] : '',
-      isEnglish: language.startsWith('en'),
+      isEnglish,
     };
     // layer app overrides from base language to specific region (e.g. 'pt' then 'pt-br')
     const subtags = language.toLowerCase().split('-');

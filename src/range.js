@@ -44,8 +44,7 @@ class Range {
       const settings = zoneOptions(options);
       if (start instanceof Range && end === undefined) {
         if (start.kind !== kind) {
-          const [from, to] = [`${start.kind}Range`, `${kind}Range`];
-          refuseType('conflictingRanges', `${from} as ${to}`, {
+          refuseType('conflictingRanges', `${start.kind}Range as ${kind}Range`, {
             explanation: isDevelopment
               ? 'cannot pass one range type directly into another range factory. Convert a `DateRange` to a `DateTimeRange` with `.in(zone)`, or build a new range from converted `start` and `end` endpoints'
               : 0,

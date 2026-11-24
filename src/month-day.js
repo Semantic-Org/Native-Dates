@@ -1,6 +1,6 @@
 import { isObject, isPlainObject, isString } from './helpers/utils.js';
 
-import { CalendarDate, today } from './calendar-date.js';
+import { CalendarDate, today, tomorrow, yesterday } from './calendar-date.js';
 import { isDevelopment } from './helpers/environment.js';
 import { guard, loosely, parseLooseParts, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
@@ -243,11 +243,11 @@ export class MonthDay {
   }
 
   isTomorrow(zone) {
-    return this.fallsOn(today(zone).plus({ days: 1 }));
+    return this.fallsOn(tomorrow(zone));
   }
 
   isYesterday(zone) {
-    return this.fallsOn(today(zone).minus({ days: 1 }));
+    return this.fallsOn(yesterday(zone));
   }
 
   /*******************************
