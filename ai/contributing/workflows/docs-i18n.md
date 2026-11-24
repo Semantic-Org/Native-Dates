@@ -79,11 +79,11 @@ Run a full backfill only once English docs settle so pre-release copy edits do n
 - **`inline()` fields:** Frontmatter `lede`, `description`, `try`, ```` ```params ```` / ```` ```returns ```` descriptions, and `plugins.*.description` parse only `` `code` ``, `**strong**`, and `[label](href)`. Never use `*italic*` or raw HTML tags in them.
 - **Headings, tables, and links:** Match English heading count/depth and table count exactly so `remark-docs.js` and `rehype-docs.js` inherit stable English anchor IDs and `.t` Type-column styling automatically. Keep internal links root-relative (`/api/...`, `/guides/...`) with English `#anchor` hashes untouched.
 - **Directives, YAML fences, and tabs:**
-  - Keep `:::entry`, `:::steps`, `:::truth`, and callout directive names (`:::note`, `:::tip`, `:::warning`, `:::danger`) untranslated; translate only `[Title]`.
+  - Keep `:::entry`, `:::steps`, `:::truth`, `:::details`, `{open}`, and callout directive names (`:::note`, `:::tip`, `:::warning`, `:::danger`) untranslated; translate only `[Title]` (keep `:::details[Title]` plain with no backticks).
   - Keep literal `true` and `false` cells inside `:::truth` tables untranslated (`rehype-docs.js` styles them by exact string match).
   - Keep `:kind[method]` / `:kind[function]` / `:kind[guard]` tags intact.
   - In ```` ```params ```` and ```` ```returns ```` blocks, translate only `description:` — never alter YAML keys (`name`, `type`, `required`, `default`, `options`) or `type:` strings.
-  - In `plugins/loose.md`, translate `label="..."` variant tabs while preserving `locale="..."` autonym fence attributes.
+  - Translate `label="..."` attributes on tabbed code fences across guides and plugins while preserving `locale="..."` autonym fence attributes (e.g., `plugins/loose.md`).
   - In `example.md` `try:` steps, keep visible English playground button/tab labels recognizable because sandbox UI stays in English.
 
 ---
