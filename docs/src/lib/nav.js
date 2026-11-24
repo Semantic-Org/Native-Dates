@@ -47,6 +47,7 @@ export const SECTIONS = [
       {
         ...named('nav.group.going-further'),
         items: [
+          { title: 'Date pickers and UI', slug: 'guides/date-pickers' },
           { title: 'Coming from Day.js', slug: 'guides/from-dayjs' },
           { title: 'Coming from Moment', slug: 'guides/from-moment' },
           { title: 'Working with Temporal', slug: 'guides/temporal' },
