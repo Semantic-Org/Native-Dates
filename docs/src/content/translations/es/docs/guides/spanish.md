@@ -1,15 +1,14 @@
 ---
-source: a4865c5d2e4e
-reviewed: false
+source: "7c459605683f"
 title: Español
-lede: Maneja los formatos regionales de fecha y las convenciones horarias de España y América.
+lede: Configura formatos de fecha, relojes de 12 o 24 horas e inicios de semana entre España, América Latina y Estados Unidos.
 ---
 
-La etiqueta `'es'` usa el inicio de semana en lunes y el reloj de 24 horas de España. En aplicaciones para Latinoamérica o Estados Unidos, pasa una etiqueta regional como `'es-MX'` en [Localización](/guides/localization/).
+`'es'` a secas aplica las convenciones de España: semana iniciada en lunes y reloj de 24 horas. Si tu aplicación atiende a América Latina o Estados Unidos, conviene pasar un locale regional como `'es-MX'` (consulta [Localización](/guides/localization/)).
 
-## España, Latinoamérica y EE. UU.
+## España, América Latina y Estados Unidos
 
-España usa reloj de 24 horas, mientras Latinoamérica y el español de EE. UU. usan 12 horas con distinta puntuación, separadores y *setiembre* en Perú:
+En España los presets usan reloj de 24 horas. En América Latina y el español de Estados Unidos predomina el formato de 12 horas, pero cada región cambia el espaciado de `a. m.`/`p. m.`, los separadores de fecha y grafías locales como *setiembre* en Perú:
 
 ```js
 import { datetime } from 'native-dates';
@@ -24,17 +23,17 @@ cita.format('long', 'es-PE'); // '16 de setiembre de 2026 a las 5:30 p. m.'
 cita.date.format('short', 'es-PR'); // '09/16/26'
 ```
 
-El primer día de la semana también varía entre países, y la etiqueta genérica `'es-419'` empieza en lunes a diferencia de México o Colombia:
+El inicio de semana también cambia según el país. Ten en cuenta que el locale genérico `'es-419'` empieza en lunes, a diferencia de México o Colombia:
 
-| Etiquetas | Inicio y hora | Convención regional |
+| Locales | Inicio y reloj | Convención regional |
 |---|---|---|
 | `'es'`, `'es-ES'` | `1`, `17:30` | Semana desde el lunes, reloj de 24 horas y septiembre abreviado como *sept*. |
-| `'es-MX'`, `'es-US'` | `7`, `5:30 p.m.` | Semana desde el domingo y periodo de 12 horas sin espacio interno. |
-| `'es-AR'`, `'es-CL'` | `1`, `5:30 p. m.` | Semana desde el lunes y periodo con espacio, con fechas cortas con guiones en Chile. |
+| `'es-MX'`, `'es-US'` | `7`, `5:30 p.m.` | Semana desde el domingo y marcador de 12 horas sin espacio interno. |
+| `'es-AR'`, `'es-CL'` | `1`, `5:30 p. m.` | Semana desde el lunes y marcador con espacio; en Chile la fecha corta usa guiones. |
 | `'es-CO'`, `'es-PE'` | `7`, `5:30 p. m.` | Semana desde el domingo, formato medio numérico en Colombia y *setiembre* en Perú. |
-| `'es-PR'` | `7`, `5:30 p. m.` | Semana desde el domingo y fechas numéricas en orden mes/día/año. |
+| `'es-PR'` | `7`, `5:30 p. m.` | Semana desde el domingo y orden numérico mes/día/año como en Estados Unidos. |
 
-Fija el lunes con `startOf('week', 'monday')` al agrupar reportes semanales para que Madrid y Ciudad de México compartan la misma clave:
+Fija el lunes con [`startOf('week', 'monday')`](/api/calendar-date/#startof) al agrupar informes semanales en base de datos para que Madrid y Ciudad de México queden en el mismo bloque:
 
 ```js
 import { date } from 'native-dates';
@@ -48,7 +47,7 @@ wed.locale('es-MX').startOf('week', 'monday').toString(); // '2026-11-16'
 
 ## Preposiciones, minúsculas y días de la semana
 
-Las fechas largas unen sus partes con *de*, *del* y *a las*. Encierra esos conectores entre corchetes en patrones personalizados para evitar `unknownFormat`:
+En patrones de tokens personalizados, encierra los conectores literales como `[de]`, `[del]` o `[a las]` entre corchetes; dejar letras sueltas sin escapar lanza [`unknownFormat`](/api/errors/#units-zones-and-formats):
 
 ```js
 import { datetime } from 'native-dates';
@@ -60,9 +59,9 @@ ev.format('dddd, D [de] MMMM [a las] HH:mm');
 // 'lunes, 16 de noviembre a las 18:30'
 ```
 
-Meses, días y marcadores horarios van en minúsculas en español. Capitaliza solo la primera letra cuando una fecha encabece un título.
+`Intl` devuelve meses, días de la semana y marcadores horarios en minúscula. Cuando una fecha abra un título o una tarjeta, convierte a mayúscula solo el primer carácter.
 
-Las iniciales de una letra repiten *M* entre *martes* y *miércoles*. Con `'dd'` obtienes dos letras sin colisión, y [`configure()`](/api/configure/) permite personalizar el miércoles o *1.º* el primer día del mes:
+Para evitar la colisión de la inicial `M` entre martes y miércoles en cuadrículas compactas, `'dd'` y `weekdayNames('narrow')` usan abreviaturas de dos letras de serie. Si prefieres `X` para el miércoles o `1.º` para el primero de mes, configúralo con [`configure()`](/api/configure/):
 
 ```js
 import { configure, date, weekdayNames } from 'native-dates';
@@ -79,9 +78,9 @@ date('2026-05-06').format('dd', 'es-MX'); // 'X'
 date('2026-05-01').format('Do [de] MMMM', 'es-AR'); // '1.º de mayo'
 ```
 
-## Lectura de fechas y meses en español
+## Interpretar fechas y meses en español
 
-Con [el plugin flexible](/plugins/loose/), las fechas numéricas siguen automáticamente la configuración regional activa. España y Chile leen primero el día por sí solos, mientras que Puerto Rico lee primero el mes:
+Con [el plugin loose](/plugins/loose/), las fechas numéricas adoptan el orden del locale activo: España y Chile leen día/mes/año de forma automática, mientras que Puerto Rico lee mes/día/año:
 
 ```js
 import '@native-dates/plugins/loose';
@@ -92,7 +91,7 @@ date('16-09-2026', { loose: true, locale: 'es-CL' })?.toString(); // '2026-09-16
 date('06/11/2026', { loose: true, locale: 'es-PR' })?.toString(); // '2026-06-11'
 ```
 
-Las fechas completas con texto, conectores, días de la semana al inicio, el *setiembre* peruano y las horas de 12 horas con espacio también se leen en modo flexible, mientras que `dayMonth()` numérico funciona en el paquete base sin plugins:
+El modo loose también interpreta fechas completas con conectores, días de la semana al principio, *setiembre* con `'es-PE'` y horas en formato de 12 horas con espacio (`p. m.`), mientras que [`dayMonth()`](/api/month-day-fn/#daymonth) funciona en el núcleo sin plugins para pares numéricos:
 
 ```js
 date('16 de noviembre de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-11-16'
@@ -108,9 +107,9 @@ monthDay('16 set.', { loose: true, locale: 'es-PE' })?.toString(); // '09-16'
 yearMonth('enero de 2026', { loose: true, locale: 'es' })?.toString(); // '2026-01'
 ```
 
-## Zonas horarias y cambios a medianoche
+## Zonas horarias y saltos de horario de verano a medianoche
 
-La mayor parte de México permanece en UTC-6 todo el año salvo la frontera norte y Quintana Roo. CST sigue la configuración regional activa: apunta a Chicago por defecto y a La Habana en Cuba:
+La mayor parte de México permanece en UTC-6 todo el año, salvo las ciudades fronterizas del norte y Quintana Roo. `CST` depende del locale activo: apunta a Chicago por defecto y a La Habana cuando el locale es `'es-CU'`:
 
 ```js
 import '@native-dates/plugins/zones';
@@ -122,7 +121,7 @@ datetime('2026-07-15T12:00', { zone: 'CST', locale: 'es-CU' }).zone; // 'America
 datetime('2026-07-15T12:00', 'Tijuana').format('HH:mm Z'); // '12:00 -07:00'
 ```
 
-El [plugin de zonas](/plugins/zones/) resuelve las principales ciudades hispanohablantes y códigos latinoamericanos de forma directa. San Juan apunta a Puerto Rico bajo `'es-PR'` y a Argentina en el resto:
+El [plugin zones](/plugins/zones/) resuelve directamente nombres de ciudades en inglés (como `'Mexico City'`), grandes ciudades hispanohablantes y siglas latinoamericanas como `'CDMX'` o `'COT'`. `San Juan` apunta a Puerto Rico con `'es-PR'` y a Argentina en el resto de los locales:
 
 ```js
 datetime('2026-07-15T12:00', 'CDMX').zone; // 'America/Mexico_City'
@@ -131,7 +130,7 @@ datetime('2026-07-15T12:00', 'San Juan').zone; // 'America/Argentina/San_Juan'
 datetime('2026-07-15T12:00', { zone: 'San Juan', locale: 'es-PR' }).zone; // 'America/Puerto_Rico'
 ```
 
-Chile y Cuba inician el horario de verano a medianoche, saltando de 00:00 a 01:00. Llamar a `at('00:00', zona)` o `startOf('day')` cae en 01:00 de esa misma fecha:
+Chile y Cuba inician el horario de verano a medianoche, saltando directamente de las 00:00 a las 01:00. Llamar a [`at('00:00', zone)`](/api/calendar-date/#at) o a `startOf('day')` avanza limpiamente a la 01:00 de ese mismo día:
 
 ```js
 import { date } from 'native-dates';
@@ -144,7 +143,7 @@ spring.hoursInDay; // 23
 
 ## Tiempo relativo
 
-El español nombra cinco días seguidos desde *anteayer* hasta *pasado mañana*. `CalendarDate` devuelve esas palabras, mientras `DateTime` cuenta horas reales:
+Al comparar fechas de calendario, [`CalendarDate`](/api/calendar-date/) usa expresiones relativas de día desde *anteayer* hasta *pasado mañana*, mientras que [`DateTime`](/api/date-time/) mide el tiempo transcurrido y devuelve conteos numéricos:
 
 ```js
 import { date, datetime, today } from 'native-dates';
@@ -157,4 +156,4 @@ datetime('2026-11-14T12:00Z').from('2026-11-16T12:00Z', 'es'); // 'hace 2 días'
 date('2026-11-18').from(today('America/Bogota'), 'es-CO');
 ```
 
-En servidores compartidos, pasa `today(zona)` en vez de `fromNow()` para que el cambio entre *hoy* y *mañana* siga la medianoche de cada usuario.
+En servidores compartidos, pasa [`today(zone)`](/api/date-fn/#today) en lugar de [`fromNow()`](/api/calendar-date/#fromnow) para que el cambio de día entre *hoy* y *mañana* siga la zona horaria del usuario.
