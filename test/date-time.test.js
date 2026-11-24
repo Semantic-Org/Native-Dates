@@ -310,6 +310,32 @@ describe('datetime() validation errors', () => {
     );
   });
 
+  it('reports an offset or zone mismatch instead of a syntax error for invalid bracketed timezone strings', () => {
+    for (
+      const [text, options] of [
+        ['2026-03-08T12:00:00-05:00[America/New_York]'],
+        ['2026-03-08t12:00:00-05:00[America/New_York]'],
+        ['2026-03-08T12:00:00-0500[America/New_York]'],
+        ['2026-03-08T12:00:00-05[America/New_York]'],
+        ['2026-03-08T02:30[America/New_York]', { disambiguation: 'reject' }],
+        ['2026-02-30T10:00[America/New_York]'],
+        ['2026-11-16T09:30[Mars/Phobos]'],
+      ]
+    ) {
+      let thrown;
+      try {
+        datetime(text, options);
+      }
+      catch (error) {
+        thrown = error;
+      }
+      expect(thrown).toMatchObject({ name: 'RangeError', code: 'invalidDateTime', at: text });
+      const detail = thrown.message.split('\n')[1];
+      expect(detail).toMatch(/offset|zone/i);
+      expect(detail).not.toMatch(/expected an ISO string/i);
+    }
+  });
+
   it('throws invalidNumber for NaN, Infinity, and an invalid Date', () => {
     expect(() => datetime(NaN)).toThrowError(
       expect.objectContaining({ name: 'RangeError', code: 'invalidNumber', at: 'NaN' }),

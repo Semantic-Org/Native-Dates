@@ -180,12 +180,14 @@ export class DateTime {
       return Temporal.PlainDate.from(trimmed).toZonedDateTime({ timeZone });
     }
     catch {
-      // separate out-of-range fields (like Feb 30) from malformed string syntax
+      // separate invalid date, time, or offset/zone values from malformed string syntax
       return (isoStart && parseLoose(trimmed, settings)) || refuse('invalidDateTime', text, {
         explanation: isDevelopment
-          ? /^\d{4}-\d{2}-\d{2}(?:[Tt ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:[zZ]|[+-](?:[01]\d|2[0-3]):[0-5]\d)?)?$/
+          ? /^\d{4}-\d{2}-\d{2}(?:[Tt ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:[zZ]|[+-](?:[01]\d|2[0-3])(?::?[0-5]\d)?)?)?(?:\[[^[\]]+\])*$/
               .test(trimmed)
-            ? 'this date or time does not exist. Check the year, month, day, and time fields'
+            ? trimmed.endsWith(']')
+              ? 'this date or time does not exist, or its offset does not match the bracketed zone. Check the date, time, offset, and zone name'
+              : 'this date or time does not exist. Check the year, month, day, and time fields'
             : "expected an ISO string like '2026-09-06T14:30:00Z', '2026-09-06T14:30', or '2026-09-06'. Pass `{ loose: true }` with '@native-dates/plugins/loose' for informal date strings"
           : 0,
       });
