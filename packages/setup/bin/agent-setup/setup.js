@@ -42,7 +42,7 @@ export class Setup {
     scopeProject: 'This project',
     scopeMachine: 'Globally',
     globalUnavailable:
-      'no supported agent found for `--global` ({agents}). Run `npx {name}@latest` to set up this project',
+      'no supported agent found for `--global` ({agents}). Run `npx {cli}@latest` to set up this project',
 
     install: '`{command}`',
     plugin: '`{command}`',
@@ -82,22 +82,22 @@ export class Setup {
     cancelled: 'cancelled',
     typedQuestion: 'Apply changes? (Y/n) ',
     declined: 'no changes made',
-    needsYes: 'no changes made. Run `npx {name}@latest {flags}` to apply',
+    needsYes: 'no changes made. Run `npx {cli}@latest {flags}` to apply',
 
     ready: 'ready. Agents can now find {skills}',
-    notReady: 'setup incomplete. Update `{name}` to {version} and re-run `npx {name}@latest`',
+    notReady: 'setup incomplete. Update `{name}` to {version} and re-run `npx {cli}@latest`',
     newer: '`{name}@{installed}`. Newer than CLI ({version})',
     docs: 'docs: {homepage}',
-    again: 'skip prompts next time: `npx {name}@latest {flags}`',
+    again: 'skip prompts next time: `npx {cli}@latest {flags}`',
     kept: '`{path}`. Already exists with different contents',
     stepFailed: '{step} step failed. No further changes made. {reason}',
     pluginFailed:
-      '`{command}` failed. No further changes made. Fix the {manager} error below, then re-run `npx {name}@latest`',
+      '`{command}` failed. No further changes made. Fix the {manager} error below, then re-run `npx {cli}@latest`',
     failed:
-      '`{command}` failed. No further changes made. Fix the {manager} error below or install `{name}` manually, then re-run `npx {name}@latest`',
-    noProject: 'no `package.json` in {folder}. Run `npx {name}@latest` from your project root',
-    unknownOption: 'unknown option `{option}`. Run `npx {name}@latest --help` for usage',
-    usage: `Usage: npx {name}@latest [options]
+      '`{command}` failed. No further changes made. Fix the {manager} error below or install `{name}` manually, then re-run `npx {cli}@latest`',
+    noProject: 'no `package.json` in {folder}. Run `npx {cli}@latest` from your project root',
+    unknownOption: 'unknown option `{option}`. Run `npx {cli}@latest --help` for usage',
+    usage: `Usage: npx {cli}@latest [options]
 
 Set up coding agents for this project:
   install  install {name} or update an older version
@@ -114,18 +114,32 @@ Options (previews changes and prompts by default):
   -h, --help      show help`,
   };
 
-  // packageUrl is the package.json beside the bin, and note is what agents are told, {skill} standing for the
-  // entry skill's path. aliases are other names the package installs under, notices are { label, text } rows to
-  // end on, such as a runtime the package needs, and copy replaces any of Setup.copy
-  constructor({ packageUrl, note, aliases = [], notices = [], copy = {}, root = process.cwd(), terminal } = {}) {
+  // packageUrl is the package.json beside the bin, target is the library package installed (defaulting to the
+  // manifest name), command is the npx package name (defaulting to the manifest name), note is what agents are
+  // told ({skill} standing for the entry skill's path), aliases are other names the library installs under,
+  // notices are { label, text } rows to end on, and copy replaces any of Setup.copy
+  constructor({
+    packageUrl,
+    target,
+    command,
+    note,
+    aliases = [],
+    notices = [],
+    copy = {},
+    root = process.cwd(),
+    terminal,
+  } = {}) {
     const packageDir = dirname(fileURLToPath(packageUrl));
-    const { name, version, homepage, repository } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
+    const manifest = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
+    const { version, homepage, repository } = manifest;
+    const name = target ?? manifest.name;
+    const cli = command ?? manifest.name;
     // owner/repo, which is how each agent's plugin command names a GitHub repository
     const repo = (repository?.url ?? repository)?.replace(/^(git\+)?https?:\/\/github\.com\//, '').replace(
       /\.git$/,
       '',
     );
-    Object.assign(this, { name, version, homepage, repo, packageDir, note, aliases, notices, root });
+    Object.assign(this, { name, command: cli, version, homepage, repo, packageDir, note, aliases, notices, root });
     this.copy = { ...Setup.copy, ...copy };
     this.terminal = terminal ?? new Terminal({ namespace: name });
   }
@@ -137,7 +151,7 @@ Options (previews changes and prompts by default):
   // answers with the exit code: 0 when the project is set up or the person declined, 1 when a step failed
   // or nobody could be asked
   async run(args = process.argv.slice(2)) {
-    const { terminal, name, version, root } = this;
+    const { terminal, version, root } = this;
     const option = args.find((arg) => !Object.hasOwn(Setup.flags, arg));
     this.given = new Set(args.map((arg) => Setup.flags[arg]));
     if (option) { return this.refuse('unknownOption', { option }); }
@@ -420,15 +434,22 @@ Options (previews changes and prompts by default):
 
   // a sentence from the copy, filled with the package's own facts and what the caller adds
   words(key, values = {}) {
-    const { copy, name, version, homepage } = this;
+    const { copy, name, command: cli, version, homepage } = this;
     const [one, many] = copy.nouns;
     const placed = ['linked', 'copied'].filter((how) => values[how]).map((how) =>
       fill(copy[how], { count: values[how], noun: values[how] === 1 ? one : many })
     );
     const listed = Object.entries(values).map((
-      [name, value],
-    ) => [name, Array.isArray(value) ? joinWords(value) : value]);
-    return fill(copy[key], { name, version, homepage, placed: placed.join(' and '), ...Object.fromEntries(listed) });
+      [key, value],
+    ) => [key, Array.isArray(value) ? joinWords(value) : value]);
+    return fill(copy[key], {
+      name,
+      cli,
+      version,
+      homepage,
+      placed: placed.join(' and '),
+      ...Object.fromEntries(listed),
+    });
   }
 
   // a busy row counts its seconds and is cut to the width, since it is redrawn in place. a finished one prints whole

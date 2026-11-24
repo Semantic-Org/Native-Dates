@@ -10,6 +10,7 @@ import {
   readFileSync,
   readlinkSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -18,17 +19,19 @@ import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { packSkills } from '../../../tools/skills.js';
 import { fill, joinWords } from '../bin/agent-setup/helpers.js';
 import { Project } from '../bin/agent-setup/project.js';
 import { Setup } from '../bin/agent-setup/setup.js';
-import { packSkills } from '../tools/skills.js';
 
-const root = fileURLToPath(new URL('..', import.meta.url));
-const { version } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+const root = fileURLToPath(new URL('../../..', import.meta.url));
+const setupDir = join(root, 'packages/setup');
+const { version } = JSON.parse(readFileSync(join(setupDir, 'package.json'), 'utf8'));
 const scratch = mkdtempSync(join(tmpdir(), 'agent-setup-'));
 
-// the package as npm unpacks it, with the skills folder prepack writes
+// the library and setup packages as npm unpacks them, with the skills folder prepack writes
 const published = join(scratch, 'published');
+const publishedSetup = join(scratch, 'published-setup');
 // package managers that record their arguments and put the package in node_modules, since tests have no registry
 const managers = join(scratch, 'managers');
 const calls = join(scratch, 'calls.log');
@@ -54,9 +57,14 @@ const environment = (agents = [], extra = {}) => ({
 
 beforeAll(() => {
   mkdirSync(published, { recursive: true });
-  cpSync(join(root, 'bin'), join(published, 'bin'), { recursive: true });
   cpSync(join(root, 'package.json'), join(published, 'package.json'));
   packSkills(published);
+
+  mkdirSync(publishedSetup, { recursive: true });
+  cpSync(join(setupDir, 'bin'), join(publishedSetup, 'bin'), { recursive: true });
+  cpSync(join(setupDir, 'package.json'), join(publishedSetup, 'package.json'));
+  packSkills(publishedSetup, { manifests: false });
+
   mkdirSync(managers);
   for (const manager of ['npm', 'pnpm', 'yarn', 'bun']) {
     const script = [
@@ -102,7 +110,7 @@ function project(files = { 'package.json': '{ "name": "app" }' }) {
 // agents are the stand-in binaries the run can find, and env adds to what it sees
 function setupWith({ agents = [], env = {} }, dir, ...args) {
   writeFileSync(calls, '');
-  const { status, stdout, stderr } = spawnSync(process.execPath, [join(published, 'bin/native-dates.js'), ...args], {
+  const { status, stdout, stderr } = spawnSync(process.execPath, [join(publishedSetup, 'bin/setup.js'), ...args], {
     cwd: dir,
     encoding: 'utf8',
     env: environment(agents, env),
@@ -114,6 +122,7 @@ const setup = (dir, ...args) => setupWith({}, dir, ...args);
 
 // what the command prints is read from its copy table, so rewording a line never breaks a test
 const { copy } = Setup;
+const cli = '@native-dates/setup';
 
 const skillPaths = [
   '.agents/skills/native-dates',
@@ -122,13 +131,48 @@ const skillPaths = [
   '.claude/skills/native-dates-plugins',
 ];
 
-describe('npx native-dates', () => {
+describe('npx @native-dates/setup', () => {
+  it('ships no bin in native-dates or @native-dates/core, while @native-dates/setup exposes its bin', () => {
+    const corePkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+    const scopedCorePkg = JSON.parse(readFileSync(join(root, 'packages/core/package.json'), 'utf8'));
+    const setupPkg = JSON.parse(readFileSync(join(setupDir, 'package.json'), 'utf8'));
+
+    expect(corePkg.bin).toBeUndefined();
+    expect(corePkg.files).not.toContain('bin');
+    expect(corePkg.files).toContain('skills');
+    expect(scopedCorePkg.bin).toBeUndefined();
+    expect(scopedCorePkg.files).not.toContain('bin.js');
+    expect(scopedCorePkg.skills).toEqual(['npm:native-dates']);
+
+    expect(setupPkg.name).toBe('@native-dates/setup');
+    expect(setupPkg.dependencies).toBeUndefined();
+    expect(setupPkg.bin).toEqual({ 'native-dates-setup': 'bin/setup.js' });
+    const binPath = join(setupDir, setupPkg.bin['native-dates-setup']);
+    expect(existsSync(binPath)).toBe(true);
+    if (process.platform !== 'win32') {
+      expect(statSync(binPath).mode & 0o111).toBeGreaterThan(0);
+    }
+  });
+
+  it('prints usage with @native-dates/setup and version with --help and --version', () => {
+    const dir = project();
+    const help = setup(dir, '--help');
+    expect(help.status).toBe(0);
+    expect(help.output).toContain(`Usage: npx ${cli}@latest [options]`);
+    expect(help.output).toContain('install native-dates or update an older version');
+    expect(help.output).not.toContain('npx native-dates@latest');
+
+    const versionResult = setup(dir, '--version');
+    expect(versionResult.status).toBe(0);
+    expect(versionResult.output.trim()).toBe(version);
+  });
+
   it('lists the changes, writes nothing, and exits 1 when nobody can be asked and --yes is absent', () => {
     const dir = project();
     const { status, output, calls: ran } = setup(dir);
     expect(status).toBe(1);
     expect(output).toContain(`npm install native-dates@${version}`);
-    expect(output).toContain('--yes');
+    expect(output).toContain(`npx ${cli}@latest --yes`);
     expect(ran).toBe('');
     expect(existsSync(join(dir, 'AGENTS.md')) || existsSync(join(dir, '.agents'))).toBe(false);
   });
@@ -241,7 +285,7 @@ describe('npx native-dates', () => {
     ['n', 0, 'n\n', false],
   ])('in a terminal asks first, and %s leaves status %i', (key, expected, typed, written) => {
     const dir = project();
-    const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+    const command = `"${process.execPath}" "${join(publishedSetup, 'bin/setup.js')}"`;
     const { status, stdout } = spawnSync(scriptBin, ['-qec', command, '/dev/null'], {
       cwd: dir,
       input: typed,
@@ -260,7 +304,7 @@ describe('npx native-dates', () => {
     'esc in the second question steps back to the first, which still answers',
     async () => {
       const dir = project();
-      const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+      const command = `"${process.execPath}" "${join(publishedSetup, 'bin/setup.js')}"`;
       const child = spawn(scriptBin, ['-qec', command, '/dev/null'], {
         cwd: dir,
         env: environment(),
@@ -311,7 +355,7 @@ describe('npx native-dates', () => {
     expect(plain).not.toContain('\x1b[');
     expect(plain).toContain('[native-dates]');
     const dir = project();
-    const forced = spawnSync(process.execPath, [join(published, 'bin/native-dates.js')], {
+    const forced = spawnSync(process.execPath, [join(publishedSetup, 'bin/setup.js')], {
       cwd: dir,
       encoding: 'utf8',
       env: environment([], { FORCE_COLOR: '3' }),
@@ -321,7 +365,7 @@ describe('npx native-dates', () => {
     expect(forced).toContain(`\x1b[38;2;121;192;255mnpm install native-dates@${version}\x1b[`);
     expect(forced).not.toContain('`');
     expect(plain).toContain(`\`npm install native-dates@${version}\``);
-    const silenced = spawnSync(process.execPath, [join(published, 'bin/native-dates.js')], {
+    const silenced = spawnSync(process.execPath, [join(publishedSetup, 'bin/setup.js')], {
       cwd: dir,
       encoding: 'utf8',
       env: environment([], { FORCE_COLOR: '3', NO_COLOR: '1' }),
@@ -333,7 +377,7 @@ describe('npx native-dates', () => {
   it.runIf(scriptBin)('in a terminal lets the person switch a change off before confirming', () => {
     const dir = project();
     writeFileSync(calls, '');
-    const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+    const command = `"${process.execPath}" "${join(publishedSetup, 'bin/setup.js')}"`;
     const { status } = spawnSync(scriptBin, ['-qec', command, '/dev/null'], {
       cwd: dir,
       input: 'j\r \r',
@@ -389,7 +433,7 @@ describe('npx native-dates', () => {
     expect(status).toBe(1);
     expect(ran).toBe('');
     expect(output).toContain(fill(copy.skillsWithheld, { folder: '.agents/skills', from: '0.0.1', to: version }));
-    expect(output).toContain(fill(copy.notReady, { name: 'native-dates', version }));
+    expect(output).toContain(fill(copy.notReady, { name: 'native-dates', version, cli }));
     expect(existsSync(join(dir, '.agents')) || existsSync(join(dir, '.claude')) || existsSync(join(dir, 'AGENTS.md')))
       .toBe(false);
   });
@@ -439,7 +483,7 @@ describe('npx native-dates', () => {
   // enter takes this project, down and enter open the checklist, and enter confirms it as it stands
   // the terminal is widened first, since a row in the checklist is cut to the width it reports
   it.runIf(scriptBin && sttyBin)('names every agent that reads a folder in the checklist, found ones first', () => {
-    const command = `${sttyBin} cols 200; "${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+    const command = `${sttyBin} cols 200; "${process.execPath}" "${join(publishedSetup, 'bin/setup.js')}"`;
     const { stdout } = spawnSync(scriptBin, ['-qec', command, '/dev/null'], {
       cwd: project(),
       input: '\rj\r\r',
@@ -486,7 +530,7 @@ describe('npx native-dates', () => {
     const agents = joinWords(['Claude Code', 'Codex', 'Antigravity']);
     expect(status).toBe(1);
     expect(ran).toBe('');
-    expect(output).toContain(fill(copy.globalUnavailable, { agents, name: 'native-dates' }));
+    expect(output).toContain(fill(copy.globalUnavailable, { agents, cli }));
     expect(existsSync(join(dir, 'AGENTS.md')) || existsSync(join(dir, '.agents'))).toBe(false);
   });
 
@@ -519,6 +563,8 @@ describe('npx native-dates', () => {
     expect(status).toBe(1);
     expect(ran.split('\n')).toEqual([install, pluginCalls[0]]);
     expect(output).toContain('claude stand-in refused');
+    expect(output).toContain(`npx ${cli}@latest`);
+    expect(output).not.toContain('npx native-dates@latest');
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false);
   });
 
@@ -541,7 +587,7 @@ describe('npx native-dates', () => {
     'in a terminal asks where the skills go first, and esc at the approval steps back to it',
     async () => {
       const dir = project();
-      const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+      const command = `"${process.execPath}" "${join(publishedSetup, 'bin/setup.js')}"`;
       writeFileSync(calls, '');
       const child = spawn(scriptBin, ['-qec', command, '/dev/null'], { cwd: dir, env: environment(['claude']) });
       let output = '';
@@ -660,7 +706,7 @@ describe('npx native-dates', () => {
   });
 
   it.runIf(scriptBin)('prints no escape codes on a terminal that says it is dumb', () => {
-    const command = `"${process.execPath}" "${join(published, 'bin/native-dates.js')}"`;
+    const command = `"${process.execPath}" "${join(publishedSetup, 'bin/setup.js')}"`;
     const { stdout } = spawnSync(scriptBin, ['-qec', command, '/dev/null'], {
       cwd: project(),
       input: 'n\n',
@@ -726,7 +772,7 @@ describe('npx native-dates', () => {
     symlinkSync(core, join(dir, 'node_modules/@native-dates/core'));
     const found = new Project({
       root: dir,
-      packageDir: published,
+      packageDir: publishedSetup,
       name: 'native-dates',
       version,
       aliases: ['@native-dates/core'],
@@ -776,10 +822,14 @@ describe('npx native-dates', () => {
 
   it('refuses outside a project and on an unknown option without writing', () => {
     const empty = mkdtempSync(join(scratch, 'empty-'));
-    expect(setup(empty, '--yes').status).toBe(1);
+    const withoutProject = setup(empty, '--yes');
+    expect(withoutProject.status).toBe(1);
+    expect(withoutProject.output).toContain(`npx ${cli}@latest`);
     expect(existsSync(join(empty, 'AGENTS.md'))).toBe(false);
     const dir = project();
-    expect(setup(dir, '--force')).toMatchObject({ status: 1, calls: '' });
+    const unknownOption = setup(dir, '--force');
+    expect(unknownOption).toMatchObject({ status: 1, calls: '' });
+    expect(unknownOption.output).toContain(`npx ${cli}@latest --help`);
     // a word every object carries is not an option either
     expect(setup(dir, 'toString')).toMatchObject({ status: 1, calls: '' });
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false);

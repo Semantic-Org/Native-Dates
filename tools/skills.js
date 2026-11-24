@@ -81,7 +81,7 @@ export function skillsFrom(resolveDir = root) {
   return readSkills(resolveDir);
 }
 
-// defaults to the package root and never the working directory, since ai/skills is a folder named skills too
+// packageDir defaults to the package root, and refuses any target whose skills/ resolves to authored ai/skills
 // what an agent's own plugin install needs to accept the package, written at pack and never by hand
 // Antigravity wants an Agent Plugins plugin.json at the root, Codex looks in .claude-plugin, and Claude Code
 // reads the version it compares for updates from either
@@ -90,7 +90,12 @@ const manifests = {
   '.claude-plugin/plugin.json': (fields) => fields,
 };
 
+const authoredSkillsDir = resolve(root, 'ai/skills');
+
 export const cleanSkills = (packageDir = root) => {
+  if (resolve(packageDir, 'skills') === authoredSkillsDir) {
+    throw new Error(`refusing to clean authored skills directory: ${authoredSkillsDir}`);
+  }
   for (const path of ['skills', ...Object.keys(manifests)]) {
     rmSync(resolve(packageDir, path), { recursive: true, force: true });
   }
@@ -123,7 +128,7 @@ export function stampMarketplace() {
   writeFileSync(marketplacePath, json(marketplaceFrom(manifest)));
 }
 
-export function packSkills(packageDir = root) {
+export function packSkills(packageDir = root, { manifests: includeManifests = true } = {}) {
   const skills = skillsFrom();
   const manifest = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
   const { name: packageName, version, description } = manifest;
@@ -132,6 +137,7 @@ export function packSkills(packageDir = root) {
     mkdirSync(resolve(packageDir, 'skills', name), { recursive: true });
     writeFileSync(resolve(packageDir, 'skills', name, 'SKILL.md'), stamped(source, version));
   }
+  if (!includeManifests) { return; }
   mkdirSync(resolve(packageDir, '.claude-plugin'), { recursive: true });
   for (const [path, shape] of Object.entries(manifests)) {
     writeFileSync(resolve(packageDir, path), json(shape({ name: packageName, version, description })));
@@ -140,12 +146,15 @@ export function packSkills(packageDir = root) {
 
 // quiet on success so `npm pack --json` stays parseable
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const [verb] = process.argv.slice(2);
-  if (verb === 'pack') { packSkills(); }
-  else if (verb === 'clean') { cleanSkills(); }
+  const args = process.argv.slice(2);
+  const skillsOnly = args.includes('--skills-only');
+  const [verb, target] = args.filter((arg) => arg !== '--skills-only');
+  const dir = target ? resolve(process.cwd(), target) : root;
+  if (verb === 'pack') { packSkills(dir, { manifests: !skillsOnly }); }
+  else if (verb === 'clean') { cleanSkills(dir); }
   else if (verb === 'stamp') { stampMarketplace(); }
   else {
-    console.error('usage: node tools/skills.js <pack|clean|stamp>');
+    console.error('usage: node tools/skills.js <pack|clean|stamp> [dir] [--skills-only]');
     process.exitCode = 1;
   }
 }

@@ -15,7 +15,7 @@ npm i native-dates
 ```
 
 ```bash label="AI スキル付き"
-npx native-dates@latest
+npx @native-dates/setup@latest
 ```
 
 インストール後、アプリから `native-dates` をインポートして使います。

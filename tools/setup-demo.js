@@ -1,4 +1,4 @@
-// runs `npx native-dates@latest` as a person would meet it, without publishing: packs this checkout, serves the tarballs
+// runs `npx @native-dates/setup@latest` as a person would meet it, without publishing: packs this checkout, serves the tarballs
 // from a registry on loopback, and starts npx in a throwaway project with an empty npm cache
 //   npm run setup:demo              # a new empty project in the temp folder
 //   npm run setup:demo -- --yes     # anything after -- goes to the command
@@ -44,6 +44,7 @@ const pack = (...args) =>
   });
 pack();
 pack('--workspace', '@native-dates/core');
+pack('--workspace', '@native-dates/setup');
 
 const tarballs = readdirSync(scratch).filter((file) => file.endsWith('.tgz')).map((file) => {
   const bytes = readFileSync(join(scratch, file));
@@ -81,11 +82,10 @@ server.listen(0, '127.0.0.1', () => {
   if (!process.env.DEMO_DIR) {
     writeFileSync(join(project, 'package.json'), '{\n  "name": "demo-app",\n  "private": true\n}\n');
   }
-  // an earlier install: this checkout's package under another version, without its skills or bin for one that predates them
-  // the newest command is asked for by name, as the homepage line does, since npx would otherwise run a copy
-  // already in the project
+  // an earlier install: this checkout's package under another version, without its skills for one that predates them
+  // the newest command is asked for by name, as the homepage line does
   const state = process.env.DEMO_DIR ? undefined : process.env.DEMO_INSTALLED;
-  const command = 'native-dates@latest';
+  const command = '@native-dates/setup@latest';
   if (state) {
     const { file, manifest } = tarballs.find((tarball) => tarball.manifest.name === 'native-dates');
     const [major, minor, patch] = manifest.version.split('.').map(Number);
@@ -98,7 +98,6 @@ server.listen(0, '127.0.0.1', () => {
     writeFileSync(join(copy, 'package.json'), JSON.stringify({ ...manifest, version }, null, 2));
     if (state === 'older-without-skills') {
       rmSync(join(copy, 'skills'), { recursive: true, force: true });
-      rmSync(join(copy, 'bin'), { recursive: true, force: true });
     }
     const dependencies = { 'native-dates': `^${version}` };
     writeFileSync(
