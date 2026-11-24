@@ -40,9 +40,12 @@ export function t(code, key, vars = {}) {
 }
 
 export function plural(code, key, count, vars = {}) {
-  const form = `${key}.${new Intl.PluralRules(code).select(count)}`;
-  const written = t(code, form, vars);
-  return written === form ? t(code, `${key}.other`, vars) : written;
+  // match plural rules to the locale supplying the strings so CJK fallbacks to English pick singular forms
+  const own = stringsOf(code);
+  const source = Object.keys(own).some((k) => k.startsWith(`${key}.`)) ? code : DEFAULT_LOCALE;
+  const form = `${key}.${new Intl.PluralRules(source).select(count)}`;
+  const written = t(source, form, vars);
+  return written === form ? t(source, `${key}.other`, vars) : written;
 }
 
 // scan client scripts for ui('...') and plural('...') calls at build time so pages only inline

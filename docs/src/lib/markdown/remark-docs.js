@@ -1,6 +1,8 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 
-import { localePath, LOCALES } from '../locales.js';
+import { DEFAULT_LOCALE, localePath } from '../locales.js';
+import { englishTwin, headingsOf, localeFromPath, plural, t } from './i18n.js';
 import { esc, inline } from './inline.js';
 import { parseMeta } from './shiki-meta.js';
 
@@ -22,22 +24,23 @@ const CALLOUTS = new Set(Object.keys(ICONS));
 const el = (tag, props, children = []) => ({ type: `docs-${tag}`, data: { hName: tag, hProperties: props }, children });
 const html = (value) => ({ type: 'html', value });
 
-function paramRow(p) {
-  const flag = p.required ? '<span class="param-flag">required</span>' : '';
+function paramRow(p, code) {
+  const flag = p.required ? `<span class="param-flag">${esc(t(code, 'api.required'))}</span>` : '';
   const def = p.default !== undefined
-    ? `<span class="param-default">default <code>${esc(p.default)}</code></span>`
+    ? `<span class="param-default">${t(code, 'api.default', { value: `<code>${esc(p.default)}</code>` })}</span>`
     : '';
   const nested = p.options?.length
-    ? `<details><summary>${p.options.length} options</summary><div class="params">${
-      p.options.map(paramRow).join('')
-    }</div></details>`
+    ? `<details><summary>${
+      esc(plural(code, 'api.options', p.options.length, { count: p.options.length }))
+    }</summary><div class="params">${p.options.map((option) => paramRow(option, code)).join('')}</div></details>`
     : '';
   return `<div class="param"><div class="param-head"><span class="param-name">${esc(p.name)}</span>`
     + `<span class="param-type">${esc(p.type ?? '')}</span>${flag}${def}</div>`
     + `${p.description ? `<p>${inline(p.description)}</p>` : ''}${nested}</div>`;
 }
 
-const paramsBlock = (yaml) => html(`<div class="params">${(parseYaml(yaml) ?? []).map(paramRow).join('')}</div>`);
+const paramsBlock = (yaml, code) =>
+  html(`<div class="params">${(parseYaml(yaml) ?? []).map((param) => paramRow(param, code)).join('')}</div>`);
 const returnsBlock = (yaml) => {
   const r = parseYaml(yaml) ?? {};
   return html(
@@ -64,10 +67,10 @@ function codeBlock(node) {
 }
 
 // group consecutive labeled or locale-tagged fences into one tabbed block sharing a .swap height container
-function variantsBlock(nodes) {
+function variantsBlock(nodes, code) {
   return el('div', { className: ['code'], dataVariants: '' }, [
     el('div', { className: ['code-head'] }, [
-      el('div', { role: 'tablist', ariaLabel: 'Code examples', dataVariantTabs: '' }),
+      el('div', { role: 'tablist', ariaLabel: t(code, 'page.codeExamples'), dataVariantTabs: '' }),
       copyButton(),
     ]),
     el('div', { className: ['swap'] }, nodes),
@@ -76,7 +79,7 @@ function variantsBlock(nodes) {
 
 const isVariant = (n) => n?.type === 'code' && /\b(?:label|locale)="/.test(n.meta ?? '');
 
-function transformChildren(parent) {
+function transformChildren(parent, code) {
   if (!parent.children) { return; }
   const out = [];
   for (let i = 0; i < parent.children.length; i++) {
@@ -84,24 +87,24 @@ function transformChildren(parent) {
     if (isVariant(node)) {
       const group = [node];
       while (isVariant(parent.children[i + 1])) { group.push(parent.children[++i]); }
-      out.push(variantsBlock(group));
+      out.push(variantsBlock(group, code));
       continue;
     }
     if (node.type === 'code') {
-      if (node.lang === 'params') { out.push(paramsBlock(node.value)); }
+      if (node.lang === 'params') { out.push(paramsBlock(node.value, code)); }
       else if (node.lang === 'returns') { out.push(returnsBlock(node.value)); }
       else { out.push(codeBlock(node)); }
       continue;
     }
-    out.push(transformNode(node));
+    out.push(transformNode(node, code));
   }
   parent.children = out;
 }
 
-function transformNode(node) {
+function transformNode(node, code) {
   if (node.type === 'containerDirective') {
     const label = node.children[0]?.data?.directiveLabel ? node.children.shift() : null;
-    transformChildren(node);
+    transformChildren(node, code);
     if (CALLOUTS.has(node.name)) {
       if (label) { label.data = { hName: 'p', hProperties: { className: ['callout-title'] } }; }
       return el('div', { className: ['callout'], dataKind: node.name }, [
@@ -125,7 +128,7 @@ function transformNode(node) {
   }
   // trim trailing space before :kind[...] so heading slugs do not end with a hyphen ('now-')
   if (node.type === 'heading') {
-    transformChildren(node);
+    transformChildren(node, code);
     const last = node.children.at(-1);
     const before = node.children.at(-2);
     if (last?.data?.hProperties?.className?.includes('kind') && before?.type === 'text') {
@@ -142,7 +145,7 @@ function transformNode(node) {
       ? { type: 'paragraph', children: [{ type: 'text', value }] }
       : { type: 'text', value };
   }
-  transformChildren(node);
+  transformChildren(node, code);
   return node;
 }
 
@@ -152,11 +155,32 @@ function localizeLinks(node, code) {
   node.children?.forEach((child) => localizeLinks(child, code));
 }
 
+function collectHeadings(node, out = []) {
+  if (node.type === 'heading') { out.push(node); }
+  node.children?.forEach((child) => collectHeadings(child, out));
+  return out;
+}
+
+// assign English heading IDs to translated headings before rehypeHeadingIds runs so cross-page
+// hash links and language switches keep working across locales
+function preserveEnglishHeadingIds(tree, filePath) {
+  const twin = englishTwin(filePath);
+  if (!twin || !existsSync(twin)) { return; }
+  const english = headingsOf(readFileSync(twin, 'utf8'));
+  const translated = collectHeadings(tree);
+  if (translated.length !== english.length || translated.some((h, i) => h.depth !== english[i].depth)) { return; }
+  translated.forEach((heading, i) => {
+    heading.data = { ...heading.data, hProperties: { ...heading.data?.hProperties, id: english[i].id } };
+  });
+}
+
 export function remarkDocs() {
   return (tree, file) => {
-    transformChildren(tree);
-    const folder = file.path?.match(/content\/translations\/([^/]+)\//)?.[1];
-    const locale = LOCALES.find((l) => l.path === folder);
-    if (locale) { localizeLinks(tree, locale.code); }
+    const locale = localeFromPath(file?.path);
+    transformChildren(tree, locale.code);
+    if (locale.code !== DEFAULT_LOCALE) {
+      localizeLinks(tree, locale.code);
+      preserveEnglishHeadingIds(tree, file.path);
+    }
   };
 }
