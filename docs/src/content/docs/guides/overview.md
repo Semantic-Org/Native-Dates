@@ -89,4 +89,4 @@ datetime('2026-11-16T09:30', 'Berlin').zone; // 'Europe/Berlin'
 date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 ```
 
-Head to [Installation](/guides/installation/) to install the package, support older runtimes, and configure app-wide defaults.
+Head to [Installation](/guides/installation/) to add the package to your project and set up polyfilling if you support Safari.

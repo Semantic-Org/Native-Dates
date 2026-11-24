@@ -429,16 +429,17 @@
 }
 @media (max-width: 600px) {
   /* a task sits above its row of times, each named by data-label, so there is room for our column and two more */
-  .bench { container-type: inline-size; }
+  .bench { container-type: inline-size; scroll-snap-type: x mandatory; scroll-padding-inline-start: 116px; }
   .bench table, .bench :is(tbody, tfoot) { display: block; }
   .bench table { width: max-content; min-width: 100%; }
   .bench thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .bench tr { display: grid; grid-template-columns: 116px; grid-auto-columns: 108px; grid-auto-flow: column; border-top: 1px solid var(--line); }
   .bench tbody tr:first-child { border-top: 0; }
   .bench tfoot tr { border-top-color: var(--line-2); }
-  .bench :is(tbody, tfoot) th:first-child { grid-area: 1 / 1; width: 100cqi; padding: 12px 12px 0; border-top: 0; background: none; }
-  .bench td { grid-row: 2; padding: 6px 12px 12px; border-top: 0; }
-  .bench td::before { content: attr(data-label); display: block; color: var(--text-3); font-size: var(--fs-3xs); line-height: var(--lh-3xs); white-space: nowrap; }
+  .bench :is(tbody, tfoot) th:first-child { grid-area: 1 / 1; width: 100cqi; padding: 12px 12px 8px; border-top: 0; border-bottom: 1px solid var(--line); background: none; }
+  .bench :is(tbody, tfoot) td { grid-row: 2; padding: 10px 12px 12px; border-top: 0; }
+  .bench td:not(.is-ours) { scroll-snap-align: start; }
+  .bench td::before { content: attr(data-label); display: block; margin-bottom: 4px; color: var(--text-3); font-size: var(--fs-3xs); line-height: var(--lh-3xs); white-space: nowrap; }
   .bench td.is-ours { inset-inline-start: 0; box-shadow: none; border-inline-end: 1px solid var(--accent-line); }
   .bench tbody .bench-detail { display: none; }
   .bench-task, .bench-time { font-size: var(--fs-sm); line-height: var(--lh-sm); }

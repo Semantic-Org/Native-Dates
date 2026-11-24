@@ -7,7 +7,7 @@ import { esc, inline } from './inline.js';
 import { parseMeta } from './shiki-meta.js';
 
 // custom markdown directives and fences used across docs pages:
-//   :::note|tip|warning|danger[Title], :::steps, :::entry, :::truth, and :kind[method]
+//   :::note|tip|warning|danger[Title], :::details[Title], :::steps, :::entry, :::truth, and :kind[method]
 //   ```js title="app.js", ```js locale="fr" label="Français", ```js signature, ```params (YAML), and ```returns (YAML)
 const ICONS = {
   note:
@@ -110,6 +110,14 @@ function transformNode(node, code) {
       return el('div', { className: ['callout'], dataKind: node.name }, [
         html(ICONS[node.name]),
         el('div', {}, label ? [label, ...node.children] : node.children),
+      ]);
+    }
+    if (node.name === 'details') {
+      if (label) { label.data = { hName: 'summary', hProperties: {} }; }
+      const props = { className: ['details'], ...(node.attributes && 'open' in node.attributes ? { open: true } : {}) };
+      return el('details', props, [
+        ...(label ? [label] : []),
+        el('div', { className: ['details-body'] }, node.children),
       ]);
     }
     if (node.name === 'steps') {

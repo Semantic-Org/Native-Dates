@@ -1,56 +1,45 @@
 ---
 title: Installation
-lede: Install the core package, add a Temporal polyfill for older runtimes, and configure defaults.
+lede: Add Native Dates in one command, with an optional polyfill for Safari and older Node releases.
 updated: 2026-11-23
 ---
 
-Native Dates ships as a small ES module package with TypeScript types included and zero runtime dependencies.
+Native Dates is an ES module package with bundled TypeScript types and zero runtime dependencies.
 
-## Install the core package
+## Install
 
-Install `native-dates` from npm:
+Install from npm, or use the setup command if you work with a coding agent:
 
-```bash
+```bash label="npm"
 npm i native-dates
 ```
 
-Import only the functions you call. Bundlers tree-shake everything else automatically:
-
-```js title="app.js"
-import { date, monthDay, now, today, yearMonth } from 'native-dates';
-
-const sprint = today().for(2, 'weeks');
-const current = now('Europe/Berlin');
-const standup = date('2026-11-16').at('9:30am', 'America/New_York');
-standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
-
-const billing = yearMonth('2026-11');
-const birthday = monthDay('10/17');
-```
-
-## Setup for coding agents
-
-If you work with a coding agent, run the interactive setup command to install the package and link its agent skills:
-
-```bash
+```bash label="With skills"
 npx native-dates@latest
 ```
 
-The package ships skills covering core usage and plugins, also served at [`/skills/native-dates.md`](/skills/native-dates.md) and [`/skills/native-dates-plugins.md`](/skills/native-dates-plugins.md).
+Then import from `native-dates` in your app:
 
-## Runtime support and polyfilling
+```js title="app.js"
+import { date, now, today } from 'native-dates';
 
-Native Dates runs directly on the platform's built-in `Temporal` and `Intl` APIs. Current releases of Chrome, Edge, Firefox, Node 26+, Deno, and Bun ship both natively.
+const due = today().plus(2, 'weeks');
+const current = now('Europe/Berlin');
+const standup = date('2026-11-16').at('9:30am', 'America/Los_Angeles');
+standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
+```
 
-Safari, older browsers, and Node 24–25 lack native `Temporal` and need `@native-dates/polyfill` alongside `temporal-polyfill`:
+## Supporting Safari and older Node
+
+Native Dates runs directly on the platform's built-in `Temporal` and `Intl` APIs. Current releases of Chrome, Edge, Firefox, Node 26+, Deno, and Bun need nothing else.
+
+For Safari, older browsers, or Node 24–25, install the polyfill alongside `temporal-polyfill`:
 
 ```bash
 npm i @native-dates/polyfill temporal-polyfill
 ```
 
-Node releases below 24 also lack `Intl.DurationFormat`, so server code calling [`Duration.format()`](/api/duration/#format) requires Node 24+, though browser builds still bundle fine on older Node.
-
-Import `@native-dates/polyfill` once at your application entry point before anything else:
+Import it once at the top of your entry file before loading date code:
 
 ```js title="main.js"
 import '@native-dates/polyfill';
@@ -59,45 +48,13 @@ import { today } from 'native-dates';
 const launch = today().plus(30, 'days');
 ```
 
-If another imported module evaluates dates at module load time before top-level `await` finishes, import `'@native-dates/polyfill/sync'` instead to load the polyfill synchronously.
-
 :::tip[Zero cost on modern browsers]
-The entry import checks `globalThis.Temporal` first and dynamically loads `temporal-polyfill` only when it is missing. Browsers with native support skip downloading the polyfill chunk altogether.
+Runtimes with native `Temporal` skip downloading `temporal-polyfill` altogether.
 :::
 
-## Adding plugins
+:::details[Compatibility notes for older runtimes]
+- **Synchronous loading:** If an imported module evaluates dates at load time before top-level `await` settles, import `@native-dates/polyfill/sync` instead.
+- **Formatting durations on Node:** Server code calling [`Duration.format()`](/api/duration/#format) requires Node 24+ for `Intl.DurationFormat`. Browser bundles still build fine on older Node versions.
+:::
 
-Optional additions like city and abbreviation lookups, loose parsing, and legacy `Date` getters live in [`@native-dates/plugins`](/plugins/):
-
-```bash
-npm i @native-dates/plugins
-```
-
-Import each subpath once in your entry file. Loading a subpath attaches its behavior immediately with no extra setup call:
-
-```js title="main.js"
-import '@native-dates/plugins/loose';
-import '@native-dates/plugins/zones';
-import { date, datetime } from 'native-dates';
-
-datetime('2026-11-16T09:30', 'Berlin').zone; // 'Europe/Berlin'
-date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
-```
-
-Browse the [Plugins overview](/plugins/) to see every subpath and its size.
-
-## App-wide defaults
-
-By default, Native Dates uses the runtime's local time zone and locale, including that locale's first day of the week. Call [`configure()`](/api/configure/) once at startup to set defaults across your app, or pass `weekStart` when you want a fixed first day regardless of locale:
-
-```js title="main.js"
-import { configure } from 'native-dates';
-
-configure({
-  zone: 'America/New_York',
-  locale: 'en-US',
-  weekStart: 'monday',
-});
-```
-
-Any individual value or call can still carry its own time zone, [`locale()`](/api/date-time/#locale), or week start when needed. Next, read [Localization](/guides/localization/) to choose how your app localizes dates across browsers and servers.
+Next, read [Customization](/guides/customization/) to tailor defaults and add optional plugins.

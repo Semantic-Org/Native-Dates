@@ -26,6 +26,7 @@ export const SECTIONS = [
         items: [
           { title: 'Overview', slug: 'guides/overview' },
           { title: 'Installation', slug: 'guides/installation' },
+          { title: 'Customization', slug: 'guides/customization' },
           { title: 'Localization', slug: 'guides/localization' },
         ],
       },
