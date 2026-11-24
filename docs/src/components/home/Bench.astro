@@ -1,6 +1,6 @@
 ---
 // times, ratios, versions, and the run they came from are all read from the published results (lib/bench.js)
-import { BENCH_URL, formatMs, formatRatio, LEAD, LIBRARIES, OVERALL, RUN, TASKS } from '../../lib/bench.js';
+import { BENCH_LINKS, BENCH_URL, formatMs, formatRatio, LEAD, LIBRARIES, OVERALL, RUN, TASKS } from '../../lib/bench.js';
 import { formatDate, t } from '../../lib/i18n.js';
 
 const locale = Astro.currentLocale;
@@ -8,7 +8,7 @@ const locale = Astro.currentLocale;
 <div class="container">
   <div class="ribbon-head">
     <h2>{t(locale, 'home.bench.title', { ratio: formatRatio(LEAD) })}</h2>
-    <p>{t(locale, 'home.bench.lede', { tasks: TASKS.length })}</p>
+    <p set:html={t(locale, 'home.bench.lede', BENCH_LINKS)} />
   </div>
   <div class="bench" role="region" aria-labelledby="bench-caption" tabindex="0">
     <table>

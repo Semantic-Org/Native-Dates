@@ -4,6 +4,9 @@
 import results from '../data/bench.json' with { type: 'json' };
 
 export const BENCH_URL = 'https://bench.nativedates.dev';
+const REPO_URL = 'https://github.com/Semantic-Org/Date-Benchmark';
+// where the benchmark's repository tells a reader how to run it and how to enter a library
+export const BENCH_LINKS = { run: `${REPO_URL}#running-locally`, add: `${REPO_URL}/blob/main/CONTRIBUTING.md` };
 
 const OURS = 'native-dates';
 // raw Temporal and Intl run as the benchmark's floor, which is the platform itself and not a library to choose
