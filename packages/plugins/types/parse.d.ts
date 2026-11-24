@@ -45,6 +45,7 @@ declare module 'native-dates' {
      * datetime('24/Nov/2026:12:40:01 -0500', {
      *   format: 'DD/MMM/YYYY:HH:mm:ss ZZ',
      *   zone: 'America/New_York',
+     *   locale: 'en-US',
      * }).toString(); // '2026-11-24T17:40:01.000Z'
      * ```
      *

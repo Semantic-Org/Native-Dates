@@ -1,5 +1,5 @@
 ---
-source: "326d94af83a9"
+source: "e9bb1a6e9b54"
 title: 解析
 lede: ISO 文字列、期間、範囲、自由形式のユーザー入力を、あいまいな推測なしに読み取ります。
 ---
@@ -163,5 +163,5 @@ import '@native-dates/plugins/parse';
 import { date, datetime } from 'native-dates';
 
 date('24112026', { format: 'DDMMYYYY' }); // 2026-11-24
-datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ' });
+datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ', locale: 'en-US' });
 ```

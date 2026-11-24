@@ -144,7 +144,7 @@ function getTimeSeparator(locale, numberingSystem) {
   }).formatToParts(0);
   const hourIndex = parts.findIndex((part) => part.type === 'hour');
   const next = hourIndex >= 0 ? parts[hourIndex + 1] : undefined;
-  return next?.type === 'literal' ? next.value : ':';
+  return next?.type === 'literal' && !/[\p{L}\s]/u.test(next.value) ? next.value : ':';
 }
 
 function tagParts(parts, unit) {

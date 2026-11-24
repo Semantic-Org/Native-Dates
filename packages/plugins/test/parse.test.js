@@ -329,5 +329,22 @@ describe('loose integration, already-parsed values, and error contracts with { f
     expect(() => datetime(`${epoch} 12-31`, { format: 'X MM-DD', zone: 'UTC' })).toThrowError(
       errorCode('invalidDateTime'),
     );
+    expect(datetime('1700000000 Z', { format: 'X Z', zone: 'America/New_York' }).toString()).toBe(
+      '2023-11-14T22:13:20.000Z',
+    );
+    expect(
+      datetime('1700000000 2023-11-14 23:13:20 +01:00', { format: 'X YYYY-MM-DD HH:mm:ss Z', zone: 'UTC' }).toString(),
+    ).toBe('2023-11-14T22:13:20.000Z');
+  });
+
+  it('rejects contradictory month or day paired with week or ordinal dates and parses uppercase Greek names', () => {
+    expect(() => date('2026-W01-07', { format: 'YYYY-[W]WW-MM' })).toThrowError(errorCode('invalidDate'));
+    expect(() => date('2026-001-06', { format: 'YYYY-DDDD-MM' })).toThrowError(errorCode('invalidDate'));
+    expect(() => date('2026-001-15', { format: 'YYYY-DDDD-DD' })).toThrowError(errorCode('invalidDate'));
+    expect(date('2026-001-01', { format: 'YYYY-DDDD-MM' }).toString()).toBe('2026-01-01');
+    expect(date('24 ΝΟΕΜΒΡΙΟΥ 2026', { format: 'D MMMM YYYY', locale: 'el' }).toString()).toBe('2026-11-24');
+    expect(date('ΤΡΙΤΗ, 24 ΝΟΕΜΒΡΙΟΥ 2026', { format: 'dddd, D MMMM YYYY', locale: 'el' }).toString()).toBe(
+      '2026-11-24',
+    );
   });
 });

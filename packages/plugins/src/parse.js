@@ -54,10 +54,12 @@ const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // expand case variants into ES2018 classes instead of ES2025 (?i:...) modifiers so Node 20/22 and Safari < 26 work
 const caselessChar = (char, locale) => {
+  const upper = char.toLocaleUpperCase(locale);
   const forms = new Set([
     char,
     char.toLocaleLowerCase(locale),
-    char.toLocaleUpperCase(locale),
+    upper,
+    upper.toLocaleLowerCase(locale),
     char.toLowerCase(),
     char.toUpperCase(),
   ]);
@@ -79,13 +81,21 @@ const choice = (items, locale) =>
     )
   })`;
 
+// include round-tripped upper->lower keys so accent-dropping locales like Greek still match uppercase names
+const caseKeys = (word, locale) => {
+  const lower = word.toLocaleLowerCase(locale);
+  const folded = word.toLocaleUpperCase(locale).toLocaleLowerCase(locale);
+  return lower === folded ? [lower] : [lower, folded];
+};
+
 const lookupMap = (lists, locale) => {
   const map = new Map();
   for (const list of lists) {
     list.forEach((word, index) => {
-      const key = word.toLocaleLowerCase(locale);
-      if (!map.has(key)) {
-        map.set(key, index + 1);
+      for (const key of caseKeys(word, locale)) {
+        if (!map.has(key)) {
+          map.set(key, index + 1);
+        }
       }
     });
   }
@@ -96,8 +106,9 @@ const lookupMap = (lists, locale) => {
 const weekdayMaskMap = (list, locale) => {
   const map = new Map();
   list.forEach((word, index) => {
-    const key = word.toLocaleLowerCase(locale);
-    map.set(key, (map.get(key) ?? 0) | (1 << (index + 1)));
+    for (const key of caseKeys(word, locale)) {
+      map.set(key, (map.get(key) ?? 0) | (1 << (index + 1)));
+    }
   });
   return map;
 };
@@ -154,10 +165,12 @@ const weekdaySpec = (token) => (table, locale) => {
 
 const meridiemSpec = (table, locale) => {
   const periods = table.isEnglish ? ['AM', 'PM'] : table.dayPeriods;
-  const map = new Map([
-    [periods[0].toLocaleLowerCase(locale), 0],
-    [periods[1].toLocaleLowerCase(locale), 1],
-  ]);
+  const map = new Map();
+  periods.forEach((period, index) => {
+    for (const key of caseKeys(period, locale)) {
+      map.set(key, index);
+    }
+  });
   return ['hour', `(${choice(periods, locale)})`, 'meridiem', (raw) => map.get(raw.toLocaleLowerCase(locale))];
 };
 
@@ -365,6 +378,12 @@ const resolveDate = (fields) => {
       return undefined;
     }
   }
+  if ('month' in fields && plain.month !== fields.month) {
+    return undefined;
+  }
+  if ('day' in fields && plain.day !== fields.day) {
+    return undefined;
+  }
   if ('dayOfYear' in fields && plain.dayOfYear !== fields.dayOfYear) {
     return undefined;
   }
@@ -474,8 +493,9 @@ export const parseFormatted = (kind, input, settings = {}) => {
 
     if ('epoch' in fields) {
       const parsedZone = 'zone' in fields ? zoneId(fields.zone, settings.locale) : undefined;
+      const offset = 'offset' in fields ? (fields.offset === 'Z' ? '+00:00' : fields.offset) : undefined;
       const instant = Temporal.Instant.fromEpochMilliseconds(fields.epoch);
-      const checked = instant.toZonedDateTimeISO(parsedZone ?? timeZone);
+      const checked = instant.toZonedDateTimeISO(parsedZone ?? offset ?? timeZone);
       const isWeekYearOnly = 'weekOfYear' in fields && !('month' in fields) && !('dayOfYear' in fields);
       if (
         ('year' in fields && (isWeekYearOnly ? checked.yearOfWeek : checked.year) !== fields.year)
@@ -485,7 +505,7 @@ export const parseFormatted = (kind, input, settings = {}) => {
         || ('weekOfYear' in fields && checked.weekOfYear !== fields.weekOfYear)
         || ('dayOfWeek' in fields && checked.dayOfWeek !== fields.dayOfWeek)
         || ('weekdayMask' in fields && !(fields.weekdayMask & (1 << checked.dayOfWeek)))
-        || ('offset' in fields && checked.offset !== (fields.offset === 'Z' ? '+00:00' : fields.offset))
+        || (offset !== undefined && checked.offset !== offset)
       ) {
         return refuseInvalid(kind, input, pattern);
       }
@@ -501,7 +521,7 @@ export const parseFormatted = (kind, input, settings = {}) => {
           return refuseInvalid(kind, input, pattern);
         }
       }
-      return settings.zone === undefined ? checked : instant.toZonedDateTimeISO(timeZone);
+      return parsedZone && settings.zone === undefined ? checked : instant.toZonedDateTimeISO(timeZone);
     }
 
     const plainDate = resolveDate(fields);
