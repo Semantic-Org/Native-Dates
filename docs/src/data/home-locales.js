@@ -87,8 +87,8 @@ export const HOME_LOCALES = {
     guideLabel: '阅读中文日期与时间指南',
     configuredLocale: 'zh-CN',
     setupNote: '客户端启动时配置一次（省略则跟随浏览器语言），服务端按请求调用 <code>.locale(tag)</code>',
-    title: '原生支持中文公历、农历干支、周表头与时段格式',
-    lede: '一次配置（或直接使用浏览器默认语言），“上午/下午”前置、不补零的年月日、纪念日与周一至周日表头都在全局自动生效；需要传统农历与干支纪年时再按需传入日历标签，语言包体积为 0 kB。',
+    title: '原生支持中文公历、农历干支、星期表头与时段格式',
+    lede: '一次配置（或直接使用浏览器默认语言），“上午/下午”前置、不补零的年月日、纪念日与周一至周日表头都在全局自动生效；需要传统农历与干支纪年时再按需传入历法标签，语言包体积为 0 kB。',
     linkLabel: '查看中文交互式示例',
     proofs: [
       {
@@ -99,13 +99,13 @@ export const HOME_LOCALES = {
       },
       {
         label: '时段词自动前置',
-        note: '12 小时制下自动输出中文“上午/下午”并置于时刻之前，无需手写英文 AM/PM 映射。',
+        note: '12 小时制下自动输出中文“上午/下午”并置于小时数字之前，无需手写英文 AM/PM 映射。',
         code: "time('09:30').format('Ah:mm')",
         run: ({ time }) => time('09:30').format('Ah:mm'),
       },
       {
         label: '传统农历与干支纪年',
-        note: '仅在切换历法时传入日历标签，春节正月初一与干支年自动对齐。',
+        note: '仅在切换历法时传入历法标签，春节正月初一与干支年自动对齐。',
         code: "date('2026-02-17').format('long', 'zh-CN-u-ca-chinese')",
         run: ({ date }) => date('2026-02-17').format('long', 'zh-CN-u-ca-chinese'),
       },
@@ -120,12 +120,12 @@ export const HOME_LOCALES = {
       day: {
         ask: '北京时间 <code>2026-09-01</code> 零点转成 ISO 日期是哪一天？',
         miss: '早了一天',
-        why: '在东八区将本地零点调用 <code>toISOString()</code> 会回退到 UTC 前一天 16:00，截出 <code>2026-08-31</code>。<code>CalendarDate</code> 只表示日历日期，绝不会因时区偏移而跨天。',
+        why: '在东八区对本地零点调用 <code>toISOString()</code> 会回退到 UTC 前一天 16:00，截出 <code>2026-08-31</code>。<code>CalendarDate</code> 只表示日历日期，绝不会因时区偏移而跨天。',
       },
       clocks: {
-        ask: '伦敦夏令时切换前一天上午 9 点，加一天后是几点？',
+        ask: '伦敦 3 月 28 日上午 9 点，加一天后是几点？',
         miss: '晚了一小时',
-        why: '中国不实行夏令时，但欧美团队每年切换两次时钟。直接加 24 小时会在切换日变成 10 点，而 <code>plus(1, \'day\')</code> 始终保持当地时间 9 点。',
+        why: '中国不实行夏令时，但伦敦会在 3 月最后一个周日拨快一小时进入夏令时。直接加 24 小时会在次日变成 10 点，而 <code>plus(1, \'day\')</code> 始终保持当地时间 9 点。',
       },
     },
     consolesEn: {
@@ -145,9 +145,9 @@ export const HOME_LOCALES = {
       toZone: 'Asia/Shanghai',
       toCity: '上海',
       toCityEn: 'Shanghai',
-      lede: '中国全年固定 UTC+8，但与欧美团队协作时每年会遇到 {changeCount} 次夏令时切换。借助浏览器内置 IANA 时区库，无需打包任何时区数据即可自动换算。',
+      lede: '中国全年固定 UTC+8，但伦敦每年会切换夏令时，两地时差一年要变动 {changes}。借助浏览器内置的 IANA 时区数据库，无需打包任何时区数据即可自动换算。',
       ledeEn: 'China stays on UTC+8 year-round while Europe and North America switch DST, changing the offset {changes} a year. Temporal’s IANA database gives you that for free with zero bytes shipped in your bundle.',
-      caption: '{year} 年伦敦 9:30 例会换算为上海时间。在冬令时的 {dayCount} 天里，时差由 {far} 小时扩大到 {near} 小时，会议时间变为 {time}。',
+      caption: '{year} 年伦敦 9:30 例会换算为上海时间。在冬令时的 {days}里，时差由 {far} 小时扩大到 {near} 小时，会议时间变为 {time}。',
       captionEn: 'A 9:30 AM London standup converted to Shanghai time across {year}. For {days} in winter, the offset widens from {far} hours to {near}, moving the meeting to {time}.',
     },
     xray: { inviteCity: '悉尼', inviteCityEn: 'Sydney' },
