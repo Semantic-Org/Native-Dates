@@ -548,9 +548,9 @@ export const HOME_LOCALES = {
     guideSlug: 'guides/french',
     guideLabel: 'Lire le guide des dates et heures en français',
     configuredLocale: 'fr',
-    setupNote: 'Une fois au démarrage (ou la langue du navigateur), ou <code>.locale(tag)</code> par requête côté serveur',
-    title: 'Mois en minuscules, horloge « 14h30 » et variantes francophones sans fichiers de langue',
-    lede: 'Une seule configuration au démarrage (ou la langue du navigateur) suffit pour écrire les jours et les mois en minuscules sans virgule et fusionner les plages, tout en permettant de passer « fr-CA » ponctuellement pour 0 ko supplémentaire.',
+    setupNote: 'Une fois au démarrage (ou la locale du navigateur), ou <code>.locale(tag)</code> par requête côté serveur',
+    title: 'Mois en minuscules, horloge « 14h30 » et variantes francophones sans fichiers de locale',
+    lede: 'Une seule configuration au démarrage (ou la locale du navigateur) suffit pour écrire les jours et les mois en minuscules sans virgule et condenser les plages, tout en appliquant « fr-CA » ponctuellement pour 0 ko supplémentaire.',
     linkLabel: 'Ouvrir l’exemple interactif en français',
     proofs: [
       {
@@ -573,7 +573,7 @@ export const HOME_LOCALES = {
       },
       {
         label: 'Variante ponctuelle pour le Québec',
-        note: 'Attachez une locale sur une valeur pour passer de « à 09:30 » en France à « à 09 h 30 » au Québec.',
+        note: 'Applique une locale à une valeur pour passer de « à 09:30 » en France à « à 09 h 30 » au Québec.',
         code: "datetime('2026-05-15T09:30', 'America/Montreal').locale('fr-CA').format('long')",
         run: ({ datetime }) => datetime('2026-05-15T09:30', 'America/Montreal').locale('fr-CA').format('long'),
       },
@@ -582,7 +582,7 @@ export const HOME_LOCALES = {
       day: {
         ask: 'Quel jour donne <code>toISOString()</code> pour minuit le <code>2026-09-01</code> à Paris ?',
         miss: 'un jour trop tôt',
-        why: 'À Paris (UTC+2 en été), minuit local correspond à 22:00 la veille en UTC, donc <code>toISOString()</code> renvoie <code>2026-08-31</code>. <code>CalendarDate</code> garde la date civile intacte.',
+        why: 'À Paris (UTC+2 en été), minuit local correspond à 22 h la veille en UTC, donc <code>toISOString()</code> renvoie <code>2026-08-31</code>. <code>CalendarDate</code> garde la date calendaire intacte.',
       },
       clocks: {
         ask: 'Quelle heure est-il un jour après 9 h la veille du passage à l’heure d’été à Paris ?',
@@ -607,9 +607,9 @@ export const HOME_LOCALES = {
       toZone: 'Europe/Paris',
       toCity: 'Paris',
       toCityEn: 'Paris',
-      lede: 'Montréal et Paris changent d’heure avec trois semaines d’écart au printemps et une semaine à l’automne, modifiant leur décalage {changeCount} fois par an. Temporal le gère nativement avec zéro octet ajouté.',
+      lede: 'Montréal et Paris changent d’heure avec trois semaines d’écart au printemps et une semaine à l’automne, modifiant leur décalage {changes} par an. Temporal le gère nativement avec zéro octet ajouté.',
       ledeEn: 'Montréal and Paris switch DST three weeks apart in spring and one week apart in autumn, changing their offset {changes} a year. Temporal’s IANA database gives you that for free with zero bytes shipped in your bundle.',
-      caption: 'Un point quotidien à 9 h 30 à Montréal lu à l’heure de Paris sur l’année {year}. Pendant {dayCount} jours, l’écart passe de {far} h à {near} h et déplace la réunion à {time}.',
+      caption: 'Un point quotidien à 9 h 30 à Montréal lu à l’heure de Paris sur l’année {year}. Pendant {days}, l’écart passe de {far} h à {near} h et déplace la réunion à {time}.',
       captionEn: 'A 9:30 AM Montréal standup converted to Paris time across {year}. For {days}, the offset narrows from {far} hours to {near}, moving the meeting to {time}.',
     },
     xray: { inviteCity: 'Tokyo', inviteCityEn: 'Tokyo' },
