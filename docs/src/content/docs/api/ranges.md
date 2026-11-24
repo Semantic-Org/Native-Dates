@@ -3,7 +3,7 @@ title: Ranges
 lede: Spans between two dates, moments, or times of day, with containment, overlap, and stepping.
 import: import { DateRange, DateTimeRange, TimeRange } from 'native-dates'
 size: core
-updated: 2026-11-22
+updated: 2026-11-24
 ---
 
 ## Range classes
@@ -24,6 +24,8 @@ new DateRange(interval, options?)
 
 Spans two [calendar dates](/api/calendar-date/) and includes both endpoints. Passing an end date earlier than the start date throws a `RangeError`.
 
+A `DateRange` iterates lazily day by day with `for...of` or spread syntax, yielding each calendar date from start through end.
+
 ```js title="ranges.js"
 import { dateRange } from 'native-dates';
 
@@ -32,6 +34,10 @@ const week = dateRange('2026-09-01', '7 days');
 
 trip.duration.days; // 7
 week.toString(); // '2026-09-01/2026-09-07'
+for (const day of trip) {
+  day.toString(); // '2026-09-01', '2026-09-02', ...
+}
+[...dateRange('2026-09-01', '2026-09-03')].map(String); // ['2026-09-01', '2026-09-02', '2026-09-03']
 ```
 :::
 
@@ -321,6 +327,8 @@ range.every(count, unit): Point[]
 ```
 
 Walks forward from `start` by a positive unit or duration and returns every point inside the range. Steps count out from the starting point rather than chaining additions, so stepping monthly from January 31 lands on each month's final day.
+
+To walk a [`DateRange`](#daterange) lazily one day at a time without allocating an array, iterate it directly with `for...of` or spread syntax.
 
 **Parameters**
 
