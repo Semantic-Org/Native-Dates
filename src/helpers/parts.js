@@ -23,7 +23,7 @@ export const wholeParts = (fields, names) => {
 // '9:00' to ISO 8601. Latin letters never separate the parts, which keeps ISO weeks and quarters ('2026-W05-1') out
 export const yearFirst = (text) =>
   text.replace(
-    /^(\s*[+-]?\d{4,6})[^\dA-Za-z:]{1,2}(\d{1,2})[^\dA-Za-z:]{1,2}(\d{1,2})(?!\d)(?:[^\0-\u2fff]|\.)?(?:([T ])(\d)(?=:))?/,
+    /^(\s*[+-]?\d{4,6})[^\dA-Za-z:]{1,2}(\d{1,2})[^\dA-Za-z:]{1,2}(\d{1,2})(?!\d)(?:[^\0-\u2fff]|\.)?(?:([Tt ])(\d)(?=:))?/,
     (_, year, month, day, gap, hour) => `${year}-${pad(month)}-${pad(day)}${gap ? `${gap}0${hour}` : ''}`,
   );
 

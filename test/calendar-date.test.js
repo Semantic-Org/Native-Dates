@@ -92,6 +92,12 @@ describe('date() with timezone inputs', () => {
     expect(date(instant, 'Asia/Tokyo').toString()).toBe('2026-11-17');
   });
 
+  it('resolves ISO instant strings with lowercase t and z into the target timezone', () => {
+    expect(date('2026-11-17t02:00:00z', 'America/Los_Angeles').toString()).toBe('2026-11-16');
+    expect(date('2026-11-17t02:00:00z', 'Asia/Tokyo').toString()).toBe('2026-11-17');
+    expect(date('2026-11-17t08:00[Asia/Tokyo]', 'America/Los_Angeles').toString()).toBe('2026-11-16');
+  });
+
   it('accepts the timezone via an options object { zone }', () => {
     expect(date(instant, { zone: 'America/Los_Angeles' }).toString()).toBe('2026-11-16');
   });

@@ -18,7 +18,7 @@ import {
 import { isInstant, isPlainDate, isPlainDateTime, isPlainTime, isZonedDateTime } from './units.js';
 
 const looksLikeTime = /^\d{1,2}(?::\d{2}){0,2}(?:\.\d+)?\s*(?:[ap]\.?m\.?)?$/i;
-const looksLikeDateTime = /[T ]\d|[zZ]$|\[[^\]]+\]$/;
+const looksLikeDateTime = /[Tt ]\d|[zZ]$|\[[^\]]+\]$/;
 
 export const point = (input) => {
   // YearMonth is ordered on the timeline too, so earliest() and latest() accept it
