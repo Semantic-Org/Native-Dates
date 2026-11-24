@@ -11,6 +11,8 @@ npm run cert      # generate local.nativedates.dev SSL cert from the local dev C
 npm run dev       # https://local.nativedates.dev on :443, or http://localhost:4321 without a cert
 npm run build     # run check:i18n + sandbox + astro sync/build into dist/, and index with Pagefind
 npm run preview   # preview dist/ locally with Pagefind search
+npm run check:i18n # validate strings.json keys, placeholders, heading alignment, and source hashes
+npm run prune:i18n # strip orphaned locale strings and orphaned translated Markdown files
 ```
 
 Reader preferences (theme, plugin view, homepage install line, locale) persist in `localStorage` under `nd:*` keys. Core and plugin bundle sizes (including subset bitmasks) are measured at build time via `tools/size.js` (`src/lib/sizes.js`). Unmeasurable bundle targets fail the build. The homepage benchmark table takes every time and ratio from `src/data/bench.json`, and the build fails if that run no longer supports the section's headline (`src/lib/bench.js`).

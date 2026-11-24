@@ -1,3 +1,8 @@
+import { existsSync, readFileSync } from 'node:fs';
+
+import { DEFAULT_LOCALE } from '../locales.js';
+import { englishTwin, localeFromPath, t, typeColumnsOf } from './i18n.js';
+
 const LINK_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
 
@@ -10,7 +15,12 @@ function walk(node, fn, parent = null, index = 0) {
 }
 
 export function rehypeDocs() {
-  return (tree) => {
+  return (tree, file) => {
+    const locale = localeFromPath(file?.path);
+    const twin = locale.code !== DEFAULT_LOCALE ? englishTwin(file?.path) : null;
+    const typeCols = twin && existsSync(twin) ? typeColumnsOf(readFileSync(twin, 'utf8')) : null;
+    let tableIndex = 0;
+
     walk(tree, (node, parent, index) => {
       if (node.type !== 'element') { return; }
 
@@ -37,13 +47,14 @@ export function rehypeDocs() {
       }
 
       if ((node.tagName === 'h2' || node.tagName === 'h3') && node.properties?.id) {
+        const heading = textOf(node).trim();
         node.children.push({
           type: 'element',
           tagName: 'a',
           properties: {
             className: ['anchor'],
             href: `#${node.properties.id}`,
-            ariaLabel: `Link to ${textOf(node).trim()}`,
+            ariaLabel: t(locale.code, 'page.linkTo', { heading }),
           },
           children: [{ type: 'raw', value: LINK_ICON }],
         });
@@ -66,8 +77,9 @@ export function rehypeDocs() {
             td.properties.dataLabel = ths[i];
           });
         });
-        // tag <code> in Type columns with .t so CSS styles them as type tokens
-        const col = ths.indexOf('Type');
+        // tag <code> in Type columns with .t, falling back to the English twin's column index on translated pages
+        const col = typeCols?.[tableIndex] ?? ths.indexOf('Type');
+        tableIndex++;
         if (col >= 0) {
           walk(node, (row) => {
             if (row.type !== 'element' || row.tagName !== 'tr') { return; }
