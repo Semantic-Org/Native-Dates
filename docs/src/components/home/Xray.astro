@@ -49,7 +49,7 @@ if (differs) { throw new Error(differs); }
             {WAYS.map(([way, name], i) => <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-xr={way}>{name}</button>)}
           </div>
           <span class="xr-count" aria-live="polite" data-xr-count></span>
-          <button class="copy" type="button" data-copy></button>
+          <button class="copy" type="button" data-copy aria-label={t(locale, 'page.copyCode')}></button>
         </div>
         <div class="xr-body">
           {WAYS.map(([way], i) => <pre class:list={{ 'is-line': !sample[way].includes('\n') }} data-xr-pane={way} data-hl hidden={i > 0} set:text={sample[way]} />)}

@@ -49,6 +49,7 @@
   "nav.lang.german": "German",
   "toc.label": "On this page",
   "page.copyImport": "Copy import",
+  "page.copyCode": "Copy code",
   "page.minBr": "minified and Brotli compressed",
   "page.readTime": "{minutes} min read",
   "page.copy": "Copy page",
