@@ -10,8 +10,8 @@ const UNITS = [
   { field: 'weeks', unit: 'week', styles: UNIT_STYLES, digital: 'short' },
   { field: 'days', unit: 'day', styles: UNIT_STYLES, digital: 'short' },
   { field: 'hours', unit: 'hour', styles: CLOCK_STYLES, digital: 'numeric' },
-  { field: 'minutes', unit: 'minute', styles: CLOCK_STYLES, digital: '2-digit' },
-  { field: 'seconds', unit: 'second', styles: CLOCK_STYLES, digital: '2-digit' },
+  { field: 'minutes', unit: 'minute', styles: CLOCK_STYLES, digital: 'numeric' },
+  { field: 'seconds', unit: 'second', styles: CLOCK_STYLES, digital: 'numeric' },
   { field: 'milliseconds', unit: 'millisecond', styles: SUB_STYLES, digital: 'numeric' },
   { field: 'microseconds', unit: 'microsecond', styles: SUB_STYLES, digital: 'numeric' },
   { field: 'nanoseconds', unit: 'nanosecond', styles: SUB_STYLES, digital: 'numeric' },
@@ -54,10 +54,19 @@ function resolveOptions(locales, options) {
       unitStyle = digital;
     }
     else if (isNumeric(prevStyle)) {
-      unitStyle = styles.includes('2-digit') ? '2-digit' : 'numeric';
+      unitStyle = 'numeric';
     }
     else {
       unitStyle = style;
+    }
+
+    if (isNumeric(prevStyle)) {
+      if (!isNumeric(unitStyle)) {
+        throw new RangeError(`invalid ${field}`);
+      }
+      if (unitStyle === 'numeric' && styles.includes('2-digit')) {
+        unitStyle = '2-digit';
+      }
     }
 
     const isClock = field === 'hours' || field === 'minutes' || field === 'seconds';

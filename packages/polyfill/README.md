@@ -1,6 +1,6 @@
 # @native-dates/polyfill
 
-Installs `temporal-polyfill` onto `globalThis.Temporal` and an `Intl.DurationFormat` fallback onto `Intl` only on runtimes without native support (Safari, older browsers, and Node 20–25; Node 26+ ships both natively).
+Installs `temporal-polyfill` onto `globalThis.Temporal` and an `Intl.DurationFormat` fallback onto `Intl` only on runtimes without native support (Safari, older browsers, and Node 22–25; Node 26+ ships both natively).
 
 ```js
 import '@native-dates/polyfill';

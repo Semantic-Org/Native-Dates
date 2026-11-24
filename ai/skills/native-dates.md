@@ -1,6 +1,6 @@
 ---
 name: native-dates
-description: "Core guide for building with native-dates (and @native-dates/core). Use whenever code creates, parses, shifts, rounds, compares, ranges over, or formats dates, clock times, zoned timestamps, durations, billing months, or recurring month-days, handles DST or HTTP Accept-Language locales, or migrates off Date, Moment, Day.js, date-fns, Luxon, or raw Temporal. For city/abbreviation zones, { loose: true } parsing, legacy Date getters, or the Temporal polyfill on Safari and Node 24–25, also load native-dates-plugins."
+description: "Core guide for building with native-dates (and @native-dates/core). Use whenever code creates, parses, shifts, rounds, compares, ranges over, or formats dates, clock times, zoned timestamps, durations, billing months, or recurring month-days, handles DST or HTTP Accept-Language locales, or migrates off Date, Moment, Day.js, date-fns, Luxon, or raw Temporal. For city/abbreviation zones, { loose: true } parsing, legacy Date getters, or the Temporal polyfill on Safari and Node 22–25, also load native-dates-plugins."
 metadata:
   title: Dates, Times, Zones, Durations, and Ranges with native-dates
   keywords: "native-dates, @native-dates/core, datetime, date, time, duration, monthDay, yearMonth, dateRange, datetimeRange, timeRange, today, now, dayOfWeek, epochSeconds, epochMilliseconds, configure, Accept-Language, Temporal, Intl, DST"
@@ -13,7 +13,7 @@ metadata:
 > **Skill:** `native-dates`
 > **Purpose:** Core mental model, pitfalls, and API reference for `native-dates` (`@native-dates/core`)
 
-`native-dates` (`@native-dates/core` is the identical scoped alias) wraps `Temporal` and `Intl` in 9 immutable, frozen classes with zero runtime dependencies. Chrome, Firefox, Edge, and Node `>=26` run natively; load `native-dates-plugins` for Safari/Node 24–25 (`@native-dates/polyfill`), `{ loose: true }` parsing (`'11/16/2026'`, localized text), city/abbreviation zones (`'PST'`, `'Berlin'`), or legacy `Date` getters.
+`native-dates` (`@native-dates/core` is the identical scoped alias) wraps `Temporal` and `Intl` in 9 immutable, frozen classes with zero runtime dependencies. Chrome, Firefox, Edge, and Node `>=26` run natively; load `native-dates-plugins` for Safari/Node 22–25 (`@native-dates/polyfill`), `{ loose: true }` parsing (`'11/16/2026'`, localized text), city/abbreviation zones (`'PST'`, `'Berlin'`), or legacy `Date` getters.
 
 **Golden rule: Match the class to the data (`datetime`, `date`, `time`), chain immutable methods, and pass explicit IANA zones and per-value `.locale()` in server code.**
 
@@ -273,4 +273,4 @@ configure({
 
 | Skill | Use when... |
 |---|---|
-| `native-dates-plugins` | City/abbreviation zones (`'Berlin'`, `'PST'`), `{ loose: true, dayFirst }` parsing, `Date` getters, `@native-dates/polyfill` on Safari/Node 24–25, or custom plugins |
+| `native-dates-plugins` | City/abbreviation zones (`'Berlin'`, `'PST'`), `{ loose: true, dayFirst }` parsing, `Date` getters, `@native-dates/polyfill` on Safari/Node 22–25, or custom plugins |

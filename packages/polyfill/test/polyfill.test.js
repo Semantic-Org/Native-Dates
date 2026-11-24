@@ -155,9 +155,19 @@ describe.each([
         .format({ seconds: 5, milliseconds: 250 }),
     ).toBe('00:05.250');
 
+    const paddedMinutes = new Intl.DurationFormat('en', { style: 'digital', minutes: 'numeric' });
+    expect(paddedMinutes.resolvedOptions().minutes).toBe('2-digit');
+    expect(paddedMinutes.format({ hours: 1, minutes: 5 })).toBe('1:05:00');
+    expect(
+      new Intl.DurationFormat('en', { style: 'digital', hours: 'long' }).format({ hours: 1, minutes: 5, seconds: 7 }),
+    ).toBe('1 hour, 5:07');
+
     expect(() => new Intl.DurationFormat('not_a_valid_locale_123')).toThrow(RangeError);
     expect(() => new Intl.DurationFormat('en-US', { style: 'medium' })).toThrow(RangeError);
     expect(() => new Intl.DurationFormat('en-US', { hoursDisplay: 'never' })).toThrow(RangeError);
+    expect(() => new Intl.DurationFormat('en', { hours: 'numeric', minutes: 'long' })).toThrow(RangeError);
+    expect(() => new Intl.DurationFormat('en', { style: 'digital', milliseconds: 'short' })).toThrow(RangeError);
+    expect(() => new Intl.DurationFormat('en', { milliseconds: 'numeric', microseconds: 'short' })).toThrow(RangeError);
     expect(() => new Intl.DurationFormat('en-US').format(null)).toThrow(TypeError);
     expect(() => new Intl.DurationFormat('en-US').format({})).toThrow(TypeError);
     expect(() => new Intl.DurationFormat('en-US').format({ hours: 1, minutes: -30 })).toThrow(RangeError);
