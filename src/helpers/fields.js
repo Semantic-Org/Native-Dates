@@ -188,10 +188,10 @@ export const temporalDurationOf = (fields) =>
     ? guard(() => Temporal.Duration.from(fields), 'invalidDuration', fields)
     : new Temporal.Duration();
 
-export const temporalDurationFrom = (input, name) => {
-  const fields = fieldsFrom(input, name);
-  return isNumber(input) && (input | 0) === input ? fields : temporalDurationOf(fields);
-};
+export const durationLike = (fields, input) =>
+  isNumber(input) && (input | 0) === input ? fields : temporalDurationOf(fields);
+
+export const temporalDurationFrom = (input, name) => durationLike(fieldsFrom(input, name), input);
 
 // plural keys ({ hours: 2 }) distinguish a duration bag from a point's singular fields ({ hour: 2 })
 export const isDurationFields = (value) =>
