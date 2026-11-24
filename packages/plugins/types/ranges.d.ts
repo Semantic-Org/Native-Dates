@@ -81,7 +81,7 @@ declare module 'native-dates' {
      * import { datetimeRange } from 'native-dates';
      *
      * const first = datetimeRange('2026-11-01T09:00', '2026-11-01T10:00', 'UTC');
-     * first.union('2026-11-01T10:00/2026-11-01T11:30')?.duration.minutes; // 150
+     * first.union('2026-11-01T10:00/2026-11-01T11:30')?.duration.total('minutes'); // 150
      * ```
      *
      * @see {@link https://nativedates.dev/plugins/ranges/#union union}

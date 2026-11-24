@@ -190,13 +190,25 @@ describe('@native-dates/plugins/ranges union()', () => {
 
   it('throws unsupportedUnion when two TimeRanges cover the full 24-hour clock', () => {
     expect(() => timeRange('22:00', '06:00').union(timeRange('06:00', '22:00'))).toThrowError(
-      expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnion' }),
+      expect.objectContaining({
+        name: 'RangeError',
+        code: 'unsupportedUnion',
+        at: '22:00:00/06:00:00 with 06:00:00/22:00:00',
+      }),
     );
     expect(() => timeRange('22:00', '08:00').union(timeRange('06:00', '23:00'))).toThrowError(
-      expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnion' }),
+      expect.objectContaining({
+        name: 'RangeError',
+        code: 'unsupportedUnion',
+        at: '22:00:00/08:00:00 with 06:00:00/23:00:00',
+      }),
     );
     expect(() => timeRange('00:00', '12:00').union(timeRange('12:00', '00:00'))).toThrowError(
-      expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnion' }),
+      expect.objectContaining({
+        name: 'RangeError',
+        code: 'unsupportedUnion',
+        at: '00:00:00/12:00:00 with 12:00:00/00:00:00',
+      }),
     );
   });
 
@@ -253,21 +265,21 @@ describe('@native-dates/plugins/ranges mergeRanges()', () => {
         timeRange('08:00', '16:00'),
         timeRange('16:00', '00:00'),
       ])
-    ).toThrowError(expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnion' }));
+    ).toThrowError(expect.objectContaining({ name: 'RangeError', code: 'unsupportedUnion', at: '3 time ranges' }));
   });
 
   it('throws conflictingRanges on mixed range kinds and invalidRange on bad inputs', () => {
     expect(() => mergeRanges([dateRange('2026-11-01', '2026-11-02'), timeRange('09:00', '10:00')])).toThrowError(
-      expect.objectContaining({ name: 'TypeError', code: 'conflictingRanges' }),
+      expect.objectContaining({ name: 'TypeError', code: 'conflictingRanges', at: 'timeRange with dateRange' }),
     );
     expect(() => mergeRanges(['2026-11-01/2026-11-02'])).toThrowError(
-      expect.objectContaining({ name: 'TypeError', code: 'invalidRange' }),
+      expect.objectContaining({ name: 'TypeError', code: 'invalidRange', at: '2026-11-01/2026-11-02' }),
     );
     expect(() => mergeRanges('2026-11-01/2026-11-02')).toThrowError(
-      expect.objectContaining({ name: 'TypeError', code: 'invalidRange' }),
+      expect.objectContaining({ name: 'TypeError', code: 'invalidRange', at: '2026-11-01/2026-11-02' }),
     );
     expect(() => mergeRanges(null)).toThrowError(
-      expect.objectContaining({ name: 'TypeError', code: 'invalidRange' }),
+      expect.objectContaining({ name: 'TypeError', code: 'invalidRange', at: 'null' }),
     );
   });
 });
