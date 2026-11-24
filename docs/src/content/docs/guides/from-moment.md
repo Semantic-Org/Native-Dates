@@ -96,7 +96,7 @@ quarter.overlaps(dateRange('2026-12-15', '2027-01-15')); // true
 | `m.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) |
 | `m.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) with `to()`, `for()`, and `overlaps()` |
 | `m.fromNow()`, `m.from(other)` | `dt.fromNow()`, `dt.from(other)` | [Relative phrases](/guides/formatting/#relative-phrases) |
-| Non-ISO string parsing | `{ loose: true }` | Load [`@native-dates/plugins/loose`](/plugins/loose/) for locale-aware and informal string parsing |
+| Non-ISO string parsing | `{ format }` or `{ loose: true }` | Load [`@native-dates/plugins/parse`](/plugins/parse/) for fixed format patterns, or [`@native-dates/plugins/loose`](/plugins/loose/) for locale-aware and informal input |
 
 ## Migrating incrementally
 

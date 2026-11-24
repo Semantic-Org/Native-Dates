@@ -111,4 +111,4 @@ date('Nov 16, 2026', { loose: true }); // CalendarDate(2026-11-16)
 | `d.format('YYYY-MM-DD HH:mm')` | `dt.format('YYYY-MM-DD HH:mm')` | [Token patterns](/guides/formatting/#token-patterns) in core |
 | `d.isBetween(a, b)` | `dateRange(a, b).contains(d)` | [Ranges](/api/ranges/) with `to()`, `for()`, and `overlaps()` |
 | `d.fromNow()`, `d.from(other)` | `d.fromNow()`, `d.from(other)` | In core, no `relativeTime` plugin |
-| `customParseFormat` | `{ loose: true }` | Provided by [`@native-dates/plugins/loose`](/plugins/loose/) |
+| `customParseFormat` | `{ format }` or `{ loose: true }` | Fixed patterns via [`@native-dates/plugins/parse`](/plugins/parse/), free-form input via [`@native-dates/plugins/loose`](/plugins/loose/) |

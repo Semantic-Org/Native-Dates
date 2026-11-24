@@ -155,3 +155,13 @@ import { duration } from 'native-dates';
 date('not a date', { loose: true }); // null
 duration('soon', { loose: true }); // null
 ```
+
+When inputs follow a known non-ISO layout such as CSV exports (`'24112026'`), server logs, or week and ordinal dates, import [`@native-dates/plugins/parse`](/plugins/parse/) and pass `{ format }` for deterministic token matching instead of heuristic parsing.
+
+```js
+import '@native-dates/plugins/parse';
+import { date, datetime } from 'native-dates';
+
+date('24112026', { format: 'DDMMYYYY' }); // 2026-11-24
+datetime('24/Nov/2026:12:40:01 -0500', { format: 'DD/MMM/YYYY:HH:mm:ss ZZ' });
+```
