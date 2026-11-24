@@ -1,5 +1,6 @@
 import '@native-dates/plugins/legacy-date';
 import '@native-dates/plugins/loose';
+import '@native-dates/plugins/parse';
 import '@native-dates/plugins/zones';
 import { datetime as coreDatetime } from '@native-dates/core';
 import { looseZoned } from '@native-dates/plugins/loose';
@@ -51,7 +52,10 @@ import {
 } from 'native-dates';
 
 const zone: Zone = 'America/New_York';
-const options: ReadOptions = { zone, locale: 'en-US' };
+const options: ReadOptions = { zone, locale: 'en-US', format: 'DDMMYYYY' };
+export const formattedDate: CalendarDate = date('24112026', { format: 'DDMMYYYY' });
+export const formattedDateLoose: CalendarDate | null = date('24112026', { format: 'DDMMYYYY', loose: true });
+export const formattedRange: DateRange = dateRange('24112026', '30112026', { format: 'DDMMYYYY' });
 const meeting: DateTime = datetime('2026-09-06T14:30', zone);
 const viaCore: DateTime = coreDatetime('2026-09-06T14:30Z', options);
 const due: CalendarDate = date(2026, 9, 6);

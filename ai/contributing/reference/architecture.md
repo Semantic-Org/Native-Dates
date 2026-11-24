@@ -54,6 +54,7 @@ Opt-in plugins live in `packages/plugins/src/` (`@native-dates/plugins`, `"sideE
 |---|---|---|
 | `@native-dates/plugins/zones` | City lookup (`'Berlin'`, `'los angeles'`), cities without an IANA zone of their own (`'Beijing'`, `'Mumbai'`), abbreviations (`'PT'`, `'CET'`) with shared ones read by the caller's locale (`'CST'`), `configure({ zoneAliases })` | Registers fallback zone resolver in `helpers/zones.js`, which passes it the active locale |
 | `@native-dates/plugins/loose` | `{ loose: true, dayFirst }` reading in the active locale's month names, day-period words, dotted clocks, digits, and day-month order (from `Intl`), a `Date.parse` fallback for machine formats, and `null` on unreadable input | Supplies the full-date reader and the partial-date reader behind `parseLoose` and `parseLooseParts` in `helpers/errors.js` across factories and ranges |
+| `@native-dates/plugins/parse` | Deterministic `{ format }` token-mask parsing (`'DDMMYYYY'`, `'DD/MMM/YYYY:HH:mm:ss ZZ'`, `'YYYY-[W]WW-E'`, `'YYYY-DDDD'`, plus `configure({ formats })` names) across every point and range factory | Registers the format parser behind `parseFormat` in `helpers/errors.js` |
 | `@native-dates/plugins/legacy-date` | `Date.prototype` read methods (`getFullYear`, `getUTC*`, `toISOString`, `toLocale*`) and `set*` refusals on `DateTime` | Attaches prototype methods onto `DateTime` (`.toJSDate()` stays in core) |
 
 ## Invariants

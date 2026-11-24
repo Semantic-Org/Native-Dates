@@ -161,7 +161,8 @@ const tokenReaders = {
 // match full single-letter runs so overlong tokens like 'SSSSSS' and typos like 'meduim' throw unknownFormat,
 // leaving 'T' unescaped for 'YYYY-MM-DDTHH:mm'
 // a letter touching an accented one ('às') or an 'h' after 'H' ('HHhmm') is a word, so it throws too
-const tokenPattern = /\[([^\]]*)\]|[A-Za-z]+[\u00c0-\u024f]|[\u00c0-\u024f]+[A-Za-z]|H+\s?h|Do|([A-SU-Za-z])\2*/g;
+export const tokenPattern =
+  /\[([^\]]*)\]|[A-Za-z]+[\u00c0-\u024f]|[\u00c0-\u024f]+[A-Za-z]|H+\s?h|Do|([A-SU-Za-z])\2*/g;
 
 // reject unrecognized style arguments such as a locale tag passed first in monthNames('de')
 const tokenOf = (widths, style) =>

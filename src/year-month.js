@@ -2,7 +2,16 @@ import { isObject, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
 import { isDevelopment } from './helpers/environment.js';
-import { guard, loosely, parseLooseParts, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import {
+  guard,
+  loosely,
+  parseFormat,
+  parseLooseParts,
+  readAs,
+  refuse,
+  refuseType,
+  requireLoose,
+} from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_YEAR_MONTH } from './helpers/identity.js';
@@ -79,6 +88,9 @@ export class YearMonth {
     }
     if (settings.loose) {
       requireLoose('loose');
+    }
+    if (settings.format !== undefined) {
+      return parseFormat('yearMonth', input, settings);
     }
     if (input === undefined || input === null) {
       return refuseType('missingYearMonth', String(input), {

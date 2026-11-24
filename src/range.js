@@ -73,7 +73,7 @@ class Range {
   static isOptions(value) {
     const keys = isPlainObject(value) && Object.keys(value);
     return !!keys?.length
-      && keys.every((key) => ['loose', 'zone', 'dayFirst', 'locale', 'disambiguation'].includes(key));
+      && keys.every((key) => ['loose', 'zone', 'dayFirst', 'locale', 'disambiguation', 'format'].includes(key));
   }
 
   // mask bracketed '[America/New_York]' zones before splitting on '/', checking spaced ' - ' / ' to ' first

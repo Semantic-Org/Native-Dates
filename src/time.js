@@ -4,7 +4,17 @@ import { CalendarDate } from './calendar-date.js';
 import { DateTime } from './date-time.js';
 import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
-import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import {
+  fail,
+  guard,
+  loosely,
+  parseFormat,
+  parseLoose,
+  readAs,
+  refuse,
+  refuseType,
+  requireLoose,
+} from './helpers/errors.js';
 import { durationLike, fieldNames, fieldsFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_TIME } from './helpers/identity.js';
@@ -65,6 +75,7 @@ export class Time {
     this.#locale = localeOf(settings, input);
     this.#plain =
       isPlainTime(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
+        && settings.format === undefined
         ? input
         : Time.#read(input, isNumber(minuteOrOptions) ? minuteOrOptions : undefined, second, settings);
     const plain = this.#plain;
@@ -82,6 +93,9 @@ export class Time {
     checkedDisambiguation(settings.disambiguation);
     if (settings.loose || settings.dayFirst !== undefined) {
       requireLoose(settings.loose ? 'loose' : 'dayFirst');
+    }
+    if (settings.format !== undefined) {
+      return parseFormat('time', input, settings);
     }
     if (input === undefined || input === null) {
       return refuseType('missingTime', String(input), {

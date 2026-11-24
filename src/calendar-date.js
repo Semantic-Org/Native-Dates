@@ -3,7 +3,17 @@ import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 import { DateTime, now } from './date-time.js';
 import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
-import { fail, guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import {
+  fail,
+  guard,
+  loosely,
+  parseFormat,
+  parseLoose,
+  readAs,
+  refuse,
+  refuseType,
+  requireLoose,
+} from './helpers/errors.js';
 import { durationLike, fieldNames, fieldsFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions } from './helpers/format.js';
 import { IS_CALENDAR_DATE, IS_MONTH_DAY } from './helpers/identity.js';
@@ -66,6 +76,7 @@ export class CalendarDate {
     this.#locale = localeOf(settings, input);
     // a Temporal value or '[u-ca=persian]' string in another calendar names the same day, read here as ISO
     const read = isPlainDate(input) && settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
+        && settings.format === undefined
       ? input
       : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings);
     const plain = read.calendarId === 'iso8601' ? read : read.withCalendar('iso8601');
@@ -84,6 +95,9 @@ export class CalendarDate {
     checkedDisambiguation(settings.disambiguation);
     if (settings.loose || settings.dayFirst !== undefined) {
       requireLoose(settings.loose ? 'loose' : 'dayFirst');
+    }
+    if (settings.format !== undefined) {
+      return parseFormat('date', input, settings);
     }
     if (isString(input) && input.length === 10 && input[4] === '-') {
       try {

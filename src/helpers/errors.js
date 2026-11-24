@@ -63,13 +63,18 @@ export const unreadable = { point, length, range: new Set([...point, ...length])
 
 export const isUnreadable = (error, codes = point) => codes.has(error?.code);
 
-// registered at module load when @native-dates/plugins/loose is imported
+// registered at module load when @native-dates/plugins/loose or @native-dates/plugins/parse is imported
 let looseParser = null;
 let partsParser = null;
+let formatParser = null;
 
 export const setLooseExtension = (parser, parts) => {
   looseParser = parser;
   partsParser = parts;
+};
+
+export const setFormatExtension = (parser) => {
+  formatParser = parser;
 };
 
 export const requireLoose = (at = 'loose') => {
@@ -80,6 +85,17 @@ export const requireLoose = (at = 'loose') => {
         : 0,
     });
   }
+};
+
+export const parseFormat = (kind, input, settings) => {
+  if (!formatParser) {
+    refuse('missingPlugin', 'format', {
+      explanation: isDevelopment
+        ? "`{ format }` requires the parse plugin. Import '@native-dates/plugins/parse' once at startup"
+        : 0,
+    });
+  }
+  return formatParser(kind, input, settings);
 };
 
 export const parseLoose = (text, options) => {

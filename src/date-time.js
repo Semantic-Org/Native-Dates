@@ -3,7 +3,7 @@ import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 import { CalendarDate, today } from './calendar-date.js';
 import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
-import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseFormat, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
@@ -68,7 +68,7 @@ export class DateTime {
     const settings = zoneOptions(options);
     this.#locale = localeOf(settings, input);
     const read = isZonedDateTime(input) && settings.zone === undefined && !settings.loose
-        && settings.dayFirst === undefined && settings.disambiguation === undefined
+        && settings.dayFirst === undefined && settings.disambiguation === undefined && settings.format === undefined
       ? input
       : DateTime.#read(input, settings);
     const zoned = read.calendarId === 'iso8601' ? read : read.withCalendar('iso8601');
@@ -95,6 +95,9 @@ export class DateTime {
     const disambiguation = checkedDisambiguation(settings.disambiguation);
     if (loose || dayFirst !== undefined) {
       requireLoose(loose ? 'loose' : 'dayFirst');
+    }
+    if (settings.format !== undefined) {
+      return parseFormat('datetime', input, settings);
     }
     if (input === undefined || input === null) {
       return refuseType('missingDateTime', String(input), {
@@ -546,7 +549,7 @@ export const datetime = (input, options) => {
   const settings = zoneOptions(options);
   const build = () =>
     input instanceof DateTime && settings.zone === undefined && settings.dayFirst === undefined
-      && settings.locale === undefined && settings.disambiguation === undefined
+      && settings.locale === undefined && settings.disambiguation === undefined && settings.format === undefined
       ? input
       : new DateTime(input, settings);
   return settings.loose ? loosely(build) : build();

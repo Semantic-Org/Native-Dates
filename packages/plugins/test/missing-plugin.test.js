@@ -103,3 +103,16 @@ describe('zone aliases and city names without @native-dates/plugins/zones', () =
     expect(() => configure({ zoneAliases: { hq: 'Europe/Berlin' } })).toThrowError(missingPlugin('zoneAliases'));
   });
 });
+
+describe('{ format } without @native-dates/plugins/parse', () => {
+  it('throws missingPlugin at format across point factories, ranges, and class constructors', () => {
+    expect(() => date('24112026', { format: 'DDMMYYYY' })).toThrowError(missingPlugin('format'));
+    expect(() => datetime('24112026 0930', { format: 'DDMMYYYY HHmm' })).toThrowError(missingPlugin('format'));
+    expect(() => time('0930', { format: 'HHmm' })).toThrowError(missingPlugin('format'));
+    expect(() => yearMonth('11/2026', { format: 'MM/YYYY' })).toThrowError(missingPlugin('format'));
+    expect(() => monthDay('24/11', { format: 'DD/MM' })).toThrowError(missingPlugin('format'));
+    expect(() => dateRange('24112026', '30112026', { format: 'DDMMYYYY' })).toThrowError(missingPlugin('format'));
+    expect(() => new CalendarDate('24112026', { format: 'DDMMYYYY' })).toThrowError(missingPlugin('format'));
+    expect(() => new DateTime('24112026 0930', { format: 'DDMMYYYY HHmm' })).toThrowError(missingPlugin('format'));
+  });
+});
