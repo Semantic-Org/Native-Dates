@@ -1,4 +1,5 @@
 import {
+  CalendarDate,
   compare,
   configure,
   date,
@@ -1099,6 +1100,76 @@ describe('DateRange count()', () => {
   it('is defined only on DateRange, not DateTimeRange or TimeRange', () => {
     expect(datetimeRange('2026-05-01T09:00', '2h', 'UTC').count).toBeUndefined();
     expect(timeRange('09:00', '17:00').count).toBeUndefined();
+  });
+});
+
+describe('DateRange [Symbol.iterator]()', () => {
+  it('yields each CalendarDate inclusively in for..of and spread', () => {
+    const stay = dateRange('2026-09-01', '2026-09-04');
+    const walked = [];
+    for (const day of stay) {
+      expect(day).toBeInstanceOf(CalendarDate);
+      walked.push(day.toString());
+    }
+    expect(walked).toEqual(['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04']);
+    expect([...stay].map(String)).toEqual(stay.every('day').map(String));
+    expect(Array.from(stay, String)).toEqual(walked);
+  });
+
+  it('yields a single CalendarDate for a one-day DateRange', () => {
+    const oneDay = dateRange('2026-09-01', '2026-09-01');
+    expect([...oneDay].map(String)).toEqual(['2026-09-01']);
+  });
+
+  it('steps across month, year, and leap-day boundaries', () => {
+    expect([...dateRange('2028-02-27', '2028-03-02')].map(String)).toEqual([
+      '2028-02-27',
+      '2028-02-28',
+      '2028-02-29',
+      '2028-03-01',
+      '2028-03-02',
+    ]);
+    expect([...dateRange('2026-12-30', '2027-01-02')].map(String)).toEqual([
+      '2026-12-30',
+      '2026-12-31',
+      '2027-01-01',
+      '2027-01-02',
+    ]);
+  });
+
+  it('preserves the carried locale on every yielded day and supports repeated iteration', () => {
+    const stay = dateRange('2026-09-01', '2026-09-03', { locale: 'de-DE' });
+    const firstPass = [...stay];
+    const secondPass = [...stay];
+    expect(firstPass.map((day) => day.locale())).toEqual(['de-DE', 'de-DE', 'de-DE']);
+    expect(secondPass.map(String)).toEqual(firstPass.map(String));
+    expect([...stay.locale('fr-FR')].map((day) => day.locale())).toEqual(['fr-FR', 'fr-FR', 'fr-FR']);
+  });
+
+  it('iterates lazily so early break stops without walking the rest of the range', () => {
+    const millennia = dateRange('2000-01-01', '9999-12-31');
+    const firstThree = [];
+    for (const day of millennia) {
+      firstThree.push(day.toString());
+      if (firstThree.length === 3) {
+        break;
+      }
+    }
+    expect(firstThree).toEqual(['2000-01-01', '2000-01-02', '2000-01-03']);
+
+    const cursor = dateRange('2026-09-01', '2026-09-02')[Symbol.iterator]();
+    expect(cursor.next().value.toString()).toBe('2026-09-01');
+    expect(cursor.next().value.toString()).toBe('2026-09-02');
+    expect(cursor.next()).toEqual({ value: undefined, done: true });
+  });
+
+  it('is defined only on DateRange, not DateTimeRange or TimeRange', () => {
+    const meeting = datetimeRange('2026-05-01T09:00', '2h', 'UTC');
+    const shift = timeRange('09:00', '17:00');
+    expect(meeting[Symbol.iterator]).toBeUndefined();
+    expect(shift[Symbol.iterator]).toBeUndefined();
+    expect(() => [...meeting]).toThrowError(TypeError);
+    expect(() => [...shift]).toThrowError(TypeError);
   });
 });
 
