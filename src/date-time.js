@@ -532,7 +532,7 @@ export class DateTime {
 
   // '+' sends hint 'default', which would return ms instead of toString() without this
   [Symbol.toPrimitive](hint) {
-    return hint === 'number' ? this.epochMilliseconds : this.toString();
+    return hint === 'number' ? this.valueOf() : this.toString();
   }
 
   [inspect]() {
