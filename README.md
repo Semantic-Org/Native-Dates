@@ -30,8 +30,9 @@ For those needing Safari support before Spring 2027 (when this lands in baseline
 | --- | --- |
 | [native-dates](src) | The core date library |
 | [@native-dates/plugins](packages/plugins) | Plugins like (`zones`, `loose`, `legacy-date`, `parse`, `ranges` etc.) |
-| [@native-dates/polyfill](packages/polyfill) | Required for Safari/iOS until Spring 2027.  `temporal-polyfill` only when `globalThis.Temporal` is absent |
+| [@native-dates/polyfill](packages/polyfill) | Required for Safari/iOS until Spring 2027 and Node 22–25. Loads `temporal-polyfill` and `Intl.DurationFormat` only when absent |
 | [@native-dates/core](packages/core) | Alias of `native-dates` |
+| [@native-dates/setup](packages/setup) | Standalone `npx @native-dates/setup` CLI for agent skills and project setup |
 
 ## License
 

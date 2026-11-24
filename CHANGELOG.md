@@ -2,6 +2,29 @@
 
 Note: To simplify versioning all subpackages like the polyfill and plugins are published in lockstep with `native-dates`.
 
+## v1.1.0 (2026-11-24)
+
+### Features
+
+- **setup:** Move agent setup CLI into standalone `@native-dates/setup` package (`npx @native-dates/setup@latest`); `native-dates` and `@native-dates/core` no longer ship a `bin` ([#126](https://github.com/Semantic-Org/Native-Dates/pull/126))
+- **core, plugins:** Add Format-Pattern Parsing Plugin ([#119](https://github.com/Semantic-Org/Native-Dates/pull/119))
+- Make DateRange Iterable by Day ([#120](https://github.com/Semantic-Org/Native-Dates/pull/120))
+- **core, plugins:** Add Range Set Operations Plugin ([#122](https://github.com/Semantic-Org/Native-Dates/pull/122))
+- **polyfill:** Polyfill Intl.DurationFormat for Node 20 and 22 ([#124](https://github.com/Semantic-Org/Native-Dates/pull/124))
+- Add Development Hint When Temporal Is Missing ([#123](https://github.com/Semantic-Org/Native-Dates/pull/123))
+
+### Bug Fixes
+
+- **plugins, polyfill:** Fix Pre-Release Parse, Polyfill, and Docs Sync Edge Cases ([#131](https://github.com/Semantic-Org/Native-Dates/pull/131))
+- **plugins:** Make Parse Plugin Compatible With Node 20/22 and Fix Edge Cases ([#130](https://github.com/Semantic-Org/Native-Dates/pull/130))
+- Measure Fractional Days Accurately Across Repeated DST Hours ([#128](https://github.com/Semantic-Org/Native-Dates/pull/128))
+- Diagnose invalid bracketed timezone strings in datetime() error prose ([#117](https://github.com/Semantic-Org/Native-Dates/pull/117))
+- Accept Lowercase ISO Time Separators ([#118](https://github.com/Semantic-Org/Native-Dates/pull/118))
+
+### Agent Skills
+
+- **skills:** Clarify set() Clamping and Out-of-Range Behavior in Core Skill ([#116](https://github.com/Semantic-Org/Native-Dates/pull/116))
+
 ## v1.0.0 (2026-11-24)
 
 This is the initial release of `native-dates`.
