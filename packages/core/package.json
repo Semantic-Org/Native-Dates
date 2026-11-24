@@ -28,16 +28,12 @@
   "dependencies": {
     "native-dates": "1.0.0"
   },
-  "bin": {
-    "native-dates": "bin.js"
-  },
   "skills": [
     "npm:native-dates"
   ],
   "files": [
     "index.js",
     "index.d.ts",
-    "bin.js",
     "README.md",
     "LICENSE"
   ]

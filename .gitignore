@@ -9,6 +9,7 @@ ai/workspace/
 
 # ai/skills laid out for the npm tarball, written by prepack and removed by postpack
 /skills/
+/packages/setup/skills/
 /plugin.json
 /.claude-plugin/plugin.json
 

@@ -37,13 +37,9 @@
     },
     "./helpers/*": "./src/helpers/*.js"
   },
-  "bin": {
-    "native-dates": "bin/native-dates.js"
-  },
   "files": [
     "src",
     "types",
-    "bin",
     "skills",
     "plugin.json",
     ".claude-plugin/plugin.json",

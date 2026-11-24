@@ -1,0 +1,34 @@
+{
+  "name": "@native-dates/setup",
+  "version": "1.0.0",
+  "title": "Native Dates Setup",
+  "description": "Interactive coding-agent setup CLI for native-dates",
+  "author": "Jack Lukic",
+  "license": "ISC",
+  "homepage": "https://nativedates.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Semantic-Org/Native-Dates.git",
+    "directory": "packages/setup"
+  },
+  "bugs": {
+    "url": "https://github.com/Semantic-Org/Native-Dates/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "bin": {
+    "native-dates-setup": "bin/setup.js"
+  },
+  "files": [
+    "bin",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prepack": "node ../../tools/skills.js pack . --skills-only",
+    "postpack": "node ../../tools/skills.js clean ."
+  }
+}

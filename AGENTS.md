@@ -36,7 +36,7 @@ Ask the maintainer rather than inventing conventions for:
 - `npm run ai:index`: Regenerate `ai/contributing/decisions.md` from `ai/contributing/decisions/package.md` (`tools/gates/decisions-index.js`)
 - `npm run size`: Measure minified and Brotli-11 sizes for `native-dates` and every plugin in `@native-dates/plugins`, and check `ai/contributing/budget.md` ([`tools/ci/bundle/README.md`](tools/ci/bundle/README.md))
 - `npm run bench`: Run headless Chrome benchmarks in `bench/` via `tachometer` ([`tools/ci/bench/README.md`](tools/ci/bench/README.md))
-- `npm run setup:demo`: Run `npx native-dates` from this checkout in a throwaway project, served by a registry on loopback (`tools/setup-demo.js`)
+- `npm run setup:demo`: Run `npx @native-dates/setup` from this checkout in a throwaway project, served by a registry on loopback (`tools/setup-demo.js`)
 - `npm run docs`: Start the Astro docs dev server (`docs/`, see [`docs/README.md`](docs/README.md))
 - `npm run format`: Format files with `dprint`
 - `npm run setup`: Install git hooks from `tools/hooks/`

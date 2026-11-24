@@ -33,13 +33,8 @@ export class Project {
   // the folders agents read skills from in a project, in the order they are filled
   static skillFolders = ['.agents/skills', '.claude/skills'];
 
-  // the coding agents this command knows, each a setting a library can add to or change
-  // * bin - the binary on the path that shows the agent is installed
-  // * uses - a project folder that shows an agent with no binary is in use
-  // * folders - the skill folders it reads, the one it prefers first
-  // * plugin - the commands of its own install for every project, where it has one a command can drive
-  //   {repo} is the package's GitHub repository and {package} its installed copy in this project
-  // * updates - the copy key that says how its plugin is kept current, where the agent leaves that to the person
+  // coding agents detected via bin on PATH or a project folder (uses), with skill folders preferred-first
+  // plugin commands expand {repo} and {package}, and updates names the copy key for manual updates
   static agents = {
     'Claude Code': {
       bin: 'claude',
@@ -70,7 +65,6 @@ export class Project {
 
   static addCommands = { npm: 'install', pnpm: 'add', yarn: 'add', bun: 'add' };
 
-  // root is the person's project, and packageDir the package this command shipped in
   constructor({ root, packageDir, name, version, aliases = [], note, noteInstalled = '', repo }) {
     this.root = root;
     this.repo = repo;
@@ -122,7 +116,6 @@ export class Project {
     );
   }
 
-  // the agents found on this machine or in use in this project, by name
   get agents() {
     return Object.keys(Project.agents).filter((agent) => {
       const { bin, uses } = Project.agents[agent];
@@ -130,7 +123,6 @@ export class Project {
     });
   }
 
-  // the found agents this command can install a plugin for: the binary is there and the package names a repository
   get pluginAgents() {
     return this.agents.filter((agent) => {
       const { bin, plugin } = Project.agents[agent];
@@ -163,9 +155,8 @@ export class Project {
     ];
   }
 
-  // every change still to make, in the order they are made, each one the person can switch off
-  // scope 'machine' installs each plugin agent's own plugin for every project and links no project skills for it
-  // selected is false for a folder no found agent reads, so finding agents only decides what starts selected
+  // pending changes in execution order, where scope 'machine' installs agent plugins instead of project links
+  // folders no detected agent reads start deselected so detection only sets defaults
   plan(scope = 'project') {
     const command = this.installCommand?.join(' ');
     const pending = this.pendingSkills;
@@ -250,13 +241,11 @@ export class Project {
     }
   }
 
-  // the version on disk, which is the library the project's code runs against
   get installedVersion() {
     const path = this.installPath;
     return path ? JSON.parse(readFileSync(`${this.root}/${path}/package.json`, 'utf8')).version : null;
   }
 
-  // -1, 0 or 1 by the three numbers of each version
   static compareVersions(one, other) {
     const numbers = (version) => version.split(/[.+-]/).slice(0, 3).map(Number);
     const [a, b] = [numbers(one), numbers(other)];
@@ -264,7 +253,6 @@ export class Project {
     return at === -1 ? 0 : Math.sign(a[at] - b[at]);
   }
 
-  // the installed copy is older than this command, so its skills, if it has any, describe an older library
   get isOlder() {
     return Boolean(this.installPath) && Project.compareVersions(this.installedVersion, this.version) < 0;
   }
@@ -274,7 +262,6 @@ export class Project {
     return Boolean(this.installPath) && Project.compareVersions(this.installedVersion, this.version) > 0;
   }
 
-  // the name the project depends on, which can be an alias. an alias is released in step with the package
   get dependencyName() {
     const { dependencies, devDependencies, optionalDependencies } = this.manifest;
     const declared = { ...dependencies, ...devDependencies, ...optionalDependencies };
@@ -323,7 +310,6 @@ export class Project {
     return done;
   }
 
-  // an agent's own install commands, filled with this package's name, repository and installed copy
   pluginCommands(agent) {
     const values = { name: this.name, repo: this.repo, package: this.installPath ?? `node_modules/${this.name}` };
     return Project.agents[agent].plugin.map((command) => command.replace(/\{(\w+)\}/g, (_, key) => values[key]));
@@ -355,9 +341,8 @@ export class Project {
     const from = source ? `${this.root}/${source}` : join(this.packageDir, 'skills', skill);
     const read = (dir) => existsSync(join(dir, 'SKILL.md')) && readFileSync(join(dir, 'SKILL.md'), 'utf8');
     if (real === realPath(from) || read(real) === read(from)) { return 'ready'; }
-    // a copy this command made from another version carries that version, stamped into every skill at pack,
-    // which tells it from a folder someone else wrote. the same version with other words is a copy someone
-    // edited, so it is left alone with theirs
+    // a copy from another version carries its pack-time version, distinguishing it from user-authored files
+    // same version with different text means the user edited it, so leave it untouched
     const stamp = (text) => (text || '').match(/\n  version: "?([^"\n]+)/)?.[1];
     const copy = read(real) || '';
     const isCopy = !lstatSync(path).isSymbolicLink() && copy.includes(`\nname: ${skill}\n`);
@@ -461,8 +446,7 @@ export class Project {
     return Boolean(source) && realPath(`${this.root}/${path}`) === realPath(`${this.root}/${source}/SKILL.md`);
   }
 
-  // the note for a file, given what the file holds now
-  // it claims the skill matches the installed version only where that is certain
+  // claims the skill matches the installed version only when it resolves to that installed file
   noteFor(content) {
     const [start, end] = this.noteMarkers;
     const path = this.skillPath(content);

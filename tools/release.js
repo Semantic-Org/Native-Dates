@@ -15,11 +15,12 @@ export const PACKAGES = [
   { name: '@native-dates/core', dir: 'packages/core', scoped: true, exactCoreDep: true },
   { name: '@native-dates/plugins', dir: 'packages/plugins', scoped: true, caretCorePeer: true },
   { name: '@native-dates/polyfill', dir: 'packages/polyfill', scoped: true },
+  { name: '@native-dates/setup', dir: 'packages/setup', scoped: true },
 ];
 
 const SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
 const REPO_URL = 'https://github.com/Semantic-Org/Native-Dates';
-const SHIPPED_PATH_RE = /^(src\/|types\/|bin\/|packages\/|ai\/skills\/)/;
+const SHIPPED_PATH_RE = /^(src\/|types\/|packages\/|ai\/skills\/)/;
 const CHANGELOG_HEADING_RE = (version) =>
   new RegExp(`^## v${version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\b|\\s|$)`, 'm');
 
@@ -169,7 +170,7 @@ export function checkLockstep(dir = root) {
     if (lock.version !== version) {
       findings.push(`package-lock.json: top-level version is '${lock.version}', expected '${version}'`);
     }
-    const lockKeys = ['', 'packages/core', 'packages/plugins', 'packages/polyfill'];
+    const lockKeys = ['', 'packages/core', 'packages/plugins', 'packages/polyfill', 'packages/setup'];
     for (const key of lockKeys) {
       const entry = lock.packages?.[key];
       if (entry && entry.version !== version) {
@@ -409,7 +410,7 @@ export function generateNotes({
     if (shipped.some((f) => /^(src|types)\//.test(f))) { scopes.push('core'); }
     if (shipped.some((f) => f.startsWith('packages/plugins/'))) { scopes.push('plugins'); }
     if (shipped.some((f) => f.startsWith('packages/polyfill/'))) { scopes.push('polyfill'); }
-    if (shipped.some((f) => f.startsWith('bin/'))) { scopes.push('cli'); }
+    if (shipped.some((f) => f.startsWith('packages/setup/'))) { scopes.push('cli'); }
     if (shipped.some((f) => f.startsWith('ai/skills/')) && !scopes.length) { scopes.push('skills'); }
     const badge = scopes.length && !(scopes.length === 1 && scopes[0] === 'core')
       ? `**${scopes.join(', ')}:** `

@@ -51,6 +51,11 @@ const makeRepo = (version = '1.0.0') => {
     version,
     publishConfig: { access: 'public' },
   });
+  writeJson(resolve(dir, 'packages/setup/package.json'), {
+    name: '@native-dates/setup',
+    version,
+    publishConfig: { access: 'public' },
+  });
   writeJson(resolve(dir, 'docs/package.json'), {
     name: 'native-dates-docs',
     version: '0.0.0',
@@ -65,6 +70,7 @@ const makeRepo = (version = '1.0.0') => {
       'packages/core': { name: '@native-dates/core', version },
       'packages/plugins': { name: '@native-dates/plugins', version },
       'packages/polyfill': { name: '@native-dates/polyfill', version },
+      'packages/setup': { name: '@native-dates/setup', version },
     },
   });
   writeFileSync(resolve(dir, 'CHANGELOG.md'), `# Changelog\n\n## v${version} (2026-11-23)\n\nInitial release.\n`);
@@ -148,7 +154,7 @@ describe('checkLockstep', () => {
 });
 
 describe('bumpVersions', () => {
-  it('updates all 4 packages and marketplace.json in lockstep', () => {
+  it('updates all 5 packages and marketplace.json in lockstep', () => {
     const dir = makeRepo('1.0.0');
     const result = bumpVersions('minor', { dir, syncLockfile: false });
     expect(result).toEqual({
@@ -159,6 +165,7 @@ describe('bumpVersions', () => {
         'packages/core/package.json',
         'packages/plugins/package.json',
         'packages/polyfill/package.json',
+        'packages/setup/package.json',
         '.claude-plugin/marketplace.json',
       ],
     });
@@ -275,12 +282,14 @@ describe('changelog notes', () => {
       'bbb\tBug: Loose Parsing of Locale Dates (#75)',
       'ccc\tFeat: Add Homepage Globe (#55)',
       'ddd\tDocs: Tighten Core Skill (#82)',
+      'eee\tFeat: Support New Agent (#91)',
     ].join('\n');
     const filesBySha = {
       aaa: 'src/date-time.js\nsrc/helpers/parse.js',
       bbb: 'packages/plugins/src/loose.js\ndocs/src/content/docs/plugins/loose.md',
       ccc: 'docs/src/views/Home.astro',
       ddd: 'ai/skills/native-dates.md',
+      eee: 'packages/setup/bin/setup.js',
     };
     const fakeExec = (cmd, args) => {
       if (args[0] === 'describe') { return { status: 0, stdout: 'v1.0.0', stderr: '' }; }
@@ -291,6 +300,9 @@ describe('changelog notes', () => {
     const { fromTag, markdown } = generateNotes({ version: '1.0.1', date: '2026-11-30', exec: fakeExec });
     expect(fromTag).toBe('v1.0.0');
     expect(markdown).toContain('## v1.0.1 (2026-11-30)');
+    expect(markdown).toContain(
+      '### Features\n\n- **cli:** Support New Agent ([#91](https://github.com/Semantic-Org/Native-Dates/pull/91))',
+    );
     expect(markdown).toContain(
       '### Performance\n\n- Speed Up ISO Parsing ([#84](https://github.com/Semantic-Org/Native-Dates/pull/84))',
     );
