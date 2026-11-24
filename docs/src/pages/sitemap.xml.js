@@ -2,11 +2,12 @@
 // it was last updated, and each doc again in every language it's translated into and reviewed in
 import { getCollection } from 'astro:content';
 
-import { inLanguage, localePath, TRANSLATED } from '../lib/i18n.js';
+import { DEFAULT_LOCALE, inLanguage, languagesWith, localePath, TRANSLATED } from '../lib/i18n.js';
 
 export async function GET({ site }) {
   const entries = await getCollection('docs');
   const examples = await getCollection('examples');
+  const landings = [['/', 'home.'], ['/plugins/', 'plugins.'], ['/examples/', 'examples.']];
   const pages = [
     { path: '/' },
     { path: '/plugins/' },
@@ -15,6 +16,11 @@ export async function GET({ site }) {
     ...entries.map((e) => ({ path: `/${e.id}/`, updated: e.data.updated })),
     ...examples.map((e) => ({ path: `/examples/${e.id}/` })),
   ];
+  for (const [route, prefix] of landings) {
+    for (const code of languagesWith(prefix, { reviewed: true })) {
+      if (code !== DEFAULT_LOCALE) { pages.push({ path: localePath(route, code) }); }
+    }
+  }
   for (const { code } of TRANSLATED) {
     for (const e of entries) {
       const { translated, draft } = await inLanguage(e, code);

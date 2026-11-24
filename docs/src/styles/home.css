@@ -494,6 +494,8 @@
   .say-grid { grid-template-columns: minmax(0, 1fr); padding: 24px 24px 8px; overflow-x: visible; }
   .say-label { display: none; }
   .say-cell { grid-column: 1; grid-row: calc(var(--col) * 3 + var(--row)); min-width: 0; }
+  .say-words { white-space: normal; }
+  .say-turn { text-align: start; }
   .say-code { padding-block: 4px 8px; font-size: var(--fs-md); line-height: var(--lh-md); white-space: normal; overflow-wrap: anywhere; }
   .say-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-height: 0; max-width: none; margin-bottom: 20px; padding-block: 10px 0; }
   .say-text { margin-top: 0; }

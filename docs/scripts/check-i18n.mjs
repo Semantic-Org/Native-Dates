@@ -1,14 +1,16 @@
 // verify content/strings.json and content/translations/* have no unused, missing, or orphaned keys,
-// mismatched {name} placeholders, orphaned or misaligned markdown twins, or stale source hashes.
-// Pass --prune to strip orphaned locale keys and orphaned markdown twins, or --strict to fail on stale hashes.
+// mismatched {name} placeholders, raw HTML in plain-text keys, incomplete CLDR plural sets,
+// orphaned or structurally misaligned markdown twins, or stale source hashes.
+// Flags: --prune (strip orphans), --strict (fail on stale hashes), --complete (require all keys and twins),
+// --locale=ja,zh-CN (limit locale checks to specific locale codes).
 import { existsSync, readdirSync, readFileSync, rmdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { NOTES, TASKS } from '../src/lib/bench.js';
-import { ENABLED, TRANSLATED } from '../src/lib/locales.js';
-import { headingsOf } from '../src/lib/markdown/i18n.js';
+import { ENABLED, localeOf, TRANSLATED } from '../src/lib/locales.js';
+import { headingsOf, typeColumnsOf } from '../src/lib/markdown/i18n.js';
 import { PLUGINS, PRESETS } from '../src/lib/plugins.js';
 import { sourceHash } from '../src/lib/source-hash.js';
 import { CASES } from '../src/scripts/home/consoles.js';
@@ -20,6 +22,31 @@ const here = dirname(fileURLToPath(import.meta.url));
 const defaultRoot = resolve(here, '..');
 
 const CLDR_FORMS = ['zero', 'one', 'two', 'few', 'many', 'other'];
+const HTML_TAG = /<[a-z!/][^>]*>/i;
+
+// keys rendered as raw HTML via set:html, innerHTML, or remark html()
+export const HTML_KEYS = new Set([
+  'api.default',
+  'examples.readMore',
+  'home.bench.lede',
+  'home.bytes.title',
+  'home.closer.title',
+  'home.consoles.lede',
+  'home.consoles.title',
+  'home.hero.lede',
+  'home.hero.title',
+  'home.year.caption',
+  'home.year.lede',
+  'playground.paused',
+  'plugins.callout.body',
+  'plugins.empty.none',
+  'plugins.stats.picked',
+  'search.hint',
+  ...CASES.flatMap((entry) => [`home.consoles.${entry.id}.ask`, `home.consoles.${entry.id}.why`]),
+]);
+
+// keys rendered through markdown/inline.js (`code`, **strong**, [label](href)) where raw HTML tags are escaped
+export const INLINE_KEYS = new Set(PLUGINS.map((plugin) => `plugins.${plugin.name}.description`));
 
 const walk = (dir) =>
   readdirSync(dir).flatMap((name) => {
@@ -45,6 +72,66 @@ const pluralBaseOf = (key) => {
   return form ? key.slice(0, -(form.length + 1)) : null;
 };
 
+const cldrFormsFor = (code) => new Intl.PluralRules(code).resolvedOptions().pluralCategories;
+
+function fencesOf(body, langs) {
+  const blocks = [];
+  const lines = body.split(/\r?\n/);
+  let current = null;
+  for (const line of lines) {
+    if (!current) {
+      const open = line.match(/^(`{3,})(\w+)\s*$/);
+      if (open) { current = { fence: open[1], lang: open[2], lines: [] }; }
+      continue;
+    }
+    if (line.startsWith(current.fence) && line.trim() === current.fence) {
+      if (langs.has(current.lang)) { blocks.push({ lang: current.lang, value: current.lines.join('\n') }); }
+      current = null;
+      continue;
+    }
+    current.lines.push(line);
+  }
+  return blocks;
+}
+
+const paramShape = (items) =>
+  (Array.isArray(items) ? items : []).map((item) => ({
+    name: String(item?.name ?? ''),
+    type: String(item?.type ?? ''),
+    required: Boolean(item?.required),
+    default: item?.default === undefined ? null : String(item.default),
+    options: item?.options ? paramShape(item.options) : null,
+  }));
+
+function directivesOf(body) {
+  const found = [];
+  let inFence = false;
+  for (const line of body.split(/\r?\n/)) {
+    if (/^`{3,}/.test(line)) { inFence = !inFence; continue; }
+    if (inFence) { continue; }
+    const open = line.match(/^:{3,}(entry|steps|truth|note|tip|warning|danger)\b/);
+    if (open) { found.push(open[1]); }
+  }
+  return found;
+}
+
+function truthBooleansOf(body) {
+  let count = 0;
+  let inFence = false;
+  let inTruth = false;
+  for (const line of body.split(/\r?\n/)) {
+    if (/^`{3,}/.test(line)) { inFence = !inFence; continue; }
+    if (inFence) { continue; }
+    if (/^:{3,}truth\b/.test(line)) { inTruth = true; continue; }
+    if (inTruth && /^:{3,}\s*$/.test(line)) { inTruth = false; continue; }
+    if (inTruth && line.includes('|')) {
+      const cells = line.trim().replace(/^\||\|$/g, '').split('|').map((cell) => cell.trim());
+      count += cells.filter((cell) => cell === 'true' || cell === 'false').length;
+    }
+  }
+  return count;
+}
+
 function removeEmptyParents(dir, stopAt) {
   let current = dir;
   while (current !== stopAt && current.startsWith(`${stopAt}/`)) {
@@ -54,7 +141,14 @@ function removeEmptyParents(dir, stopAt) {
   }
 }
 
-export function checkI18n({ root = defaultRoot, srcRoot = resolve(defaultRoot, 'src'), prune = false, strict = false } = {}) {
+export function checkI18n({
+  root = defaultRoot,
+  srcRoot = resolve(defaultRoot, 'src'),
+  prune = false,
+  strict = false,
+  complete = false,
+  locales = null,
+} = {}) {
   const contentDir = resolve(root, 'src/content');
   const translationsDir = resolve(contentDir, 'translations');
 
@@ -130,11 +224,14 @@ export function checkI18n({ root = defaultRoot, srcRoot = resolve(defaultRoot, '
   const warnings = [];
   const pruned = [];
 
-  // 1. unused English keys
-  for (const key of englishKeys) {
+  // 1. unused English keys and HTML allowlist parity
+  for (const [key, value] of Object.entries(english)) {
     const base = pluralBaseOf(key);
     if (!literalKeys.has(key) && !(base && pluralFamilies.has(base))) {
       errors.push(`src/content/strings.json: unused key "${key}"`);
+    }
+    if (HTML_TAG.test(String(value)) && !HTML_KEYS.has(key)) {
+      errors.push(`src/content/strings.json: "${key}" contains HTML tags but is not in HTML_KEYS`);
     }
   }
 
@@ -152,17 +249,29 @@ export function checkI18n({ root = defaultRoot, srcRoot = resolve(defaultRoot, '
 
   // 3. locale strings.json and twin markdown files
   const enabledPaths = new Set(TRANSLATED.map((locale) => locale.path));
+  const localeFilter = locales?.length ? new Set(locales.map((code) => localeOf(code).path)) : null;
   const localeDirs = existsSync(translationsDir)
-    ? readdirSync(translationsDir).filter((dir) => statSync(resolve(translationsDir, dir)).isDirectory()).sort()
+    ? readdirSync(translationsDir)
+      .filter((dir) => statSync(resolve(translationsDir, dir)).isDirectory() && (!localeFilter || localeFilter.has(dir)))
+      .sort()
     : [];
 
+  const englishMarkdown = [
+    ...(existsSync(resolve(contentDir, 'docs')) ? walk(resolve(contentDir, 'docs')) : []),
+    ...(existsSync(resolve(contentDir, 'examples')) ? walk(resolve(contentDir, 'examples')) : []),
+  ].filter((file) => file.endsWith('.md'));
+
   for (const dir of localeDirs) {
+    const locale = TRANSLATED.find((l) => l.path === dir) ?? { code: dir, path: dir };
     const localeRoot = resolve(translationsDir, dir);
     const stringsFile = resolve(localeRoot, 'strings.json');
     if (existsSync(stringsFile)) {
       const rel = relative(root, stringsFile);
       const strings = JSON.parse(readFileSync(stringsFile, 'utf8'));
       const orphanedKeys = [];
+      const translatedFamilies = new Set();
+      const cldrForms = cldrFormsFor(locale.code);
+
       if (enabledPaths.has(dir)) {
         for (const key of [...englishKeys].filter((name) => name.startsWith('language.'))) {
           if (!strings[key]) {
@@ -185,14 +294,22 @@ export function checkI18n({ root = defaultRoot, srcRoot = resolve(defaultRoot, '
           }
           continue;
         }
+        if (base && pluralFamilies.has(base)) {
+          translatedFamilies.add(base);
+        }
+        if (HTML_TAG.test(String(value)) && !HTML_KEYS.has(key)) {
+          errors.push(
+            `${rel}: "${key}" contains raw HTML tags but renders as ${INLINE_KEYS.has(key) ? 'inline markdown' : 'plain text'}`,
+          );
+        }
         const expectedVars = varsOf(english[refKey]);
         const actualVars = varsOf(String(value));
         // language.untranslated names its own language (docs-i18n.md), and singular/dual/zero plurals
-        // in languages like Arabic spell the count in the noun itself without {count} / {kept}
+        // in languages like Arabic spell the count in the noun itself without {count}, {kept}, or {hours}
         const optionalVars = new Set([
           ...(key === 'language.untranslated' ? ['language'] : []),
           ...(key === 'home.xray.invite' || key === 'home.try.title' ? ['city'] : []),
-          ...(base && /\.(?:zero|one|two)$/.test(key) ? ['count', 'kept'] : []),
+          ...(base && /\.(?:zero|one|two)$/.test(key) ? ['count', 'kept', 'hours'] : []),
         ]);
         const missingVars = expectedVars.filter((variable) =>
           !actualVars.includes(variable) && !optionalVars.has(variable)
@@ -204,12 +321,46 @@ export function checkI18n({ root = defaultRoot, srcRoot = resolve(defaultRoot, '
           );
         }
       }
+
+      // require complete CLDR plural forms for every plural family translated in this locale
+      const familiesToCheck = complete ? pluralFamilies : translatedFamilies;
+      for (const family of familiesToCheck) {
+        for (const form of cldrForms) {
+          const pluralKey = `${family}.${form}`;
+          if (!strings[pluralKey]) {
+            errors.push(`${rel}: missing CLDR plural form "${pluralKey}" for ${locale.code}`);
+          }
+        }
+      }
+
+      if (complete) {
+        for (const key of englishKeys) {
+          const base = pluralBaseOf(key);
+          if (base && pluralFamilies.has(base)) { continue; }
+          if (!strings[key]) {
+            errors.push(`${rel}: missing key "${key}"`);
+          }
+        }
+      }
+
       if (prune && orphanedKeys.length) {
         const cleaned = Object.fromEntries(
           Object.entries(strings).filter(([key]) => !orphanedKeys.includes(key)),
         );
         writeFileSync(stringsFile, `${JSON.stringify(cleaned, null, 2)}\n`);
         pruned.push(`${rel}: pruned ${orphanedKeys.length} orphaned key(s): ${orphanedKeys.join(', ')}`);
+      }
+    }
+    else if (complete) {
+      errors.push(`${relative(root, stringsFile)}: missing strings.json`);
+    }
+
+    if (complete) {
+      for (const englishFile of englishMarkdown) {
+        const expectedTwin = englishFile.replace('/content/', `/content/translations/${dir}/`);
+        if (!existsSync(expectedTwin)) {
+          errors.push(`${relative(root, expectedTwin)}: missing translated twin`);
+        }
       }
     }
 
@@ -233,6 +384,29 @@ export function checkI18n({ root = defaultRoot, srcRoot = resolve(defaultRoot, '
       const englishRaw = readFileSync(englishTwin, 'utf8');
       const twinEntry = parseMarkdown(twinRaw);
       const englishEntry = parseMarkdown(englishRaw);
+      const isExample = rel.includes('/examples/');
+
+      // required frontmatter fields match what Doc.astro and Example.astro render without crashing
+      if (!String(twinEntry.data.title ?? '').trim()) {
+        errors.push(`${rel}: missing required frontmatter "title"`);
+      }
+      if (isExample) {
+        if (!String(twinEntry.data.description ?? '').trim()) {
+          errors.push(`${rel}: missing required frontmatter "description"`);
+        }
+        const expectedTry = Array.isArray(englishEntry.data.try) ? englishEntry.data.try.length : 0;
+        if (
+          !Array.isArray(twinEntry.data.try)
+          || twinEntry.data.try.length !== expectedTry
+          || twinEntry.data.try.some((step) => !String(step ?? '').trim())
+        ) {
+          errors.push(`${rel}: frontmatter "try" must be a list of ${expectedTry} non-empty step(s)`);
+        }
+      }
+      else if (!String(twinEntry.data.lede ?? '').trim()) {
+        errors.push(`${rel}: missing required frontmatter "lede"`);
+      }
+
       const expectedSource = sourceHash(englishEntry);
       if (String(twinEntry.data.source ?? '') !== expectedSource) {
         const note = `${rel}: stale source hash (got "${twinEntry.data.source ?? ''}", expected "${expectedSource}")`;
@@ -251,6 +425,67 @@ export function checkI18n({ root = defaultRoot, srcRoot = resolve(defaultRoot, '
           })`,
         );
       }
+
+      // table count parity preserves rehype-docs.js Type column styling by table index
+      const twinTables = typeColumnsOf(twinRaw).length;
+      const englishTables = typeColumnsOf(englishRaw).length;
+      if (twinTables !== englishTables) {
+        errors.push(`${rel}: table count (${twinTables}) != english (${englishTables})`);
+      }
+
+      // container directive order and literal true/false cells in :::truth tables
+      const twinDirectives = directivesOf(twinEntry.body);
+      const englishDirectives = directivesOf(englishEntry.body);
+      if (twinDirectives.join(',') !== englishDirectives.join(',')) {
+        errors.push(`${rel}: directive sequence (${twinDirectives.join(',')}) != english (${englishDirectives.join(',')})`);
+      }
+      const twinTruth = truthBooleansOf(twinEntry.body);
+      const englishTruth = truthBooleansOf(englishEntry.body);
+      if (twinTruth !== englishTruth) {
+        errors.push(`${rel}: :::truth literal true/false count (${twinTruth}) != english (${englishTruth})`);
+      }
+
+      // params and returns fenced YAML blocks must parse and preserve API schema keys
+      const yamlLangs = new Set(['params', 'returns']);
+      const twinBlocks = fencesOf(twinEntry.body, yamlLangs);
+      const englishBlocks = fencesOf(englishEntry.body, yamlLangs);
+      if (
+        twinBlocks.length !== englishBlocks.length
+        || twinBlocks.some((block, i) => block.lang !== englishBlocks[i].lang)
+      ) {
+        errors.push(
+          `${rel}: params/returns block sequence (${twinBlocks.map((b) => b.lang).join(',')}) != english (${
+            englishBlocks.map((b) => b.lang).join(',')
+          })`,
+        );
+      }
+      else {
+        const seen = { params: 0, returns: 0 };
+        for (let i = 0; i < twinBlocks.length; i++) {
+          const lang = twinBlocks[i].lang;
+          const index = ++seen[lang];
+          let twinParsed;
+          let englishParsed;
+          try {
+            twinParsed = parseYaml(twinBlocks[i].value);
+            englishParsed = parseYaml(englishBlocks[i].value);
+          }
+          catch (err) {
+            errors.push(`${rel}: invalid YAML in \`\`\`${lang} block #${index}: ${err.message}`);
+            continue;
+          }
+          if (lang === 'params') {
+            if (JSON.stringify(paramShape(twinParsed)) !== JSON.stringify(paramShape(englishParsed))) {
+              errors.push(`${rel}: \`\`\`params block #${index} schema differs from english`);
+            }
+          }
+          else if (String(twinParsed?.type ?? '') !== String(englishParsed?.type ?? '')) {
+            errors.push(
+              `${rel}: \`\`\`returns block #${index} type ("${twinParsed?.type ?? ''}") != english ("${englishParsed?.type ?? ''}")`,
+            );
+          }
+        }
+      }
     }
   }
 
@@ -258,10 +493,17 @@ export function checkI18n({ root = defaultRoot, srcRoot = resolve(defaultRoot, '
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const args = new Set(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  const args = new Set(argv);
+  const locales = argv
+    .filter((arg) => arg.startsWith('--locale='))
+    .flatMap((arg) => arg.slice('--locale='.length).split(','))
+    .filter(Boolean);
   const { errors, warnings, pruned, keyCount, localeCount } = checkI18n({
     prune: args.has('--prune'),
     strict: args.has('--strict'),
+    complete: args.has('--complete'),
+    locales: locales.length ? locales : null,
   });
   pruned.forEach((line) => console.log(`  - ${line}`));
   warnings.forEach((line) => console.warn(`  ! ${line}`));

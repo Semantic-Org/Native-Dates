@@ -36,16 +36,16 @@ function paramRow(p, code) {
     : '';
   return `<div class="param"><div class="param-head"><span class="param-name">${esc(p.name)}</span>`
     + `<span class="param-type">${esc(p.type ?? '')}</span>${flag}${def}</div>`
-    + `${p.description ? `<p>${inline(p.description)}</p>` : ''}${nested}</div>`;
+    + `${p.description ? `<p>${inline(p.description, code)}</p>` : ''}${nested}</div>`;
 }
 
 const paramsBlock = (yaml, code) =>
   html(`<div class="params">${(parseYaml(yaml) ?? []).map((param) => paramRow(param, code)).join('')}</div>`);
-const returnsBlock = (yaml) => {
+const returnsBlock = (yaml, code) => {
   const r = parseYaml(yaml) ?? {};
   return html(
     `<div class="returns"><span class="param-type">${esc(r.type ?? '')}</span>${
-      r.description ? `<p>${inline(r.description)}</p>` : ''
+      r.description ? `<p>${inline(r.description, code)}</p>` : ''
     }</div>`,
   );
 };
@@ -92,7 +92,7 @@ function transformChildren(parent, code) {
     }
     if (node.type === 'code') {
       if (node.lang === 'params') { out.push(paramsBlock(node.value, code)); }
-      else if (node.lang === 'returns') { out.push(returnsBlock(node.value)); }
+      else if (node.lang === 'returns') { out.push(returnsBlock(node.value, code)); }
       else { out.push(codeBlock(node)); }
       continue;
     }

@@ -110,7 +110,7 @@ const ICONS = {
           <label class="plugin-hit" for={`pick-${p.name}`}><span class="visually-hidden">{t(locale, 'plugins.add', { name: p.name })}</span></label>
           <h2 class="plugin-name">{p.href ? <a class="plugin-link" href={p.href}>{p.name}</a> : p.name}</h2>
           <button class="plugin-tag" type="button" data-tag={p.categoryName} aria-label={t(locale, 'plugins.showCategory', { category: p.categoryName })}>{p.categoryName}</button>
-          <p class="plugin-desc" set:html={inline(p.description)} />
+          <p class="plugin-desc" set:html={inline(p.description, locale)} />
           <span class="plugin-size"><bdi><b>{p.size ?? '–'}</b> {t(locale, 'plugins.minBr')}</bdi></span>
         </li>
       ))}

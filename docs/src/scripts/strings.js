@@ -10,6 +10,11 @@ export function ui(key, vars = {}) {
 }
 
 export function plural(key, count, vars = {}) {
-  const form = new Intl.PluralRules(document.documentElement.lang).select(count);
+  const locale = all().$pluralLocales?.[key] ?? document.documentElement.lang;
+  const form = new Intl.PluralRules(locale).select(count);
   return ui(`${key}.${form}` in all() ? `${key}.${form}` : `${key}.other`, vars);
+}
+
+export function suggested() {
+  return all().$suggested ?? [];
 }

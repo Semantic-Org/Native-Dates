@@ -1,4 +1,4 @@
-import { ui } from './strings.js';
+import { suggested, ui } from './strings.js';
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const terms = (q) => q.toLowerCase().split(/\s+/).filter(Boolean);
 const looksLikeSymbol = (t) => /^[\w.-]+\(\)$|^[A-Z][a-z]+[A-Z]\w*$|^[a-z]+(-[a-z]+)+$/.test(t);
@@ -126,14 +126,15 @@ export function mountSearch() {
     const opt = (cls, href, inner) =>
       `<a class="search-opt ${cls}" id="so-${n}" data-i="${n++}" href="${href}" role="option">${inner}</a>`;
     if (!q) {
+      const items = suggested().length ? suggested() : SUGGESTED;
       html = `<p class="search-group">${ui('search.suggested')}</p>${
-        SUGGESTED.map((s) =>
+        items.map((s) =>
           opt(
             'is-page',
             s.url,
             `${ICONS.page}<span class="so-title">${
               label(s.title, s.symbol)
-            }</span><span class="so-crumb">${s.section}</span>`,
+            }</span><span class="so-crumb">${esc(s.section)}</span>`,
           )
         ).join('')
       }`;
