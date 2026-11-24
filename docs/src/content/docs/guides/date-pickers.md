@@ -1,21 +1,21 @@
 ---
 title: Date pickers and UI
-lede: Connect HTML inputs, third-party date pickers, form schemas, and read-only Date views without leaking timezone bugs.
+lede: Connect browser inputs and date pickers to Native Dates while isolating legacy Date widgets at the UI boundary.
 updated: 2026-11-24
 ---
 
-Keep calendar dates, times, billing months, and moments in your application state.
+Keep Native Dates values in your application state and domain logic.
 
-Convert to ISO strings or native JavaScript dates only at the edge where an input, picker, or chart asks for one. That keeps timezone rules and calendar math separate from UI library quirks.
+Convert to ISO strings or native JavaScript dates only at the component boundary where a browser input or third-party widget expects them. That keeps timezone rules and calendar math separate from UI library quirks.
 
 ## Native HTML inputs
 
-Built-in date, time, and month controls read and write standard ISO strings directly. They need no picker library and never shift a calendar day across time zones.
+Native HTML date and time controls read and write standard ISO strings directly. They need no picker library and never shift a calendar day across time zones.
 
-| Control | Value for the input | Reading back into core |
+| Control | Writing to the input | Reading back into core |
 |---|---|---|
 | `<input type="date">` | `d.toString()` | Pass non-empty strings to [`date()`](/api/date-fn/) for a zone-free calendar day. |
-| `<input type="time">` | `t.format('HH:mm')` | Pass `value` to [`time()`](/api/time-fn/), or write `t.toString()` when `step="1"` shows seconds. |
+| `<input type="time">` | `t.format('HH:mm')`, or `t.toString()` with `step="1"` | Pass `value` to [`time()`](/api/time-fn/) for a zone-free time of day. |
 | `<input type="month">` | `ym.toString()` | Pass `value` to [`yearMonth()`](/api/year-month-fn/) for a billing period or card expiry. |
 | `<input type="datetime-local">` | `dt.format('YYYY-MM-DDTHH:mm')` | Pass `value` and a zone to [`datetime()`](/api/datetime-fn/) for a specific moment. |
 
@@ -78,7 +78,7 @@ function DueDateField() {
 }
 ```
 
-For range selection, wrap the conversion in two small helpers and store a [`DateRange`](/api/ranges/). On the first click, the picker omits the end date until the user selects a second day, so fall back to the start day:
+For range selection, wrap the conversion in two small helpers and store a [`DateRange`](/api/ranges/). While a user is mid-selection, the end date may be undefined or match the start, so falling back to `picked.to ?? picked.from` keeps the range valid:
 
 ```js
 import { date, dateRange } from 'native-dates';
@@ -101,32 +101,42 @@ restored.count('days'); // 5
 restored.toString(); // '2026-11-16/2026-11-20'
 ```
 
-By default, [`toJSDate()`](/api/calendar-date/#tojsdate) and `date()` follow the browser's time zone. If your app sets another default zone with [`configure()`](/api/configure/), pass the browser's resolved zone to both calls so the grid never shifts by a day.
+By default, [`toJSDate()`](/api/calendar-date/#tojsdate) and `date()` follow the browser's time zone. If your app overrides the default zone with [`configure()`](/api/configure/), pass the browser's active zone to both calls so the calendar grid stays aligned:
+
+```js
+const host = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const pickerDate = due.toJSDate(host);
+const picked = date(pickerDate, host);
+```
 
 ## MUI X and Date-based pickers
 
-Suites like MUI X Date Pickers ship their own date adapters and expose native dates on value and change props. Keep that adapter inside one thin wrapper component so legacy dates stay out of application state.
+With `AdapterDateFns`, MUI X Date Pickers pass native JavaScript dates through value and change props. Keep that adapter inside `LocalizationProvider` and one thin wrapper component so legacy dates stay out of application state.
 
 Text-backed pickers fire change handlers on every keystroke, passing an invalid `Date` while the user is still typing. Check `Number.isNaN()` before converting:
 
 ```jsx
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { date, today } from 'native-dates';
 
 function CalendarDatePicker({ value, onChange, ...props }) {
   return (
-    <DatePicker
-      {...props}
-      value={value ? value.toJSDate() : null}
-      minDate={today().toJSDate()}
-      onChange={(next) => {
-        if (!next || Number.isNaN(next.getTime())) {
-          onChange(null);
-          return;
-        }
-        onChange(date(next));
-      }}
-    />
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <DatePicker
+        {...props}
+        value={value ? value.toJSDate() : null}
+        minDate={today().toJSDate()}
+        onChange={(next) => {
+          if (!next || Number.isNaN(next.getTime())) {
+            onChange(null);
+            return;
+          }
+          onChange(date(next));
+        }}
+      />
+    </LocalizationProvider>
   );
 }
 ```
@@ -147,7 +157,7 @@ meeting.format('short', 'en-US'); // '11/16/26, 9:30 AM'
 
 ## Forms and schema validation
 
-Form libraries like React Hook Form, Zod, and Valibot work cleanly when fields stay strings during editing. Parse them into typed values during schema validation.
+Form tools like React Hook Form and Zod work cleanly when fields stay strings during editing. Parse them into typed values during schema validation.
 
 For strict ISO controls, transform each string inside your schema and run domain checks directly on the parsed types:
 
@@ -191,7 +201,7 @@ Type guards like [`isCalendarDate()`](/api/kind-of/) and `isDateTime()` also plu
 
 ## Charts, tables, and read-only Date views
 
-Charts, data tables, and older utilities often read timestamps through native getters like `getTime()` and `getHours()`.
+Charts and data tables often read timestamps through native getters like `getTime()` and `getHours()`.
 
 Import the [legacy-date plugin](/plugins/legacy-date/) once at startup to attach those read-only getters onto [`DateTime`](/api/date-time/). Local getters evaluate in the instance's own zone rather than the host machine's zone, while mutating setters throw:
 
@@ -208,46 +218,17 @@ const rows = [
 rows[0].createdAt.getHours(); // 13
 rows[0].createdAt.getTime(); // 1794852000000
 
-// Sort table columns across CalendarDate, DateTime, Time, and Range
+// Sort rows by any single core type
 const sorted = [...rows].sort((a, b) => compare(a.createdAt, b.createdAt));
 sorted[0].id; // 'a'
 ```
 
-For table column sorting across calendar dates, moments, times, and ranges, pass [`compare()`](/api/compare/) directly to your sort handler.
+Call [`compare()`](/api/compare/) inside your table's sort comparator for any column holding one kind, such as all dates or all moments. Mixing different kinds in one comparison throws an error.
 
 :::tip[When a widget checks instanceof Date]
-The `legacy-date` plugin extends `DateTime` only and never spoofs `instanceof Date`. If a chart or table checks object identity or mutates values in place, pass `dt.toJSDate()` or `dt.epochMilliseconds` at the series boundary instead.
+The legacy-date plugin extends `DateTime` only and never spoofs native date identity. If a chart or table checks object identity or mutates values in place, pass `dt.toJSDate()` or `dt.epochMilliseconds` at the series boundary instead.
 :::
 
-## Submitting to JSON APIs and databases
+## Submitting to APIs and databases
 
-Once inputs are parsed at the form edge, sending them to an API needs no extra mapping. Every core type serializes straight to an ISO 8601 string inside `JSON.stringify()`:
-
-```js
-import { date, dateRange, datetime } from 'native-dates';
-
-const payload = {
-  checkIn: date('2026-11-16'),
-  stay: dateRange('2026-11-16', '2026-11-20'),
-  startsAt: date('2026-11-16').at('9:30am', 'America/Los_Angeles'),
-  zone: 'America/Los_Angeles',
-};
-
-const body = JSON.stringify(payload);
-// '{"checkIn":"2026-11-16","stay":"2026-11-16/2026-11-20","startsAt":"2026-11-16T17:30:00.000Z","zone":"America/Los_Angeles"}'
-```
-
-When reading a JSON response or database row back into the UI, pass each serialized string into its matching factory:
-
-```js
-const data = JSON.parse(body);
-
-const checkIn = date(data.checkIn);
-const stay = dateRange(data.stay);
-const startsAt = datetime(data.startsAt, data.zone);
-
-stay.count('days'); // 5
-startsAt.hour; // 9
-```
-
-See [Storing and sending](/guides/storing-and-sending/) for the full wire-format reference, numeric epoch helpers, and SQL column recommendations.
+Once form values are parsed at the UI edge, pass them straight into `JSON.stringify()` with no manual conversion. See [Storing and sending](/guides/storing-and-sending/) for ISO wire formats and round-tripping JSON or database rows back into factories.
