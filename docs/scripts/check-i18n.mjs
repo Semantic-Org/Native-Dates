@@ -23,6 +23,14 @@ const defaultRoot = resolve(here, '..');
 
 const CLDR_FORMS = ['zero', 'one', 'two', 'few', 'many', 'other'];
 const HTML_TAG = /<[a-z!/][^>]*>/i;
+const HTML_ENTITY = /&(?:nbsp|amp|lt|gt|quot);/i;
+const REQUIRED_HTML = {
+  'playground.paused': [/class="pg-run"/],
+  'home.consoles.title': [/class="is-wrong"/, /class="is-right"/],
+  'home.bench.lede': [/href="\{run\}"/, /href="\{add\}"/],
+  'plugins.callout.body': [/href="\{href\}"/],
+};
+const LOCALE_PREFIX = new RegExp(`\\]\\((\\/(?:${TRANSLATED.map((l) => l.path).join('|')})\\/[^)\\s]*)\\)`, 'gi');
 
 // keys rendered as raw HTML via set:html, innerHTML, or remark html()
 export const HTML_KEYS = new Set([
@@ -64,7 +72,18 @@ const varsOf = (text) => [...new Set([...text.matchAll(/\{(\w+)\}/g)].map(([, na
 
 const parseMarkdown = (raw) => {
   const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-  return match ? { data: parseYaml(match[1]) ?? {}, body: match[2] } : { data: {}, body: raw };
+  if (!match) { return { data: {}, body: raw, error: null }; }
+  try {
+    return { data: parseYaml(match[1]) ?? {}, body: match[2], error: null };
+  }
+  catch (err) {
+    return { data: {}, body: match[2], error: err.message };
+  }
+};
+
+const resolveTranslated = (input) => {
+  const normalized = String(input).trim().toLowerCase();
+  return TRANSLATED.find((l) => l.path === normalized || l.code.toLowerCase() === normalized) ?? null;
 };
 
 const pluralBaseOf = (key) => {
@@ -98,10 +117,47 @@ const paramShape = (items) =>
   (Array.isArray(items) ? items : []).map((item) => ({
     name: String(item?.name ?? ''),
     type: String(item?.type ?? ''),
-    required: Boolean(item?.required),
+    required: typeof item?.required === 'boolean'
+      ? item.required
+      : item?.required === undefined
+      ? false
+      : String(item.required),
     default: item?.default === undefined ? null : String(item.default),
+    hasDescription: Boolean(String(item?.description ?? '').trim()),
     options: item?.options ? paramShape(item.options) : null,
   }));
+
+function stripCodeFences(body) {
+  const out = [];
+  let fence = null;
+  for (const line of body.split(/\r?\n/)) {
+    if (!fence) {
+      const open = line.match(/^(`{3,})/);
+      if (open) { fence = open[1]; continue; }
+      out.push(line);
+      continue;
+    }
+    if (line.startsWith(fence) && line.trim() === fence) { fence = null; }
+  }
+  return out.join('\n');
+}
+
+function kindsOf(body) {
+  return [...stripCodeFences(body).matchAll(/:kind\[([^\]]*)\]/g)].map(([, kind]) => kind);
+}
+
+function localeTabsOf(body) {
+  const locales = [];
+  for (const line of body.split(/\r?\n/)) {
+    const match = line.match(/^`{3,}[^\n]*\blocale="([^"]+)"/);
+    if (match) { locales.push(match[1]); }
+  }
+  return locales;
+}
+
+function doublePrefixedLinksOf(body) {
+  return [...stripCodeFences(body).matchAll(LOCALE_PREFIX)].map(([, href]) => href);
+}
 
 function directivesOf(body) {
   const found = [];
@@ -249,12 +305,24 @@ export function checkI18n({
 
   // 3. locale strings.json and twin markdown files
   const enabledPaths = new Set(TRANSLATED.map((locale) => locale.path));
-  const localeFilter = locales?.length ? new Set(locales.map((code) => localeOf(code).path)) : null;
-  const localeDirs = existsSync(translationsDir)
-    ? readdirSync(translationsDir)
-      .filter((dir) => statSync(resolve(translationsDir, dir)).isDirectory() && (!localeFilter || localeFilter.has(dir)))
-      .sort()
-    : [];
+  let localeDirs;
+  if (locales?.length) {
+    localeDirs = [];
+    for (const input of locales) {
+      const matched = resolveTranslated(input);
+      if (!matched) {
+        errors.push(`unknown or non-translated --locale="${input}"`);
+        continue;
+      }
+      if (!localeDirs.includes(matched.path)) { localeDirs.push(matched.path); }
+    }
+    localeDirs.sort();
+  }
+  else {
+    localeDirs = existsSync(translationsDir)
+      ? readdirSync(translationsDir).filter((dir) => statSync(resolve(translationsDir, dir)).isDirectory()).sort()
+      : [];
+  }
 
   const englishMarkdown = [
     ...(existsSync(resolve(contentDir, 'docs')) ? walk(resolve(contentDir, 'docs')) : []),
@@ -297,10 +365,15 @@ export function checkI18n({
         if (base && pluralFamilies.has(base)) {
           translatedFamilies.add(base);
         }
-        if (HTML_TAG.test(String(value)) && !HTML_KEYS.has(key)) {
+        if ((HTML_TAG.test(String(value)) || HTML_ENTITY.test(String(value))) && !HTML_KEYS.has(key)) {
           errors.push(
-            `${rel}: "${key}" contains raw HTML tags but renders as ${INLINE_KEYS.has(key) ? 'inline markdown' : 'plain text'}`,
+            `${rel}: "${key}" contains raw HTML or entities but renders as ${INLINE_KEYS.has(key) ? 'inline markdown' : 'plain text'}`,
           );
+        }
+        for (const required of REQUIRED_HTML[key] ?? []) {
+          if (!required.test(String(value))) {
+            errors.push(`${rel}: "${key}" is missing required HTML markup (${required.source})`);
+          }
         }
         const expectedVars = varsOf(english[refKey]);
         const actualVars = varsOf(String(value));
@@ -364,6 +437,7 @@ export function checkI18n({
       }
     }
 
+    if (!existsSync(localeRoot)) { continue; }
     for (const file of walk(localeRoot)) {
       if (file === stringsFile) { continue; }
       const rel = relative(root, file);
@@ -384,6 +458,10 @@ export function checkI18n({
       const englishRaw = readFileSync(englishTwin, 'utf8');
       const twinEntry = parseMarkdown(twinRaw);
       const englishEntry = parseMarkdown(englishRaw);
+      if (twinEntry.error) {
+        errors.push(`${rel}: invalid YAML frontmatter: ${twinEntry.error}`);
+        continue;
+      }
       const isExample = rel.includes('/examples/');
 
       // required frontmatter fields match what Doc.astro and Example.astro render without crashing
@@ -445,6 +523,21 @@ export function checkI18n({
         errors.push(`${rel}: :::truth literal true/false count (${twinTruth}) != english (${englishTruth})`);
       }
 
+      // keep :kind[...] badges, locale="..." variant tabs, and root-relative links intact
+      const twinKinds = kindsOf(twinEntry.body);
+      const englishKinds = kindsOf(englishEntry.body);
+      if (twinKinds.join(',') !== englishKinds.join(',')) {
+        errors.push(`${rel}: :kind[...] sequence (${twinKinds.join(',')}) != english (${englishKinds.join(',')})`);
+      }
+      const twinTabs = localeTabsOf(twinEntry.body);
+      const englishTabs = localeTabsOf(englishEntry.body);
+      if (twinTabs.join(',') !== englishTabs.join(',')) {
+        errors.push(`${rel}: locale="..." tabs (${twinTabs.join(',')}) != english (${englishTabs.join(',')})`);
+      }
+      for (const badHref of doublePrefixedLinksOf(twinEntry.body)) {
+        errors.push(`${rel}: link "${badHref}" includes a locale prefix (use root-relative paths)`);
+      }
+
       // params and returns fenced YAML blocks must parse and preserve API schema keys
       const yamlLangs = new Set(['params', 'returns']);
       const twinBlocks = fencesOf(twinEntry.body, yamlLangs);
@@ -479,10 +572,15 @@ export function checkI18n({
               errors.push(`${rel}: \`\`\`params block #${index} schema differs from english`);
             }
           }
-          else if (String(twinParsed?.type ?? '') !== String(englishParsed?.type ?? '')) {
-            errors.push(
-              `${rel}: \`\`\`returns block #${index} type ("${twinParsed?.type ?? ''}") != english ("${englishParsed?.type ?? ''}")`,
-            );
+          else {
+            if (String(twinParsed?.type ?? '') !== String(englishParsed?.type ?? '')) {
+              errors.push(
+                `${rel}: \`\`\`returns block #${index} type ("${twinParsed?.type ?? ''}") != english ("${englishParsed?.type ?? ''}")`,
+              );
+            }
+            if (Boolean(String(twinParsed?.description ?? '').trim()) !== Boolean(String(englishParsed?.description ?? '').trim())) {
+              errors.push(`${rel}: \`\`\`returns block #${index} missing description`);
+            }
           }
         }
       }

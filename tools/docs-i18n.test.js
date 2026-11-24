@@ -221,6 +221,8 @@ describe('check-i18n', () => {
     const arStrings = JSON.parse(readFileSync(arStringsPath, 'utf8'));
     arStrings['home.bench.title'] = '<bdi>2×</bdi> أسرع';
     arStrings['plugins.loose.description'] = 'تحليل <code>مرن</code>.';
+    arStrings['nav.home'] = 'native-dates&nbsp;home';
+    arStrings['playground.paused'] = 'متوقف مؤقتًا';
     arStrings['home.year.gap.one'] = 'فرق ساعة واحدة';
     arStrings['home.year.gap.other'] = 'فرق {hours} ساعة';
     writeFileSync(arStringsPath, JSON.stringify(arStrings, null, 2));
@@ -235,11 +237,15 @@ describe('check-i18n', () => {
     mkdirSync(arExDir, { recursive: true });
 
     const englishBody = [
-      '## Table',
+      '## Table :kind[method]',
       '',
       '| Name | Type |',
       '|---|---|',
       '| `a` | `string` |',
+      '',
+      '```js locale="ja"',
+      'date("2026-01-01");',
+      '```',
       '',
       ':::truth',
       '| Case | Result |',
@@ -250,6 +256,7 @@ describe('check-i18n', () => {
       '```params',
       '- name: zone',
       '  type: Zone',
+      '  required: true',
       '  description: Time zone.',
       '```',
       '',
@@ -261,6 +268,10 @@ describe('check-i18n', () => {
     writeFileSync(
       resolve(enDocDir, 'contract.md'),
       `---\ntitle: Contract\nlede: Summary.\nupdated: 2026-11-23\n---\n\n${englishBody}\n`,
+    );
+    writeFileSync(
+      resolve(enDocDir, 'bad-yaml.md'),
+      '---\ntitle: Broken\nlede: Summary.\nupdated: 2026-11-23\n---\n\nBody.\n',
     );
     writeFileSync(
       resolve(enExDir, 'example.md'),
@@ -276,7 +287,13 @@ describe('check-i18n', () => {
         'title: العقد',
         '---',
         '',
-        '## جدول',
+        '## جدول :kind[دالة]',
+        '',
+        'راجع [الوثائق](/ar/api/date-time/).',
+        '',
+        '```js',
+        'date("2026-01-01");',
+        '```',
         '',
         ':::truth',
         '| الحالة | النتيجة |',
@@ -285,16 +302,21 @@ describe('check-i18n', () => {
         ':::',
         '',
         '```params',
-        '- name: renamed',
+        '- name: zone',
         '  type: Zone',
-        '  description: المنطقة الزمنية.',
+        '  required: "نعم"',
+        '  وصف: المنطقة الزمنية.',
         '```',
         '',
         '```returns',
-        'type: CalendarDate',
-        'description: النتيجة.',
+        'type: DateTime',
+        'وصف: النتيجة.',
         '```',
       ].join('\n'),
+    );
+    writeFileSync(
+      resolve(arDocDir, 'bad-yaml.md'),
+      '---\nsource: abcdef123456\ntitle: broken: [unclosed\n---\n\nنص.\n',
     );
     const exHash = sourceHash({
       data: { title: 'Demo', description: 'Try demo.', try: ['First step', 'Second step'] },
@@ -310,24 +332,36 @@ describe('check-i18n', () => {
     expect(check.errors.some((e) => e.includes('plugins.loose.description') && e.includes('inline markdown'))).toBe(
       true,
     );
+    expect(check.errors.some((e) => e.includes('nav.home') && e.includes('plain text'))).toBe(true);
+    expect(check.errors.some((e) => e.includes('playground.paused') && e.includes('pg-run'))).toBe(true);
     expect(check.errors.some((e) => e.includes('home.year.gap.zero'))).toBe(true);
     expect(check.errors.some((e) => e.includes('home.year.gap.two'))).toBe(true);
     expect(check.errors.some((e) => e.includes('contract.md') && e.includes('missing required frontmatter "lede"')))
       .toBe(true);
     expect(check.errors.some((e) => e.includes('contract.md') && e.includes('table count'))).toBe(true);
     expect(check.errors.some((e) => e.includes('contract.md') && e.includes(':::truth literal true/false'))).toBe(true);
+    expect(check.errors.some((e) => e.includes('contract.md') && e.includes(':kind[...] sequence'))).toBe(true);
+    expect(check.errors.some((e) => e.includes('contract.md') && e.includes('locale="..." tabs'))).toBe(true);
+    expect(check.errors.some((e) => e.includes('contract.md') && e.includes('locale prefix'))).toBe(true);
     expect(check.errors.some((e) => e.includes('contract.md') && e.includes('```params block #1 schema'))).toBe(true);
-    expect(check.errors.some((e) => e.includes('contract.md') && e.includes('```returns block #1 type'))).toBe(true);
+    expect(check.errors.some((e) => e.includes('contract.md') && e.includes('```returns block #1 missing description')))
+      .toBe(true);
+    expect(check.errors.some((e) => e.includes('bad-yaml.md') && e.includes('invalid YAML frontmatter'))).toBe(true);
     expect(check.errors.some((e) => e.includes('demo/example.md') && e.includes('frontmatter "try"'))).toBe(true);
 
-    const completeCheck = checkI18n({ root, srcRoot: resolve(docsRoot, 'src'), complete: true, locales: ['ja'] });
-    expect(completeCheck.errors.some((e) => e.includes('ja/strings.json') && e.includes('missing key "nav.home"')))
+    // case-insensitive --locale=zh-cn resolves cleanly, and unknown/en --locale fails loudly
+    const completeCheck = checkI18n({ root, srcRoot: resolve(docsRoot, 'src'), complete: true, locales: ['zh-cn'] });
+    expect(completeCheck.errors.some((e) => e.includes('zh-cn/strings.json') && e.includes('missing key "nav.home"')))
       .toBe(true);
     expect(
       completeCheck.errors.some((e) =>
-        e.includes('ja/docs/guides/contract.md') && e.includes('missing translated twin')
+        e.includes('zh-cn/docs/guides/contract.md') && e.includes('missing translated twin')
       ),
     ).toBe(true);
     expect(completeCheck.errors.some((e) => e.includes('translations/ar/'))).toBe(false);
+
+    const badLocale = checkI18n({ root, srcRoot: resolve(docsRoot, 'src'), complete: true, locales: ['typo', 'en'] });
+    expect(badLocale.errors.some((e) => e.includes('unknown or non-translated --locale="typo"'))).toBe(true);
+    expect(badLocale.errors.some((e) => e.includes('unknown or non-translated --locale="en"'))).toBe(true);
   });
 });
