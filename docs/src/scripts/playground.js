@@ -1,5 +1,5 @@
-import { PlaygroundPreview, PlaygroundProject } from '@semantic-ui/playground';
-import { createEditor } from '@semantic-ui/playground/editor';
+import { isScriptFile, PlaygroundPreview, PlaygroundProject } from '@semantic-ui/playground';
+import { createEditor, intelligence } from '@semantic-ui/playground/editor';
 
 import { ui } from './strings.js';
 
@@ -62,8 +62,272 @@ const EDITOR_THEME = `
     .cm-panel.cm-search button[name=close]:hover { color: var(--text); background: var(--surface-3); }
     .cm-searchMatch { background: color-mix(in oklab, var(--accent) 22%, transparent); outline: 1px solid var(--accent-line); }
     .cm-searchMatch.cm-searchMatch-selected { background: color-mix(in oklab, var(--accent) 45%, transparent); }
+
+    /* double .cm-tooltip specificity to beat CodeMirror's light and dark base themes */
+    .cm-tooltip.cm-tooltip {
+      z-index: 500;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-3);
+      padding: 10px 12px;
+      background: var(--bevel-soft), var(--surface-2);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: var(--fs-2xs);
+      line-height: 1.5;
+      box-shadow: 0 16px 40px -12px oklch(0 0 0 / 0.72), 0 0 0 1px oklch(1 0 0 / 0.03);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete {
+      min-width: 280px;
+      max-width: 440px;
+      padding: 4px;
+    }
+    .cm-tooltip.cm-tooltip-autocomplete > ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      padding-inline-start: 0;
+      /* 9 rows at 26px each so items never slice cleanly in half at the scroll edge */
+      max-height: 234px;
+      overflow-y: auto;
+      scroll-padding-block: 4px;
+      font-family: var(--font-mono);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete > ul > li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      margin: 0;
+      padding: 3px 8px;
+      border-radius: var(--r-2);
+      font-family: var(--font-mono);
+      font-size: var(--code-sm-fs);
+      line-height: 20px;
+      color: var(--text-2);
+      cursor: pointer;
+    }
+    .cm-tooltip.cm-tooltip-autocomplete > ul > li:hover {
+      background: var(--surface-3);
+      color: var(--text);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected="true"] {
+      background: var(--accent-wash);
+      box-shadow: inset 0 0 0 1px var(--accent-line);
+      color: var(--text);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionMatchedText {
+      text-decoration: none;
+      color: var(--accent-strong);
+      font-weight: 600;
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionLabel {
+      flex-shrink: 0;
+      max-width: 240px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionDetail {
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: right;
+      color: var(--text-3);
+      font-size: var(--fs-3xs);
+      font-style: normal;
+      margin-left: auto;
+      padding-left: 12px;
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon {
+      box-sizing: border-box;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      padding: 0;
+      margin: 0;
+      border-radius: var(--r-1);
+      font-size: 10px;
+      font-weight: 600;
+      font-style: normal;
+      line-height: 1;
+      opacity: 1;
+      background: var(--surface-3);
+      color: var(--text-3);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon::after { display: block; text-align: center; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-function {
+      background: color-mix(in oklab, var(--c-violet) 16%, transparent); color: var(--c-violet);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-function::after { content: 'f'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-method {
+      background: color-mix(in oklab, var(--c-violet) 16%, transparent); color: var(--c-violet);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-method::after { content: 'm'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-variable {
+      background: color-mix(in oklab, var(--c-blue) 16%, transparent); color: var(--c-blue);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-variable::after { content: 'v'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-property {
+      background: color-mix(in oklab, var(--c-blue) 16%, transparent); color: var(--c-blue);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-property::after { content: 'p'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-constant {
+      background: color-mix(in oklab, var(--c-amber) 18%, transparent); color: var(--c-amber);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-constant::after { content: 'c'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-keyword {
+      background: color-mix(in oklab, var(--c-coral) 16%, transparent); color: var(--c-coral);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-keyword::after { content: 'k'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-enum {
+      background: color-mix(in oklab, var(--c-coral) 16%, transparent); color: var(--c-coral);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-enum::after { content: 'e'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-type,
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-class,
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-interface,
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-namespace {
+      background: color-mix(in oklab, var(--c-green) 16%, transparent); color: var(--c-green);
+    }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-type::after { content: 't'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-class::after { content: 'c'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-interface::after { content: 'i'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-namespace::after { content: 'n'; }
+    .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon-text::after { content: 'a'; font-size: 10px; }
+
+    .cm-tooltip.cm-completionInfo {
+      max-width: 420px;
+      padding: 10px 12px;
+      white-space: normal;
+    }
+    .cm-tooltip.cm-completionInfo.cm-completionInfo-right { margin-left: 6px; }
+    .cm-tooltip.cm-completionInfo.cm-completionInfo-left { margin-right: 6px; }
+
+    .cm-intelligence-hover,
+    .cm-intelligence-info,
+    .cm-intelligence-signature {
+      max-width: 420px;
+      font-family: var(--font-sans);
+      font-size: var(--fs-2xs);
+      line-height: 1.5;
+      color: var(--text-2);
+    }
+    .cm-intelligence-hover > code,
+    .cm-intelligence-info > code,
+    .cm-intelligence-signature > code {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: var(--code-sm-fs);
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+    }
+    .cm-intelligence-docs {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      font-size: var(--fs-2xs);
+      line-height: 1.5;
+      color: var(--text-2);
+    }
+    .cm-intelligence-docs p,
+    .cm-intelligence-docs ul { margin: 0; font-size: inherit; line-height: inherit; }
+    .cm-intelligence-docs p + p,
+    .cm-intelligence-docs p + ul,
+    .cm-intelligence-docs ul + p { margin-top: 6px; }
+    .cm-intelligence-docs ul { padding-inline-start: 16px; }
+    /* TypeScript keeps the leading hyphen on @param descriptions, which markdown parses as a one-item list */
+    .cm-intelligence-docs ul:has(> li:only-child) { list-style: none; padding-inline-start: 0; }
+    .cm-intelligence-docs li { margin: 0; font-size: inherit; line-height: inherit; color: inherit; }
+    .cm-intelligence-docs li + li { margin-top: 3px; }
+    .cm-intelligence-docs strong { color: var(--text); font-weight: 600; }
+    /* reset prose inline-code pill metrics inside compact tooltips */
+    .cm-intelligence-docs code {
+      font-family: var(--font-mono);
+      font-size: 0.92em;
+      line-height: inherit;
+      padding: 1px 4px;
+      margin: 0;
+      border-radius: var(--r-1);
+      background: var(--surface-3);
+      box-shadow: none;
+      color: var(--text);
+      white-space: normal;
+    }
+    .cm-intelligence-docs pre {
+      margin: 6px 0 0;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--r-2);
+      background: var(--code-bg);
+      font-family: var(--font-mono);
+      font-size: var(--fs-3xs);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+    }
+    .cm-intelligence-docs a,
+    .cm-intelligence-links a {
+      color: var(--accent-strong);
+      text-decoration: none;
+    }
+    .cm-intelligence-docs a:hover,
+    .cm-intelligence-links a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .cm-intelligence-shape {
+      display: block;
+      margin-top: 8px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--r-2);
+      background: var(--code-bg);
+      max-height: 140px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: var(--fs-3xs);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      color: var(--text-2);
+    }
+    .cm-intelligence-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 12px;
+      margin-top: 8px;
+      padding-top: 7px;
+      border-top: 1px solid var(--line);
+      font-family: var(--font-sans);
+      font-size: var(--fs-2xs);
+      font-weight: 500;
+    }
+    .cm-intelligence-links a::after {
+      content: '\\00a0\\2197';
+      font-size: 0.9em;
+      opacity: 0.72;
+    }
+    .cm-signature-activeParameter {
+      color: var(--accent-strong);
+      font-weight: 600;
+    }
+  }
+  :root[data-theme='light'] .cm-editor .cm-tooltip.cm-tooltip {
+    background: var(--bg);
+    box-shadow: 0 12px 32px -12px oklch(0.3 0.03 265 / 0.28), 0 0 0 1px oklch(0.3 0.03 265 / 0.06);
   }
 `;
+
+const localePrefix = () => {
+  const lang = document.documentElement.lang?.toLowerCase();
+  return lang && lang !== 'en' ? `/${lang}` : '';
+};
+
+const resolveLink = (url) => url.replace(/^https:\/\/nativedates\.dev(?=\/)/, localePrefix());
 
 export function mountPlayground(root) {
   const { files: FILES, tabs: TABS, importMap } = JSON.parse(root.querySelector('[data-pg-files]').textContent);
@@ -106,9 +370,19 @@ export function mountPlayground(root) {
     // continuous numbering avoids a gap after hidden setup lines
     lineNumbers: root.dataset.lineNumbers === 'off' ? false : 'continuous',
     theme: EDITOR_THEME,
+    getFileExtensions: (fileName) => {
+      if (!isScriptFile(fileName)) { return []; }
+      return intelligence({
+        fileName,
+        completions: (file, offset) => project.getCompletions(file, offset),
+        completionDetail: (file, offset, name) => project.getCompletionDetail(file, offset, name),
+        signatures: (file, offset) => project.getSignatureHelp(file, offset),
+        hover: (file, offset) => project.getHover(file, offset),
+        resolveLink,
+      });
+    },
     onChange: (name, content) => {
       project.editFile(name, content);
-      project.buildCoalesced();
     },
   });
   const open = (name) => {
