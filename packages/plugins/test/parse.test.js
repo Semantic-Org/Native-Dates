@@ -280,4 +280,54 @@ describe('loose integration, already-parsed values, and error contracts with { f
     configure({ weekdayNames: { en: { short: { tuesday: 'Marsday' } } } });
     expect(date('Marsday 2026-11-24', { format: 'ddd YYYY-MM-DD', locale: 'en-US' }).toString()).toBe('2026-11-24');
   });
+
+  it('matches Turkish and ASCII case variants without inline regex modifiers while keeping literals case-sensitive', () => {
+    expect(date('24/NOV/2026', { format: 'DD/MMM/YYYY', locale: 'en-US' }).toString()).toBe('2026-11-24');
+    expect(date('24TH Nov 2026', { format: 'Do MMM YYYY', locale: 'en-US' }).toString()).toBe('2026-11-24');
+    expect(time('9:30 pm', { format: 'h:mm A', locale: 'en-US' }).toString()).toBe('21:30:00');
+    expect(date('24 NİSAN 2026', { format: 'DD MMMM YYYY', locale: 'tr-TR' }).toString()).toBe('2026-04-24');
+    expect(date('24 KASIM 2026', { format: 'DD MMMM YYYY', locale: 'tr-TR' }).toString()).toBe('2026-11-24');
+    expect(() => datetime('2026-11-24 AT 09:30', { format: 'YYYY-MM-DD [at] HH:mm', zone: 'UTC' })).toThrowError(
+      errorCode('invalidDateTime'),
+    );
+  });
+
+  it('round-trips colliding narrow dd weekday labels across affected locales and rejects mismatches', () => {
+    for (const loc of ['pt', 'pt-BR', 'tr', 'id', 'lv', 'hu']) {
+      for (let day = 1; day <= 7; day++) {
+        const expected = date(2026, 1, day);
+        const formatted = expected.format('dd YYYY-MM-DD', loc);
+        expect(date(formatted, { format: 'dd YYYY-MM-DD', locale: loc }).toString()).toBe(expected.toString());
+      }
+    }
+    expect(() => date('S 2026-01-01', { format: 'dd YYYY-MM-DD', locale: 'pt-BR' })).toThrowError(
+      errorCode('invalidDate'),
+    );
+    expect(() => date('2026-W01-Q', { format: 'YYYY-[W]WW-dd', locale: 'pt-BR' })).toThrowError(
+      errorCode('invalidDate'),
+    );
+  });
+
+  it('rejects meridiem-only patterns with unknownFormat and validates extra fields paired with epoch tokens', () => {
+    expect(() => time('AM', { format: 'A', locale: 'en-US' })).toThrowError(errorCode('unknownFormat'));
+    expect(() => time('30 PM', { format: 'mm A', locale: 'en-US', loose: true })).toThrowError(
+      errorCode('unknownFormat'),
+    );
+    expect(() => datetime('2026-11-24 PM', { format: 'YYYY-MM-DD A', locale: 'en-US' })).toThrowError(
+      errorCode('unknownFormat'),
+    );
+
+    const epoch = datetime('2026-11-24T17:40:01Z', 'UTC').epochSeconds;
+    expect(datetime(`${epoch} 2026`, { format: 'X YYYY', zone: 'UTC' }).toString()).toBe('2026-11-24T17:40:01.000Z');
+    expect(datetime(`${epoch} 17:40`, { format: 'X HH:mm', zone: 'UTC' }).toString()).toBe('2026-11-24T17:40:01.000Z');
+    expect(() => datetime(`${epoch} 2025`, { format: 'X YYYY', zone: 'UTC' })).toThrowError(
+      errorCode('invalidDateTime'),
+    );
+    expect(() => datetime(`${epoch} 00:00`, { format: 'X HH:mm', zone: 'UTC' })).toThrowError(
+      errorCode('invalidDateTime'),
+    );
+    expect(() => datetime(`${epoch} 12-31`, { format: 'X MM-DD', zone: 'UTC' })).toThrowError(
+      errorCode('invalidDateTime'),
+    );
+  });
 });
