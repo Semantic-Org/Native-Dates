@@ -2,7 +2,7 @@ import { isObject, isPlainObject, isString } from './helpers/utils.js';
 
 import { CalendarDate, today } from './calendar-date.js';
 import { isDevelopment } from './helpers/environment.js';
-import { guard, loosely, parseLooseParts, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLooseParts, readAs, readPlugins, refuse, refuseType } from './helpers/errors.js';
 import { fieldsFrom, temporalDurationOf } from './helpers/fields.js';
 import { epochOf, partFormatter, partOptions } from './helpers/format.js';
 import { IS_YEAR_MONTH } from './helpers/identity.js';
@@ -77,8 +77,9 @@ export class YearMonth {
     if (settings.zone !== undefined) {
       zoneId(settings.zone);
     }
-    if (settings.loose) {
-      requireLoose('loose');
+    const formatted = readPlugins('yearMonth', input, settings, 1);
+    if (formatted) {
+      return formatted;
     }
     if (input === undefined || input === null) {
       return refuseType('missingYearMonth', String(input), {
@@ -347,7 +348,7 @@ export const monthYear = (input, yearOrOptions) => {
   if (isCount(input) && isCount(yearOrOptions)) {
     return yearMonth(inCentury(yearOrOptions), input);
   }
-  const parts = isString(input) && monthFirst.exec(input.trim());
+  const parts = isString(input) && yearOrOptions?.format === undefined && monthFirst.exec(input.trim());
   return parts
     ? yearMonth({ year: inCentury(parts[2]), month: parts[1] }, yearOrOptions)
     : yearMonth(input, yearOrOptions);

@@ -3,7 +3,7 @@ import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 import { CalendarDate, today } from './calendar-date.js';
 import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
-import { guard, loosely, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLoose, readAs, readPlugins, refuse, refuseType } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
@@ -14,6 +14,7 @@ import {
   alias,
   dayOfWeek,
   endPrecision,
+  hasNoReadOptions,
   hasOffset,
   hasTime,
   hasZoneName,
@@ -67,8 +68,7 @@ export class DateTime {
   constructor(input, options) {
     const settings = zoneOptions(options);
     this.#locale = localeOf(settings, input);
-    const read = isZonedDateTime(input) && settings.zone === undefined && !settings.loose
-        && settings.dayFirst === undefined && settings.disambiguation === undefined
+    const read = isZonedDateTime(input) && hasNoReadOptions(settings)
       ? input
       : DateTime.#read(input, settings);
     const zoned = read.calendarId === 'iso8601' ? read : read.withCalendar('iso8601');
@@ -89,12 +89,13 @@ export class DateTime {
   }
 
   static #read(input, settings) {
-    const { zone, loose, dayFirst } = settings;
+    const { zone } = settings;
     // validate zone and disambiguation up front so bad options throw even when loose: true returns null on bad input
     const timeZone = zoneId(zone, settings.locale);
     const disambiguation = checkedDisambiguation(settings.disambiguation);
-    if (loose || dayFirst !== undefined) {
-      requireLoose(loose ? 'loose' : 'dayFirst');
+    const formatted = readPlugins('datetime', input, settings);
+    if (formatted) {
+      return formatted;
     }
     if (input === undefined || input === null) {
       return refuseType('missingDateTime', String(input), {
@@ -545,8 +546,7 @@ alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative
 export const datetime = (input, options) => {
   const settings = zoneOptions(options);
   const build = () =>
-    input instanceof DateTime && settings.zone === undefined && settings.dayFirst === undefined
-      && settings.locale === undefined && settings.disambiguation === undefined
+    input instanceof DateTime && settings.locale === undefined && hasNoReadOptions(settings)
       ? input
       : new DateTime(input, settings);
   return settings.loose ? loosely(build) : build();

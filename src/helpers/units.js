@@ -204,6 +204,10 @@ export const zoneOptions = (
   value,
 ) => (value === undefined ? noOptions : isPlainObject(value) ? value : { zone: value });
 
+export const hasNoReadOptions = (settings) =>
+  settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
+  && settings.disambiguation === undefined && settings.format === undefined;
+
 // disambiguate every('hour', zone) from every(30, 'minutes', zone)
 export const stepArguments = (step, [second, third]) =>
   isNumber(step) || isDigits(step) ? [second, third] : [undefined, second];
