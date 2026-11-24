@@ -2,15 +2,16 @@
 
 export const DEFAULT_LOCALE = 'en';
 
+// ordered by worldwide developer population so the largest audiences stay visible without scrolling
 export const LOCALES = [
   { code: 'en', name: 'English', dir: 'ltr', enabled: true },
   { code: 'zh-CN', name: '简体中文', dir: 'ltr', enabled: true },
-  { code: 'ja', name: '日本語', dir: 'ltr', enabled: true },
-  { code: 'pt-BR', name: 'Português (Brasil)', dir: 'ltr', enabled: true },
   { code: 'es', name: 'Español', dir: 'ltr', enabled: true },
-  { code: 'ko', name: '한국어', dir: 'ltr', enabled: true },
+  { code: 'pt-BR', name: 'Português (Brasil)', dir: 'ltr', enabled: true },
   { code: 'ru', name: 'Русский', dir: 'ltr', enabled: true },
+  { code: 'ja', name: '日本語', dir: 'ltr', enabled: true },
   { code: 'fr', name: 'Français', dir: 'ltr', enabled: true },
+  { code: 'ko', name: '한국어', dir: 'ltr', enabled: true },
   { code: 'ar', name: 'العربية', dir: 'rtl', enabled: true },
 ].map((l) => ({ ...l, path: l.code.toLowerCase() }));
 

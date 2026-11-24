@@ -125,6 +125,8 @@ const CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>';
 
+const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
+
 // each language carries the first zone and the locale its homepage already demonstrates so the globe
 // (scripts/language-globe.js) can turn to it. English has neither, so it follows the reader's own zone
 export function languageMenu(pathname, code) {
@@ -139,7 +141,7 @@ export function languageMenu(pathname, code) {
   <button class="version-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="${t(code, 'language.label')}: ${localeOf(code).name}">${ICON.globe}<span class="language-code">${code}</span>${CHEVRON}</button>
   <div class="pop-menu" hidden>
     <div class="language-list" role="menu" aria-label="${t(code, 'language.label')}">${items}</div>
-    <div class="language-globe" aria-hidden="true"><canvas width="168" height="168"></canvas><p class="globe-now" dir="auto"></p><code class="globe-zone"></code></div>
+    <div class="language-globe" aria-hidden="true"><canvas width="168" height="168"></canvas><p class="globe-now" dir="auto"></p><code class="globe-zone"></code><a class="globe-go" tabindex="-1"><span class="globe-go-name" dir="auto"></span>${ARROW}</a></div>
   </div>
 </div>`;
 }
