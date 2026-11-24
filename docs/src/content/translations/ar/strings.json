@@ -191,7 +191,7 @@
   "home.prims.range": "نطاق تواريخ",
   "home.prims.timeRange": "نطاق أوقات",
   "home.prims.plugin": "إضافة {name}",
-  "home.consoles.title": "Date <em class=\"is-wrong\">يُخطئ</em> في هذه الحالات، وTemporal <em class=\"is-right\">يُصيب</em>.",
+  "home.consoles.title": "Date <em class=\"is-wrong\">يُخطئ</em> في هذه الحالات.<br>Temporal <em class=\"is-right\">يُصيب</em>.",
   "home.consoles.lede": "لا تُضِع وقتك في حفظ أخطاء <code>Date</code> وحالاته الشاذة وكأننا ما زلنا في عام 1995.",
   "home.consoles.pick": "أسئلة للاختبار",
   "home.consoles.date.since": "منذ 1995",

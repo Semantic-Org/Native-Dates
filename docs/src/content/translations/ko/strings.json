@@ -186,7 +186,7 @@
   "home.prims.range": "날짜 범위",
   "home.prims.timeRange": "시각 범위",
   "home.prims.plugin": "{name} 플러그인",
-  "home.consoles.title": "날짜 계산, Date는 <em class=\"is-wrong\">틀리고</em> Temporal은 <em class=\"is-right\">맞힙니다</em>.",
+  "home.consoles.title": "Date는 <em class=\"is-wrong\">틀립니다</em>.<br>Temporal은 <em class=\"is-right\">맞힙니다</em>.",
   "home.consoles.lede": "1995년 방식 그대로 <code>Date</code>의 버그와 예외 상황을 일일이 외우느라 시간을 쓰지 마세요.",
   "home.consoles.pick": "비교할 질문",
   "home.consoles.date.since": "1995년부터",
