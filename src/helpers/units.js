@@ -204,7 +204,7 @@ export const zoneOptions = (
   value,
 ) => (value === undefined ? noOptions : isPlainObject(value) ? value : { zone: value });
 
-export const isPlainRead = (settings) =>
+export const hasNoReadOptions = (settings) =>
   settings.zone === undefined && !settings.loose && settings.dayFirst === undefined
   && settings.disambiguation === undefined && settings.format === undefined;
 

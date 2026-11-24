@@ -14,6 +14,7 @@ import {
   alias,
   dayOfWeek,
   endPrecision,
+  hasNoReadOptions,
   hasOffset,
   hasTime,
   hasZoneName,
@@ -22,7 +23,6 @@ import {
   isInstant,
   isPlainDate,
   isPlainDateTime,
-  isPlainRead,
   isZonedDateTime,
   localeOf,
   quarterStart,
@@ -68,7 +68,7 @@ export class DateTime {
   constructor(input, options) {
     const settings = zoneOptions(options);
     this.#locale = localeOf(settings, input);
-    const read = isZonedDateTime(input) && isPlainRead(settings)
+    const read = isZonedDateTime(input) && hasNoReadOptions(settings)
       ? input
       : DateTime.#read(input, settings);
     const zoned = read.calendarId === 'iso8601' ? read : read.withCalendar('iso8601');
@@ -546,7 +546,7 @@ alias(DateTime, { add: 'plus', subtract: 'minus', lang: 'locale', formatRelative
 export const datetime = (input, options) => {
   const settings = zoneOptions(options);
   const build = () =>
-    input instanceof DateTime && settings.locale === undefined && isPlainRead(settings)
+    input instanceof DateTime && settings.locale === undefined && hasNoReadOptions(settings)
       ? input
       : new DateTime(input, settings);
   return settings.loose ? loosely(build) : build();

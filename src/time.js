@@ -12,12 +12,12 @@ import { formatTokens } from './helpers/tokens.js';
 import {
   alias,
   endPrecision,
+  hasNoReadOptions,
   inspect,
   isCount,
   isDigits,
   isInstant,
   isPlainDateTime,
-  isPlainRead,
   isPlainTime,
   isUnzoned,
   isZonedDateTime,
@@ -64,7 +64,7 @@ export class Time {
     }
     const settings = zoneOptions(isNumber(minuteOrOptions) ? undefined : minuteOrOptions);
     this.#locale = localeOf(settings, input);
-    this.#plain = isPlainTime(input) && isPlainRead(settings)
+    this.#plain = isPlainTime(input) && hasNoReadOptions(settings)
       ? input
       : Time.#read(input, isNumber(minuteOrOptions) ? minuteOrOptions : undefined, second, settings);
     const plain = this.#plain;

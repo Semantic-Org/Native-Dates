@@ -13,13 +13,13 @@ import { formatTokens } from './helpers/tokens.js';
 import {
   alias,
   dayOfWeek,
+  hasNoReadOptions,
   inspect,
   isCount,
   isDigits,
   isInstant,
   isPlainDate,
   isPlainDateTime,
-  isPlainRead,
   isUnzoned,
   isZonedDateTime,
   localeOf,
@@ -66,7 +66,7 @@ export class CalendarDate {
     const settings = zoneOptions(isNumber(monthOrOptions) ? undefined : monthOrOptions);
     this.#locale = localeOf(settings, input);
     // a Temporal value or '[u-ca=persian]' string in another calendar names the same day, read here as ISO
-    const read = isPlainDate(input) && isPlainRead(settings)
+    const read = isPlainDate(input) && hasNoReadOptions(settings)
       ? input
       : CalendarDate.#read(input, isNumber(monthOrOptions) ? monthOrOptions : undefined, day, settings);
     const plain = read.calendarId === 'iso8601' ? read : read.withCalendar('iso8601');

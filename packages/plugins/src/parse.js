@@ -50,10 +50,10 @@ const isTemporalValue = (value) =>
 
 const isParsedValue = (value) => isDate(value) || Object.hasOwn(constructors, kindOf(value)) || isTemporalValue(value);
 
-const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const choice = (items) =>
-  `(?i:${[...new Set(items)].filter(Boolean).sort((a, b) => b.length - a.length).map(escapeRegex).join('|')})`;
+  `(?i:${[...new Set(items)].filter(Boolean).sort((a, b) => b.length - a.length).map(escapeRegExp).join('|')})`;
 
 const lookupMap = (lists, locale) => {
   const map = new Map();
@@ -98,18 +98,18 @@ const readHour24 = numberIn(0, 23);
 const readHour12 = numberIn(1, 12);
 const readSixty = numberIn(0, 59);
 
-const monthSpec = (token) => (locale, table) => {
+const monthSpec = (token) => (table, locale) => {
   const lists = [table[token], table.besideDay[token]];
   const map = lookupMap(lists, locale);
   return ['month', `(${choice(lists.flat())})`, 'month', (raw) => map.get(raw.toLocaleLowerCase(locale))];
 };
 
-const weekdaySpec = (token) => (locale, table) => {
+const weekdaySpec = (token) => (table, locale) => {
   const map = lookupMap([table[token]], locale);
   return ['dayOfWeek', `(${choice(table[token])})`, 'dayOfWeek', (raw) => map.get(raw.toLocaleLowerCase(locale))];
 };
 
-const meridiemSpec = (locale, table) => {
+const meridiemSpec = (table, locale) => {
   const periods = table.isEnglish ? ['AM', 'PM'] : table.dayPeriods;
   const map = new Map([
     [periods[0].toLocaleLowerCase(locale), 0],
@@ -118,8 +118,8 @@ const meridiemSpec = (locale, table) => {
   return ['hour', `(${choice(periods)})`, 'meridiem', (raw) => map.get(raw.toLocaleLowerCase(locale))];
 };
 
-const ordinalSpec = (_locale, table) => {
-  const suffix = table.isEnglish ? '(?i:st|nd|rd|th)' : escapeRegex(table.dayMark);
+const ordinalSpec = (table) => {
+  const suffix = table.isEnglish ? '(?i:st|nd|rd|th)' : escapeRegExp(table.dayMark);
   return [
     'day',
     `(\\d{1,2}${suffix})`,
@@ -135,7 +135,7 @@ const ordinalSpec = (_locale, table) => {
   ];
 };
 
-// each entry is [allowedField, regexFragment, outputKey, readValue] or a (locale, table) => tuple builder
+// each entry is [allowedField, regexFragment, outputKey, readValue] or a (table, locale) => tuple builder
 const tokenSpecs = {
   __proto__: null,
   YYYY: ['year', '(\\d{4})', 'year', Number],
@@ -235,12 +235,12 @@ const compile = (pattern, kind, locale, table) => {
 
   for (const match of pattern.matchAll(tokenPattern)) {
     if (match.index > cursor) {
-      source += escapeRegex(pattern.slice(cursor, match.index));
+      source += escapeRegExp(pattern.slice(cursor, match.index));
     }
     cursor = match.index + match[0].length;
     const [token, literal] = match;
     if (literal !== undefined) {
-      source += escapeRegex(literal);
+      source += escapeRegExp(literal);
       continue;
     }
     const entry = tokenSpecs[token];
@@ -251,7 +251,7 @@ const compile = (pattern, kind, locale, table) => {
           : 0,
       });
     }
-    const [field, fragment, key, read] = typeof entry === 'function' ? entry(locale, table) : entry;
+    const [field, fragment, key, read] = typeof entry === 'function' ? entry(table, locale) : entry;
     if (!allowed.has(field)) {
       refuse('unsupportedToken', `${token} in '${pattern}'`, {
         explanation: isDevelopment
@@ -265,7 +265,7 @@ const compile = (pattern, kind, locale, table) => {
   }
 
   if (cursor < pattern.length) {
-    source += escapeRegex(pattern.slice(cursor));
+    source += escapeRegExp(pattern.slice(cursor));
   }
   source += '$';
 
