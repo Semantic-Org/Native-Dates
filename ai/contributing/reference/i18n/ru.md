@@ -139,8 +139,8 @@ Desktop `.say-words` uses `white-space: nowrap`; keep every chip concise, use na
 3. **`length`** (`duration.*` + `plus.*` + `times.*` + `format.{narrow,short,digital}`):
    - `duration.*`: `1 час 30 минут` / `45 минут` / `2 дня 6 часов`
    - `times.2`: `удвоить`; `times.3`: `утроить` (gender-neutral infinitives matching `округлить`)
-   - `format.narrow`: `в узком формате`; `format.short`: `в кратком формате`; `format.digital`: `в цифровом формате`
-   - Check: *«1 час 30 минут · плюс 45 минут · удвоить · в узком формате»*.
+   - `format.narrow`: `в компактном формате`; `format.short`: `в кратком формате`; `format.digital`: `в цифровом формате`
+   - Check: *«1 час 30 минут · плюс 45 минут · удвоить · в компактном формате»*.
 4. **`range`** (`range.*` + `count.*`):
    - `range.may`: `с 1 мая на 2 недели`; `range.jan`: `с 1 по 14 января`; `range.nov`: `весь ноябрь`
    - `count.*`: `сколько будней` / `сколько выходных` / `сколько понедельников` / `сколько дней`
