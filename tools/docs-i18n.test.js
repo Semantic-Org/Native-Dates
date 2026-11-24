@@ -12,7 +12,8 @@ import { unified } from 'unified';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { checkI18n, HTML_KEYS, INLINE_KEYS } from '../docs/scripts/check-i18n.mjs';
-import { headingsOf, typeColumnsOf } from '../docs/src/lib/markdown/i18n.js';
+import { TRANSLATED } from '../docs/src/lib/locales.js';
+import { headingsOf, plural, t, typeColumnsOf } from '../docs/src/lib/markdown/i18n.js';
 import { inline } from '../docs/src/lib/markdown/inline.js';
 import { rehypeDocs } from '../docs/src/lib/markdown/rehype-docs.js';
 import { remarkDocs } from '../docs/src/lib/markdown/remark-docs.js';
@@ -25,8 +26,16 @@ const temps = [];
 function makeTempDocs() {
   const root = mkdtempSync(join(tmpdir(), 'native-dates-i18n-'));
   temps.push(root);
-  cpSync(resolve(docsRoot, 'src/content/strings.json'), resolve(root, 'src/content/strings.json'));
-  cpSync(resolve(docsRoot, 'src/content/translations'), resolve(root, 'src/content/translations'), { recursive: true });
+  const englishStringsPath = resolve(docsRoot, 'src/content/strings.json');
+  mkdirSync(resolve(root, 'src/content'), { recursive: true });
+  cpSync(englishStringsPath, resolve(root, 'src/content/strings.json'));
+  const englishStrings = JSON.parse(readFileSync(englishStringsPath, 'utf8'));
+  const stub = Object.fromEntries(Object.entries(englishStrings).filter(([key]) => key.startsWith('language.')));
+  for (const locale of TRANSLATED) {
+    const dir = resolve(root, 'src/content/translations', locale.path);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(resolve(dir, 'strings.json'), JSON.stringify(stub, null, 2));
+  }
   return root;
 }
 
@@ -88,8 +97,8 @@ describe('docs markdown i18n plugins', () => {
     expect(html).toContain('id="token-patterns"');
     expect(html).toContain('id="relative-phrases"');
     expect(html).toContain('href="/ja/guides/formatting/#token-patterns"');
-    expect(html).toContain('1 option</summary>');
-    expect(html).toContain('default <code>UTC</code>');
+    expect(html).toContain(`${plural('ja', 'api.options', 1, { count: 1 })}</summary>`);
+    expect(html).toContain(t('ja', 'api.default', { value: '<code>UTC</code>' }));
   });
 
   it('applies .t type styling to translated table headers using the English twin column index', async () => {
