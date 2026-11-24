@@ -25,8 +25,10 @@ describe('@native-dates/plugins production bundle sideEffects retention', () => 
       import '@native-dates/plugins/legacy-date';
       import '@native-dates/plugins/loose';
       import '@native-dates/plugins/parse';
+      import '@native-dates/plugins/ranges';
       import '@native-dates/plugins/zones';
-      export { configure, date, datetime } from 'native-dates';
+      export { mergeRanges } from '@native-dates/plugins/ranges';
+      export { configure, date, dateRange, datetime, timeRange } from 'native-dates';
     `);
     withoutPlugins = await buildBundle(`
       export { configure, date, datetime } from 'native-dates';
@@ -74,6 +76,23 @@ describe('@native-dates/plugins production bundle sideEffects retention', () => 
         locale: 'en-US',
       }).toString(),
     ).toBe('2026-11-24T17:40:01.000Z');
+  });
+
+  it('keeps @native-dates/plugins/ranges side-effect imports when minified', () => {
+    const trip = withPlugins.dateRange('2026-11-01', '2026-11-10');
+    expect(trip.subtract('2026-11-04/2026-11-06').map(String)).toEqual([
+      '2026-11-01/2026-11-03',
+      '2026-11-07/2026-11-10',
+    ]);
+    expect(withPlugins.dateRange('2026-11-01', '2026-11-05').union('2026-11-06/2026-11-10')?.toString()).toBe(
+      '2026-11-01/2026-11-10',
+    );
+    expect(
+      withPlugins.mergeRanges([
+        withPlugins.timeRange('22:00', '02:00'),
+        withPlugins.timeRange('01:00', '06:00'),
+      ]).map(String),
+    ).toEqual(['22:00:00/06:00:00']);
   });
 
   it('throws missingPlugin in a production bundle that omits plugin imports', () => {

@@ -87,15 +87,20 @@ export const requireLoose = (at = 'loose') => {
   }
 };
 
-export const parseFormat = (kind, input, settings) => {
-  if (!formatParser) {
-    refuse('missingPlugin', 'format', {
-      explanation: isDevelopment
-        ? "`{ format }` requires the parse plugin. Import '@native-dates/plugins/parse' once at startup"
-        : 0,
-    });
+export const readPlugins = (kind, input, settings, allowDayFirst) => {
+  if (settings.loose || (!allowDayFirst && settings.dayFirst !== undefined)) {
+    requireLoose(settings.loose ? 'loose' : 'dayFirst');
   }
-  return formatParser(kind, input, settings);
+  if (settings.format !== undefined) {
+    if (!formatParser) {
+      refuse('missingPlugin', 'format', {
+        explanation: isDevelopment
+          ? "`{ format }` requires the parse plugin. Import '@native-dates/plugins/parse' once at startup"
+          : 0,
+      });
+    }
+    return formatParser(kind, input, settings);
+  }
 };
 
 export const parseLoose = (text, options) => {

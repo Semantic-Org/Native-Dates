@@ -3,7 +3,7 @@ import { isDate, isNumber, isPlainObject, isString } from './helpers/utils.js';
 import { CalendarDate, today } from './calendar-date.js';
 import { anchored, duration, forLength } from './duration.js';
 import { isDevelopment } from './helpers/environment.js';
-import { guard, loosely, parseFormat, parseLoose, readAs, refuse, refuseType, requireLoose } from './helpers/errors.js';
+import { guard, loosely, parseLoose, readAs, readPlugins, refuse, refuseType } from './helpers/errors.js';
 import { temporalDurationFrom } from './helpers/fields.js';
 import { formatIntl, intlOptions, textFormat } from './helpers/format.js';
 import { IS_DATE_TIME, IS_MONTH_DAY } from './helpers/identity.js';
@@ -89,15 +89,13 @@ export class DateTime {
   }
 
   static #read(input, settings) {
-    const { zone, loose, dayFirst } = settings;
+    const { zone } = settings;
     // validate zone and disambiguation up front so bad options throw even when loose: true returns null on bad input
     const timeZone = zoneId(zone, settings.locale);
     const disambiguation = checkedDisambiguation(settings.disambiguation);
-    if (loose || dayFirst !== undefined) {
-      requireLoose(loose ? 'loose' : 'dayFirst');
-    }
-    if (settings.format !== undefined) {
-      return parseFormat('datetime', input, settings);
+    const formatted = readPlugins('datetime', input, settings);
+    if (formatted) {
+      return formatted;
     }
     if (input === undefined || input === null) {
       return refuseType('missingDateTime', String(input), {
@@ -556,7 +554,11 @@ export const datetime = (input, options) => {
 
 // use Date.now() ms precision rather than Temporal.Now ns so values survive a JSON or Date round trip unchanged
 export const now = (zone) =>
-  new DateTime(Temporal.Instant.fromEpochMilliseconds(Date.now()).toZonedDateTimeISO(zoneId(zone)));
+  new DateTime(
+    ((isDevelopment && typeof Temporal === 'undefined' && zoneId()) || Temporal).Instant.fromEpochMilliseconds(
+      Date.now(),
+    ).toZonedDateTimeISO(zoneId(zone)),
+  );
 
 export const startOfToday = (zone) => now(zone).startOf('day');
 export const endOfToday = (zone) => now(zone).endOf('day');

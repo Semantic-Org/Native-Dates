@@ -11,7 +11,7 @@ import {
   IS_TIME,
   IS_YEAR_MONTH,
 } from './identity.js';
-import { checkedLocale } from './zones.js';
+import { checkedLocale, zoneId } from './zones.js';
 
 export const inspect = Symbol.for('nodejs.util.inspect.custom');
 
@@ -139,8 +139,10 @@ export const namesInstant = (text) => {
 };
 export const isPlainDate = (value) => value instanceof Temporal.PlainDate;
 export const isPlainDateTime = (value) => value instanceof Temporal.PlainDateTime;
-export const isPlainTime = (value) => value instanceof Temporal.PlainTime;
-export const isTemporalDuration = (value) => value instanceof Temporal.Duration;
+export const isPlainTime = (value) =>
+  (isDevelopment && typeof Temporal === 'undefined' && zoneId()) || value instanceof Temporal.PlainTime;
+export const isTemporalDuration = (value) =>
+  (isDevelopment && typeof Temporal === 'undefined' && zoneId()) || value instanceof Temporal.Duration;
 
 export const pad = (value, width = 2) => String(Math.abs(value)).padStart(width, '0');
 
@@ -188,7 +190,10 @@ export const alias = (Class, names) => {
 // check brand before calling .locale() so plain field bags with a `locale` key aren't invoked as methods
 const nouns = [IS_DATE_TIME, IS_CALENDAR_DATE, IS_TIME, IS_DURATION, IS_MONTH_DAY, IS_YEAR_MONTH, IS_RANGE];
 export const localeOf = (options, input) => {
-  if (isPlainObject(options) && Object.hasOwn(options, 'locale') && options.locale !== undefined) {
+  if (
+    (isDevelopment && typeof Temporal === 'undefined' && zoneId())
+    || (isPlainObject(options) && Object.hasOwn(options, 'locale') && options.locale !== undefined)
+  ) {
     return checkedLocale(options.locale);
   }
   return isObject(input) && input.locale && nouns.some((brand) => input[brand]) ? input.locale() : undefined;

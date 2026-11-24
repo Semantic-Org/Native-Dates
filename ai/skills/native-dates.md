@@ -1,6 +1,6 @@
 ---
 name: native-dates
-description: "Core guide for building with native-dates (and @native-dates/core). Use whenever code creates, parses, shifts, rounds, compares, ranges over, or formats dates, clock times, zoned timestamps, durations, billing months, or recurring month-days, handles DST or HTTP Accept-Language locales, or migrates off Date, Moment, Day.js, date-fns, Luxon, or raw Temporal. For city/abbreviation zones, { loose: true } parsing, legacy Date getters, or the Temporal polyfill on Safari and Node 24–25, also load native-dates-plugins."
+description: "Core guide for building with native-dates (and @native-dates/core). Use whenever code creates, parses, shifts, rounds, compares, ranges over, or formats dates, clock times, zoned timestamps, durations, billing months, or recurring month-days, handles DST or HTTP Accept-Language locales, or migrates off Date, Moment, Day.js, date-fns, Luxon, or raw Temporal. For city/abbreviation zones, { loose: true } parsing, legacy Date getters, or the Temporal polyfill on Safari and Node 22–25, also load native-dates-plugins."
 metadata:
   title: Dates, Times, Zones, Durations, and Ranges with native-dates
   keywords: "native-dates, @native-dates/core, datetime, date, time, duration, monthDay, yearMonth, dateRange, datetimeRange, timeRange, today, now, dayOfWeek, epochSeconds, epochMilliseconds, configure, Accept-Language, Temporal, Intl, DST"
@@ -13,7 +13,7 @@ metadata:
 > **Skill:** `native-dates`
 > **Purpose:** Core mental model, pitfalls, and API reference for `native-dates` (`@native-dates/core`)
 
-`native-dates` (`@native-dates/core` is the identical scoped alias) wraps `Temporal` and `Intl` in 9 immutable, frozen classes with zero runtime dependencies. Chrome, Firefox, Edge, and Node `>=26` run natively; load `native-dates-plugins` for Safari/Node 24–25 (`@native-dates/polyfill`), `{ loose: true }` parsing (`'11/16/2026'`, localized text), city/abbreviation zones (`'PST'`, `'Berlin'`), or legacy `Date` getters.
+`native-dates` (`@native-dates/core` is the identical scoped alias) wraps `Temporal` and `Intl` in 9 immutable, frozen classes with zero runtime dependencies. Chrome, Firefox, Edge, and Node `>=26` run natively; load `native-dates-plugins` for Safari/Node 22–25 (`@native-dates/polyfill`), `{ loose: true }` parsing (`'11/16/2026'`, localized text), city/abbreviation zones (`'PST'`, `'Berlin'`), or legacy `Date` getters.
 
 **Golden rule: Match the class to the data (`datetime`, `date`, `time`), chain immutable methods, and pass explicit IANA zones and per-value `.locale()` in server code.**
 
@@ -186,7 +186,7 @@ sprint.split(1, 'week'); // [DateRange('2026-11-02/2026-11-08'), DateRange('2026
 
 - **Construction:** `pt.to(end)`, `pt.for(n, unit)`/`pt.for(dur)` (explicit durations only), `date.through(end)`, `pt.range(unit, firstDay?)`, or `dateRange`/`datetimeRange`/`timeRange` with `(start, end, opts?)` or `(intervalStr, opts?)` (`'2026-09-01/2026-09-07'`, `'2026-09-01 to 2026-09-07'`, `'09:00-17:00'`).
 - **Ops:** `kind` (`'date' | 'datetime' | 'time'`), `start`, `end`, `duration` (inclusive on `DateRange`, e.g. `P3D` for 3 days), `isEmpty()`, `contains`/`includes(ptOrRange)`, `overlaps(other)`, `intersection(other)` (`null` or range; `unsupportedIntersection` on double overnight overlap), `format(spec?, locale?)` (`Intl` range format on presets/options; `'start – end'` on tokens).
-- **Iteration, count & zone:** `every(step, unit?)` -> `Array` (includes `end` on `DateRange`, excludes `end` on `DateTimeRange`/`TimeRange`; `step` is unit `'day'`, phrase `'30m'`, `Duration`, or `(n, unit)` with `n > 0`), `DateRange.count(kind = 'days')` (`'days'`, `'weekdays'`, `'weekends'`, or weekday like `'mondays'`, O(1)), `split`/`splitBy(step, unit?)` (clips remainder at `end`), `in(zone)` (lifts inclusive `DateRange` to half-open `DateTimeRange` `[start 00:00, (end + 1d) 00:00)`; `unsupportedZone` on `TimeRange`).
+- **Iteration, count & zone:** `DateRange` is lazily iterable day-by-day (`for (const day of range)` / `[...range]`, inclusive; `DateTimeRange`/`TimeRange` require `every()`), `every(step, unit?)` -> `Array` (includes `end` on `DateRange`, excludes `end` on `DateTimeRange`/`TimeRange`; `step` is unit `'day'`, phrase `'30m'`, `Duration`, or `(n, unit)` with `n > 0`), `DateRange.count(kind = 'days')` (`'days'`, `'weekdays'`, `'weekends'`, or weekday like `'mondays'`, O(1)), `split`/`splitBy(step, unit?)` (clips remainder at `end`), `in(zone)` (lifts inclusive `DateRange` to half-open `DateTimeRange` `[start 00:00, (end + 1d) 00:00)`; `unsupportedZone` on `TimeRange`).
 
 ---
 
@@ -242,7 +242,7 @@ configure({
 
 | Error codes | Thrown when |
 |---|---|
-| `missingDateTime`, `missingDate`, `missingTime`, `missingMonthDay`, `missingYearMonth`, `missingDay`, `missingPoints`, `missingAnchor`, `missingPlugin` | Nullish input, `date(2026, 11)`, unanchored `months(2).total('days')`, or unloaded plugin option |
+| `missingDateTime`, `missingDate`, `missingTime`, `missingMonthDay`, `missingYearMonth`, `missingDay`, `missingPoints`, `missingAnchor`, `missingPlugin`, `missingTemporal` | Nullish input, `date(2026, 11)`, unanchored `months(2).total('days')`, unloaded plugin option, or missing `globalThis.Temporal` in development (`RangeError`; production throws native `ReferenceError`) |
 | `invalidDateTime`, `invalidDate`, `invalidTime`, `invalidDuration`, `invalidMonthDay`, `invalidYearMonth`, `invalidRange`, `invalidStep`, `invalidNumber`, `invalidFraction`, `invalidYear`, `invalidDay`, `invalidPoint` | Malformed input, `Feb 30`, rejected DST gap/fold, non-positive step, or `end < start` |
 | `cannotAdd`, `cannotSubtract`, `cannotSet`, `cannotRound`, `cannotBalance`, `cannotTotal` | Overflow, invalid `set()` field, or bad rounding increment (`round(7, 'minutes')`) |
 | `unknownZone`, `unknownLocale`, `unknownDisambiguation`, `unknownUnit`, `unknownDayOfWeek`, `unknownFormat`, `unknownKind`, `unknownSetting`, `unknownWidth` | Bad zone, BCP 47 tag, `disambiguation`, unit, weekday, token/preset (`'yyyy'`), `as()`/`count()` target, or `configure()` key |
@@ -273,4 +273,4 @@ configure({
 
 | Skill | Use when... |
 |---|---|
-| `native-dates-plugins` | City/abbreviation zones (`'Berlin'`, `'PST'`), `{ loose: true, dayFirst }` parsing, `Date` getters, `@native-dates/polyfill` on Safari/Node 24–25, or custom plugins |
+| `native-dates-plugins` | City/abbreviation zones (`'Berlin'`, `'PST'`), `{ loose: true, dayFirst }` parsing, `Date` getters, `@native-dates/polyfill` on Safari/Node 22–25, or custom plugins |

@@ -1,9 +1,9 @@
 ---
 name: native-dates-plugins
-description: "Companion guide for @native-dates/plugins (zones, loose, parse, legacy-date), @native-dates/polyfill, and authoring custom native-dates prototype plugins. Use whenever code parses fixed format patterns ('24112026', '24/Nov/2026:12:40:01 -0500', '2026-W48-2', '2026-328', { format }), parses localized, non-ISO, or slash/dot dates and times ('06/11/2026', '17 octobre 2026', '晚上9:10', '14.30', non-ASCII digits, { loose: true, dayFirst }), resolves city names ('Berlin', 'Beijing', 'Mumbai') or locale-aware timezone abbreviations ('CST', 'IST', 'EST', 'PT', zoneAliases), shims legacy Date.prototype getters (getFullYear, getMonth, getDay), polyfills Temporal on Safari, older browsers, or Node <26, or extends native-dates class prototypes."
+description: "Companion guide for @native-dates/plugins (zones, loose, parse, ranges, legacy-date), @native-dates/polyfill, and authoring custom native-dates prototype plugins. Use whenever code parses fixed format patterns ('24112026', '24/Nov/2026:12:40:01 -0500', '2026-W48-2', '2026-328', { format }), parses localized, non-ISO, or slash/dot dates and times ('06/11/2026', '17 octobre 2026', '晚上9:10', '14.30', non-ASCII digits, { loose: true, dayFirst }), resolves city names ('Berlin', 'Beijing', 'Mumbai') or locale-aware timezone abbreviations ('CST', 'IST', 'EST', 'PT', zoneAliases), performs range set operations (subtract, union, mergeRanges), shims legacy Date.prototype getters (getFullYear, getMonth, getDay), polyfills Temporal on Safari, older browsers, or Node <26, or extends native-dates class prototypes."
 metadata:
   title: Plugins, Format Parsing, Loose Parsing, Zone Aliases, and Polyfill for native-dates
-  keywords: "@native-dates/plugins, @native-dates/polyfill, temporal-polyfill, zones, loose, parse, format, legacy-date, dayFirst, zoneAliases, timezones, getFullYear, getTimezoneOffset, sideEffects, missingPlugin"
+  keywords: "@native-dates/plugins, @native-dates/polyfill, temporal-polyfill, zones, loose, parse, format, ranges, legacy-date, dayFirst, zoneAliases, timezones, mergeRanges, subtract, union, getFullYear, getTimezoneOffset, sideEffects, missingPlugin"
   audience: usage
   type: skill
 ---
@@ -11,9 +11,9 @@ metadata:
 # Plugins, Format Parsing, Loose Parsing, Zone Aliases, and Polyfill for native-dates
 
 > **Skill:** `native-dates-plugins`
-> **Purpose:** Guide to `@native-dates/plugins/{zones,loose,parse,legacy-date}`, `@native-dates/polyfill`, and custom prototype plugins
+> **Purpose:** Guide to `@native-dates/plugins/{zones,loose,parse,ranges,legacy-date}`, `@native-dates/polyfill`, and custom prototype plugins
 
-Each `@native-dates/plugins/*` subpath mutates `native-dates` hooks or prototypes once process-wide when imported (with no per-instance scoping or unload), and `@native-dates/polyfill` installs `temporal-polyfill` only when `globalThis.Temporal` is absent. Point factories (`datetime`, `date`, `time`, `monthDay`, `dayMonth`, `yearMonth`, `monthYear`) take `(input, zoneOrOpts?)`, `duration` takes `(input, unitOrOpts?)`, range factories (`dateRange`, `datetimeRange`, `timeRange`) take `(start, end, zoneOrOpts?)` or `(intervalString, zoneOrOpts?)` where `zoneOrOpts` is a bare `zone` string or `{ zone, locale, disambiguation, loose, dayFirst, format }`, and `now(zone?)`, `today(zone?)`, `dt.in(zone)`, and `d.at(time?, zone?)` take a bare `zone` string.
+Each `@native-dates/plugins/*` subpath mutates `native-dates` hooks or prototypes once process-wide when imported (with no per-instance scoping or unload), and `@native-dates/polyfill` installs `temporal-polyfill` and an `Intl.DurationFormat` fallback only when missing. Point factories (`datetime`, `date`, `time`, `monthDay`, `dayMonth`, `yearMonth`, `monthYear`) take `(input, zoneOrOpts?)`, `duration` takes `(input, unitOrOpts?)`, range factories (`dateRange`, `datetimeRange`, `timeRange`) take `(start, end, zoneOrOpts?)` or `(intervalString, zoneOrOpts?)` where `zoneOrOpts` is a bare `zone` string or `{ zone, locale, disambiguation, loose, dayFirst, format }`, and `now(zone?)`, `today(zone?)`, `dt.in(zone)`, and `d.at(time?, zone?)` take a bare `zone` string.
 
 **Golden rule: Import plugin subpaths once at startup without `.use()`, pass `{ loose: true }` per call, and remember `{ loose: true }` returns `null` for unreadable data while still throwing on bad options (and `invalidRange` when `end < start`).**
 
@@ -68,7 +68,7 @@ tokyo.getMonth(); // 10 (0-indexed; tokyo.month is 11)
 tokyo.setHours(12); // RangeError [immutable] — use tokyo.set('hour', 12)
 ```
 
-**5. Node 24–25 and Safari require both `@native-dates/polyfill` AND `"temporal-polyfill": ">=0.3.0"` in your app's `dependencies`.** (Node `<24` also lacks `Intl.DurationFormat`, so `Duration.format()` requires Node 24+ on the server; browser builds still bundle fine on older Node.) Bundlers statically resolve `import('temporal-polyfill')`, so omitting `"temporal-polyfill"` from `package.json` breaks builds even when targeting Chrome. Use `'@native-dates/polyfill/sync'` in CommonJS, build targets without top-level `await`, or when sibling static imports call `today()`/`now()` at module top level.
+**5. Node 22–25 and Safari require both `@native-dates/polyfill` AND `"temporal-polyfill": ">=0.3.0"` in your app's `dependencies`.** On Node 22–23, `@native-dates/polyfill` also installs a zero-dependency `Intl.DurationFormat` fallback so `Duration.text` and `Duration.format()` work end-to-end (browsers and Node 24+ ship `Intl.DurationFormat` natively and skip downloading it). Bundlers statically resolve `import('temporal-polyfill')`, so omitting `"temporal-polyfill"` from `package.json` breaks builds even when targeting Chrome. Use `'@native-dates/polyfill/sync'` in CommonJS, build targets without top-level `await`, or when sibling static imports call `today()`/`now()` at module top level.
 
 ---
 
@@ -132,6 +132,26 @@ time('1430', { format: 'HHmm' }); // 14:30:00
 
 ---
 
+## @native-dates/plugins/ranges
+
+Attaches `subtract(other)` and `union(other)` onto `DateRange`, `DateTimeRange`, and `TimeRange` and exports `mergeRanges(ranges)` (importing `mergeRanges` also attaches the prototype methods without a second bare import):
+
+- **`range.subtract(other)` -> `Range[]`:** Removes `other` (range or interval string of the same kind) and returns `0`, `1`, or `2` remaining ranges preserving `this.locale()` and `this.start.zone`. Inclusive `DateRange` trims without off-by-one overlap (`Nov 1..10` minus `Nov 4..6` -> `[Nov 1..3, Nov 7..10]`); empty `DateTimeRange`/`TimeRange` returns `[]`; overnight `TimeRange` splits and stitches cleanly across midnight (`22:00–06:00` minus `01:00–03:00` -> `[22:00–01:00, 03:00–06:00]`). Throws `conflictingRanges` on mismatched range kinds.
+- **`range.union(other)` -> `Range | null`:** Combines overlapping or directly adjacent ranges (`Nov 1..5` + `Nov 6..10` -> `Nov 1..10`; `09:00–10:00` + `10:00–11:00` -> `09:00–11:00`; `22:00–06:00` + `06:00–08:00` -> `22:00–08:00`), returning `null` across a gap. Throws `unsupportedUnion` if two `TimeRange` values cover all 24 hours (`22:00–06:00` union `06:00–22:00`) because equal start/end times are empty.
+- **`mergeRanges(ranges)` -> `T[]`:** Accepts any iterable of same-kind ranges, drops empty moment/clock spans, sorts chronologically, and coalesces overlapping or adjacent spans (including overnight `TimeRange` wrap-around). Throws `invalidRange` on non-iterables or non-range elements, `conflictingRanges` on mixed kinds, and `unsupportedUnion` when merged `TimeRange` values cover all 24 hours.
+
+```js
+import { mergeRanges } from '@native-dates/plugins/ranges';
+import { dateRange, timeRange } from 'native-dates';
+
+dateRange('2026-11-01', '2026-11-10').subtract('2026-11-04/2026-11-06').map(String);
+// ['2026-11-01/2026-11-03', '2026-11-07/2026-11-10']
+mergeRanges([timeRange('22:00', '02:00'), timeRange('01:00', '06:00')]).map(String);
+// ['22:00:00/06:00:00']
+```
+
+---
+
 ## @native-dates/plugins/legacy-date
 
 Shims `Date.prototype` onto `DateTime.prototype` (`valueOf()` / `+dt` and `toJSDate()` are already in core):
@@ -147,8 +167,8 @@ Shims `Date.prototype` onto `DateTime.prototype` (`valueOf()` / `+dt` and `toJSD
 
 | Entrypoint | Mechanism | When to use |
 |---|---|---|
-| `import '@native-dates/polyfill'` | `if (!globalThis.Temporal) await import('temporal-polyfill')` | ESM browser entrypoints (0 B downloaded on Chrome/Firefox/Edge; dynamic chunk on Safari) & async ESM on Node 24–25 |
-| `import '@native-dates/polyfill/sync'` | Sync `import { Temporal } from 'temporal-polyfill'` + `if (!globalThis.Temporal)` | CommonJS, test setups, targets without top-level `await`, or when sibling static imports call `today()`/`now()` during module evaluation |
+| `import '@native-dates/polyfill'` | Lazy `await import()` for `temporal-polyfill` and `Intl.DurationFormat` fallback when missing | ESM browser entrypoints (0 B downloaded on Chrome/Firefox/Edge; dynamic chunks on Safari / Node 22–25) |
+| `import '@native-dates/polyfill/sync'` | Sync installs of `temporal-polyfill` and `Intl.DurationFormat` fallback when missing | CommonJS, test setups, targets without top-level `await`, or when sibling static imports call `today()`/`now()` during module evaluation |
 
 ---
 
