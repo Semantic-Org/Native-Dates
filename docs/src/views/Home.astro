@@ -15,7 +15,7 @@ import Playground from '../components/Playground.astro';
 import { HOME_LOCALES } from '../data/home-locales.js';
 import Base from '../layouts/Base.astro';
 import { filesFor } from '../lib/examples.js';
-import { DEFAULT_LOCALE, draftStrings, englishIn, languageMenu, languageSelect, languagesWith, localeOf, localePath, t } from '../lib/i18n.js';
+import { DEFAULT_LOCALE, draftStrings, englishIn, languageMenu, languagesWith, localeOf, localePath, t } from '../lib/i18n.js';
 import { ICON, MARK } from '../lib/icons.js';
 import { formatSize, sizeOf } from '../lib/sizes.js';
 import { REPO_URL, versionMenu } from '../lib/versions.js';
@@ -74,7 +74,6 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
     </div>
     <nav class="home-menu" id="home-menu" aria-label={t(locale, 'nav.sections')} hidden>
       {SECTIONS.map(([name, path]) => <a href={to(path)}>{t(locale, name)}</a>)}
-      <Fragment set:html={languageSelect(Astro.url.pathname, locale)} />
     </nav>
   </header>
   {notice && <p class="archive-banner" lang={locale} dir={localeOf(locale).dir}>{notice} <a href="/" hreflang="en" lang="en" data-language-pick="en">{t(locale, 'language.readEnglish')}</a></p>}

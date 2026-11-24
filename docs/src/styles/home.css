@@ -510,7 +510,7 @@
   .prim-code code, .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { white-space: pre-wrap; overflow-wrap: anywhere; }
 }
 @media (max-width: 900px) {
-  .topnav, .version, .version-menu { display: none; }
+  .topnav, .version, .version-menu:not(.language-menu) { display: none; }
   .topbar-inner { gap: 16px; }
   .topbar .menu-toggle { display: inline-grid; }
   .home-menu:not([hidden]) {
@@ -535,11 +535,18 @@
   .bytes-presets { margin-inline-start: 0; flex-basis: 100%; }
 }
 @media (max-width: 600px) {
-  .topbar-inner { gap: 12px; }
+  .topbar-inner { gap: 8px; }
+  .topbar-tools { gap: 4px; }
+  .topbar .icon-btn, .topbar .search-trigger, .topbar .language-menu .version-button { width: 32px; }
   .prim { padding: 14px 16px; }
   .prim-code code { font-size: var(--fs-sm); line-height: var(--lh-sm); }
   .prim-code :is([data-prim='temporal'], [data-prim='legacy']) { font-size: var(--fs-2xs); line-height: var(--lh-2xs); }
-  .topbar .search-trigger { width: 34px; padding: 0; justify-content: center; }
+  .topbar .search-trigger {
+    width: 32px; padding: 0; margin-inline-end: 0; justify-content: center;
+    border-color: transparent; background: transparent;
+  }
+  .topbar .search-trigger:hover { color: var(--text); background: var(--surface-2); border-color: var(--line); }
+  .topbar .search-trigger svg { width: 17px; height: 17px; }
   .topbar .search-trigger .keys { display: none; }
   .topbar .search-trigger .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .install-cmd { width: 100%; min-width: 0; font-size: var(--fs-xs); height: 44px; }

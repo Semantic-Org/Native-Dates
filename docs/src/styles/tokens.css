@@ -480,26 +480,11 @@ pre.astro-code .line.highlighted {
 .language-toast .btn { height: 32px; padding-inline: 12px; font-size: var(--fs-sm); }
 
 .language-select { display: none; }
-@media (max-width: 900px) {
-  .language-select {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    height: 40px; margin-bottom: 24px; padding-inline: 12px 6px;
-    border: 1px solid var(--line-2); border-radius: var(--r-3);
-    color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-sm);
-  }
-  .language-select select {
-    min-width: 0; height: 28px; padding-inline: 6px; border: 0; border-radius: var(--r-2);
-    background: transparent; color: var(--text); font: inherit; font-weight: 500; text-align: end; cursor: pointer;
-  }
-  /* force explicit option colors so native OS dropdown menus stay legible in dark mode */
-  .language-select option { background: var(--bg); color: var(--text); }
-  .home-menu .language-select { margin: 8px 0 0; }
-}
 
 /* language globe: names beside a planet that turns to whichever language is pointed at (scripts/language-globe.js) */
 .language-menu .version-button svg:first-child { width: 14px; height: 14px; rotate: none; }
 /* the topbar is already tight just above the mobile breakpoint, so the icon waits for room */
-@media (max-width: 1040px) { .language-menu .version-button svg:first-child { display: none; } }
+@media (min-width: 901px) and (max-width: 1040px) { .language-menu .version-button svg:first-child { display: none; } }
 .language-menu .pop-menu { width: 432px; }
 .language-menu .pop-menu:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) 204px; }
 .language-globe {
@@ -515,10 +500,37 @@ pre.astro-code .line.highlighted {
   --globe-land-day: oklch(0.45 0.15 292); --globe-land-night: oklch(0.84 0.05 290 / 0.75);
   --globe-limb: oklch(0.3 0.08 285 / 0.1); --globe-halo: oklch(0.6 0.19 295 / 0.5);
 }
-/* the canvas stays an empty disc until the script arrives on first hover or focus */
+/* the canvas stays an empty disc until the script arrives on first hover, touch, or focus */
 .language-globe canvas { width: 168px; height: 168px; margin-bottom: 12px; border-radius: 50%; background: var(--surface-2); }
 .language-globe .globe-now { min-height: var(--lh-sm); margin: 0; color: var(--text); font-size: var(--fs-sm); line-height: var(--lh-sm); font-weight: 500; }
 .language-globe .globe-zone { min-height: var(--lh-3xs); color: var(--text-4); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); }
+
+@media (max-width: 900px) {
+  /* anchor the popover to the full-width sticky topbar so it never clips off either edge on narrow screens */
+  .language-menu { position: static; }
+  .language-menu .version-button { height: 34px; border: 1px solid transparent; }
+  .language-menu .version-button:hover,
+  .language-menu .version-button[aria-expanded='true'] { border-color: var(--line); }
+  .language-menu .pop-menu {
+    top: calc(100% + 6px); inset-inline-end: 12px;
+    width: min(366px, calc(100vw - 24px));
+    max-height: calc(100dvh - 76px); overflow-y: auto;
+  }
+  .language-menu .pop-menu:not([hidden]) { grid-template-columns: minmax(0, 1fr) 154px; }
+  .language-menu .pop-menu [role=menuitemradio] { gap: 8px; padding: 7px 8px; }
+  .language-menu .pop-menu span { font-size: var(--fs-xs); line-height: var(--lh-xs); white-space: nowrap; }
+  .language-menu .language-globe { margin-inline-start: 4px; padding: 10px 8px; }
+  .language-menu .language-globe canvas { width: 132px; height: 132px; margin-bottom: 10px; }
+  .language-menu .globe-now { text-align: center; }
+  .language-menu .globe-zone { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 600px) {
+  .wordmark { font-size: 16px; gap: 7px; }
+  .wordmark svg { width: 20px; height: 20px; }
+  .language-menu .version-button { width: 32px; padding: 0; justify-content: center; }
+  .language-menu .version-button svg:first-child { width: 17px; height: 17px; }
+  .language-menu .language-code, .language-menu .version-button svg:last-child { display: none; }
+}
 
 /* keep code, timelines, and playground panes LTR inside RTL layouts while restoring RTL on prose captions */
 :where(pre, code, kbd, .keys, .code, .pg, .say-code, .console, .year-strip, .xr) { direction: ltr; }

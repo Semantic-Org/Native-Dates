@@ -136,7 +136,7 @@ export function languageMenu(pathname, code) {
     return `<a class="pop-item" role="menuitemradio" data-language-pick="${l.code}" data-locale="${home?.configuredLocale ?? l.code}" data-zone="${home?.try.zones[0] ?? ''}" aria-checked="${on}" href="${localePath(path, l.code)}" hreflang="${l.code}" lang="${l.code}"><span>${l.name}</span>${on ? CHECK : ''}</a>`;
   }).join('');
   return `<div class="version-menu language-menu" data-menu data-language-globe>
-  <button class="version-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="${t(code, 'language.label')}: ${localeOf(code).name}">${ICON.globe}${code}${CHEVRON}</button>
+  <button class="version-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="${t(code, 'language.label')}: ${localeOf(code).name}">${ICON.globe}<span class="language-code">${code}</span>${CHEVRON}</button>
   <div class="pop-menu" hidden>
     <div class="language-list" role="menu" aria-label="${t(code, 'language.label')}">${items}</div>
     <div class="language-globe" aria-hidden="true"><canvas width="168" height="168"></canvas><p class="globe-now" dir="auto"></p><code class="globe-zone"></code></div>

@@ -70,7 +70,6 @@ export function mountLanguageGlobe(host) {
 
   const size = canvas.width;
   const ratio = Math.min(devicePixelRatio || 1, 2);
-  canvas.style.width = canvas.style.height = `${size}px`;
   canvas.width = canvas.height = size * ratio;
   const context = canvas.getContext('2d');
   const shade = Object.assign(document.createElement('canvas'), { width: SHADE, height: SHADE });
@@ -228,7 +227,12 @@ export function mountLanguageGlobe(host) {
   };
 
   const follow = (item) => { if (item && item !== shown) { show(item); } };
-  list.addEventListener('pointerover', (event) => follow(event.target.closest('[data-language-pick]')));
+  const pickAt = (target) => follow(target?.closest?.('[data-language-pick]'));
+  list.addEventListener('pointerover', (event) => pickAt(event.target));
+  list.addEventListener('pointerdown', (event) => pickAt(event.target));
+  list.addEventListener('pointermove', (event) => {
+    if (event.buttons) { pickAt(document.elementFromPoint(event.clientX, event.clientY)); }
+  });
   // opening the menu focuses its first item by script, so only follow focus a reader moved with the keyboard
   list.addEventListener('focusin', (event) => { if (event.target.matches(':focus-visible')) { follow(event.target); } });
 
