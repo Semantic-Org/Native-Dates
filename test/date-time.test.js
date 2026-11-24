@@ -1487,6 +1487,27 @@ describe('DateTime.until() and since()', () => {
     expect(foldStart.until('2026-10-25T00:30:00Z', 'hours')).toBe(-1);
   });
 
+  it('measures fractional days accurately across both occurrences of a fall-back repeated hour', () => {
+    const first = datetime('2026-11-01T01:30:00-04:00[America/New_York]');
+    const second = datetime('2026-11-01T01:30:00-05:00[America/New_York]');
+    const after = datetime('2026-11-01T02:30:00-05:00[America/New_York]');
+    const before = datetime('2026-11-01T00:30:00-04:00[America/New_York]');
+
+    expect(Object.is(second.until(second, 'days'), 0)).toBe(true);
+    expect(second.until(after, 'days')).toBeCloseTo(1 / 24, 12);
+    expect(second.until(first, 'days')).toBeCloseTo(-1 / 25, 12);
+    expect(second.until(before, 'days')).toBeCloseTo(-2 / 25, 12);
+    expect(second.until(second.minus(30, 'minutes'), 'days')).toBeCloseTo(-0.5 / 25, 12);
+    expect(first.until(first.plus(30, 'minutes'), 'days')).toBeCloseTo(0.5 / 25, 12);
+    expect(first.until(second, 'days')).toBeCloseTo(1 / 25, 12);
+    expect(second.until('2026-11-02T01:30:00-05:00[America/New_York]', 'days')).toBe(1);
+    expect(second.until('2026-10-31T01:30:00-04:00[America/New_York]', 'days')).toBe(-1);
+
+    const lordHoweSecond = datetime('2026-04-05T01:45:00+10:30[Australia/Lord_Howe]');
+    expect(lordHoweSecond.until(lordHoweSecond.plus(1, 'hour'), 'days')).toBeCloseTo(1 / 24, 12);
+    expect(lordHoweSecond.until(lordHoweSecond.minus(30, 'minutes'), 'days')).toBeCloseTo(-0.5 / 24.5, 12);
+  });
+
   it('preserves exact sub-second precision across multi-century spans', () => {
     const start = datetime('1800-01-01T00:00:00.000Z');
     const end = datetime('2026-06-01T00:00:00.008Z');

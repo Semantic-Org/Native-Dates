@@ -461,20 +461,29 @@ export class DateTime {
 
   until(other, name) {
     const rival = (other?.[IS_DATE_TIME] ? other : new DateTime(other, this.zone)).toTemporal();
-    const scale = name !== undefined && clockScales[unit(name)];
-    if (scale) {
-      // divide in BigInt first so multi-century nanosecond spans keep full sub-second float64 precision
-      const diff = rival.epochNanoseconds - this.#zoned.epochNanoseconds;
-      return Number(diff / scale) + Number(diff % scale) / Number(scale);
+    const diff = rival.epochNanoseconds - this.#zoned.epochNanoseconds;
+    const target = name !== undefined && unit(name);
+    let scale = target && clockScales[target];
+    if (!scale) {
+      const end = rival.withTimeZone(this.zone);
+      // compare against a 1-day step under 26h so fold-hour spans avoid Temporal's day-0 'compatible' shift
+      const dayStep = Math.abs(Number(diff)) < 26 * 36e11
+        && this.#zoned.add({ days: diff < 0n ? -1 : 1 }).epochNanoseconds - this.#zoned.epochNanoseconds;
+      const subDay = dayStep && (diff < 0n ? diff > dayStep : diff < dayStep);
+      if (subDay && target === 'day') {
+        scale = diff < 0n ? -dayStep : dayStep;
+      }
+      else {
+        const span = anchored(
+          this.#zoned.until(end, { largestUnit: subDay ? 'hour' : 'day' }),
+          this.#zoned,
+          this.#locale,
+        );
+        return name === undefined ? span : span.total(name);
+      }
     }
-    const end = rival.withTimeZone(this.zone);
-    const hours = Math.abs(end.epochMilliseconds - this.epochMilliseconds) / 36e5;
-    // sub-day spans use exact elapsed hours so day-0 'compatible' resolution starting in a fall-back fold hour cannot add 1h or throw
-    const subDay = hours < 26
-      && ((this.offset === end.offset && hours < 24)
-        || !this.#zoned.toPlainDateTime().until(end.toPlainDateTime()).days);
-    const span = anchored(this.#zoned.until(end, { largestUnit: subDay ? 'hour' : 'day' }), this.#zoned, this.#locale);
-    return name === undefined ? span : span.total(name);
+    // divide in BigInt first so multi-century nanosecond spans keep full sub-second float64 precision
+    return Number(diff / scale) + Number(diff % scale) / Number(scale);
   }
 
   since(other, name) {
