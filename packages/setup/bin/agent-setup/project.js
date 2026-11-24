@@ -34,7 +34,7 @@ export class Project {
   static skillFolders = ['.agents/skills', '.claude/skills'];
 
   // coding agents detected via bin on PATH or a project folder (uses), with skill folders preferred-first
-  // plugin commands expand {repo} and {package}, and updates names the copy key for manual updates
+  // plugin commands expand {name}, {repo}, and {package}, and updates names the copy key for manual updates
   static agents = {
     'Claude Code': {
       bin: 'claude',
@@ -65,6 +65,7 @@ export class Project {
 
   static addCommands = { npm: 'install', pnpm: 'add', yarn: 'add', bun: 'add' };
 
+  // root is the user's project and packageDir is the setup package this CLI shipped in
   constructor({ root, packageDir, name, version, aliases = [], note, noteInstalled = '', repo }) {
     this.root = root;
     this.repo = repo;
@@ -262,6 +263,7 @@ export class Project {
     return Boolean(this.installPath) && Project.compareVersions(this.installedVersion, this.version) > 0;
   }
 
+  // aliases release in lockstep with the package so installCommand can pin the declared alias at this version
   get dependencyName() {
     const { dependencies, devDependencies, optionalDependencies } = this.manifest;
     const declared = { ...dependencies, ...devDependencies, ...optionalDependencies };

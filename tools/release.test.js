@@ -301,7 +301,7 @@ describe('changelog notes', () => {
     expect(fromTag).toBe('v1.0.0');
     expect(markdown).toContain('## v1.0.1 (2026-11-30)');
     expect(markdown).toContain(
-      '### Features\n\n- **cli:** Support New Agent ([#91](https://github.com/Semantic-Org/Native-Dates/pull/91))',
+      '### Features\n\n- **setup:** Support New Agent ([#91](https://github.com/Semantic-Org/Native-Dates/pull/91))',
     );
     expect(markdown).toContain(
       '### Performance\n\n- Speed Up ISO Parsing ([#84](https://github.com/Semantic-Org/Native-Dates/pull/84))',

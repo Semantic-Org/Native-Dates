@@ -15,7 +15,7 @@ npm i native-dates
 ```
 
 ```bash label="附带技能"
-npx native-dates@latest
+npx @native-dates/setup@latest
 ```
 
 随后在应用中从 `native-dates` 导入：

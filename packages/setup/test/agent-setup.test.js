@@ -162,9 +162,9 @@ describe('npx @native-dates/setup', () => {
     expect(help.output).toContain('install native-dates or update an older version');
     expect(help.output).not.toContain('npx native-dates@latest');
 
-    const ver = setup(dir, '--version');
-    expect(ver.status).toBe(0);
-    expect(ver.output.trim()).toBe(version);
+    const versionResult = setup(dir, '--version');
+    expect(versionResult.status).toBe(0);
+    expect(versionResult.output.trim()).toBe(version);
   });
 
   it('lists the changes, writes nothing, and exits 1 when nobody can be asked and --yes is absent', () => {
@@ -822,14 +822,14 @@ describe('npx @native-dates/setup', () => {
 
   it('refuses outside a project and on an unknown option without writing', () => {
     const empty = mkdtempSync(join(scratch, 'empty-'));
-    const noProj = setup(empty, '--yes');
-    expect(noProj.status).toBe(1);
-    expect(noProj.output).toContain(`npx ${cli}@latest`);
+    const withoutProject = setup(empty, '--yes');
+    expect(withoutProject.status).toBe(1);
+    expect(withoutProject.output).toContain(`npx ${cli}@latest`);
     expect(existsSync(join(empty, 'AGENTS.md'))).toBe(false);
     const dir = project();
-    const badOpt = setup(dir, '--force');
-    expect(badOpt).toMatchObject({ status: 1, calls: '' });
-    expect(badOpt.output).toContain(`npx ${cli}@latest --help`);
+    const unknownOption = setup(dir, '--force');
+    expect(unknownOption).toMatchObject({ status: 1, calls: '' });
+    expect(unknownOption.output).toContain(`npx ${cli}@latest --help`);
     // a word every object carries is not an option either
     expect(setup(dir, 'toString')).toMatchObject({ status: 1, calls: '' });
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false);

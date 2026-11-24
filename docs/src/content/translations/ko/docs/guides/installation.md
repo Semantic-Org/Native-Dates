@@ -15,7 +15,7 @@ npm i native-dates
 ```
 
 ```bash label="스킬 포함 설치"
-npx native-dates@latest
+npx @native-dates/setup@latest
 ```
 
 설치 후 앱에서 `native-dates`를 불러와 사용하세요.

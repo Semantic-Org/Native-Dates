@@ -15,7 +15,7 @@ process.exitCode = await setup({
     ? [{
       label: 'node',
       text:
-        `${process.version} lacks built-in Temporal. Install \`@native-dates/polyfill\` and \`temporal-polyfill\` (see \`native-dates-plugins\` skill)`,
+        `${process.version} lacks built-in Temporal. Needs \`@native-dates/polyfill\` (see \`native-dates-plugins\` skill)`,
     }]
     : [],
 });

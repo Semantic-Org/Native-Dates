@@ -101,6 +101,29 @@ describe('skills in ai/skills', () => {
     }
   }, 60_000);
 
+  it('packs skills without plugin manifests when passed --skills-only, and refuses to clean authored ai/skills', () => {
+    const packageDir = mkdtempSync(resolve(tmpdir(), 'skills-only-'));
+    try {
+      execFileSync(process.execPath, [resolve(root, 'tools/skills.js'), 'pack', packageDir, '--skills-only'], {
+        cwd: root,
+      });
+      for (const { name } of skillsFrom()) {
+        expect(existsSync(resolve(packageDir, 'skills', name, 'SKILL.md'))).toBe(true);
+      }
+      expect(existsSync(resolve(packageDir, 'plugin.json'))).toBe(false);
+      expect(existsSync(resolve(packageDir, '.claude-plugin/plugin.json'))).toBe(false);
+
+      execFileSync(process.execPath, [resolve(root, 'tools/skills.js'), 'clean', packageDir], { cwd: root });
+      expect(existsSync(resolve(packageDir, 'skills'))).toBe(false);
+
+      expect(() => cleanSkills(resolve(root, 'ai'))).toThrow(/authored skills directory/);
+      expect(existsSync(resolve(root, 'ai/skills/native-dates.md'))).toBe(true);
+    }
+    finally {
+      rmSync(packageDir, { recursive: true, force: true });
+    }
+  });
+
   it('are published through a marketplace file that names the npm release of the version in package.json', () => {
     const manifest = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
     const published = JSON.parse(readFileSync(resolve(root, '.claude-plugin/marketplace.json'), 'utf8'));

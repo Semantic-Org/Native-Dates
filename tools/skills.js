@@ -81,7 +81,7 @@ export function skillsFrom(resolveDir = root) {
   return readSkills(resolveDir);
 }
 
-// defaults to the package root and never the working directory, since ai/skills is a folder named skills too
+// packageDir defaults to the package root, and refuses any target whose skills/ resolves to authored ai/skills
 // what an agent's own plugin install needs to accept the package, written at pack and never by hand
 // Antigravity wants an Agent Plugins plugin.json at the root, Codex looks in .claude-plugin, and Claude Code
 // reads the version it compares for updates from either
@@ -90,7 +90,12 @@ const manifests = {
   '.claude-plugin/plugin.json': (fields) => fields,
 };
 
+const authoredSkillsDir = resolve(root, 'ai/skills');
+
 export const cleanSkills = (packageDir = root) => {
+  if (resolve(packageDir, 'skills') === authoredSkillsDir) {
+    throw new Error(`refusing to clean authored skills directory: ${authoredSkillsDir}`);
+  }
   for (const path of ['skills', ...Object.keys(manifests)]) {
     rmSync(resolve(packageDir, path), { recursive: true, force: true });
   }

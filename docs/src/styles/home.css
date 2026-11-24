@@ -34,7 +34,7 @@
 
 .hero-copy {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(340px, 31%, 405px);
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 31%, 405px);
   column-gap: clamp(40px, 4.5vw, 72px);
 }
 .hero-copy h1 { grid-column: 1; margin-bottom: 24px; }
@@ -116,7 +116,7 @@
 .closer-inner { display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
 .closer h2 { font-size: var(--heading); line-height: var(--heading-lh); letter-spacing: var(--heading-track); font-weight: 620; }
 .closer-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.install-cmd.solo { min-width: 280px; height: 40px; border-radius: var(--r-2); font-size: var(--fs-sm); }
+.install-cmd.solo { min-width: 340px; height: 40px; border-radius: var(--r-2); font-size: var(--fs-sm); }
 .install-cmd .copy[data-copied] { color: var(--c-green); }
 
 .footer { border-top: 1px solid var(--line); padding: 48px 0 64px; }

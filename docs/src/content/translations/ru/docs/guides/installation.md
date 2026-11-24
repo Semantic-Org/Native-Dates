@@ -15,7 +15,7 @@ npm i native-dates
 ```
 
 ```bash label="Со скиллами"
-npx native-dates@latest
+npx @native-dates/setup@latest
 ```
 
 Затем импортируйте нужные функции из `native-dates`:

@@ -15,7 +15,7 @@ npm i native-dates
 ```
 
 ```bash label="Con skills"
-npx native-dates@latest
+npx @native-dates/setup@latest
 ```
 
 Luego importa lo que necesites desde `native-dates` en tu aplicación:

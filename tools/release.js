@@ -410,7 +410,7 @@ export function generateNotes({
     if (shipped.some((f) => /^(src|types)\//.test(f))) { scopes.push('core'); }
     if (shipped.some((f) => f.startsWith('packages/plugins/'))) { scopes.push('plugins'); }
     if (shipped.some((f) => f.startsWith('packages/polyfill/'))) { scopes.push('polyfill'); }
-    if (shipped.some((f) => f.startsWith('packages/setup/'))) { scopes.push('cli'); }
+    if (shipped.some((f) => f.startsWith('packages/setup/'))) { scopes.push('setup'); }
     if (shipped.some((f) => f.startsWith('ai/skills/')) && !scopes.length) { scopes.push('skills'); }
     const badge = scopes.length && !(scopes.length === 1 && scopes[0] === 'core')
       ? `**${scopes.join(', ')}:** `
