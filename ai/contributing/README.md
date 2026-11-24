@@ -19,7 +19,7 @@ Internal records and workflows for developing `native-dates`. Application develo
 | Write source comments or title a pull request | [`code-comments.md`](standards/code-comments.md) and [`author-pull-requests.md`](standards/author-pull-requests.md) |
 | Author or evaluate skills in `ai/skills/` | [`ai-author-context.md`](standards/ai-author-context.md) and [`workflows/author-skill.md`](workflows/author-skill.md) |
 | Run a clean-room DX review on public API surface | [`workflows/clean-room-dx-review.md`](workflows/clean-room-dx-review.md) |
-| Write documentation pages or update the docs site | [`workflows/docs-writing.md`](workflows/docs-writing.md) and [`workflows/docs-authoring.md`](workflows/docs-authoring.md) |
+| Write documentation pages, update the docs site, or localize docs | [`workflows/docs-writing.md`](workflows/docs-writing.md), [`workflows/docs-authoring.md`](workflows/docs-authoring.md), [`workflows/docs-i18n.md`](workflows/docs-i18n.md), and [`reference/i18n/slots.md`](reference/i18n/slots.md) |
 | Read the project's core goals and tradeoffs | [`north-star.md`](north-star.md) (hand-authored by the maintainer) |
 
 ## Directory Layout
