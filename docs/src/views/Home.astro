@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 
 import AgentReads from '../components/home/AgentReads.astro';
+import Bench from '../components/home/Bench.astro';
 import Bytes from '../components/home/Bytes.astro';
 import Consoles from '../components/home/Consoles.astro';
 import LocaleProof from '../components/home/LocaleProof.astro';
@@ -119,6 +120,10 @@ const nowCall = '<button type="button" class="closer-call" data-now-call><code>n
 
     <section class="ribbon" id="agent-reads">
       <AgentReads />
+    </section>
+
+    <section class="ribbon" id="benchmark">
+      <Bench />
     </section>
 
     <section class="ribbon">

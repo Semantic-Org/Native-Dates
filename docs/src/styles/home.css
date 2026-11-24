@@ -384,6 +384,68 @@
   .locale-proof { padding: 18px 16px; }
 }
 
+/* cross-library benchmark (a tint marks the fastest time in a row, the outline marks our column) */
+
+.bench { position: relative; border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); overflow: clip; }
+.bench:focus-visible { border-radius: var(--r-4); }
+.bench table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+.bench :is(th, td) { padding: 14px 16px; border-top: 1px solid var(--line); font-weight: 400; text-align: start; vertical-align: top; }
+/* library names follow the reader down the table, under the topbar */
+.bench thead th { position: sticky; z-index: 2; top: 60px; border-top: 0; border-bottom: 1px solid var(--line); background: var(--code-head); vertical-align: bottom; }
+.bench tbody tr:first-child :is(th, td) { border-top: 0; }
+.bench tfoot :is(th, td) { padding-block: 18px; border-top-color: var(--line-2); }
+.bench th:first-child { width: 31%; padding-inline-start: 24px; }
+/* our name is the longest in the header, so its column is a little wider than the rest */
+.bench thead .is-ours { width: 12.5%; }
+.bench .is-ours { box-shadow: inset 1px 0 0 var(--accent-line), inset -1px 0 0 var(--accent-line); }
+.bench thead .is-ours { box-shadow: inset 1px 0 0 var(--accent-line), inset -1px 0 0 var(--accent-line), inset 0 2px 0 var(--accent); }
+.bench td.is-fastest { background: var(--surface-3); }
+.bench td.is-fastest.is-ours { background: var(--accent-wash); }
+.bench-library, .bench-version, .bench-task, .bench-detail, .bench-note { display: block; }
+.bench-library { color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); font-weight: 600; white-space: nowrap; }
+.bench-version { color: var(--text-3); font: 400 var(--fs-3xs)/var(--lh-3xs) var(--font-mono); }
+.bench-task { color: var(--text); font-size: var(--fs-md); line-height: var(--lh-md); font-weight: 550; }
+.bench-detail { margin-top: 2px; color: var(--text-3); font-size: var(--fs-sm); line-height: var(--lh-sm); }
+.bench-time { color: var(--text-2); font-size: var(--fs-md); line-height: var(--lh-md); white-space: nowrap; }
+.bench-time span { color: var(--text-3); font-size: var(--fs-xs); }
+.is-fastest .bench-time { color: var(--text); font-weight: 650; }
+.is-fastest .bench-time span { font-weight: 400; }
+.bench tfoot .bench-time { font-size: var(--fs-lg); line-height: var(--lh-lg); }
+.bench-note { margin-top: 2px; color: var(--text-3); font-size: var(--fs-xs); line-height: var(--lh-xs); }
+/* the run's small print is set by .reads-disclaimer, so the two stay identical */
+.bench-run { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+.bench-run .text-link { margin-top: 0; }
+@media (max-width: 1080px) {
+  /* too narrow for every library at once, so the others scroll past the task names and our column */
+  .bench { overflow-x: auto; overscroll-behavior-x: contain; }
+  .bench thead th { position: static; }
+  .bench th:first-child, .bench .is-ours { position: sticky; z-index: 1; inset-inline-start: 0; background: var(--surface-1); }
+  .bench table { min-width: 912px; }
+  .bench th:first-child { width: 272px; }
+  .bench .is-ours { inset-inline-start: 272px; }
+  .bench thead .is-ours { width: 124px; }
+  .bench thead :is(th:first-child, .is-ours) { background: var(--code-head); }
+  .bench td.is-fastest.is-ours { background: linear-gradient(var(--accent-wash), var(--accent-wash)), var(--surface-1); }
+}
+@media (max-width: 600px) {
+  /* a task sits above its row of times, each named by data-label, so there is room for our column and two more */
+  .bench { container-type: inline-size; }
+  .bench table, .bench :is(tbody, tfoot) { display: block; }
+  .bench table { width: max-content; min-width: 100%; }
+  .bench thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .bench tr { display: grid; grid-template-columns: 116px; grid-auto-columns: 108px; grid-auto-flow: column; border-top: 1px solid var(--line); }
+  .bench tbody tr:first-child { border-top: 0; }
+  .bench tfoot tr { border-top-color: var(--line-2); }
+  .bench :is(tbody, tfoot) th:first-child { grid-area: 1 / 1; width: 100cqi; padding: 12px 12px 0; border-top: 0; background: none; }
+  .bench td { grid-row: 2; padding: 6px 12px 12px; border-top: 0; }
+  .bench td::before { content: attr(data-label); display: block; color: var(--text-3); font-size: var(--fs-3xs); line-height: var(--lh-3xs); white-space: nowrap; }
+  .bench td.is-ours { inset-inline-start: 0; box-shadow: none; border-inline-end: 1px solid var(--accent-line); }
+  .bench tbody .bench-detail { display: none; }
+  .bench-task, .bench-time { font-size: var(--fs-sm); line-height: var(--lh-sm); }
+  .bench tfoot .bench-time { font-size: var(--fs-md); line-height: var(--lh-md); }
+  .bench-note { font-size: var(--fs-2xs); line-height: var(--lh-2xs); }
+}
+
 /* bundle size calculator */
 
 .bytes { padding: 28px 32px; border: 1px solid var(--line-2); border-radius: var(--r-4); background: var(--surface-1); }
@@ -722,7 +784,7 @@
 .read-card.is-yours:hover { border-color: var(--accent); }
 .read-yours-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 
-.reads-disclaimer {
+.reads-disclaimer, .bench-run p {
   margin: 12px 0 0; color: var(--text-3); opacity: 0.62;
   font-size: var(--fs-3xs); line-height: 1.45;
 }

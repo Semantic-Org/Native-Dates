@@ -1,0 +1,65 @@
+---
+// times, ratios, versions, and the run they came from are all read from the published results (lib/bench.js)
+import { BENCH_URL, formatMs, formatRatio, LEAD, LIBRARIES, OVERALL, RUN, TASKS } from '../../lib/bench.js';
+import { formatDate, t } from '../../lib/i18n.js';
+
+const locale = Astro.currentLocale;
+---
+<div class="container">
+  <div class="ribbon-head">
+    <h2>{t(locale, 'home.bench.title', { ratio: formatRatio(LEAD) })}</h2>
+    <p>{t(locale, 'home.bench.lede', { tasks: TASKS.length })}</p>
+  </div>
+  <div class="bench" role="region" aria-labelledby="bench-caption" tabindex="0">
+    <table>
+      <caption class="visually-hidden" id="bench-caption">{t(locale, 'home.bench.caption')}</caption>
+      <thead>
+        <tr>
+          <th scope="col"><span class="visually-hidden">{t(locale, 'home.bench.task')}</span></th>
+          {LIBRARIES.map((library) => (
+            <th scope="col" class:list={{ 'is-ours': library.isOurs }}>
+              <bdi class="bench-library">{library.name}</bdi>
+              <bdi class="bench-version">{library.version}</bdi>
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {TASKS.map((task) => (
+          <tr>
+            <th scope="row">
+              <span class="bench-task">{t(locale, `home.bench.${task.id}.task`)}</span>
+              <span class="bench-detail">{t(locale, `home.bench.${task.id}.detail`)}</span>
+            </th>
+            {task.times.map((time) => (
+              <td class:list={{ 'is-ours': time.library.isOurs, 'is-fastest': time.isFastest }} data-label={time.library.name}>
+                <bdi class="bench-time">{formatMs(time.ms)} <span>ms</span></bdi>
+                {time.isFastest && <span class="visually-hidden">{t(locale, 'home.bench.fastest')}</span>}
+                {time.note && <span class="bench-note">{t(locale, time.note.key, time.note)}</span>}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row">
+            <span class="bench-task">{t(locale, 'home.bench.overall.task')}</span>
+            <span class="bench-detail">{t(locale, 'home.bench.overall.detail')}</span>
+          </th>
+          {OVERALL.map((entry) => (
+            <td class:list={{ 'is-ours': entry.library.isOurs, 'is-fastest': entry.library.isOurs }} data-label={entry.library.name}>
+              <bdi class="bench-time">{formatRatio(entry.ratio)}×</bdi>
+              {entry.library.isOurs && <span class="visually-hidden">{t(locale, 'home.bench.fastest')}</span>}
+              {entry.isNextFastest && <span class="bench-note">{t(locale, 'home.bench.next')}</span>}
+            </td>
+          ))}
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <div class="bench-run">
+    <p>{t(locale, 'home.bench.run', { rounds: RUN.rounds, chrome: RUN.chrome, date: formatDate(locale, RUN.measured) })}</p>
+    <a class="text-link" href={BENCH_URL}>{t(locale, 'home.bench.link')}</a>
+  </div>
+</div>
