@@ -149,4 +149,5 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | Code | Thrown by | Cause |
 |---|---|---|
 | `missingPlugin` | Factories, `configure()` | Using `loose`, `dayFirst`, or `zoneAliases` before importing the matching plugin. |
+| `missingTemporal` | Factories, constructors, `configure({ zone })` | Development-only hint when `globalThis.Temporal` is absent and `@native-dates/polyfill` has not been loaded (production builds strip this check and throw the runtime's native `ReferenceError`). |
 | `immutable` | `DateTime` legacy setters | Calling a mutating `Date` setter such as `setHours()` when [`@native-dates/plugins/legacy-date`](/plugins/legacy-date/) is loaded. |

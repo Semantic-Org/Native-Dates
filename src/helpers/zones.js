@@ -44,13 +44,13 @@ export const setZoneExtension = (resolver) => {
 };
 
 // plugins may read a name by the caller's locale ('CST' is Shanghai in zh-CN), so plugin results cache per locale
-// dev-only guard piggybacked on zoneId so production builds fold it to 0 bytes
+// inlined inside zoneId rather than a separate helper so esbuild folds the dev-only guard to 0 bytes in production
 export const zoneId = (id, tag) => {
   if (
     (isDevelopment && typeof Temporal === 'undefined'
       && refuse('missingTemporal', 'globalThis.Temporal', {
         explanation: isDevelopment
-          ? "Temporal is not available in this runtime. Install `@native-dates/polyfill` and `temporal-polyfill`, then import '@native-dates/polyfill' once at startup"
+          ? "Temporal is not available in this runtime. Install `@native-dates/polyfill` and `temporal-polyfill`, then import '@native-dates/polyfill' once at startup, or '@native-dates/polyfill/sync' if dates run at module load"
           : 0,
       })) || id == null
   ) {

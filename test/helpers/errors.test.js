@@ -511,6 +511,7 @@ describe('missing Temporal development hint', () => {
     const [firstLine, explanation] = error.message.split('\n');
     expect(firstLine).toBe('dates refused [missingTemporal] globalThis.Temporal');
     expect(explanation).toContain('@native-dates/polyfill');
+    expect(explanation).toContain('@native-dates/polyfill/sync');
     expect(explanation).toContain('temporal-polyfill');
   });
 
