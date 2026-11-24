@@ -545,6 +545,16 @@
   }
   .home-menu a:hover { color: var(--text); background: var(--surface-2); }
   .topbar .search-trigger { min-width: 0; }
+  .say-head { padding-inline-end: 0; }
+  .say-where { display: none; }
+  /* trailing padding lets the final tab scroll clear of the edge fade without dimming tabs that already fit */
+  .say-tabs {
+    padding-inline-end: 28px;
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+  .say-tabs:dir(rtl) {
+    mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+  }
   .ask { grid-template-columns: minmax(0, 1fr); }
   .ask-list { border-inline-end: 0; border-bottom: 1px solid var(--line); }
   .ask-tab { padding: 12px 16px; column-gap: 12px; font-size: var(--fs-sm); line-height: var(--lh-sm); }
@@ -562,18 +572,6 @@
   .ask-why { padding-block: 12px; padding-inline: 16px max(16px, calc(100% - 16px - 68ch)); }
   .bytes-plugins { grid-template-columns: minmax(0, 1fr); }
   .bytes-presets { margin-inline-start: 0; flex-basis: 100%; }
-}
-@media (max-width: 640px) {
-  .say-head { padding-inline: 12px 0; }
-  .say-where { display: none; }
-  /* trailing padding lets the final tab scroll clear of the edge fade without dimming tabs that already fit */
-  .say-tabs {
-    padding-inline-end: 28px;
-    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-  }
-  .say-tabs:dir(rtl) {
-    mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
-  }
 }
 @media (max-width: 600px) {
   .topbar-inner { gap: 8px; }
@@ -600,6 +598,7 @@
   .hero-copy h1 { margin-bottom: 16px; }
   .hero .lede { font-size: var(--fs-md); line-height: var(--lh-md); }
   .say { margin-top: 28px; }
+  .say-head { padding-inline: 12px 0; }
   .say-tab { padding: 0 9px; font-size: var(--fs-xs); }
   .say-grid { padding: 18px 16px 20px; }
   .say-code { font-size: var(--code-fs); line-height: var(--code-lh); }

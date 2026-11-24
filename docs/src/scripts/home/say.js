@@ -124,6 +124,8 @@ export function mountSay(root, library) {
       other.tabIndex = on ? 0 : -1;
       document.getElementById(other.getAttribute('aria-controls')).hidden = !on;
     });
+    // slide a partially faded edge tab clear of the mobile scroll mask when chosen
+    tab.scrollIntoView({ block: 'nearest', inline: 'center', behavior: still.matches ? 'auto' : 'smooth' });
   };
   tabs.forEach((tab) => tab.addEventListener('click', () => show(tab)));
   root.querySelector('[role=tablist]').addEventListener('keydown', (event) => {
@@ -132,7 +134,6 @@ export function mountSay(root, library) {
     event.preventDefault();
     const tab = tabs[(tabs.indexOf(document.activeElement) + by + tabs.length) % tabs.length];
     tab.focus();
-    tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     show(tab);
   });
 
