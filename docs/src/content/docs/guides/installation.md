@@ -33,7 +33,7 @@ standup.format('YYYY-MM-DD HH:mm'); // '2026-11-16 09:30'
 
 Native Dates runs directly on the platform's built-in `Temporal` and `Intl` APIs. Current releases of Chrome, Edge, Firefox, Node 26+, Deno, and Bun need nothing else.
 
-For Safari, older browsers, or Node 24–25, install the polyfill alongside `temporal-polyfill`:
+For Safari, older browsers, or Node 22–25, install the polyfill alongside `temporal-polyfill`:
 
 ```bash
 npm i @native-dates/polyfill temporal-polyfill
@@ -49,12 +49,12 @@ const launch = today().plus(30, 'days');
 ```
 
 :::tip[Zero cost on modern browsers]
-Runtimes with native `Temporal` skip downloading `temporal-polyfill` altogether.
+Runtimes with native `Temporal` and `Intl.DurationFormat` skip downloading either polyfill altogether.
 :::
 
 :::details[Compatibility notes for older runtimes]
 - **Synchronous loading:** If an imported module evaluates dates at load time before top-level `await` settles, import `@native-dates/polyfill/sync` instead.
-- **Formatting durations on Node:** Server code calling [`Duration.format()`](/api/duration/#format) requires Node 24+ for `Intl.DurationFormat`. Browser bundles still build fine on older Node versions.
+- **Formatting durations on Node 22–23:** `@native-dates/polyfill` includes a zero-dependency `Intl.DurationFormat` fallback so [`Duration.format()`](/api/duration/#format) and `Duration.text` work on Node 22–23 as well (browsers and Node 24+ ship it natively and never download it).
 :::
 
 Next, read [Customization](/guides/customization/) to tailor defaults and add optional plugins.

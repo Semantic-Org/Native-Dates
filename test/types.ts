@@ -1,8 +1,10 @@
 import '@native-dates/plugins/legacy-date';
 import '@native-dates/plugins/loose';
+import '@native-dates/plugins/ranges';
 import '@native-dates/plugins/zones';
 import { datetime as coreDatetime } from '@native-dates/core';
 import { looseZoned } from '@native-dates/plugins/loose';
+import { mergeRanges } from '@native-dates/plugins/ranges';
 import { timezones } from '@native-dates/plugins/zones';
 import {
   type ActiveSettings,
@@ -146,6 +148,8 @@ export const appWide: ActiveSettings = configure({ locale: languages });
 export const inFrench: string = due.format('long', ['fr-CH', 'fr']);
 export const fromHeader: Locale | undefined = due.locale('fr-CH;q=0.8, de;q=0.9').locale();
 export const rangeDays: CalendarDate[] = dateRange('2026-05-01', '2 weeks').every('day');
+export const spreadDays: CalendarDate[] = [...stay];
+export const dayCursor: IterableIterator<CalendarDate> = week[Symbol.iterator]();
 export const daySlots: DateTime[] = due.every(6, 'hours', 'UTC');
 export const totalDays: number = dateRange('2026-05-01', '2 weeks').count();
 export const workdays: number = dateRange('2026-05-01', '2 weeks').count('weekdays');
@@ -157,6 +161,10 @@ dateRange('2026-05-01', '2 weeks').points('day');
 datetimeRange('2026-05-01T09:00', '2h', 'UTC').count('days');
 // @ts-expect-error count() is only defined on DateRange
 timeRange('09:00', '17:00').count('days');
+// @ts-expect-error DateTimeRange is not iterable without an explicit step unit
+export const invalidDateTimeSpread = [...slots[0]];
+// @ts-expect-error TimeRange is not iterable without an explicit step unit
+export const invalidTimeSpread = [...shift];
 
 // @ts-expect-error instance locale may be a string[] without toUpperCase()
 due.locale()?.toUpperCase();
@@ -198,6 +206,7 @@ export const capDays: number = stay.count('Days');
 export function readErrorCode(err: NativeDatesError): ErrorCode {
   return err.code;
 }
+export const missingTemporalCode: ErrorCode = 'missingTemporal';
 
 // @ts-expect-error invalid disambiguation mode is rejected at compile time
 datetime('2026-03-08T12:00', { zone: 'America/New_York', disambiguation: 'skip' });
@@ -317,3 +326,23 @@ due.split(3_600_000, 'UTC');
 due.splitBy(3_600_000, 'UTC');
 // @ts-expect-error Duration.round() rejects quarter
 elapsed.round('quarter');
+
+// ranges plugin adds subtract(), union(), and mergeRanges()
+export const dateDiff: DateRange[] = week.subtract('2026-09-03/2026-09-04');
+export const dateUnion: DateRange | null = week.union(stay);
+export const dtDiff: DateTimeRange[] = slots[0].subtract(slots[1]);
+export const dtUnion: DateTimeRange | null = slots[0].union('2026-09-06T15:00/2026-09-06T16:00');
+export const timeDiff: TimeRange[] = shift.subtract('12:00 - 13:00');
+export const timeUnion: TimeRange | null = shift.union(timeRange('17:00', '19:00'));
+export const mergedDates: DateRange[] = mergeRanges([stay, week]);
+export const mergedMoments: DateTimeRange[] = mergeRanges(slots);
+export const mergedTimes: TimeRange[] = mergeRanges(new Set([shift]));
+
+// @ts-expect-error subtract() rejects mismatched range kinds
+week.subtract(shift);
+// @ts-expect-error union() rejects mismatched range kinds
+shift.union(week);
+// @ts-expect-error mergeRanges() rejects mixed range kinds
+mergeRanges([week, shift]);
+// @ts-expect-error mergeRanges() rejects raw strings
+mergeRanges(['2026-09-01/2026-09-07']);

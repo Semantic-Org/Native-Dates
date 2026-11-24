@@ -554,7 +554,11 @@ export const datetime = (input, options) => {
 
 // use Date.now() ms precision rather than Temporal.Now ns so values survive a JSON or Date round trip unchanged
 export const now = (zone) =>
-  new DateTime(Temporal.Instant.fromEpochMilliseconds(Date.now()).toZonedDateTimeISO(zoneId(zone)));
+  new DateTime(
+    ((isDevelopment && typeof Temporal === 'undefined' && zoneId()) || Temporal).Instant.fromEpochMilliseconds(
+      Date.now(),
+    ).toZonedDateTimeISO(zoneId(zone)),
+  );
 
 export const startOfToday = (zone) => now(zone).startOf('day');
 export const endOfToday = (zone) => now(zone).endOf('day');

@@ -82,7 +82,8 @@ Type errors indicate that a required input is missing, has the wrong JavaScript 
 | `unsupportedCalendar` | `yearMonth()`, `monthDay()`, `YearMonth`, `MonthDay` | Input is a `Temporal.PlainYearMonth` or `PlainMonthDay` with a non-ISO calendar. |
 | `invalidPoint` | `compare()`, `earliest()`, `latest()` | Value is not a `DateTime`, `CalendarDate`, `Time`, `YearMonth`, `Date`, epoch timestamp, Temporal point, or parseable string. |
 | `conflictingKinds` | `compare()`, `earliest()`, `latest()` | Comparing values of different kinds, such as a `CalendarDate` with a `DateTime`. |
-| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange` | Passing a range of one kind to another range constructor or factory. |
+| `invalidRange` | `mergeRanges()` | Passing a non-iterable value or an item that is not a range instance when [`@native-dates/plugins/ranges`](/plugins/ranges/) is loaded. |
+| `conflictingRanges` | `DateRange`, `DateTimeRange`, `TimeRange`, `subtract()`, `union()`, `mergeRanges()` | Passing a range of one kind to another range constructor, factory, or set operation. |
 
 ## RangeError codes
 
@@ -142,6 +143,7 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | `invalidRange` | `DateRange`, `DateTimeRange`, `to()` | Range `end` is earlier than `start`. |
 | `invalidStep` | `every()`, `split()` | Step duration passed to `every()` or `split()` is zero or negative. |
 | `unsupportedIntersection` | `TimeRange.intersection()` | Two overnight time ranges overlap in two separate windows across midnight. |
+| `unsupportedUnion` | `TimeRange.union()`, `mergeRanges()` | Clock ranges cover all 24 hours, which a single `TimeRange` cannot represent. |
 | `unsupportedZone` | `TimeRange.in()` | Calling `in()` on a `TimeRange`, which has no calendar date to place in a zone. |
 
 ### Plugins
@@ -149,4 +151,5 @@ Range errors indicate that a value cannot be parsed, falls outside valid bounds,
 | Code | Thrown by | Cause |
 |---|---|---|
 | `missingPlugin` | Factories, `configure()` | Using `loose`, `dayFirst`, or `zoneAliases` before importing the matching plugin. |
+| `missingTemporal` | Factories, constructors, `configure({ zone })` | Development-only hint when `globalThis.Temporal` is absent and `@native-dates/polyfill` has not been loaded (production builds strip this check and throw the runtime's native `ReferenceError`). |
 | `immutable` | `DateTime` legacy setters | Calling a mutating `Date` setter such as `setHours()` when [`@native-dates/plugins/legacy-date`](/plugins/legacy-date/) is loaded. |
