@@ -13,7 +13,7 @@ npm run build     # run check:i18n + sandbox + astro sync/build into dist/, and 
 npm run preview   # preview dist/ locally with Pagefind search
 ```
 
-Reader preferences (theme, plugin view, homepage install line, locale) persist in `localStorage` under `nd:*` keys. Core and plugin bundle sizes (including subset bitmasks) are measured at build time via `tools/size.js` (`src/lib/sizes.js`). Unmeasurable bundle targets fail the build.
+Reader preferences (theme, plugin view, homepage install line, locale) persist in `localStorage` under `nd:*` keys. Core and plugin bundle sizes (including subset bitmasks) are measured at build time via `tools/size.js` (`src/lib/sizes.js`). Unmeasurable bundle targets fail the build. The homepage benchmark table takes every time and ratio from `src/data/bench.json`, and the build fails if that run no longer supports the section's headline (`src/lib/bench.js`).
 
 Interactive examples (`/examples/`) run inside `@semantic-ui/playground`. `npm run sandbox` (`scripts/sync-sandbox.mjs`) copies playground worker assets into git-ignored `public/sandbox/` and copies `src/`, `packages/plugins/src/`, `packages/polyfill/`, and `temporal-polyfill` into git-ignored `public/libs/` for import-map resolution (`src/lib/import-map.js`).
 
@@ -73,6 +73,7 @@ English serves at `/` with 8 additional locales enabled in `src/lib/locales.js` 
 | `src/content/translations/` | Per-locale `strings.json` and translated Markdown twins |
 | `src/content/strings.json` | English UI string dictionary |
 | `src/data/home-locales.js` | Localized homepage interactive proof configs |
+| `src/data/bench.json` | One run file (`runs/<sha>.json`) copied whole from [`Semantic-Org/Date-Benchmark`](https://github.com/Semantic-Org/Date-Benchmark), read by `src/lib/bench.js` for the homepage benchmark table |
 | `src/lib/nav.js` | Sidebar navigation hierarchy and pagination |
 | `src/lib/{plugins,locales,i18n,sizes,versions}.js` | Plugin metadata, locale routing, build-time bundle sizes, and version switcher |
 | `src/lib/markdown/` | Custom `remark`, `rehype`, and Shiki transformers |

@@ -1,0 +1,704 @@
+{
+  "sha": "346db0a",
+  "focus": "native-dates",
+  "msg": "Perf: Fast-Path Integer Durations and CalendarDate Boundaries (#86)",
+  "timestamp": "2026-11-23T23:19:11.408Z",
+  "rounds": 7,
+  "wallclock_seconds": 71,
+  "chrome_version": "159.0.8154.6",
+  "field": {
+    "date-fns": "4.4.0",
+    "dayjs": "1.11.23",
+    "luxon": "3.7.2",
+    "moment": "2.31.0",
+    "native-dates": "1.0.0 (local)",
+    "tempo": "1.5.0"
+  },
+  "sizes": {
+    "vanilla-temporal": {
+      "minimal": {
+        "minified": 95,
+        "gzip": 114,
+        "brotli": 89
+      },
+      "full": {
+        "minified": 4931,
+        "gzip": 1910,
+        "brotli": 1757
+      }
+    },
+    "date-fns": {
+      "minimal": {
+        "minified": 22388,
+        "gzip": 6809,
+        "brotli": 6081
+      },
+      "full": {
+        "minified": 41094,
+        "gzip": 11906,
+        "brotli": 10723
+      }
+    },
+    "dayjs": {
+      "minimal": {
+        "minified": 7789,
+        "gzip": 3409,
+        "brotli": 3131
+      },
+      "full": {
+        "minified": 20545,
+        "gzip": 7899,
+        "brotli": 7220
+      }
+    },
+    "luxon": {
+      "minimal": {
+        "minified": 70966,
+        "gzip": 22033,
+        "brotli": 19755
+      },
+      "full": {
+        "minified": 74489,
+        "gzip": 23240,
+        "brotli": 20814
+      }
+    },
+    "moment": {
+      "minimal": {
+        "minified": 63982,
+        "gzip": 20760,
+        "brotli": 18806
+      },
+      "full": {
+        "minified": 805860,
+        "gzip": 61198,
+        "brotli": 47555
+      }
+    },
+    "native-dates": {
+      "minimal": {
+        "minified": 51176,
+        "gzip": 14669,
+        "brotli": 13430
+      },
+      "full": {
+        "minified": 55295,
+        "gzip": 16227,
+        "brotli": 14857
+      }
+    },
+    "tempo": {
+      "minimal": {
+        "minified": 9334,
+        "gzip": 3784,
+        "brotli": 3492
+      },
+      "full": {
+        "minified": 16048,
+        "gzip": 6054,
+        "brotli": 5580
+      }
+    }
+  },
+  "polyfill": {
+    "minified": 57863,
+    "gzip": 21127,
+    "brotli": 19053
+  },
+  "audits": {
+    "vanilla-temporal": {
+      "passed": true,
+      "dstAccuracyPct": 100,
+      "rejectsInvalidCalendar": true,
+      "leapYearClamp": true,
+      "issues": []
+    },
+    "date-fns": {
+      "passed": true,
+      "dstAccuracyPct": 100,
+      "rejectsInvalidCalendar": true,
+      "leapYearClamp": true,
+      "issues": []
+    },
+    "dayjs": {
+      "passed": false,
+      "dstAccuracyPct": 96.9,
+      "rejectsInvalidCalendar": false,
+      "leapYearClamp": true,
+      "issues": [
+        "rolls over invalid ISO dates (2026-02-31)",
+        "spring-forward DST shift (2026-03-09 16:30 vs 2026-03-09 15:30)",
+        "DST array parity 96.9%"
+      ]
+    },
+    "luxon": {
+      "passed": true,
+      "dstAccuracyPct": 100,
+      "rejectsInvalidCalendar": true,
+      "leapYearClamp": true,
+      "issues": []
+    },
+    "moment": {
+      "passed": true,
+      "dstAccuracyPct": 100,
+      "rejectsInvalidCalendar": true,
+      "leapYearClamp": true,
+      "issues": []
+    },
+    "native-dates": {
+      "passed": true,
+      "dstAccuracyPct": 100,
+      "rejectsInvalidCalendar": true,
+      "leapYearClamp": true,
+      "issues": []
+    },
+    "tempo": {
+      "passed": false,
+      "dstAccuracyPct": 0,
+      "rejectsInvalidCalendar": false,
+      "leapYearClamp": true,
+      "issues": [
+        "rolls over invalid ISO dates (2026-02-31)",
+        "spring-forward DST shift (2026-03-09 22:30 vs 2026-03-09 15:30)",
+        "DST array parity 0%"
+      ]
+    }
+  },
+  "scores": {
+    "vanilla-temporal": {
+      "core_krausest": 1.15,
+      "app_krausest": 1,
+      "weighted_krausest": 1.07,
+      "core_vs_fastest": 0.88,
+      "app_vs_fastest": 0.43,
+      "weighted_vs_fastest": 0.62,
+      "weighted_vs_floor": 1
+    },
+    "date-fns": {
+      "core_krausest": 6.85,
+      "app_krausest": 9.01,
+      "weighted_krausest": 7.86,
+      "core_vs_fastest": 5.25,
+      "app_vs_fastest": 3.86,
+      "weighted_vs_fastest": 4.5,
+      "weighted_vs_floor": 7.31
+    },
+    "dayjs": {
+      "core_krausest": 6.32,
+      "app_krausest": 18.76,
+      "weighted_krausest": 10.89,
+      "core_vs_fastest": 4.84,
+      "app_vs_fastest": 8.05,
+      "weighted_vs_fastest": 6.24,
+      "weighted_vs_floor": 10.14
+    },
+    "luxon": {
+      "core_krausest": 7.53,
+      "app_krausest": 9.55,
+      "weighted_krausest": 8.48,
+      "core_vs_fastest": 5.77,
+      "app_vs_fastest": 4.1,
+      "weighted_vs_fastest": 4.86,
+      "weighted_vs_floor": 7.9
+    },
+    "moment": {
+      "core_krausest": 6.67,
+      "app_krausest": 5.53,
+      "weighted_krausest": 6.08,
+      "core_vs_fastest": 5.11,
+      "app_vs_fastest": 2.37,
+      "weighted_vs_fastest": 3.48,
+      "weighted_vs_floor": 5.66
+    },
+    "native-dates": {
+      "core_krausest": 1.65,
+      "app_krausest": 2.33,
+      "weighted_krausest": 1.96,
+      "core_vs_fastest": 1.26,
+      "app_vs_fastest": 1,
+      "weighted_vs_fastest": 1.12,
+      "weighted_vs_floor": 1.83
+    },
+    "tempo": {
+      "core_krausest": 17.23,
+      "app_krausest": 26.04,
+      "weighted_krausest": 21.18,
+      "core_vs_fastest": 13.2,
+      "app_vs_fastest": 11.16,
+      "weighted_vs_fastest": 12.14,
+      "weighted_vs_floor": 19.72
+    }
+  },
+  "medians": {
+    "01_parse_iso": {
+      "vanilla-temporal": 3.8,
+      "date-fns": 15.3,
+      "dayjs": 3.8,
+      "luxon": 14.9,
+      "moment": 28.1,
+      "native-dates": 7,
+      "tempo": 3.7
+    },
+    "02_format_token": {
+      "vanilla-temporal": 2.9,
+      "date-fns": 21.2,
+      "dayjs": 5.2,
+      "luxon": 6,
+      "moment": 3.9,
+      "native-dates": 3.6,
+      "tempo": 553.1
+    },
+    "03_format_intl_warm": {
+      "vanilla-temporal": 3.1,
+      "date-fns": 165.6,
+      "dayjs": 145.5,
+      "luxon": 19,
+      "moment": 143.1,
+      "native-dates": 9.7,
+      "tempo": 1074.3
+    },
+    "04_format_intl_cold": {
+      "vanilla-temporal": 2.3,
+      "date-fns": 23.8,
+      "dayjs": 20.3,
+      "luxon": 5.9,
+      "moment": 21.3,
+      "native-dates": 1.4,
+      "tempo": 182.2
+    },
+    "05_calendar_math": {
+      "vanilla-temporal": 7.2,
+      "date-fns": 5.9,
+      "dayjs": 21.2,
+      "luxon": 41.3,
+      "moment": 12.8,
+      "native-dates": 15.3,
+      "tempo": 8.7
+    },
+    "06_zoned_dst_math": {
+      "vanilla-temporal": 3.5,
+      "date-fns": 22.2,
+      "dayjs": 122.8,
+      "luxon": 29.1,
+      "moment": 16,
+      "native-dates": 7.6,
+      "tempo": 535.8
+    },
+    "07_diff_and_sort": {
+      "vanilla-temporal": 3.3,
+      "date-fns": 17.2,
+      "dayjs": 4.4,
+      "luxon": 26.1,
+      "moment": 6.3,
+      "native-dates": 3.2,
+      "tempo": 2.4
+    },
+    "08_relative_time": {
+      "vanilla-temporal": 1,
+      "date-fns": 3.5,
+      "dayjs": 7.9,
+      "luxon": 68.5,
+      "moment": 18.9,
+      "native-dates": 0.9,
+      "tempo": 3.6
+    },
+    "09_app_orders_table": {
+      "vanilla-temporal": 1.3,
+      "date-fns": 21.4,
+      "dayjs": 15.7,
+      "luxon": 29.5,
+      "moment": 12.4,
+      "native-dates": 1.6,
+      "tempo": 89.2
+    },
+    "10_app_month_grid": {
+      "vanilla-temporal": 1,
+      "date-fns": 1.5,
+      "dayjs": 3.2,
+      "luxon": 7.3,
+      "moment": 3,
+      "native-dates": 1.4,
+      "tempo": 118.3
+    },
+    "11_app_booking_slots": {
+      "vanilla-temporal": 0.8,
+      "date-fns": 126.2,
+      "dayjs": 1496.1,
+      "luxon": 14.1,
+      "moment": 11.4,
+      "native-dates": 9.6,
+      "tempo": 13.4
+    },
+    "12_app_cold_startup": {
+      "vanilla-temporal": 11.6,
+      "date-fns": 19.6,
+      "dayjs": 19.9,
+      "luxon": 33.1,
+      "moment": 26.7,
+      "native-dates": 16.6,
+      "tempo": 39.2
+    }
+  },
+  "intervals": {
+    "01_parse_iso": {
+      "vanilla-temporal": [
+        3.614,
+        4.158
+      ],
+      "date-fns": [
+        14.773,
+        16.256
+      ],
+      "dayjs": [
+        3.569,
+        4.374
+      ],
+      "luxon": [
+        13.803,
+        17.683
+      ],
+      "moment": [
+        26.928,
+        28.9
+      ],
+      "native-dates": [
+        6.827,
+        7.83
+      ],
+      "tempo": [
+        3.174,
+        4.54
+      ]
+    },
+    "02_format_token": {
+      "vanilla-temporal": [
+        2.823,
+        3.148
+      ],
+      "date-fns": [
+        20.679,
+        22.521
+      ],
+      "dayjs": [
+        4.932,
+        5.554
+      ],
+      "luxon": [
+        5.623,
+        7.32
+      ],
+      "moment": [
+        3.276,
+        5.039
+      ],
+      "native-dates": [
+        3.304,
+        3.868
+      ],
+      "tempo": [
+        539.812,
+        576.588
+      ]
+    },
+    "03_format_intl_warm": {
+      "vanilla-temporal": [
+        2.982,
+        3.361
+      ],
+      "date-fns": [
+        160.294,
+        174.706
+      ],
+      "dayjs": [
+        143.219,
+        148.981
+      ],
+      "luxon": [
+        17.919,
+        20.652
+      ],
+      "moment": [
+        141.397,
+        147.775
+      ],
+      "native-dates": [
+        9.231,
+        10.197
+      ],
+      "tempo": [
+        1055.742,
+        1128.115
+      ]
+    },
+    "04_format_intl_cold": {
+      "vanilla-temporal": [
+        1.72,
+        3.994
+      ],
+      "date-fns": [
+        22.045,
+        24.698
+      ],
+      "dayjs": [
+        18.671,
+        20.986
+      ],
+      "luxon": [
+        5.3,
+        7.557
+      ],
+      "moment": [
+        20.776,
+        21.967
+      ],
+      "native-dates": [
+        1.128,
+        2.358
+      ],
+      "tempo": [
+        169.795,
+        212.12
+      ]
+    },
+    "05_calendar_math": {
+      "vanilla-temporal": [
+        7.029,
+        7.371
+      ],
+      "date-fns": [
+        5.776,
+        6.052
+      ],
+      "dayjs": [
+        19.896,
+        22.876
+      ],
+      "luxon": [
+        37.878,
+        44.779
+      ],
+      "moment": [
+        11.899,
+        13.643
+      ],
+      "native-dates": [
+        14.309,
+        17.576
+      ],
+      "tempo": [
+        7.196,
+        13.976
+      ]
+    },
+    "06_zoned_dst_math": {
+      "vanilla-temporal": [
+        3.298,
+        4.416
+      ],
+      "date-fns": [
+        21.478,
+        23.465
+      ],
+      "dayjs": [
+        113.918,
+        141.768
+      ],
+      "luxon": [
+        28.511,
+        30.347
+      ],
+      "moment": [
+        15.22,
+        17.494
+      ],
+      "native-dates": [
+        7.386,
+        8.385
+      ],
+      "tempo": [
+        503.661,
+        556.111
+      ]
+    },
+    "07_diff_and_sort": {
+      "vanilla-temporal": [
+        3.037,
+        3.848
+      ],
+      "date-fns": [
+        16.454,
+        21.146
+      ],
+      "dayjs": [
+        4.188,
+        4.783
+      ],
+      "luxon": [
+        23.649,
+        30.38
+      ],
+      "moment": [
+        5.735,
+        7.237
+      ],
+      "native-dates": [
+        2.893,
+        3.793
+      ],
+      "tempo": [
+        2.14,
+        2.832
+      ]
+    },
+    "08_relative_time": {
+      "vanilla-temporal": [
+        0.945,
+        1.198
+      ],
+      "date-fns": [
+        3.231,
+        4.197
+      ],
+      "dayjs": [
+        7.592,
+        8.322
+      ],
+      "luxon": [
+        65.703,
+        71.64
+      ],
+      "moment": [
+        18.212,
+        21.188
+      ],
+      "native-dates": [
+        0.823,
+        1.063
+      ],
+      "tempo": [
+        3.414,
+        4.157
+      ]
+    },
+    "09_app_orders_table": {
+      "vanilla-temporal": [
+        1.082,
+        1.546
+      ],
+      "date-fns": [
+        20.326,
+        22.589
+      ],
+      "dayjs": [
+        15.276,
+        17.267
+      ],
+      "luxon": [
+        27.668,
+        29.961
+      ],
+      "moment": [
+        11.352,
+        13.905
+      ],
+      "native-dates": [
+        1.483,
+        1.888
+      ],
+      "tempo": [
+        87.314,
+        91.943
+      ]
+    },
+    "10_app_month_grid": {
+      "vanilla-temporal": [
+        0.915,
+        1.027
+      ],
+      "date-fns": [
+        1.17,
+        2.145
+      ],
+      "dayjs": [
+        3.065,
+        3.393
+      ],
+      "luxon": [
+        6.89,
+        8.881
+      ],
+      "moment": [
+        2.76,
+        3.326
+      ],
+      "native-dates": [
+        1.258,
+        1.542
+      ],
+      "tempo": [
+        113.806,
+        131.937
+      ]
+    },
+    "11_app_booking_slots": {
+      "vanilla-temporal": [
+        0.658,
+        0.971
+      ],
+      "date-fns": [
+        122.86,
+        129.654
+      ],
+      "dayjs": [
+        1439.173,
+        1515.97
+      ],
+      "luxon": [
+        13.147,
+        15.281
+      ],
+      "moment": [
+        8.017,
+        19.497
+      ],
+      "native-dates": [
+        8.464,
+        10.307
+      ],
+      "tempo": [
+        12.246,
+        14.754
+      ]
+    },
+    "12_app_cold_startup": {
+      "vanilla-temporal": [
+        11.385,
+        12.472
+      ],
+      "date-fns": [
+        18.978,
+        20.851
+      ],
+      "dayjs": [
+        19.285,
+        20.857
+      ],
+      "luxon": [
+        32.638,
+        34.076
+      ],
+      "moment": [
+        25.739,
+        29.404
+      ],
+      "native-dates": [
+        16.342,
+        17.058
+      ],
+      "tempo": [
+        38.247,
+        40.439
+      ]
+    }
+  }
+}

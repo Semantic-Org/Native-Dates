@@ -76,7 +76,7 @@ Build-time `esbuild` + Brotli-11 measurements via `tools/size.js` (`docs/src/lib
 - **Whole-pixel geometry:** Keep layout dimensions and split positions on integer pixels.
 - **Stable control widths:** Stack swappable button/dropdown labels in a shared CSS grid cell (`.swap`) so controls reserve their widest state without layout shift (`Copy page` -> `Copied`).
 - **Centered reading column:** Center `.doc` relative to the viewport and position `.docs-toc` in the remaining inline space.
-- **Bespoke homepage (`docs/src/views/Home.astro`):** Interactive demonstrations (`Say`, `LocaleProof`, `Primitives`, `Consoles`, `YearStrip`, `Xray`, embedded `Playground`, and `Bytes`) verify their build-time outputs against `native-dates` and `Temporal` at build time so equivalent panes cannot drift.
+- **Bespoke homepage (`docs/src/views/Home.astro`):** Interactive demonstrations (`Say`, `LocaleProof`, `Primitives`, `Consoles`, `YearStrip`, `Xray`, embedded `Playground`, and `Bytes`) verify their build-time outputs against `native-dates` and `Temporal` at build time so equivalent panes cannot drift. The benchmark table (`Bench`) reads its times, ratios, and headline from a copied run of the cross-library benchmark (`docs/src/data/bench.json`), so never type a measured time into its copy.
 - **Logical CSS properties (`inline`, `block`):** Use logical margins, borders, and padding throughout so RTL locales (`ar`) mirror cleanly.
 
 ---

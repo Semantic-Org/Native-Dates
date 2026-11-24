@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { NOTES, TASKS } from '../src/lib/bench.js';
 import { ENABLED, TRANSLATED } from '../src/lib/locales.js';
 import { PLUGINS, PRESETS } from '../src/lib/plugins.js';
 import { CASES } from '../src/scripts/home/consoles.js';
@@ -90,6 +91,14 @@ for (const entry of CASES) {
 }
 for (const sample of SAMPLES) {
   literalKeys.add(`home.xray.${sample.id}`);
+}
+for (const task of TASKS) {
+  for (const field of ['task', 'detail']) {
+    literalKeys.add(`home.bench.${task.id}.${field}`);
+  }
+}
+for (const note of NOTES) {
+  literalKeys.add(note.key);
 }
 
 const errors = [];
