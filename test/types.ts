@@ -198,6 +198,7 @@ export const capDays: number = stay.count('Days');
 export function readErrorCode(err: NativeDatesError): ErrorCode {
   return err.code;
 }
+export const missingTemporalCode: ErrorCode = 'missingTemporal';
 
 // @ts-expect-error invalid disambiguation mode is rejected at compile time
 datetime('2026-03-08T12:00', { zone: 'America/New_York', disambiguation: 'skip' });

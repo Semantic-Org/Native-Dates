@@ -14,6 +14,7 @@ export type ErrorCode =
   | 'missingPoints'
   | 'missingAnchor'
   | 'missingPlugin'
+  | 'missingTemporal'
   | 'invalidDateTime'
   | 'invalidDate'
   | 'invalidTime'

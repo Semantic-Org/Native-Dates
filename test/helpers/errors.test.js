@@ -1,25 +1,33 @@
 import { build } from 'esbuild';
 import {
+  CalendarDate,
   compare,
   configure,
   date,
   dateRange,
+  DateTime,
   datetime,
   datetimeRange,
   dayMonth,
   dayOfWeek,
+  Duration,
   duration,
   earliest,
   hours,
   latest,
+  MonthDay,
   monthDay,
   months,
   monthYear,
   now,
+  Time,
   time,
   timeRange,
   today,
+  tomorrow,
+  YearMonth,
   yearMonth,
+  yesterday,
 } from 'native-dates';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -27,7 +35,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
 import vm from 'node:vm';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 const catchError = (call) => {
   try {
@@ -454,5 +462,97 @@ describe('errors in browser bundles without a process global', () => {
     expect(() => dateRange('['.repeat(20_000))).toThrowError(RangeError);
     expect(date('2026-01-01', { locale: `en${' '.repeat(20_000)}x,fr` }).locale()).toBe('fr');
     expect(performance.now() - t0).toBeLessThan(500);
+  });
+});
+
+describe('missing Temporal development hint', () => {
+  const nativeTemporal = Object.getOwnPropertyDescriptor(globalThis, 'Temporal');
+
+  beforeEach(() => {
+    delete globalThis.Temporal;
+  });
+
+  afterEach(() => {
+    Object.defineProperty(globalThis, 'Temporal', nativeTemporal);
+  });
+
+  it.each([
+    ['date()', () => date('2026-11-16')],
+    ['datetime()', () => datetime('2026-11-16T09:30')],
+    ['now()', () => now()],
+    ['today()', () => today()],
+    ['tomorrow()', () => tomorrow()],
+    ['yesterday()', () => yesterday()],
+    ['time()', () => time('09:30')],
+    ['duration()', () => duration(2, 'hours')],
+    ['hours()', () => hours(2)],
+    ['yearMonth()', () => yearMonth('2026-11')],
+    ['monthYear()', () => monthYear('11/26')],
+    ['monthDay()', () => monthDay('10-17')],
+    ['dayMonth()', () => dayMonth('17/10')],
+    ['dateRange()', () => dateRange('2026-11-01', '2026-11-07')],
+    ['datetimeRange()', () => datetimeRange('2026-11-16T09:00', '2026-11-16T10:00')],
+    ['timeRange()', () => timeRange('09:00', '17:00')],
+    ['configure({ zone })', () => configure({ zone: 'America/New_York' })],
+    ['compare()', () => compare('2026-11-01', '2026-11-02')],
+    ['earliest()', () => earliest('2026-11-01', '2026-11-02')],
+    ['latest()', () => latest('2026-11-01', '2026-11-02')],
+    ['new CalendarDate()', () => new CalendarDate('2026-11-16')],
+    ['new DateTime()', () => new DateTime('2026-11-16T09:30')],
+    ['new Time()', () => new Time('09:30')],
+    ['new Duration()', () => new Duration(2, 'hours')],
+    ['new YearMonth()', () => new YearMonth('2026-11')],
+    ['new MonthDay()', () => new MonthDay('10-17')],
+  ])('%s throws missingTemporal pointing to @native-dates/polyfill when Temporal is absent', (_label, call) => {
+    const error = catchError(call);
+    expect(error).toBeInstanceOf(RangeError);
+    expect(error.code).toBe('missingTemporal');
+    expect(error.at).toBe('globalThis.Temporal');
+    const [firstLine, explanation] = error.message.split('\n');
+    expect(firstLine).toBe('dates refused [missingTemporal] globalThis.Temporal');
+    expect(explanation).toContain('@native-dates/polyfill');
+    expect(explanation).toContain('temporal-polyfill');
+  });
+
+  it('recovers cleanly once globalThis.Temporal is installed later', () => {
+    expect(catchError(() => date('2026-11-16')).code).toBe('missingTemporal');
+    Object.defineProperty(globalThis, 'Temporal', nativeTemporal);
+    expect(date('2026-11-16').toString()).toBe('2026-11-16');
+  });
+
+  it('strips the missingTemporal check completely from production bundles', async () => {
+    const bundle = await build({
+      bundle: true,
+      minify: true,
+      format: 'esm',
+      write: false,
+      logLevel: 'silent',
+      define: { 'process.env.NODE_ENV': '"production"' },
+      stdin: {
+        contents: "import * as core from 'native-dates'; console.log(core);",
+        resolveDir: fileURLToPath(new URL('../..', import.meta.url)),
+      },
+    });
+    expect(bundle.outputFiles[0].text).not.toContain('missingTemporal');
+    expect(bundle.outputFiles[0].text).not.toContain('@native-dates/polyfill');
+  });
+
+  it('falls back to native ReferenceError under NODE_ENV=production when Temporal is absent', () => {
+    const script = `
+      import { date } from 'native-dates';
+      delete globalThis.Temporal;
+      try {
+        date('2026-11-16');
+      }
+      catch (error) {
+        console.log(JSON.stringify({ name: error.name, code: error.code ?? null }));
+      }
+    `;
+    const output = execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
+      env: { ...process.env, NODE_ENV: 'production' },
+      encoding: 'utf8',
+    });
+    expect(JSON.parse(output)).toEqual({ name: 'ReferenceError', code: null });
   });
 });
