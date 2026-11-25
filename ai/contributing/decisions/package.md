@@ -158,8 +158,8 @@ Delegating partial or noisy strings to `Date.parse()` fabricated V8's default ye
 
 Reopen: callers report friction from human-typed current-year dates like `'Nov 16'` returning `null`.
 
-## D27: `isWeekend()` and `isWeekday()` follow the locale by default, with `configure({ weekend })` overriding `.locale()` (2026-11-25)
+## D27: `isWeekend()` and `isWeekday()` follow the locale, but `configure({ weekend })` overrides instance locales (2026-11-25)
 
-Supersedes D19. `isWeekend()`, `isWeekday()`, and `DateRange.prototype.count('weekdays')` still follow the active locale by default via `Intl.Locale.prototype.getWeekInfo`, while `configure({ weekend })` sets a process-wide override ahead of per-instance `.locale()`, `configure({ locale })`, and the host locale. Letting per-instance `.locale()` beat `configure({ weekend })` (as per-call `{ locale }` beats `configure({ dayFirst })` in `D25`) was rejected because `.locale()` on instances is typically attached from a viewer's `Accept-Language` header for display formatting (`D6`), whereas `configure({ weekend })` mirrors `configure({ weekStart })` so business-day rules stay pinned when explicitly configured (pass `configure({ weekend: null })` to revert).
+Supersedes D19. Weekend checks and weekday range counts follow the active locale by default, while `configure({ weekend })` sets fixed weekend days for the whole process. Letting an instance locale win instead would silently change business-day rules whenever a server formats a date for a visitor. This follows the same priority as `weekStart` and keeps workweeks consistent across requests.
 
-Reopen: apps serving multiple regions with different business workweeks in one process ask for a per-call or per-instance weekend override.
+Reopen: apps serving regions with different workweeks in one process ask for a per-call or per-instance weekend override.
