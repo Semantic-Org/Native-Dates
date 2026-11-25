@@ -819,6 +819,7 @@
 .read-card.is-tall .read-quote {
   color: var(--text); letter-spacing: -0.015em;
 }
+.read-card.is-tall.is-yours { justify-content: space-between; }
 .read-quote code { padding: 1px 5px; border-radius: var(--r-1); }
 
 .read-by {
