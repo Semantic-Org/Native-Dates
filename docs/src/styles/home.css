@@ -860,7 +860,7 @@
   .reads-col.is-pair { width: min(82vw, 316px); gap: 12px; }
   .reads-track, .reads-set { gap: 12px; }
   .read-card.is-tall { padding: 20px; }
-  .read-card.is-tall .read-quote { font-size: 15px; line-height: 1.45; }
+  .read-card.is-tall .read-quote { font-size: 14.25px; line-height: 1.44; }
   .read-card.is-short { padding: 14px 16px; }
   .read-card.is-short .read-quote { font-size: 13px; line-height: 1.38; }
 }

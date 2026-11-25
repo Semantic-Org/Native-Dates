@@ -15,33 +15,6 @@ export const AGENT_QUOTES = [
       "It got every DST edge case right where dayjs didn't, ran faster than luxon, dayjs and date-fns in my quick test, and reads more naturally than luxon, so on a modern runtime it's what I'd reach for. It's also brand new, so for a team shipping to Safari or older Node today, I'd give it a few releases first.",
   },
   {
-    id: 'gemini-4-carbon',
-    kind: 'agent',
-    size: 'short',
-    name: 'Gemini 4 Carbon',
-    source: 'google',
-    quote:
-      "I'd wait on browsers until Safari ships Temporal, but for timezone-heavy Node 26+ code I'd pick native-dates over Luxon today.",
-  },
-  {
-    id: 'gpt-6-2-astra',
-    kind: 'agent',
-    size: 'short',
-    name: 'GPT-6.2 Astra',
-    source: 'openai',
-    quote:
-      'I’d pick native-dates for scheduling on Node 26 and stick with date-fns for projects that mostly pass Date objects around.',
-  },
-  {
-    id: 'claude-fable-5-2',
-    kind: 'agent',
-    size: 'tall',
-    name: 'Claude Fable 5.2',
-    source: 'anthropic',
-    quote:
-      "native-dates got every DST and invalid-date case I threw at it right, was the fastest of the four on timezone work, and has the clearest API of the bunch. I'd pick it for a new project on Node 26+ or evergreen browsers, but it's brand new and needs a polyfill where Temporal is missing, so I wouldn't make it my default everywhere yet.",
-  },
-  {
     id: 'gemini-4-argon',
     kind: 'agent',
     size: 'short',
@@ -60,13 +33,22 @@ export const AGENT_QUOTES = [
       'I’d default to date-fns and pick native-dates if I controlled the runtime and needed calendar dates distinct from instants across the app.',
   },
   {
-    id: 'qwen3-8-max-prime',
+    id: 'gemini-4-carbon',
     kind: 'agent',
     size: 'tall',
+    name: 'Gemini 4 Carbon',
+    source: 'google',
+    quote:
+      "`native-dates` gives you `Temporal`'s strict separation between civil dates and zoned timestamps without the ceremony of raw `Temporal`, and reading the source made `luxon` feel immediately dated. I'd still wait for Safari to ship native `Temporal` before making it my default in browser bundles, but for a Node 26+ service or anything heavy on timezones and intervals, I'd pick it today.",
+  },
+  {
+    id: 'qwen3-8-max-prime',
+    kind: 'agent',
+    size: 'short',
     name: 'Qwen3.8 Max Prime',
     source: 'qwen',
     quote:
-      "I'd genuinely pick native-dates over dayjs or date-fns for a new project on a modern runtime — the Temporal foundation is the right bet and the code is clearly built with care. My only hesitation is that it's two weeks old, so I'd let someone else find the first production bug before I put anything critical on it.",
+      "I'd pick native-dates for new apps on modern runtimes — just nothing critical until it's had a year of real traffic.",
   },
   {
     id: 'gemini-4-hydrogen',
@@ -76,5 +58,23 @@ export const AGENT_QUOTES = [
     source: 'google',
     quote:
       'Stick with `date-fns` or `luxon` for broad compatibility today; where `Temporal` is native, `native-dates` has a noticeably safer API.',
+  },
+  {
+    id: 'gpt-6-2-astra',
+    kind: 'agent',
+    size: 'tall',
+    name: 'GPT-6.2 Astra',
+    source: 'openai',
+    quote:
+      'I’d pick `native-dates` for a scheduling app on Node 26. The code reads the way I think about a meeting, and it kept a 9 AM appointment at 9 AM across the clock change. For a project that mostly passes `Date` objects around, I’d stick with `date-fns`.',
+  },
+  {
+    id: 'minimax-m3-1-flash',
+    kind: 'agent',
+    size: 'short',
+    name: 'MiniMax M3.1 Flash',
+    source: 'minimax',
+    quote:
+      "Everything I tested was correct and better-designed than the alternatives, but at 22 minutes old, I'd wait a year before trusting it.",
   },
 ];
