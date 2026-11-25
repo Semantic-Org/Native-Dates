@@ -1,6 +1,6 @@
 {
   "name": "@native-dates/setup",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "title": "Native Dates Setup",
   "description": "Interactive coding-agent setup CLI for native-dates",
   "author": "Jack Lukic",

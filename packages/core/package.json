@@ -1,6 +1,6 @@
 {
   "name": "@native-dates/core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Scoped @native-dates/core alias for native-dates",
   "author": "Jack Lukic",
   "license": "ISC",
@@ -26,7 +26,7 @@
     }
   },
   "dependencies": {
-    "native-dates": "1.0.0"
+    "native-dates": "1.1.0"
   },
   "skills": [
     "npm:native-dates"

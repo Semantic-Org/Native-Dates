@@ -1,6 +1,6 @@
 {
   "name": "@native-dates/polyfill",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "title": "Native Dates Polyfill",
   "description": "Loads temporal-polyfill and an Intl.DurationFormat fallback onto globalThis only when missing",
   "author": "Jack Lukic",
