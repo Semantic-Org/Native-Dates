@@ -68,8 +68,6 @@ const jevYes = jevAnswers.adopt_modern.noul;
 
 // each row pairs the question asked with its answer, then the answer's meaning with its path in the response
 const jevCardRows = [
-  { key: 'code_craft', ...jevScoreRow('code_craft') },
-  { key: 'api_legibility', ...jevScoreRow('api_legibility') },
   {
     key: 'adopt_modern',
     value: jevYes.toFixed(2),
@@ -87,6 +85,8 @@ const jevCardRows = [
     scale: jevPicks.map(({ name, share }) => `${name} ${pct(share)}`).join(' · '),
     marks: [jevPick.share, 1 - jevPick.share],
   },
+  { key: 'code_craft', ...jevScoreRow('code_craft') },
+  { key: 'api_legibility', ...jevScoreRow('api_legibility') },
 ].map((row) => ({
   ...row,
   ...JEV_DECISION.questions[row.key],
