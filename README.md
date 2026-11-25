@@ -38,7 +38,7 @@ meeting.duration.format('long'); // '1 hour, 30 minutes'
 
 Works natively in latest Chrome, Edge, Firefox, Safari Technology Preview, and Node 26+.
 
-For Safari/iOS before Spring 2027 (when Temporal lands in Baseline) or Node 20–25, use `@native-dates/polyfill` — it loads `temporal-polyfill` and `Intl.DurationFormat` only when absent.
+For Safari/iOS before Spring 2027 (when Temporal lands in Baseline) or Node 20–25, use `@native-dates/polyfill` which loads `temporal-polyfill` and `Intl.DurationFormat` only when absent.
 
 ## Packages
 
