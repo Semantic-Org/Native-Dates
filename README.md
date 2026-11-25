@@ -54,7 +54,7 @@ For Safari/iOS before Spring 2027 (when Temporal lands in Baseline) or Node 20â€
 
 Hi, I'm Jack. 15 years ago I built a project called Semantic UI. Between then and now I helped build a company from 0 to 600 employees in a highly time-sensitive field, a system of record for home closings. There I dealt with pretty much every kind of date problem under the sun, so I'm excited today to release something to make time simpler for some people.
 
-For the last three years I've been working full-time on a new full-stack JavaScript framework, not Semantic UI 2, but a web dev platform built on web standards like web components with a db agnostic data-sync layer using WebTransport and datagrams. We were the largest MeteorJS company in the world, so I'm excited to share with people what a real walled garden experience can mean if designed correctly and to scale.  
+For the last three years I've been working full-time on a new full-stack JavaScript framework, not Semantic UI 2, but a web dev platform built on web standards like web components with a db agnostic data-sync layer using WebTransport and datagrams. We were the largest MeteorJS company in the world, so I'm excited to share with people what a fully integrated real time sync framework can mean if designed correctly and to scale... and was db agnostic... and handled file buckets and accounts and every hard problem faced repeatedly.
 
 This date library was one of the pieces used in that framework that was extracted to be truly standalone and released separately from that framework, so anyone can use it. 
 
