@@ -2,6 +2,14 @@
 
 Note: To simplify versioning all subpackages like the polyfill and plugins are published in lockstep with `native-dates`.
 
+## v1.1.1 (2026-11-25)
+
+### Bug Fixes
+
+- **plugins:** Parse Hour-Only Meridiems Beside Colon Offsets in Loose Plugin ([#137](https://github.com/Semantic-Org/Native-Dates/pull/137))
+- Measure Anchored Sub-Unit Totals Across Repeated DST Hours ([#136](https://github.com/Semantic-Org/Native-Dates/pull/136))
+- **plugins:** Parse hour-only meridiems in loose plugin ([#135](https://github.com/Semantic-Org/Native-Dates/pull/135))
+
 ## v1.1.0 (2026-11-24)
 
 ### Features
