@@ -814,6 +814,39 @@ describe('Duration anchored arithmetic and totals', () => {
     expect(days(1).total('hours')).toBe(24);
   });
 
+  it('totals anchored spans accurately across both occurrences of a fall-back repeated hour', () => {
+    const first = datetime('2026-11-01T01:30:00-04:00[America/New_York]');
+    const second = datetime('2026-11-01T01:30:00-05:00[America/New_York]');
+
+    const zero = second.until(second);
+    for (const unit of ['hours', 'days', 'weeks', 'months', 'quarters', 'years']) {
+      expect(Object.is(zero.total(unit), 0)).toBe(true);
+    }
+
+    expect(second.until(first).total('days')).toBeCloseTo(-1 / 25, 12);
+    expect(second.until(first).total('weeks')).toBeCloseTo(-1 / 169, 12);
+    expect(second.until(second.plus(1, 'hour')).total('days')).toBeCloseTo(1 / 24, 12);
+    expect(second.until(second.plus(1, 'hour')).total('weeks')).toBeCloseTo(1 / 168, 12);
+    expect(second.until(second.plus(1, 'day')).total('days')).toBe(1);
+    expect(second.until(second.plus(1, 'day')).total('weeks')).toBeCloseTo(1 / 7, 12);
+    expect(second.until(second.plus(1, 'day')).total('months')).toBeCloseTo(1 / 30, 12);
+    expect(second.until(second.minus(1, 'day')).total('days')).toBe(-1);
+    expect(second.until(second.minus(1, 'day')).total('weeks')).toBeCloseTo(-25 / 169, 12);
+    expect(second.until(second.plus(8, 'days')).total('weeks')).toBeCloseTo(8 / 7, 12);
+    expect(second.until(second.plus(1, 'month')).total('years')).toBeCloseTo(720 / 8759, 12);
+    expect(first.until(first.plus(30, 'minutes')).total('days')).toBeCloseTo(0.5 / 25, 12);
+    expect(first.until(first.plus(30, 'minutes')).total('weeks')).toBeCloseTo(0.5 / 169, 12);
+
+    const lordHoweSecond = datetime('2026-04-05T01:45:00+10:30[Australia/Lord_Howe]');
+    expect(lordHoweSecond.until(lordHoweSecond.plus(1, 'hour')).total('days')).toBeCloseTo(1 / 24, 12);
+    expect(lordHoweSecond.until(lordHoweSecond.minus(30, 'minutes')).total('days')).toBeCloseTo(-0.5 / 24.5, 12);
+    expect(lordHoweSecond.until(lordHoweSecond.plus(1, 'day')).total('weeks')).toBeCloseTo(1 / 7, 12);
+
+    const epoch = datetime('1970-01-01T00:00:00Z');
+    expect(epoch.until(epoch.plus(12, 'hours')).total('days')).toBe(0.5);
+    expect(epoch.until(epoch.plus(1, 'day')).total('weeks')).toBeCloseTo(1 / 7, 12);
+  });
+
   it('preserves the anchor when adding an unanchored duration', () => {
     const span = date('2026-01-01').until('2026-04-01').plus(days(1));
     expect(String(span.anchor)).toBe('2026-01-01');

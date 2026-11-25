@@ -1508,6 +1508,34 @@ describe('DateTime.until() and since()', () => {
     expect(lordHoweSecond.until(lordHoweSecond.minus(30, 'minutes'), 'days')).toBeCloseTo(-0.5 / 24.5, 12);
   });
 
+  it('measures fractional weeks, months, and years accurately across fall-back and spring-forward transitions', () => {
+    const first = datetime('2026-11-01T01:30:00-04:00[America/New_York]');
+    const second = datetime('2026-11-01T01:30:00-05:00[America/New_York]');
+
+    for (const unit of ['days', 'weeks', 'months', 'quarters', 'years']) {
+      expect(Object.is(second.until(second, unit), 0)).toBe(true);
+    }
+    expect(second.until(second.plus(1, 'hour'), 'weeks')).toBeCloseTo(1 / 168, 12);
+    expect(second.until(first, 'weeks')).toBeCloseTo(-1 / 169, 12);
+    expect(first.until(first.plus(30, 'minutes'), 'weeks')).toBeCloseTo(0.5 / 169, 12);
+    expect(second.until(second.plus(1, 'day'), 'weeks')).toBeCloseTo(1 / 7, 12);
+    expect(second.until(second.minus(1, 'day'), 'weeks')).toBeCloseTo(-25 / 169, 12);
+    expect(second.until(second.plus(1, 'week'), 'weeks')).toBe(1);
+    expect(second.until(second.minus(1, 'week'), 'weeks')).toBe(-1);
+    expect(second.until(second.plus(8, 'days'), 'weeks')).toBeCloseTo(8 / 7, 12);
+    expect(second.until(second.plus(1, 'day'), 'months')).toBeCloseTo(1 / 30, 12);
+    expect(second.until(second.plus(1, 'week'), 'months')).toBeCloseTo(7 / 30, 12);
+    expect(second.until(second.plus(1, 'month'), 'years')).toBeCloseTo(720 / 8759, 12);
+
+    const spring = datetime('2026-03-08T01:30:00-05:00[America/New_York]');
+    expect(spring.until(spring.plus(1, 'hour'), 'days')).toBeCloseTo(1 / 23, 12);
+    expect(spring.until(spring.plus(1, 'day'), 'weeks')).toBeCloseTo(23 / 167, 12);
+
+    const lordHoweSecond = datetime('2026-04-05T01:45:00+10:30[Australia/Lord_Howe]');
+    expect(lordHoweSecond.until(lordHoweSecond.plus(1, 'day'), 'weeks')).toBeCloseTo(1 / 7, 12);
+    expect(lordHoweSecond.until(lordHoweSecond.minus(30, 'minutes'), 'weeks')).toBeCloseTo(-0.5 / 168.5, 12);
+  });
+
   it('preserves exact sub-second precision across multi-century spans', () => {
     const start = datetime('1800-01-01T00:00:00.000Z');
     const end = datetime('2026-06-01T00:00:00.008Z');
