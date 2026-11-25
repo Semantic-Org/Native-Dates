@@ -7,11 +7,11 @@
     {
       "name": "native-dates",
       "description": "Human-friendly dates, times, durations, and ranges built on the browser's Temporal and Intl APIs",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "source": {
         "source": "npm",
         "package": "native-dates",
-        "version": "1.1.0"
+        "version": "1.1.1"
       }
     }
   ]

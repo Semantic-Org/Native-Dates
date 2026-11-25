@@ -1,6 +1,6 @@
 {
   "name": "@native-dates/plugins",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Opt-in subpath plugins for native-dates",
   "author": "Jack Lukic",
   "license": "ISC",
@@ -27,7 +27,7 @@
     }
   },
   "peerDependencies": {
-    "native-dates": "^1.1.0"
+    "native-dates": "^1.1.1"
   },
   "files": [
     "src",
