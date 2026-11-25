@@ -2,6 +2,12 @@
 
 Installs `temporal-polyfill` onto `globalThis.Temporal` and an `Intl.DurationFormat` fallback onto `Intl` only on runtimes without native support (Safari, older browsers, and Node 22–25; Node 26+ ships both natively).
 
+```bash
+npm i @native-dates/polyfill temporal-polyfill
+```
+
+`temporal-polyfill` is a peer dependency so your app pins its version and never bundles two copies, while still letting bundlers resolve the dynamic `import('temporal-polyfill')` at build time.
+
 ```js
 import '@native-dates/polyfill';
 import { now } from 'native-dates';
