@@ -40,6 +40,94 @@ export function mountReads(root) {
     toggleBtn.setAttribute('aria-expanded', String(drawerOpen));
   });
 
+  const dialog = root.querySelector('[data-jev-dialog]');
+  let dialogOpen = false;
+  let returnFocus = null;
+  if (dialog) {
+    const closeBtn = dialog.querySelector('[data-jev-close]');
+    const tablist = dialog.querySelector('[data-jev-tabs]');
+    const tabs = [...dialog.querySelectorAll('[data-jev-tab]')];
+    const panels = [...dialog.querySelectorAll('[data-jev-panel]')];
+    const copyBtn = dialog.querySelector('[data-jev-copy]');
+    const copyLabel = copyBtn?.querySelector('[data-jev-copy-label]');
+    const defaultCopyText = copyLabel?.textContent ?? 'Copy';
+    let copyTimer;
+
+    const resetCopy = () => {
+      clearTimeout(copyTimer);
+      if (copyBtn) { delete copyBtn.dataset.copied; }
+      if (copyLabel) { copyLabel.textContent = defaultCopyText; }
+    };
+
+    const selectTab = (id) => {
+      tabs.forEach((tab) => {
+        const active = tab.dataset.jevTab === id;
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+      });
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.jevPanel !== id;
+      });
+      resetCopy();
+    };
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => selectTab(tab.dataset.jevTab));
+    });
+
+    tablist?.addEventListener('keydown', (e) => {
+      const i = tabs.indexOf(document.activeElement);
+      if (i < 0) { return; }
+      const moves = {
+        ArrowRight: (i + 1) % tabs.length,
+        ArrowLeft: (i - 1 + tabs.length) % tabs.length,
+        Home: 0,
+        End: tabs.length - 1,
+      };
+      if (!(e.key in moves)) { return; }
+      e.preventDefault();
+      const next = tabs[moves[e.key]];
+      next.focus();
+      selectTab(next.dataset.jevTab);
+    });
+
+    copyBtn?.addEventListener('click', async () => {
+      const activePanel = panels.find((panel) => !panel.hidden);
+      const text = activePanel?.dataset.raw ?? activePanel?.textContent ?? '';
+      try {
+        await navigator.clipboard.writeText(text.trim());
+      }
+      catch {}
+      clearTimeout(copyTimer);
+      copyBtn.dataset.copied = '';
+      if (copyLabel) { copyLabel.textContent = ui('page.copied'); }
+      copyTimer = setTimeout(resetCopy, 1400);
+    });
+
+    root.querySelectorAll('[data-jev-open]').forEach((trigger) => {
+      trigger.addEventListener('click', () => {
+        if (dialog.open) { return; }
+        // return focus to the accessible card in the primary set when a cloned card is clicked
+        returnFocus = trigger.closest('[aria-hidden="true"]')
+          ? root.querySelector('[data-reads-set]:not([aria-hidden]) [data-jev-open]')
+          : trigger;
+        dialogOpen = true;
+        dialog.showModal();
+      });
+    });
+
+    closeBtn?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) { dialog.close(); }
+    });
+    dialog.addEventListener('close', () => {
+      dialogOpen = false;
+      resetCopy();
+      returnFocus?.focus({ preventScroll: true });
+      returnFocus = null;
+    });
+  }
+
   if (!track || sets.length < 2) { return; }
 
   const reducedQuery = matchMedia('(prefers-reduced-motion: reduce)');
@@ -80,7 +168,7 @@ export function mountReads(root) {
     if (!inView || reduced) { return; }
     const dt = lastTime ? Math.min((now - lastTime) / 1000, 0.05) : 0;
     lastTime = now;
-    const active = !hovered && !focused && !pointerDown && !drawerOpen && now >= resumeAt && loopWidth > 0;
+    const active = !hovered && !focused && !pointerDown && !drawerOpen && !dialogOpen && now >= resumeAt && loopWidth > 0;
     if (active && dt > 0) {
       let next = pos + SPEED * dt;
       if (next >= loopWidth) { next -= loopWidth; }

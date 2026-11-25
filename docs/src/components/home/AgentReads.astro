@@ -1,5 +1,5 @@
 ---
-import { AGENT_PROMPT, AGENT_QUOTES } from '../../data/agent-quotes.js';
+import { AGENT_PROMPT, AGENT_QUOTES, JEV_DECISION } from '../../data/agent-quotes.js';
 import { t } from '../../lib/i18n.js';
 
 const locale = Astro.currentLocale;
@@ -17,6 +17,8 @@ const SOURCE_MARK = {
     '<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M16.278 2c1.156 0 2.093.927 2.093 2.07v12.501a.74.74 0 00.744.709.74.74 0 00.743-.709V9.099a2.06 2.06 0 012.071-2.049A2.06 2.06 0 0124 9.1v6.561a.649.649 0 01-.652.645.649.649 0 01-.653-.645V9.1a.762.762 0 00-.766-.758.762.762 0 00-.766.758v7.472a2.037 2.037 0 01-2.048 2.026 2.037 2.037 0 01-2.048-2.026v-12.5a.785.785 0 00-.788-.753.785.785 0 00-.789.752l-.001 15.904A2.037 2.037 0 0113.441 22a2.037 2.037 0 01-2.048-2.026V18.04c0-.356.292-.645.652-.645.36 0 .652.289.652.645v1.934c0 .263.142.506.372.638.23.131.514.131.744 0a.734.734 0 00.372-.638V4.07c0-1.143.937-2.07 2.093-2.07zm-5.674 0c1.156 0 2.093.927 2.093 2.07v11.523a.648.648 0 01-.652.645.648.648 0 01-.652-.645V4.07a.785.785 0 00-.789-.78.785.785 0 00-.789.78v14.013a2.06 2.06 0 01-2.07 2.048 2.06 2.06 0 01-2.071-2.048V9.1a.762.762 0 00-.766-.758.762.762 0 00-.766.758v3.8a2.06 2.06 0 01-2.071 2.049A2.06 2.06 0 010 12.9v-1.378c0-.357.292-.646.652-.646.36 0 .653.29.653.646V12.9c0 .418.343.757.766.757s.766-.339.766-.757V9.099a2.06 2.06 0 012.07-2.048 2.06 2.06 0 012.071 2.048v8.984c0 .419.343.758.767.758.423 0 .766-.339.766-.758V4.07c0-1.143.937-2.07 2.093-2.07z"/></svg>',
   x:
     '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>',
+  typesafe:
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3h18v4h-7v14h-4V7H3Zm0 8h4v10H3Zm14 4h4v6h-4Z"/></svg>',
   yours:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 5 4-5 4M12 16h7"/></svg>',
 };
@@ -31,6 +33,65 @@ const PREV_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
 const NEXT_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+const ARROW_UP_RIGHT_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>';
+const CLOSE_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+
+const jevAnswers = JEV_DECISION.response.answers;
+const jevJson = JSON.stringify(JEV_DECISION.response, null, 2);
+const [jevMethod, jevUrl] = JEV_DECISION.endpoint.split(' ');
+const jevEndpoint = new URL(jevUrl);
+
+const pct = (share) => `${Math.round(share * 100)}%`;
+
+const jevScoreRow = (key) => {
+  const answer = jevAnswers[key];
+  const bands = Object.entries(answer.legend).map(([band, name]) => ({ band, name, share: answer.probabilities[band] }));
+  const landed = bands.reduce((best, band) => (band.share > best.share ? band : best));
+  return {
+    value: answer.score.toFixed(2),
+    denom: `/ ${bands.length - 1}`,
+    reading: landed.name,
+    scale: bands.map(({ band, name }) => `${band} ${name}`).join(' · '),
+    marks: bands.map(({ share }) => share),
+  };
+};
+
+const jevPicks = Object.entries(jevAnswers.runtime_pick.probabilities)
+  .map(([name, share]) => ({ name, share }))
+  .sort((a, b) => b.share - a.share);
+const [jevPick, jevRunnerUp] = jevPicks;
+
+// a noul is the probability that a yes/no question is answered yes
+const jevYes = jevAnswers.adopt_modern.noul;
+
+// each row pairs the question asked with its answer, then the answer's meaning with its path in the response
+const jevCardRows = [
+  {
+    key: 'adopt_modern',
+    value: jevYes.toFixed(2),
+    accent: true,
+    split: true,
+    reading: `${pct(jevYes)} yes`,
+    scale: '0 Strong no · 1 Strong yes',
+    marks: [jevYes, 1 - jevYes],
+  },
+  {
+    key: 'runtime_pick',
+    value: 'native-dates',
+    split: true,
+    reading: `${pct(jevPick.share)} vs ${jevRunnerUp.name} ${pct(jevRunnerUp.share)}`,
+    scale: jevPicks.map(({ name, share }) => `${name} ${pct(share)}`).join(' · '),
+    marks: [jevPick.share, 1 - jevPick.share],
+  },
+  { key: 'code_craft', ...jevScoreRow('code_craft') },
+  { key: 'api_legibility', ...jevScoreRow('api_legibility') },
+].map((row) => ({
+  ...row,
+  ...JEV_DECISION.questions[row.key],
+  path: `${row.key}.${jevAnswers[row.key].type}`,
+}));
 
 const esc = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const renderQuote = (text) => esc(text).replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -144,6 +205,49 @@ const sets = [false, true];
                       </div>
                     </article>
                   )
+                  : item.kind === 'jev'
+                  ? (
+                    <button
+                      class:list={['read-card', col.type === 'tall' ? 'is-tall' : 'is-short', 'is-jev']}
+                      type="button"
+                      lang="en"
+                      dir="ltr"
+                      tabindex={cloned ? -1 : undefined}
+                      aria-haspopup="dialog"
+                      aria-controls="reads-jev-dialog"
+                      data-jev-open
+                    >
+                      <span class="read-jev-head">
+                        <span class="read-brand">
+                          <span class="read-mark" aria-hidden="true" set:html={SOURCE_MARK[item.source]} />
+                          <strong>{item.name}</strong>
+                        </span>
+                        <span class="jev-open-icon" aria-hidden="true" set:html={ARROW_UP_RIGHT_ICON} />
+                      </span>
+
+                      <span class="jev-ledger">
+                        {jevCardRows.map((row) => (
+                          <span class="jev-row">
+                            <span class="jev-line">
+                              <span class="jev-ask" title={row.prompt}>{row.label}</span>
+                              <span class:list={['jev-val', row.accent && 'is-accent']}>
+                                <b>{row.value}</b>{row.denom && <span class="jev-denom"> {row.denom}</span>}
+                              </span>
+                            </span>
+                            <span class="jev-line is-sub">
+                              <span class="jev-read" title={row.scale}>
+                                <span class:list={['jev-marks', row.split && 'is-split', row.accent && 'is-accent']} aria-hidden="true">
+                                  {row.marks.map((share) => <span style={`--share: ${share}`} />)}
+                                </span>
+                                <span>{row.reading}</span>
+                              </span>
+                              <span class="jev-path">{row.path}</span>
+                            </span>
+                          </span>
+                        ))}
+                      </span>
+                    </button>
+                  )
                   : item.size === 'tall'
                   ? (
                     <figure class="read-card is-tall" lang="en" dir="ltr">
@@ -183,4 +287,73 @@ const sets = [false, true];
   <div class="container">
     <p class="reads-disclaimer">{t(locale, 'home.reads.disclaimer')}</p>
   </div>
+
+  <dialog
+    class="jev-dialog"
+    id="reads-jev-dialog"
+    aria-labelledby="reads-jev-title"
+    lang="en"
+    dir="ltr"
+    data-jev-dialog
+  >
+    <div class="jev-panel">
+      <div class="jev-head">
+        <div class="jev-identity">
+          <span class="read-mark" aria-hidden="true" set:html={SOURCE_MARK.typesafe} />
+          <h3 id="reads-jev-title">TypeSafe Jev</h3>
+          <span class="jev-model">{JEV_DECISION.model}</span>
+        </div>
+        <button class="icon-btn jev-close" type="button" aria-label="Close" data-jev-close set:html={CLOSE_ICON} />
+      </div>
+
+      <div class="code jev-code">
+        <div class="code-head">
+          <div role="tablist" aria-label="Decisions API payload" data-jev-tabs>
+            <button
+              class="code-tab"
+              type="button"
+              role="tab"
+              id="jev-tab-json"
+              aria-selected="true"
+              aria-controls="jev-panel-json"
+              data-jev-tab="json"
+            >
+              Response
+            </button>
+            <button
+              class="code-tab"
+              type="button"
+              role="tab"
+              id="jev-tab-reproduce"
+              aria-selected="false"
+              aria-controls="jev-panel-reproduce"
+              tabindex="-1"
+              data-jev-tab="reproduce"
+            >
+              Query
+            </button>
+          </div>
+          <button
+            class="reads-copy is-modal-copy"
+            type="button"
+            aria-label={t(locale, 'page.copyCode')}
+            data-jev-copy
+          >
+            <span class="reads-copy-icon" aria-hidden="true" set:html={COPY_ICON} />
+            <span class="reads-copy-check" aria-hidden="true" set:html={CHECK_ICON} />
+            <span data-jev-copy-label>Copy</span>
+          </button>
+        </div>
+        <div class="jev-panels">
+          <pre id="jev-panel-json" role="tabpanel" aria-labelledby="jev-tab-json" data-hl data-jev-panel="json" set:text={jevJson} />
+          <pre id="jev-panel-reproduce" role="tabpanel" aria-labelledby="jev-tab-reproduce" data-hl data-jev-panel="reproduce" hidden set:text={JEV_DECISION.reproduce} />
+        </div>
+      </div>
+
+      <p class="jev-foot">
+        <span>{jevMethod} <span class="jev-origin">{jevEndpoint.origin}</span>{jevEndpoint.pathname}</span>
+        <span>{JEV_DECISION.package}</span>
+      </p>
+    </div>
+  </dialog>
 </div>
