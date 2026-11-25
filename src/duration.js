@@ -15,7 +15,7 @@ import {
 } from './helpers/fields.js';
 import { IS_DURATION } from './helpers/identity.js';
 import { durationFormat, unitFormat } from './helpers/intl.js';
-import { alias, inspect, isCount, isTemporalDuration, unit } from './helpers/units.js';
+import { alias, inspect, isCount, isTemporalDuration, plural, unit } from './helpers/units.js';
 import { cachedText, checkedLocale, locale as pickLocale } from './helpers/zones.js';
 
 /*
@@ -242,7 +242,9 @@ export class Duration {
     }
     if (this.#anchor) {
       return guard(
-        () => this.#temporal.total({ unit: target, relativeTo: this.#anchor }),
+        () =>
+          subUnit(this.#anchor, this.#temporal, target)
+            ?? this.#temporal.total({ unit: target, relativeTo: this.#anchor }),
         'cannotTotal',
         `${this} in ${target}`,
       );
@@ -360,6 +362,20 @@ export const duration = (input, unitOrOptions) => {
 };
 
 export const anchored = (temporal, anchor, locale) => new Duration(temporal, undefined, { anchor, locale });
+
+// measure a sub-unit span directly so fold-hour anchors avoid Temporal's day-0 'compatible' shift
+export const subUnit = (anchor, end, target) => {
+  const base = anchor.epochNanoseconds;
+  const key = plural(target);
+  if (base !== undefined && calendarFieldNames.includes(key)) {
+    const diff = (end.epochNanoseconds ?? anchor.add(end).epochNanoseconds) - base;
+    const sign = diff < 0n ? -1 : 1;
+    const ratio = Number(diff) / Number(anchor.add({ [key]: sign }).epochNanoseconds - base);
+    if (ratio < 1) {
+      return sign * ratio;
+    }
+  }
+};
 
 export const forLength = (length, name) =>
   name === undefined && isCount(length)
