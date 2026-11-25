@@ -14,32 +14,57 @@ export const JEV_DECISION = {
   response: {
     model: 'typesafe/jev-1.14-20261014',
     answers: {
-      maintained: { type: 'noul', noul: 0.83 },
-      adopt_modern: { type: 'noul', noul: 0.59 },
+      code_craft: {
+        type: 'score',
+        score: 2.97,
+        legend: {
+          0: 'Fragile',
+          1: 'Average',
+          2: 'Solid',
+          3: 'Unusually thorough',
+        },
+        probabilities: { 0: 0, 1: 0, 2: 0.03, 3: 0.97 },
+        confidence: 0.97,
+      },
       api_legibility: {
         type: 'score',
-        score: 2.96,
+        score: 2.75,
         legend: {
-          0: 'Cryptic / verbose',
+          0: 'Cryptic',
           1: 'Adequate',
           2: 'Clean',
           3: 'Exceptionally legible',
         },
-        probabilities: { 0: 0, 1: 0, 2: 0.04, 3: 0.96 },
-        confidence: 0.96,
+        probabilities: { 0: 0, 1: 0, 2: 0.24, 3: 0.76 },
+        confidence: 0.76,
       },
-      verdict: {
+      adopt_modern: {
+        type: 'noul',
+        noul: 0.7,
+      },
+      runtime_pick: {
         type: 'choice',
-        choice: 'caution',
-        probabilities: { adopt: 0.01, caution: 0.99, avoid: 0 },
-        confidence: 0.98,
+        choice: 'native-dates (modern)',
+        probabilities: {
+          'native-dates (modern)': 0.51,
+          luxon: 0.48,
+          'date-fns': 0.01,
+          dayjs: 0,
+        },
+        confidence: 0.35,
       },
     },
-    usage: { input_tokens: 2007, output_tokens: 96, cost: 0.000084294 },
+    usage: { input_tokens: 7598, output_tokens: 109, cost: 0.000319116 },
   },
-  reproduce: `const [pkg, dl] = await Promise.all([
+  reproduce: `import { readFile } from 'node:fs/promises';
+
+const [pkg, dl, readme, calendarDate, dateTime, duration] = await Promise.all([
   fetch('https://registry.npmjs.org/native-dates').then((r) => r.json()),
   fetch('https://api.npmjs.org/downloads/point/last-week/native-dates').then((r) => r.json()),
+  readFile('node_modules/native-dates/README.md', 'utf8'),
+  readFile('node_modules/native-dates/src/calendar-date.js', 'utf8'),
+  readFile('node_modules/native-dates/src/date-time.js', 'utf8'),
+  readFile('node_modules/native-dates/src/duration.js', 'utf8'),
 ]);
 const latest = pkg['dist-tags'].latest;
 const ver = pkg.versions[latest];
@@ -57,30 +82,35 @@ const res = await fetch('https://openrouter.ai/api/alpha/decisions', {
       description: ver.description,
       license: ver.license,
       dependencies: Object.keys(ver.dependencies ?? {}),
-      weekly_downloads: dl.downloads,
+      created: pkg.time.created,
       published: pkg.time[latest],
-      readme: pkg.readme,
+      weekly_downloads: dl.downloads,
+      readme,
+      source: {
+        'src/calendar-date.js': calendarDate,
+        'src/date-time.js': dateTime,
+        'src/duration.js': duration,
+      },
     },
     questions: {
-      maintained: { type: 'noul', prompt: 'Is this package actively maintained?' },
-      adopt_modern: {
-        type: 'noul',
-        prompt: 'Should a team on a modern runtime adopt this over date-fns, luxon, or dayjs?',
+      code_craft: {
+        type: 'score',
+        prompt: 'Rate the implementation craft and edge-case handling in the source.',
+        legend: { 0: 'Fragile', 1: 'Average', 2: 'Solid', 3: 'Unusually thorough' },
       },
       api_legibility: {
         type: 'score',
         prompt: 'Rate the API legibility.',
-        legend: {
-          0: 'Cryptic / verbose',
-          1: 'Adequate',
-          2: 'Clean',
-          3: 'Exceptionally legible',
-        },
+        legend: { 0: 'Cryptic', 1: 'Adequate', 2: 'Clean', 3: 'Exceptionally legible' },
       },
-      verdict: {
+      adopt_modern: {
+        type: 'noul',
+        prompt: 'Should a team on a modern runtime adopt this over date-fns, luxon, or dayjs?',
+      },
+      runtime_pick: {
         type: 'choice',
-        prompt: 'Overall adoption verdict for a new project today?',
-        choices: ['adopt', 'caution', 'avoid'],
+        prompt: 'Which library would you pick for a new project on a modern runtime?',
+        choices: ['native-dates (modern)', 'luxon', 'date-fns', 'dayjs'],
       },
     },
   }),
@@ -116,13 +146,11 @@ export const AGENT_QUOTES = [
     quote: "In my tests it got every DST case right; I'd pick it on Node 26+ or evergreen browsers, though it's brand new.",
   },
   {
-    id: 'claude-opus-5-5',
-    kind: 'agent',
+    id: 'typesafe-jev',
+    kind: 'jev',
     size: 'tall',
-    name: 'Claude Opus 5.5',
-    source: 'anthropic',
-    quote:
-      "Correct on every DST case I tried and better-modeled than date-fns, luxon or dayjs; I'd use it where I control the runtime, but wait on Safari and track record.",
+    name: 'TypeSafe Jev 1.14',
+    source: 'typesafe',
   },
   {
     id: 'gemini-4-argon',
@@ -133,6 +161,24 @@ export const AGENT_QUOTES = [
     quote: "It makes Temporal actually pleasant to write, and anywhere I'd reach for Luxon, I'd use this.",
   },
   {
+    id: 'gpt-6-2-astra',
+    kind: 'agent',
+    size: 'short',
+    name: 'GPT-6.2 Astra',
+    source: 'openai',
+    quote:
+      'I’d pick native-dates for a new scheduling app on Node 26 because adding one day kept my 9 AM New York meeting at 9 AM across the spring clock change.',
+  },
+  {
+    id: 'claude-opus-5-5',
+    kind: 'agent',
+    size: 'tall',
+    name: 'Claude Opus 5.5',
+    source: 'anthropic',
+    quote:
+      "Correct on every DST case I tried and better-modeled than date-fns, luxon or dayjs; I'd use it where I control the runtime, but wait on Safari and track record.",
+  },
+  {
     id: 'gemini-4-hydrogen',
     kind: 'agent',
     size: 'short',
@@ -140,21 +186,5 @@ export const AGENT_QUOTES = [
     source: 'google',
     quote:
       'Stick with `date-fns` or `luxon` for broad compatibility today; where `Temporal` is native, `native-dates` has a noticeably safer API.',
-  },
-  {
-    id: 'gpt-6-2-astra',
-    kind: 'agent',
-    size: 'tall',
-    name: 'GPT-6.2 Astra',
-    source: 'openai',
-    quote:
-      'I’d pick native-dates for a new scheduling app on Node 26 because adding one day kept my 9 AM New York meeting at 9 AM across the spring clock change.',
-  },
-  {
-    id: 'typesafe-jev',
-    kind: 'jev',
-    size: 'short',
-    name: 'TypeSafe Jev 1.14',
-    source: 'typesafe',
   },
 ];

@@ -839,45 +839,51 @@
 /* TypeSafe Jev System-1 decision card and inspect modal */
 
 .read-card.is-jev {
-  --jev-grid: color-mix(in oklab, var(--line) 55%, transparent);
   appearance: none;
-  padding: 15px 18px 13px;
-  background-color: var(--code-bg);
-  background-image:
-    linear-gradient(to right, var(--jev-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--jev-grid) 1px, transparent 1px);
-  background-size: 24px 24px;
-  background-position: -1px -1px;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px 20px;
+  background: var(--sheen);
+  border-color: var(--accent-line);
   color: inherit;
   font: inherit;
   text-align: start;
   cursor: pointer;
-}
-:root[data-theme='light'] .read-card.is-jev {
-  background-color: var(--surface-1);
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
 }
 .read-card.is-jev:hover,
 .read-card.is-jev:focus-visible {
-  border-color: var(--accent-line);
+  border-color: var(--accent);
+  background: var(--sheen-hover);
 }
 .read-card.is-jev:focus-visible {
   outline-offset: -2px;
 }
-.read-mark.is-jev { color: var(--text); }
-.read-mark.is-jev svg { width: 14px; height: 14px; }
+.read-mark.is-jev { color: var(--accent-strong); }
+.read-mark.is-jev svg { width: 17px; height: 17px; }
 
-.jev-rows {
-  display: flex; flex-direction: column; gap: 6px; width: 100%;
+.read-jev-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%;
 }
-.jev-row {
-  display: grid; grid-template-columns: 98px minmax(0, 1fr) 48px; align-items: center; gap: 10px;
-  font: 400 11.5px/18px var(--font-mono);
+.read-jev-head .read-brand { min-width: 0; }
+.read-jev-head .read-brand strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.jev-tall-list {
+  display: flex; flex-direction: column; gap: 15px; width: 100%;
+}
+.jev-tall-item {
+  display: flex; flex-direction: column; gap: 7px; width: 100%;
+}
+.jev-tall-top {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  font: 400 var(--fs-2xs)/16px var(--font-mono);
 }
 .jev-key {
-  color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .jev-bar {
-  display: block; height: 5px; border-radius: 999px;
+  display: block; height: 6px; border-radius: 999px;
   background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--line);
   overflow: hidden;
 }
@@ -885,35 +891,39 @@
   display: block; height: 100%; width: var(--p, 0%); border-radius: inherit;
   background: var(--accent);
 }
-.jev-fill.is-good { background: var(--tip); }
-.jev-fill.is-accent { background: var(--accent); }
-.jev-fill.is-cyan { background: var(--c-cyan); }
-.jev-fill.is-warn { background: var(--warn); }
-.jev-fill.is-muted { background: var(--danger); }
+.jev-fill.is-primary { background: var(--accent); }
+.jev-fill.is-secondary { background: color-mix(in oklab, var(--text-3) 50%, transparent); }
+.jev-fill.is-quiet { background: color-mix(in oklab, var(--text-3) 24%, transparent); }
 .jev-val {
-  text-align: end; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap;
+  color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.jev-val.is-good { color: var(--tip); }
-.jev-val.is-warn { color: var(--warn); }
-.jev-val.is-muted { color: var(--text-4); }
+.jev-val b { font-weight: 500; }
+.jev-denom { color: var(--text-3); }
 
-.read-jev-foot {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  width: 100%; padding-top: 9px; border-top: 1px solid var(--line);
+.jev-pick-summary {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.jev-pick-summary b.is-primary { color: var(--accent-strong); font-weight: 500; }
+.jev-pick-vs { color: var(--text-4); }
+
+.read-jev-meta {
+  display: block; width: 100%; padding-top: 12px; border-top: 1px solid var(--line);
+  color: var(--text-3); font: 400 var(--fs-3xs)/16px var(--font-mono);
+  font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .jev-hint {
   display: inline-flex; align-items: center; gap: 4px; flex: none;
-  padding: 2px 8px; border: 1px solid var(--line-2); border-radius: 999px;
-  background: var(--surface-2); color: var(--text-3);
+  padding: 3px 9px; border: 1px solid var(--accent-line); border-radius: 999px;
+  background: var(--accent-wash); color: var(--accent-strong);
   font: 400 var(--fs-3xs)/16px var(--font-mono); white-space: nowrap;
   transition: border-color 0.18s var(--ease), background 0.18s var(--ease), color 0.18s var(--ease);
 }
 .jev-hint svg { width: 11px; height: 11px; flex: none; }
 .read-card.is-jev:hover .jev-hint,
 .read-card.is-jev:focus-visible .jev-hint {
-  border-color: var(--accent-line);
-  background: var(--accent-wash);
-  color: var(--accent-strong);
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
 }
 
 dialog.jev-dialog {
@@ -952,8 +962,8 @@ dialog.jev-dialog::backdrop {
 .jev-badge {
   display: grid; place-items: center; flex: none;
   width: 34px; height: 34px; margin-top: 1px;
-  border: 1px solid var(--line-2); border-radius: var(--r-2);
-  background: var(--surface-1); color: var(--text);
+  border: 1px solid var(--accent-line); border-radius: var(--r-2);
+  background: var(--accent-wash); color: var(--accent-strong);
 }
 .jev-badge svg { width: 17px; height: 17px; }
 .jev-titles { min-width: 0; }
@@ -1016,8 +1026,9 @@ dialog.jev-dialog::backdrop {
 .jev-big span {
   color: var(--text-3); font: 400 var(--fs-sm)/1 var(--font-mono);
 }
-.jev-big.is-good strong { color: var(--tip); }
-.jev-big.is-warn strong { color: var(--warn); font-family: var(--font-mono); font-size: 24px; }
+.jev-big.is-choice strong {
+  color: var(--accent-strong); font-family: var(--font-mono); font-size: 17px; line-height: 28px; letter-spacing: -0.01em;
+}
 
 .jev-breakdown {
   display: flex; flex-direction: column; gap: 5px;
@@ -1026,6 +1037,7 @@ dialog.jev-dialog::backdrop {
   display: grid; grid-template-columns: minmax(0, 1fr) 56px 32px; align-items: center; gap: 8px;
   font: 400 var(--fs-3xs)/16px var(--font-mono);
 }
+.jev-dist-row .jev-bar { height: 5px; }
 .jev-dist-label {
   display: flex; align-items: center; gap: 6px; min-width: 0;
   color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1035,29 +1047,31 @@ dialog.jev-dialog::backdrop {
 .jev-dist-pct { text-align: end; color: var(--text-3); font-variant-numeric: tabular-nums; }
 
 .jev-segment {
-  display: flex; gap: 2px; height: 8px; border-radius: 999px;
-  background: var(--surface-3); overflow: hidden;
+  display: flex; gap: 2px; height: 7px; border-radius: 999px;
+  background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
 }
+.jev-segment.is-card { height: 6px; }
 .jev-seg { height: 100%; min-width: 4px; border-radius: 999px; }
-.jev-seg.is-good { background: var(--tip); }
-.jev-seg.is-warn { background: var(--warn); }
-.jev-seg.is-danger { background: var(--danger); }
+.jev-seg.is-primary { background: var(--accent); }
+.jev-seg.is-secondary { background: color-mix(in oklab, var(--text-3) 50%, transparent); }
+.jev-seg.is-quiet { background: color-mix(in oklab, var(--text-3) 24%, transparent); }
 
 .jev-choices {
-  display: flex; flex-wrap: wrap; gap: 6px 14px;
+  display: flex; flex-wrap: wrap; gap: 5px 12px;
   font: 400 var(--fs-3xs)/16px var(--font-mono); color: var(--text-3);
 }
 .jev-choice-item {
   display: inline-flex; align-items: center; gap: 5px;
 }
-.jev-choice-item b { color: var(--text); font-weight: 400; font-variant-numeric: tabular-nums; }
-.jev-choice-item.is-warn b { color: var(--warn); }
+.jev-choice-item b { color: var(--text-2); font-weight: 400; font-variant-numeric: tabular-nums; }
+.jev-choice-item.is-primary b { color: var(--accent-strong); font-weight: 500; }
 .jev-dot {
-  width: 6px; height: 6px; border-radius: 50%; background: var(--text-4); flex: none;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: color-mix(in oklab, var(--text-3) 28%, transparent); flex: none;
 }
-.jev-choice-item.is-good .jev-dot { background: var(--tip); }
-.jev-choice-item.is-warn .jev-dot { background: var(--warn); }
-.jev-choice-item.is-danger .jev-dot { background: var(--danger); }
+.jev-choice-item.is-primary .jev-dot { background: var(--accent); }
+.jev-choice-item.is-secondary .jev-dot { background: color-mix(in oklab, var(--text-3) 58%, transparent); }
 
 .jev-gauge { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
 .jev-gauge .jev-bar { height: 7px; }
@@ -1099,11 +1113,14 @@ dialog.jev-dialog::backdrop {
   .reads-track, .reads-set { gap: 12px; }
   .read-card.is-tall { padding: 20px; }
   .read-card.is-short { padding: 16px; }
-  .read-card.is-jev { padding: 12px 14px 10px; }
-  .jev-rows { gap: 4px; }
-  .jev-row { grid-template-columns: 88px minmax(0, 1fr) 44px; gap: 8px; font-size: 10.5px; line-height: 16px; }
-  .read-jev-foot { padding-top: 7px; gap: 6px; }
-  .jev-hint { padding: 2px 6px; font-size: 10px; }
+  .read-card.is-jev { padding: 18px 18px 16px; gap: 12px; }
+  .read-jev-head .read-brand { font-size: var(--fs-sm); gap: 8px; }
+  .read-mark.is-jev svg { width: 15px; height: 15px; }
+  .jev-tall-list { gap: 12px; }
+  .jev-tall-item { gap: 6px; }
+  .jev-tall-top { font-size: 11px; line-height: 15px; }
+  .read-jev-meta { padding-top: 10px; font-size: 10px; }
+  .jev-hint { padding: 2px 7px; font-size: 10px; }
   dialog.jev-dialog { width: calc(100vw - 20px); max-height: calc(100dvh - 20px); }
   .jev-panel { max-height: calc(100dvh - 20px); }
   .jev-head { padding: 16px 16px 14px; }

@@ -43,45 +43,47 @@ const jevUsage = JEV_DECISION.response.usage;
 const jevJson = JSON.stringify(JEV_DECISION.response, null, 2);
 const jevCost = `$${jevUsage.cost.toFixed(6)}`;
 const jevTokens = `${jevUsage.input_tokens.toLocaleString('en-US')} in / ${jevUsage.output_tokens.toLocaleString('en-US')} out`;
+const jevCardMeta = `${jevUsage.input_tokens.toLocaleString('en-US')} in · ${jevUsage.output_tokens.toLocaleString('en-US')} out · ${jevCost}`;
 const pct = (value) => `${Math.round(value * 100)}%`;
 
-const jevCardRows = [
+const jevCardBars = [
+  {
+    key: 'code_craft',
+    fill: (jevAnswers.code_craft.score / 3) * 100,
+    value: jevAnswers.code_craft.score.toFixed(2),
+    denom: '/3',
+  },
   {
     key: 'api_legibility',
     fill: (jevAnswers.api_legibility.score / 3) * 100,
-    tone: 'is-good',
-    value: `${jevAnswers.api_legibility.score.toFixed(2)}/3`,
+    value: jevAnswers.api_legibility.score.toFixed(2),
+    denom: '/3',
   },
   {
-    key: 'maintained',
-    fill: jevAnswers.maintained.noul * 100,
-    tone: 'is-accent',
-    value: jevAnswers.maintained.noul.toFixed(2),
+    key: 'adopt_modern',
+    fill: jevAnswers.adopt_modern.noul * 100,
+    value: jevAnswers.adopt_modern.noul.toFixed(2),
+    denom: '',
   },
-  {
-    key: 'avoid',
-    fill: jevAnswers.verdict.probabilities.avoid * 100,
-    tone: 'is-muted',
-    value: jevAnswers.verdict.probabilities.avoid.toFixed(2),
-  },
-  {
-    key: 'verdict',
-    fill: jevAnswers.verdict.probabilities[jevAnswers.verdict.choice] * 100,
-    tone: 'is-warn',
-    value: jevAnswers.verdict.choice,
-  },
+];
+
+const jevCraftRows = [
+  { key: '3', label: jevAnswers.code_craft.legend['3'], prob: jevAnswers.code_craft.probabilities['3'], tone: 'is-primary' },
+  { key: '2', label: jevAnswers.code_craft.legend['2'], prob: jevAnswers.code_craft.probabilities['2'], tone: 'is-secondary' },
+  { key: '0-1', label: 'Average / Fragile', prob: jevAnswers.code_craft.probabilities['0'] + jevAnswers.code_craft.probabilities['1'], tone: 'is-quiet' },
 ];
 
 const jevLegibilityRows = [
-  { key: '3', label: jevAnswers.api_legibility.legend['3'], prob: jevAnswers.api_legibility.probabilities['3'], tone: 'is-good' },
-  { key: '2', label: jevAnswers.api_legibility.legend['2'], prob: jevAnswers.api_legibility.probabilities['2'], tone: 'is-accent' },
-  { key: '0-1', label: 'Adequate / Cryptic', prob: jevAnswers.api_legibility.probabilities['0'] + jevAnswers.api_legibility.probabilities['1'], tone: 'is-muted' },
+  { key: '3', label: jevAnswers.api_legibility.legend['3'], prob: jevAnswers.api_legibility.probabilities['3'], tone: 'is-primary' },
+  { key: '2', label: jevAnswers.api_legibility.legend['2'], prob: jevAnswers.api_legibility.probabilities['2'], tone: 'is-secondary' },
+  { key: '0-1', label: 'Adequate / Cryptic', prob: jevAnswers.api_legibility.probabilities['0'] + jevAnswers.api_legibility.probabilities['1'], tone: 'is-quiet' },
 ];
 
-const jevVerdictRows = [
-  { key: 'adopt', prob: jevAnswers.verdict.probabilities.adopt, tone: 'is-good' },
-  { key: 'caution', prob: jevAnswers.verdict.probabilities.caution, tone: 'is-warn' },
-  { key: 'avoid', prob: jevAnswers.verdict.probabilities.avoid, tone: 'is-danger' },
+const jevPickRows = [
+  { key: 'native-dates', prob: jevAnswers.runtime_pick.probabilities['native-dates (modern)'], tone: 'is-primary' },
+  { key: 'luxon', prob: jevAnswers.runtime_pick.probabilities.luxon, tone: 'is-secondary' },
+  { key: 'date-fns', prob: jevAnswers.runtime_pick.probabilities['date-fns'], tone: 'is-quiet' },
+  { key: 'dayjs', prob: jevAnswers.runtime_pick.probabilities.dayjs, tone: 'is-quiet' },
 ];
 
 const esc = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -208,19 +210,8 @@ const sets = [false, true];
                       aria-controls="reads-jev-dialog"
                       data-jev-open
                     >
-                      <span class="jev-rows">
-                        {jevCardRows.map((row) => (
-                          <span class="jev-row">
-                            <span class="jev-key">{row.key}</span>
-                            <span class="jev-bar" aria-hidden="true">
-                              <span class:list={['jev-fill', row.tone]} style={`--p: ${row.fill}%`} />
-                            </span>
-                            <span class:list={['jev-val', row.tone]}>{row.value}</span>
-                          </span>
-                        ))}
-                      </span>
-                      <span class="read-jev-foot">
-                        <span class="read-by">
+                      <span class="read-jev-head">
+                        <span class="read-brand">
                           <span class="read-mark is-jev" aria-hidden="true" set:html={SOURCE_MARK[item.source]} />
                           <strong>{item.name}</strong>
                         </span>
@@ -229,6 +220,40 @@ const sets = [false, true];
                           <Fragment set:html={ARROW_UP_RIGHT_ICON} />
                         </span>
                       </span>
+
+                      <span class="jev-tall-list">
+                        {jevCardBars.map((row) => (
+                          <span class="jev-tall-item">
+                            <span class="jev-tall-top">
+                              <span class="jev-key">{row.key}</span>
+                              <span class="jev-val">
+                                <b>{row.value}</b>{row.denom && <span class="jev-denom">{row.denom}</span>}
+                              </span>
+                            </span>
+                            <span class="jev-bar" aria-hidden="true">
+                              <span class="jev-fill is-primary" style={`--p: ${row.fill}%`} />
+                            </span>
+                          </span>
+                        ))}
+
+                        <span class="jev-tall-item">
+                          <span class="jev-tall-top">
+                            <span class="jev-key">runtime_pick</span>
+                            <span class="jev-pick-summary">
+                              <b class="is-primary">native-dates {pct(jevPickRows[0].prob)}</b>
+                              <span class="jev-pick-vs">vs</span>
+                              <span>luxon {pct(jevPickRows[1].prob)}</span>
+                            </span>
+                          </span>
+                          <span class="jev-segment is-card" aria-hidden="true">
+                            {jevPickRows.filter((row) => row.prob > 0).map((row) => (
+                              <span class:list={['jev-seg', row.tone]} style={`width: ${row.prob * 100}%`} />
+                            ))}
+                          </span>
+                        </span>
+                      </span>
+
+                      <span class="read-jev-meta">{jevCardMeta}</span>
                     </button>
                   )
                   : item.size === 'tall'
@@ -308,10 +333,35 @@ const sets = [false, true];
         <div class="jev-grid">
           <section class="jev-metric">
             <div class="jev-metric-head">
+              <span class="jev-metric-name">code_craft</span>
+              <span class="jev-metric-tag">score · {pct(jevAnswers.code_craft.confidence)} conf</span>
+            </div>
+            <p class="jev-big">
+              <strong>{jevAnswers.code_craft.score.toFixed(2)}</strong>
+              <span>/ 3</span>
+            </p>
+            <div class="jev-breakdown">
+              {jevCraftRows.map((row) => (
+                <div class="jev-dist-row">
+                  <span class="jev-dist-label">
+                    <b>{row.key}</b>
+                    <span>{row.label}</span>
+                  </span>
+                  <span class="jev-bar" aria-hidden="true">
+                    <span class:list={['jev-fill', row.tone]} style={`--p: ${row.prob * 100}%`} />
+                  </span>
+                  <span class="jev-dist-pct">{pct(row.prob)}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section class="jev-metric">
+            <div class="jev-metric-head">
               <span class="jev-metric-name">api_legibility</span>
               <span class="jev-metric-tag">score · {pct(jevAnswers.api_legibility.confidence)} conf</span>
             </div>
-            <p class="jev-big is-good">
+            <p class="jev-big">
               <strong>{jevAnswers.api_legibility.score.toFixed(2)}</strong>
               <span>/ 3</span>
             </p>
@@ -331,50 +381,6 @@ const sets = [false, true];
             </div>
           </section>
 
-          <section class="jev-metric">
-            <div class="jev-metric-head">
-              <span class="jev-metric-name">verdict</span>
-              <span class="jev-metric-tag">choice · {pct(jevAnswers.verdict.confidence)} conf</span>
-            </div>
-            <p class="jev-big is-warn">
-              <strong>{jevAnswers.verdict.choice}</strong>
-            </p>
-            <div class="jev-segment" aria-hidden="true">
-              {jevVerdictRows.filter((row) => row.prob > 0).map((row) => (
-                <span class:list={['jev-seg', row.tone]} style={`width: ${row.prob * 100}%`} />
-              ))}
-            </div>
-            <div class="jev-choices">
-              {jevVerdictRows.map((row) => (
-                <span class:list={['jev-choice-item', row.tone]}>
-                  <span class="jev-dot" aria-hidden="true" />
-                  <span>{row.key}</span>
-                  <b>{pct(row.prob)}</b>
-                </span>
-              ))}
-            </div>
-          </section>
-
-          <section class="jev-metric is-noul">
-            <div class="jev-metric-head">
-              <span class="jev-metric-name">maintained</span>
-              <span class="jev-metric-tag">noul</span>
-            </div>
-            <p class="jev-big">
-              <strong>{jevAnswers.maintained.noul.toFixed(2)}</strong>
-            </p>
-            <div class="jev-gauge">
-              <span class="jev-bar" aria-hidden="true">
-                <span class="jev-fill is-accent" style={`--p: ${jevAnswers.maintained.noul * 100}%`} />
-              </span>
-              <div class="jev-ticks" aria-hidden="true">
-                <span>0.00</span>
-                <span>0.50</span>
-                <span>1.00</span>
-              </div>
-            </div>
-          </section>
-
           <section class="jev-metric is-noul">
             <div class="jev-metric-head">
               <span class="jev-metric-name">adopt_modern</span>
@@ -385,13 +391,37 @@ const sets = [false, true];
             </p>
             <div class="jev-gauge">
               <span class="jev-bar" aria-hidden="true">
-                <span class="jev-fill is-cyan" style={`--p: ${jevAnswers.adopt_modern.noul * 100}%`} />
+                <span class="jev-fill is-primary" style={`--p: ${jevAnswers.adopt_modern.noul * 100}%`} />
               </span>
               <div class="jev-ticks" aria-hidden="true">
                 <span>0.00</span>
                 <span>0.50</span>
                 <span>1.00</span>
               </div>
+            </div>
+          </section>
+
+          <section class="jev-metric">
+            <div class="jev-metric-head">
+              <span class="jev-metric-name">runtime_pick</span>
+              <span class="jev-metric-tag">choice · {pct(jevAnswers.runtime_pick.confidence)} conf</span>
+            </div>
+            <p class="jev-big is-choice">
+              <strong>{jevAnswers.runtime_pick.choice}</strong>
+            </p>
+            <div class="jev-segment" aria-hidden="true">
+              {jevPickRows.filter((row) => row.prob > 0).map((row) => (
+                <span class:list={['jev-seg', row.tone]} style={`width: ${row.prob * 100}%`} />
+              ))}
+            </div>
+            <div class="jev-choices">
+              {jevPickRows.map((row) => (
+                <span class:list={['jev-choice-item', row.tone]}>
+                  <span class="jev-dot" aria-hidden="true" />
+                  <span>{row.key}</span>
+                  <b>{pct(row.prob)}</b>
+                </span>
+              ))}
             </div>
           </section>
         </div>
