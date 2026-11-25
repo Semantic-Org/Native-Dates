@@ -836,98 +836,68 @@
 .read-card.is-yours:hover { border-color: var(--accent); }
 .read-yours-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 
-/* TypeSafe Jev System-1 decision card and inspect modal */
+/* TypeSafe Jev editorial specimen card and payload inspector */
 
 .read-card.is-jev {
   appearance: none;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 22px 24px 20px;
-  background: var(--sheen);
-  border-color: var(--accent-line);
+  justify-content: center;
+  gap: 22px;
+  background: var(--surface-1);
+  border-color: var(--line-2);
   color: inherit;
   font: inherit;
   text-align: start;
   cursor: pointer;
-  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
 }
 .read-card.is-jev:hover,
 .read-card.is-jev:focus-visible {
-  border-color: var(--accent);
-  background: var(--sheen-hover);
+  border-color: var(--line-3);
 }
 .read-card.is-jev:focus-visible {
   outline-offset: -2px;
 }
-.read-mark.is-jev { color: var(--accent-strong); }
-.read-mark.is-jev svg { width: 17px; height: 17px; }
 
 .read-jev-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
   width: 100%;
 }
 .read-jev-head .read-brand { min-width: 0; }
 .read-jev-head .read-brand strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jev-open-icon {
+  display: inline-flex; flex: none; color: var(--text-4);
+  transition: color 0.18s var(--ease), transform 0.18s var(--ease);
+}
+.jev-open-icon svg { width: 15px; height: 15px; }
+.read-card.is-jev:hover .jev-open-icon,
+.read-card.is-jev:focus-visible .jev-open-icon {
+  color: var(--text);
+  transform: translate(1px, -1px);
+}
 
-.jev-tall-list {
-  display: flex; flex-direction: column; gap: 15px; width: 100%;
+.jev-ledger {
+  display: flex; flex-direction: column; width: 100%;
 }
-.jev-tall-item {
-  display: flex; flex-direction: column; gap: 7px; width: 100%;
+.jev-ledger-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+  width: 100%; padding: 11px 0;
 }
-.jev-tall-top {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
-  font: 400 var(--fs-2xs)/16px var(--font-mono);
-}
+.jev-ledger-row:first-child { padding-top: 0; }
+.jev-ledger-row:last-child { padding-bottom: 0; }
+.jev-ledger-row + .jev-ledger-row { border-top: 1px solid var(--line); }
+
 .jev-key {
-  color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--text-3); font: 400 13.5px/20px var(--font-mono); white-space: nowrap;
 }
-.jev-bar {
-  display: block; height: 6px; border-radius: 999px;
-  background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--line);
-  overflow: hidden;
-}
-.jev-fill {
-  display: block; height: 100%; width: var(--p, 0%); border-radius: inherit;
-  background: var(--accent);
-}
-.jev-fill.is-primary { background: var(--accent); }
-.jev-fill.is-secondary { background: color-mix(in oklab, var(--text-3) 50%, transparent); }
-.jev-fill.is-quiet { background: color-mix(in oklab, var(--text-3) 24%, transparent); }
 .jev-val {
-  color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap;
+  color: var(--text); font: 400 15.5px/20px var(--font-mono);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .jev-val b { font-weight: 500; }
-.jev-denom { color: var(--text-3); }
-
-.jev-pick-summary {
-  display: inline-flex; align-items: baseline; gap: 5px;
-  color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap;
-}
-.jev-pick-summary b.is-primary { color: var(--accent-strong); font-weight: 500; }
-.jev-pick-vs { color: var(--text-4); }
-
-.read-jev-meta {
-  display: block; width: 100%; padding-top: 12px; border-top: 1px solid var(--line);
-  color: var(--text-3); font: 400 var(--fs-3xs)/16px var(--font-mono);
-  font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.jev-hint {
-  display: inline-flex; align-items: center; gap: 4px; flex: none;
-  padding: 3px 9px; border: 1px solid var(--accent-line); border-radius: 999px;
-  background: var(--accent-wash); color: var(--accent-strong);
-  font: 400 var(--fs-3xs)/16px var(--font-mono); white-space: nowrap;
-  transition: border-color 0.18s var(--ease), background 0.18s var(--ease), color 0.18s var(--ease);
-}
-.jev-hint svg { width: 11px; height: 11px; flex: none; }
-.read-card.is-jev:hover .jev-hint,
-.read-card.is-jev:focus-visible .jev-hint {
-  border-color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 18%, transparent);
-}
+.jev-val.is-accent b { color: var(--accent-strong); }
+.jev-denom { color: var(--text-3); font-size: 13px; }
 
 dialog.jev-dialog {
-  width: min(740px, calc(100vw - 24px)); max-width: none; max-height: calc(100dvh - 32px);
+  width: min(640px, calc(100vw - 24px)); max-width: none; max-height: calc(100dvh - 32px);
   margin: auto; padding: 0; border: 0; background: transparent; color: inherit;
   overflow: visible;
 }
@@ -949,148 +919,45 @@ dialog.jev-dialog::backdrop {
   box-shadow: 0 24px 60px -16px oklch(0.25 0.03 265 / 0.22);
 }
 .jev-head {
-  flex: none; padding: 20px 22px 16px;
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 14px 14px 20px;
   border-bottom: 1px solid var(--line);
-  background: var(--surface-2);
-}
-.jev-head-top {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  background: var(--surface-1);
 }
 .jev-identity {
-  display: flex; align-items: flex-start; gap: 12px; min-width: 0;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 2px 10px; min-width: 0;
 }
-.jev-badge {
-  display: grid; place-items: center; flex: none;
-  width: 34px; height: 34px; margin-top: 1px;
-  border: 1px solid var(--accent-line); border-radius: var(--r-2);
-  background: var(--accent-wash); color: var(--accent-strong);
-}
-.jev-badge svg { width: 17px; height: 17px; }
-.jev-titles { min-width: 0; }
-.jev-title-row {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px;
-}
-.jev-title-row h3 {
-  margin: 0; color: var(--text); font-size: var(--fs-lg); line-height: 24px; font-weight: 620;
+.jev-identity .read-mark svg { width: 16px; height: 16px; }
+.jev-identity h3 {
+  margin: 0; color: var(--text); font-size: var(--fs-md); line-height: 22px; font-weight: 600;
 }
 .jev-model {
-  padding: 2px 7px; border: 1px solid var(--line-2); border-radius: var(--r-1);
-  background: var(--surface-1); color: var(--text-2);
-  font: 400 var(--fs-2xs)/16px var(--font-mono);
+  color: var(--text-3); font: 400 var(--fs-2xs)/18px var(--font-mono);
 }
-.jev-sub {
-  margin: 5px 0 0; color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-sm);
-}
-.jev-close { flex: none; margin: -2px -4px 0 0; }
+.jev-close { flex: none; }
 
-.jev-meta {
-  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px;
+.jev-code {
+  flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0;
+  border: 0; border-radius: 0;
 }
-.jev-chip {
-  display: inline-flex; align-items: center; height: 24px; padding: 0 9px;
-  border: 1px solid var(--line-2); border-radius: 999px;
-  background: var(--surface-1); color: var(--text-3);
-  font: 400 var(--fs-3xs)/1 var(--font-mono); white-space: nowrap;
-}
-
-.jev-body {
-  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
-  display: flex; flex-direction: column; gap: 14px;
-  padding: 16px 22px 20px;
-}
-
-.jev-grid {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
-}
-.jev-metric {
-  display: flex; flex-direction: column; gap: 9px; min-width: 0;
-  padding: 13px 15px; border: 1px solid var(--line-2); border-radius: var(--r-3);
-  background: var(--surface-2);
-}
-.jev-metric-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-}
-.jev-metric-name {
-  color: var(--text); font: 400 var(--fs-xs)/18px var(--font-mono);
-}
-.jev-metric-tag {
-  color: var(--text-3); font: 400 var(--fs-3xs)/16px var(--font-mono); white-space: nowrap;
-}
-.jev-big {
-  display: flex; align-items: baseline; gap: 6px; margin: 0;
-  font-variant-numeric: tabular-nums;
-}
-.jev-big strong {
-  color: var(--text); font: 640 28px/32px var(--font-sans); letter-spacing: -0.02em;
-}
-.jev-big span {
-  color: var(--text-3); font: 400 var(--fs-sm)/1 var(--font-mono);
-}
-.jev-big.is-choice strong {
-  color: var(--accent-strong); font-family: var(--font-mono); font-size: 17px; line-height: 28px; letter-spacing: -0.01em;
-}
-
-.jev-breakdown {
-  display: flex; flex-direction: column; gap: 5px;
-}
-.jev-dist-row {
-  display: grid; grid-template-columns: minmax(0, 1fr) 56px 32px; align-items: center; gap: 8px;
-  font: 400 var(--fs-3xs)/16px var(--font-mono);
-}
-.jev-dist-row .jev-bar { height: 5px; }
-.jev-dist-label {
-  display: flex; align-items: center; gap: 6px; min-width: 0;
-  color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.jev-dist-label b { color: var(--text-3); font-weight: 400; flex: none; }
-.jev-dist-label span { overflow: hidden; text-overflow: ellipsis; }
-.jev-dist-pct { text-align: end; color: var(--text-3); font-variant-numeric: tabular-nums; }
-
-.jev-segment {
-  display: flex; gap: 2px; height: 7px; border-radius: 999px;
-  background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--line);
-  overflow: hidden;
-}
-.jev-segment.is-card { height: 6px; }
-.jev-seg { height: 100%; min-width: 4px; border-radius: 999px; }
-.jev-seg.is-primary { background: var(--accent); }
-.jev-seg.is-secondary { background: color-mix(in oklab, var(--text-3) 50%, transparent); }
-.jev-seg.is-quiet { background: color-mix(in oklab, var(--text-3) 24%, transparent); }
-
-.jev-choices {
-  display: flex; flex-wrap: wrap; gap: 5px 12px;
-  font: 400 var(--fs-3xs)/16px var(--font-mono); color: var(--text-3);
-}
-.jev-choice-item {
-  display: inline-flex; align-items: center; gap: 5px;
-}
-.jev-choice-item b { color: var(--text-2); font-weight: 400; font-variant-numeric: tabular-nums; }
-.jev-choice-item.is-primary b { color: var(--accent-strong); font-weight: 500; }
-.jev-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: color-mix(in oklab, var(--text-3) 28%, transparent); flex: none;
-}
-.jev-choice-item.is-primary .jev-dot { background: var(--accent); }
-.jev-choice-item.is-secondary .jev-dot { background: color-mix(in oklab, var(--text-3) 58%, transparent); }
-
-.jev-gauge { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
-.jev-gauge .jev-bar { height: 7px; }
-.jev-ticks {
-  display: flex; justify-content: space-between;
-  color: var(--text-4); font: 400 10px/12px var(--font-mono);
-}
-
-.jev-code { flex: none; }
-.jev-code .code-head { gap: 8px; }
+.jev-code .code-head { flex: none; gap: 8px; padding-inline: 10px 12px; }
 .reads-copy.is-modal-copy {
   flex: none; height: 28px; padding: 0 10px; font-size: var(--fs-2xs);
 }
 .reads-copy.is-modal-copy svg { width: 12px; height: 12px; }
+.jev-panels { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .jev-panels pre {
-  max-height: 280px; margin: 0; padding: 14px 16px;
+  flex: 1 1 auto; max-height: min(460px, 60dvh); margin: 0; padding: 16px 20px;
   overflow: auto; font-size: var(--code-sm-fs); line-height: var(--code-sm-lh);
 }
 .jev-panels pre[hidden] { display: none; }
+
+.jev-foot {
+  flex: none; margin: 0; padding: 10px 20px;
+  border-top: 1px solid var(--line); background: var(--surface-1);
+  color: var(--text-4); font: 400 var(--fs-3xs)/16px var(--font-mono);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
 .reads-disclaimer, .bench-run p {
   margin: 12px 0 0; color: var(--text-3); opacity: 0.62;
@@ -1113,24 +980,18 @@ dialog.jev-dialog::backdrop {
   .reads-track, .reads-set { gap: 12px; }
   .read-card.is-tall { padding: 20px; }
   .read-card.is-short { padding: 16px; }
-  .read-card.is-jev { padding: 18px 18px 16px; gap: 12px; }
-  .read-jev-head .read-brand { font-size: var(--fs-sm); gap: 8px; }
-  .read-mark.is-jev svg { width: 15px; height: 15px; }
-  .jev-tall-list { gap: 12px; }
-  .jev-tall-item { gap: 6px; }
-  .jev-tall-top { font-size: 11px; line-height: 15px; }
-  .read-jev-meta { padding-top: 10px; font-size: 10px; }
-  .jev-hint { padding: 2px 7px; font-size: 10px; }
+  .read-card.is-jev { gap: 18px; }
+  .jev-ledger-row { padding: 10px 0; }
+  .jev-key { font-size: 12.5px; }
+  .jev-val { font-size: 14px; }
   dialog.jev-dialog { width: calc(100vw - 20px); max-height: calc(100dvh - 20px); }
   .jev-panel { max-height: calc(100dvh - 20px); }
-  .jev-head { padding: 16px 16px 14px; }
-  .jev-body { padding: 14px 16px 16px; gap: 12px; }
-  .jev-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .jev-metric { padding: 12px 14px; }
-  .jev-panels pre { max-height: 220px; padding: 12px 14px; }
+  .jev-head { padding: 12px 12px 12px 16px; }
+  .jev-panels pre { max-height: min(400px, 60dvh); padding: 14px 16px; }
+  .jev-foot { padding: 9px 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .reads-copy, .reads-inspect, .reads-inspect svg, .reads-step, .read-card, .jev-hint { transition: none; }
+  .reads-copy, .reads-inspect, .reads-inspect svg, .reads-step, .read-card, .jev-open-icon { transition: none; }
 }
 
 

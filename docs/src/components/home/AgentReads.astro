@@ -39,51 +39,13 @@ const CLOSE_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 
 const jevAnswers = JEV_DECISION.response.answers;
-const jevUsage = JEV_DECISION.response.usage;
 const jevJson = JSON.stringify(JEV_DECISION.response, null, 2);
-const jevCost = `$${jevUsage.cost.toFixed(6)}`;
-const jevTokens = `${jevUsage.input_tokens.toLocaleString('en-US')} in / ${jevUsage.output_tokens.toLocaleString('en-US')} out`;
-const jevCardMeta = `${jevUsage.input_tokens.toLocaleString('en-US')} in · ${jevUsage.output_tokens.toLocaleString('en-US')} out · ${jevCost}`;
-const pct = (value) => `${Math.round(value * 100)}%`;
 
-const jevCardBars = [
-  {
-    key: 'code_craft',
-    fill: (jevAnswers.code_craft.score / 3) * 100,
-    value: jevAnswers.code_craft.score.toFixed(2),
-    denom: '/3',
-  },
-  {
-    key: 'api_legibility',
-    fill: (jevAnswers.api_legibility.score / 3) * 100,
-    value: jevAnswers.api_legibility.score.toFixed(2),
-    denom: '/3',
-  },
-  {
-    key: 'adopt_modern',
-    fill: jevAnswers.adopt_modern.noul * 100,
-    value: jevAnswers.adopt_modern.noul.toFixed(2),
-    denom: '',
-  },
-];
-
-const jevCraftRows = [
-  { key: '3', label: jevAnswers.code_craft.legend['3'], prob: jevAnswers.code_craft.probabilities['3'], tone: 'is-primary' },
-  { key: '2', label: jevAnswers.code_craft.legend['2'], prob: jevAnswers.code_craft.probabilities['2'], tone: 'is-secondary' },
-  { key: '0-1', label: 'Average / Fragile', prob: jevAnswers.code_craft.probabilities['0'] + jevAnswers.code_craft.probabilities['1'], tone: 'is-quiet' },
-];
-
-const jevLegibilityRows = [
-  { key: '3', label: jevAnswers.api_legibility.legend['3'], prob: jevAnswers.api_legibility.probabilities['3'], tone: 'is-primary' },
-  { key: '2', label: jevAnswers.api_legibility.legend['2'], prob: jevAnswers.api_legibility.probabilities['2'], tone: 'is-secondary' },
-  { key: '0-1', label: 'Adequate / Cryptic', prob: jevAnswers.api_legibility.probabilities['0'] + jevAnswers.api_legibility.probabilities['1'], tone: 'is-quiet' },
-];
-
-const jevPickRows = [
-  { key: 'native-dates', prob: jevAnswers.runtime_pick.probabilities['native-dates (modern)'], tone: 'is-primary' },
-  { key: 'luxon', prob: jevAnswers.runtime_pick.probabilities.luxon, tone: 'is-secondary' },
-  { key: 'date-fns', prob: jevAnswers.runtime_pick.probabilities['date-fns'], tone: 'is-quiet' },
-  { key: 'dayjs', prob: jevAnswers.runtime_pick.probabilities.dayjs, tone: 'is-quiet' },
+const jevCardRows = [
+  { key: 'code_craft', value: jevAnswers.code_craft.score.toFixed(2), denom: '/ 3' },
+  { key: 'api_legibility', value: jevAnswers.api_legibility.score.toFixed(2), denom: '/ 3' },
+  { key: 'adopt_modern', value: jevAnswers.adopt_modern.noul.toFixed(2) },
+  { key: 'runtime_pick', value: 'native-dates', accent: true },
 ];
 
 const esc = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -212,48 +174,22 @@ const sets = [false, true];
                     >
                       <span class="read-jev-head">
                         <span class="read-brand">
-                          <span class="read-mark is-jev" aria-hidden="true" set:html={SOURCE_MARK[item.source]} />
+                          <span class="read-mark" aria-hidden="true" set:html={SOURCE_MARK[item.source]} />
                           <strong>{item.name}</strong>
                         </span>
-                        <span class="jev-hint">
-                          <span>Decisions API</span>
-                          <Fragment set:html={ARROW_UP_RIGHT_ICON} />
-                        </span>
+                        <span class="jev-open-icon" aria-hidden="true" set:html={ARROW_UP_RIGHT_ICON} />
                       </span>
 
-                      <span class="jev-tall-list">
-                        {jevCardBars.map((row) => (
-                          <span class="jev-tall-item">
-                            <span class="jev-tall-top">
-                              <span class="jev-key">{row.key}</span>
-                              <span class="jev-val">
-                                <b>{row.value}</b>{row.denom && <span class="jev-denom">{row.denom}</span>}
-                              </span>
-                            </span>
-                            <span class="jev-bar" aria-hidden="true">
-                              <span class="jev-fill is-primary" style={`--p: ${row.fill}%`} />
+                      <span class="jev-ledger">
+                        {jevCardRows.map((row) => (
+                          <span class="jev-ledger-row">
+                            <span class="jev-key">{row.key}</span>
+                            <span class:list={['jev-val', row.accent && 'is-accent']}>
+                              <b>{row.value}</b>{row.denom && <span class="jev-denom"> {row.denom}</span>}
                             </span>
                           </span>
                         ))}
-
-                        <span class="jev-tall-item">
-                          <span class="jev-tall-top">
-                            <span class="jev-key">runtime_pick</span>
-                            <span class="jev-pick-summary">
-                              <b class="is-primary">native-dates {pct(jevPickRows[0].prob)}</b>
-                              <span class="jev-pick-vs">vs</span>
-                              <span>luxon {pct(jevPickRows[1].prob)}</span>
-                            </span>
-                          </span>
-                          <span class="jev-segment is-card" aria-hidden="true">
-                            {jevPickRows.filter((row) => row.prob > 0).map((row) => (
-                              <span class:list={['jev-seg', row.tone]} style={`width: ${row.prob * 100}%`} />
-                            ))}
-                          </span>
-                        </span>
                       </span>
-
-                      <span class="read-jev-meta">{jevCardMeta}</span>
                     </button>
                   )
                   : item.size === 'tall'
@@ -306,170 +242,59 @@ const sets = [false, true];
   >
     <div class="jev-panel">
       <div class="jev-head">
-        <div class="jev-head-top">
-          <div class="jev-identity">
-            <span class="jev-badge" aria-hidden="true" set:html={SOURCE_MARK.typesafe} />
-            <div class="jev-titles">
-              <div class="jev-title-row">
-                <h3 id="reads-jev-title">TypeSafe Jev</h3>
-                <code class="jev-model" data-no-hl>{JEV_DECISION.model}</code>
-              </div>
-              <p class="jev-sub">
-                System-1 decision model: no prose output, only calibrated probabilities via OpenRouter's Decisions API.
-              </p>
-            </div>
-          </div>
-          <button class="icon-btn jev-close" type="button" aria-label="Close" data-jev-close set:html={CLOSE_ICON} />
+        <div class="jev-identity">
+          <span class="read-mark" aria-hidden="true" set:html={SOURCE_MARK.typesafe} />
+          <h3 id="reads-jev-title">TypeSafe Jev</h3>
+          <span class="jev-model">{JEV_DECISION.model}</span>
         </div>
-        <div class="jev-meta">
-          <span class="jev-chip">{JEV_DECISION.package}</span>
-          <span class="jev-chip">{JEV_DECISION.endpointPath}</span>
-          <span class="jev-chip">{jevTokens}</span>
-          <span class="jev-chip">{jevCost}</span>
-        </div>
+        <button class="icon-btn jev-close" type="button" aria-label="Close" data-jev-close set:html={CLOSE_ICON} />
       </div>
 
-      <div class="jev-body">
-        <div class="jev-grid">
-          <section class="jev-metric">
-            <div class="jev-metric-head">
-              <span class="jev-metric-name">code_craft</span>
-              <span class="jev-metric-tag">score · {pct(jevAnswers.code_craft.confidence)} conf</span>
-            </div>
-            <p class="jev-big">
-              <strong>{jevAnswers.code_craft.score.toFixed(2)}</strong>
-              <span>/ 3</span>
-            </p>
-            <div class="jev-breakdown">
-              {jevCraftRows.map((row) => (
-                <div class="jev-dist-row">
-                  <span class="jev-dist-label">
-                    <b>{row.key}</b>
-                    <span>{row.label}</span>
-                  </span>
-                  <span class="jev-bar" aria-hidden="true">
-                    <span class:list={['jev-fill', row.tone]} style={`--p: ${row.prob * 100}%`} />
-                  </span>
-                  <span class="jev-dist-pct">{pct(row.prob)}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section class="jev-metric">
-            <div class="jev-metric-head">
-              <span class="jev-metric-name">api_legibility</span>
-              <span class="jev-metric-tag">score · {pct(jevAnswers.api_legibility.confidence)} conf</span>
-            </div>
-            <p class="jev-big">
-              <strong>{jevAnswers.api_legibility.score.toFixed(2)}</strong>
-              <span>/ 3</span>
-            </p>
-            <div class="jev-breakdown">
-              {jevLegibilityRows.map((row) => (
-                <div class="jev-dist-row">
-                  <span class="jev-dist-label">
-                    <b>{row.key}</b>
-                    <span>{row.label}</span>
-                  </span>
-                  <span class="jev-bar" aria-hidden="true">
-                    <span class:list={['jev-fill', row.tone]} style={`--p: ${row.prob * 100}%`} />
-                  </span>
-                  <span class="jev-dist-pct">{pct(row.prob)}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section class="jev-metric is-noul">
-            <div class="jev-metric-head">
-              <span class="jev-metric-name">adopt_modern</span>
-              <span class="jev-metric-tag">noul</span>
-            </div>
-            <p class="jev-big">
-              <strong>{jevAnswers.adopt_modern.noul.toFixed(2)}</strong>
-            </p>
-            <div class="jev-gauge">
-              <span class="jev-bar" aria-hidden="true">
-                <span class="jev-fill is-primary" style={`--p: ${jevAnswers.adopt_modern.noul * 100}%`} />
-              </span>
-              <div class="jev-ticks" aria-hidden="true">
-                <span>0.00</span>
-                <span>0.50</span>
-                <span>1.00</span>
-              </div>
-            </div>
-          </section>
-
-          <section class="jev-metric">
-            <div class="jev-metric-head">
-              <span class="jev-metric-name">runtime_pick</span>
-              <span class="jev-metric-tag">choice · {pct(jevAnswers.runtime_pick.confidence)} conf</span>
-            </div>
-            <p class="jev-big is-choice">
-              <strong>{jevAnswers.runtime_pick.choice}</strong>
-            </p>
-            <div class="jev-segment" aria-hidden="true">
-              {jevPickRows.filter((row) => row.prob > 0).map((row) => (
-                <span class:list={['jev-seg', row.tone]} style={`width: ${row.prob * 100}%`} />
-              ))}
-            </div>
-            <div class="jev-choices">
-              {jevPickRows.map((row) => (
-                <span class:list={['jev-choice-item', row.tone]}>
-                  <span class="jev-dot" aria-hidden="true" />
-                  <span>{row.key}</span>
-                  <b>{pct(row.prob)}</b>
-                </span>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        <div class="code jev-code">
-          <div class="code-head">
-            <div role="tablist" aria-label="Decisions API payload" data-jev-tabs>
-              <button
-                class="code-tab"
-                type="button"
-                role="tab"
-                id="jev-tab-json"
-                aria-selected="true"
-                aria-controls="jev-panel-json"
-                data-jev-tab="json"
-              >
-                Response JSON
-              </button>
-              <button
-                class="code-tab"
-                type="button"
-                role="tab"
-                id="jev-tab-reproduce"
-                aria-selected="false"
-                aria-controls="jev-panel-reproduce"
-                tabindex="-1"
-                data-jev-tab="reproduce"
-              >
-                Reproduce (POST /api/alpha/decisions)
-              </button>
-            </div>
+      <div class="code jev-code">
+        <div class="code-head">
+          <div role="tablist" aria-label="Decisions API payload" data-jev-tabs>
             <button
-              class="reads-copy is-modal-copy"
+              class="code-tab"
               type="button"
-              aria-label={t(locale, 'page.copyCode')}
-              data-jev-copy
+              role="tab"
+              id="jev-tab-json"
+              aria-selected="true"
+              aria-controls="jev-panel-json"
+              data-jev-tab="json"
             >
-              <span class="reads-copy-icon" aria-hidden="true" set:html={COPY_ICON} />
-              <span class="reads-copy-check" aria-hidden="true" set:html={CHECK_ICON} />
-              <span data-jev-copy-label>Copy</span>
+              Response
+            </button>
+            <button
+              class="code-tab"
+              type="button"
+              role="tab"
+              id="jev-tab-reproduce"
+              aria-selected="false"
+              aria-controls="jev-panel-reproduce"
+              tabindex="-1"
+              data-jev-tab="reproduce"
+            >
+              Query
             </button>
           </div>
-          <div class="jev-panels">
-            <pre id="jev-panel-json" role="tabpanel" aria-labelledby="jev-tab-json" data-hl data-jev-panel="json" set:text={jevJson} />
-            <pre id="jev-panel-reproduce" role="tabpanel" aria-labelledby="jev-tab-reproduce" data-hl data-jev-panel="reproduce" hidden set:text={JEV_DECISION.reproduce} />
-          </div>
+          <button
+            class="reads-copy is-modal-copy"
+            type="button"
+            aria-label={t(locale, 'page.copyCode')}
+            data-jev-copy
+          >
+            <span class="reads-copy-icon" aria-hidden="true" set:html={COPY_ICON} />
+            <span class="reads-copy-check" aria-hidden="true" set:html={CHECK_ICON} />
+            <span data-jev-copy-label>Copy</span>
+          </button>
+        </div>
+        <div class="jev-panels">
+          <pre id="jev-panel-json" role="tabpanel" aria-labelledby="jev-tab-json" data-hl data-jev-panel="json" set:text={jevJson} />
+          <pre id="jev-panel-reproduce" role="tabpanel" aria-labelledby="jev-tab-reproduce" data-hl data-jev-panel="reproduce" hidden set:text={JEV_DECISION.reproduce} />
         </div>
       </div>
+
+      <p class="jev-foot">{JEV_DECISION.endpoint} · {JEV_DECISION.package}</p>
     </div>
   </dialog>
 </div>
