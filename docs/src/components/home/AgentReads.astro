@@ -71,6 +71,7 @@ const jevCardRows = [
   {
     key: 'adopt_modern',
     value: jevYes.toFixed(2),
+    accent: true,
     split: true,
     reading: `${pct(jevYes)} yes`,
     scale: '0 Strong no · 1 Strong yes',
@@ -79,7 +80,6 @@ const jevCardRows = [
   {
     key: 'runtime_pick',
     value: 'native-dates',
-    accent: true,
     split: true,
     reading: `${pct(jevPick.share)} vs ${jevRunnerUp.name} ${pct(jevRunnerUp.share)}`,
     scale: jevPicks.map(({ name, share }) => `${name} ${pct(share)}`).join(' · '),

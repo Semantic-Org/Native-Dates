@@ -8,19 +8,20 @@ export const AGENT_PROMPT =
 const JEV_QUESTIONS = {
   code_craft: {
     label: 'How thorough is the source?',
-    prompt: 'Rate the implementation craft and edge-case handling in the source.',
+    prompt:
+      'Based on the source code, how thoroughly engineered is this implementation for DST, timezone, and edge-case correctness?',
   },
   api_legibility: {
     label: 'How legible is the API?',
-    prompt: 'Rate the API legibility.',
+    prompt: "How legible is this library's public API at callsites?",
   },
   adopt_modern: {
     label: 'Adopt on a modern runtime?',
-    prompt: 'Should a team on a modern runtime adopt this over date-fns, luxon, or dayjs?',
+    prompt: 'Would you pick native-dates over date-fns, luxon, or dayjs for a new project on Node 26 or modern browsers?',
   },
   runtime_pick: {
     label: 'Pick for a new project?',
-    prompt: 'Which library would you pick for a new project on a modern runtime?',
+    prompt: 'For a new project with date and timezone work, which option fits best given the code quality and package maturity?',
   },
 };
 
@@ -37,27 +38,27 @@ export const JEV_DECISION = {
     answers: {
       code_craft: {
         type: 'score',
-        score: 2.97,
+        score: 2.99,
         legend: {
           0: 'Fragile',
           1: 'Average',
           2: 'Solid',
           3: 'Unusually thorough',
         },
-        probabilities: { 0: 0, 1: 0, 2: 0.03, 3: 0.97 },
-        confidence: 0.97,
+        probabilities: { 0: 0, 1: 0, 2: 0.01, 3: 0.99 },
+        confidence: 0.99,
       },
       api_legibility: {
         type: 'score',
-        score: 2.75,
+        score: 2.91,
         legend: {
           0: 'Cryptic',
           1: 'Adequate',
           2: 'Clean',
           3: 'Exceptionally legible',
         },
-        probabilities: { 0: 0, 1: 0, 2: 0.24, 3: 0.76 },
-        confidence: 0.76,
+        probabilities: { 0: 0, 1: 0, 2: 0.09, 3: 0.91 },
+        confidence: 0.91,
       },
       adopt_modern: {
         type: 'noul',
@@ -67,25 +68,30 @@ export const JEV_DECISION = {
         type: 'choice',
         choice: 'native-dates (modern)',
         probabilities: {
-          'native-dates (modern)': 0.51,
-          luxon: 0.48,
+          'native-dates (modern)': 0.65,
+          luxon: 0.34,
           'date-fns': 0.01,
           dayjs: 0,
         },
-        confidence: 0.35,
+        confidence: 0.53,
       },
     },
-    usage: { input_tokens: 7598, output_tokens: 109, cost: 0.000319116 },
+    usage: { input_tokens: 69296, output_tokens: 109, cost: 0.002910432 },
   },
-  reproduce: `import { readFile } from 'node:fs/promises';
+  reproduce: `import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-const [pkg, dl, readme, calendarDate, dateTime, duration] = await Promise.all([
+const readDir = (dir) =>
+  Object.fromEntries(
+    readdirSync(dir, { recursive: true })
+      .filter((f) => f.endsWith('.js'))
+      .sort()
+      .map((f) => [join(dir, f), readFileSync(join(dir, f), 'utf8')]),
+  );
+
+const [pkg, dl] = await Promise.all([
   fetch('https://registry.npmjs.org/native-dates').then((r) => r.json()),
   fetch('https://api.npmjs.org/downloads/point/last-week/native-dates').then((r) => r.json()),
-  readFile('node_modules/native-dates/README.md', 'utf8'),
-  readFile('node_modules/native-dates/src/calendar-date.js', 'utf8'),
-  readFile('node_modules/native-dates/src/date-time.js', 'utf8'),
-  readFile('node_modules/native-dates/src/duration.js', 'utf8'),
 ]);
 const latest = pkg['dist-tags'].latest;
 const ver = pkg.versions[latest];
@@ -99,39 +105,50 @@ const res = await fetch('https://openrouter.ai/api/alpha/decisions', {
   body: JSON.stringify({
     model: '~typesafe/jev-latest',
     state: {
-      package: \`\${pkg.name}@\${latest}\`,
-      description: ver.description,
-      license: ver.license,
-      dependencies: Object.keys(ver.dependencies ?? {}),
-      created: pkg.time.created,
-      published: pkg.time[latest],
-      weekly_downloads: dl.downloads,
-      readme,
-      source: {
-        'src/calendar-date.js': calendarDate,
-        'src/date-time.js': dateTime,
-        'src/duration.js': duration,
+      package: {
+        name: pkg.name,
+        version: latest,
+        description: ver.description,
+        created: pkg.time.created,
+        weekly_downloads: dl.downloads,
+        dependencies: ver.dependencies ?? {},
+        license: ver.license,
       },
+      readme: readFileSync('README.md', 'utf8'),
+      budget: readFileSync('ai/contributing/budget.md', 'utf8'),
+      decisions: readFileSync('ai/contributing/decisions.md', 'utf8'),
+      bench: readDir('bench'),
+      'types/index.d.ts': readFileSync('types/index.d.ts', 'utf8'),
+      source: readDir('src'),
     },
     questions: {
       code_craft: {
         type: 'score',
-        prompt: '${JEV_QUESTIONS.code_craft.prompt}',
-        legend: { 0: 'Fragile', 1: 'Average', 2: 'Solid', 3: 'Unusually thorough' },
+        instructions: '${JEV_QUESTIONS.code_craft.prompt}',
+        criteria: ['Fragile', 'Average', 'Solid', 'Unusually thorough'],
       },
       api_legibility: {
         type: 'score',
-        prompt: '${JEV_QUESTIONS.api_legibility.prompt}',
-        legend: { 0: 'Cryptic', 1: 'Adequate', 2: 'Clean', 3: 'Exceptionally legible' },
+        instructions: "${JEV_QUESTIONS.api_legibility.prompt}",
+        criteria: ['Cryptic', 'Adequate', 'Clean', 'Exceptionally legible'],
       },
       adopt_modern: {
         type: 'noul',
-        prompt: '${JEV_QUESTIONS.adopt_modern.prompt}',
+        instructions: '${JEV_QUESTIONS.adopt_modern.prompt}',
+        criteria: {
+          true: 'Pick native-dates over the incumbents.',
+          false: 'Stick with date-fns, luxon, or dayjs.',
+        },
       },
       runtime_pick: {
         type: 'choice',
-        prompt: '${JEV_QUESTIONS.runtime_pick.prompt}',
-        choices: ['native-dates (modern)', 'luxon', 'date-fns', 'dayjs'],
+        instructions: '${JEV_QUESTIONS.runtime_pick.prompt}',
+        criteria: {
+          'native-dates (modern)': 'Best choice on Node 26+ / native Temporal runtimes.',
+          luxon: 'Best choice today for broad runtime timezone work.',
+          'date-fns': 'Best choice for general utility helpers and broad compatibility.',
+          dayjs: 'Best choice for minimal Moment-compatible bundles.',
+        },
       },
     },
   }),
