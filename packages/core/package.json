@@ -18,6 +18,9 @@
   },
   "type": "module",
   "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
   "types": "./index.d.ts",
   "exports": {
     ".": {

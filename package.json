@@ -27,6 +27,9 @@
   ],
   "type": "module",
   "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
   "main": "src/index.js",
   "module": "src/index.js",
   "types": "types/index.d.ts",
