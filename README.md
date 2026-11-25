@@ -18,7 +18,7 @@ The library also makes it incredibly easy to ju-jitsu between `DateTime`, `Time`
 const standupTime = standup.in('Asia/Tokyo').as('time'); // was a date now I'm a time!
 ```
 
-## About This Librar
+## About This Library
 
 Hi, I'm Jack. 15 years ago I built a project called Semantic UI. Between then and now I helped build a company from 0-600 employees in a highly time-sensitive field, a system of record for home closings. There I dealt with pretty much every kind of date problem under the sun, so I'm excited today to release something to make time simpler for some people.
 
