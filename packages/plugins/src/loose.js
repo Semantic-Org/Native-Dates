@@ -353,7 +353,8 @@ export const looseZoned = (input, { zone, dayFirst, locale, timeOnly, disambigua
       (clock) => clock.replaceAll('.', ':'),
     );
   }
-  if (!clockTime.test(text)) {
+  // strip zone offsets before checking for a clock so colon offsets ('+02:00') do not mask hour-only meridiems
+  if (!clockTime.test(text.replace(zoneMarker, '$1$2'))) {
     const hourOnly = hourMeridiem.exec(text);
     if (hourOnly) {
       const [matched, hour, half] = hourOnly;
