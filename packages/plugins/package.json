@@ -20,6 +20,9 @@
   "sideEffects": [
     "./src/*.js"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "exports": {
     "./*": {
       "types": "./types/*.d.ts",

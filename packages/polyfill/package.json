@@ -22,6 +22,9 @@
     "./index.js",
     "./sync.js"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "main": "index.js",
   "types": "index.d.ts",
   "exports": {
