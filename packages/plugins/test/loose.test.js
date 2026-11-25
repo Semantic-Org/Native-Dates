@@ -176,6 +176,85 @@ describe('datetime() with { loose: true }', () => {
     expect(datetime('14:30 +2500', { loose: true })).toBeNull();
     expect(datetime('2026-09-06T14:30:00+25:00', { loose: true, zone: 'UTC' })).toBeNull();
   });
+
+  it.each([
+    ['16 Nov 2026 3pm', '2026-11-16T15:00:00.000Z'],
+    ['Nov 16, 2026 3 PM', '2026-11-16T15:00:00.000Z'],
+    ['16 Nov 2026 3 pm', '2026-11-16T15:00:00.000Z'],
+    ['16 Nov 2026 3 p.m.', '2026-11-16T15:00:00.000Z'],
+    ['16 Nov 2026 3 a.m.', '2026-11-16T03:00:00.000Z'],
+    ['16 Nov 2026 3 p. m.', '2026-11-16T15:00:00.000Z'],
+    ['16 Nov 2026 3\u202fPM', '2026-11-16T15:00:00.000Z'],
+    ['16 Nov 2026 at 3pm', '2026-11-16T15:00:00.000Z'],
+    ['16 Nov 2026 03pm', '2026-11-16T15:00:00.000Z'],
+    ['16 Nov 2026 12am', '2026-11-16T00:00:00.000Z'],
+    ['16 Nov 2026 12pm', '2026-11-16T12:00:00.000Z'],
+    ['2026-11-16 3pm', '2026-11-16T15:00:00.000Z'],
+    ['11/16/2026 3pm', '2026-11-16T15:00:00.000Z'],
+    ['16-Nov-26 3pm', '2026-11-16T15:00:00.000Z'],
+    ['16 Nov 2026 3:00pm', '2026-11-16T15:00:00.000Z'],
+  ])('parses hour-only meridiem input %j as %s', (text, expected) => {
+    expect(datetime(text, { loose: true, zone: 'UTC' })?.toString()).toBe(expected);
+  });
+
+  it('parses hour-only meridiems with dayFirst, locales, and zone markers', () => {
+    expect(datetime('16/11/2026 3pm', { loose: true, dayFirst: true, zone: 'UTC' })?.toString()).toBe(
+      '2026-11-16T15:00:00.000Z',
+    );
+    expect(datetime('16.11.2026 3pm', { loose: true, locale: 'de', zone: 'UTC' })?.toString()).toBe(
+      '2026-11-16T15:00:00.000Z',
+    );
+    expect(datetime('16 novembre 2026 3pm', { loose: true, locale: 'fr', zone: 'UTC' })?.toString()).toBe(
+      '2026-11-16T15:00:00.000Z',
+    );
+    expect(datetime('16 Nov 2026 3pm UTC', { loose: true, zone: 'America/New_York' })).toMatchObject({
+      zone: 'America/New_York',
+      year: 2026,
+      month: 11,
+      day: 16,
+      hour: 10,
+      minute: 0,
+    });
+    expect(datetime('16 Nov 2026 3pm EST', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-11-16T20:00:00.000Z');
+    expect(datetime('16 Jul 2026 3pm EDT', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-07-16T19:00:00.000Z');
+    expect(datetime('16 Nov 2026 3pm -0500', { loose: true, zone: 'UTC' })?.toString()).toBe(
+      '2026-11-16T20:00:00.000Z',
+    );
+    expect(time('16 Nov 2026 3pm', { loose: true })?.toString()).toBe('15:00:00');
+    expect(time('3 p. m.', { loose: true })?.toString()).toBe('15:00:00');
+    expect(date('16 Nov 2026 3pm', { loose: true })?.toString()).toBe('2026-11-16');
+  });
+
+  it.each([
+    '16 Nov 2026 0am',
+    '16 Nov 2026 00am',
+    '16 Nov 2026 0pm',
+    '16 Nov 2026 13pm',
+    '16 Nov 2026 13am',
+    '16 Nov 2026 25pm',
+    'Nov 2026 13pm',
+    '16 Nov 2026 3pm XYZ',
+    '16 Nov 2026 3.5pm',
+    '16 Nov 2026 3:5pm',
+    '3pm',
+    '16 Nov 3pm',
+  ])('returns null for invalid or incomplete hour-only meridiem input %j', (text) => {
+    expect(datetime(text, { loose: true, zone: 'UTC' })).toBeNull();
+  });
+
+  it('does not misread dates beside month initials or German prepositions as hour-only meridiems', () => {
+    expect(datetime('16 March 2026', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-03-16T00:00:00.000Z');
+    expect(datetime('24 April 2026', { loose: true, zone: 'UTC' })?.toString()).toBe('2026-04-24T00:00:00.000Z');
+    expect(datetime('am 16.11.2026', { loose: true, locale: 'de', zone: 'UTC' })?.toString()).toBe(
+      '2026-11-16T00:00:00.000Z',
+    );
+    expect(datetime('16.11.2026 am Montag', { loose: true, locale: 'de', zone: 'UTC' })?.toString()).toBe(
+      '2026-11-16T00:00:00.000Z',
+    );
+    expect(date('16 March 2026', { loose: true })?.toString()).toBe('2026-03-16');
+    expect(date('24 April 2026', { loose: true })?.toString()).toBe('2026-04-24');
+    expect(date('am 16.11.2026', { loose: true, locale: 'de' })?.toString()).toBe('2026-11-16');
+  });
 });
 
 describe('time() with { loose: true }', () => {

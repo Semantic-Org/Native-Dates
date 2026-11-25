@@ -69,7 +69,16 @@ describe('datetime() zone abbreviations in the input string with { loose: true }
     expect(read('16 novembre 2026 9:05 AM JST', { locale: 'fr' })).toBe('2026-11-16T00:05:00.000Z');
   });
 
+  it('parses hour-only meridiems followed by zone abbreviations', () => {
+    expect(read('16 Nov 2026 3pm EST')).toBe('2026-11-16T20:00:00.000Z');
+    expect(read('16 Jul 2026 3pm EST')).toBe('2026-07-16T19:00:00.000Z');
+    expect(read('16 Nov 2026 3 p.m. KST')).toBe('2026-11-16T06:00:00.000Z');
+    expect(read('16 Nov 2026 3pm CST', { locale: 'zh-CN' })).toBe('2026-11-16T07:00:00.000Z');
+    expect(read('16 Nov 2026 3pm CST', { locale: 'en-US' })).toBe('2026-11-16T21:00:00.000Z');
+  });
+
   it('returns null for an unknown uppercase abbreviation after the clock', () => {
     expect(datetime('2026-11-16 14:30 XYZ', { loose: true, zone: 'UTC' })).toBeNull();
+    expect(datetime('16 Nov 2026 3pm XYZ', { loose: true, zone: 'UTC' })).toBeNull();
   });
 });
