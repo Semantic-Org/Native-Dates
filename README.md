@@ -63,7 +63,7 @@ Expect more small, plain libraries in the coming months held to the same princip
 - **Byte Budget** - Ship the smallest thing that covers the feature set you need, and spend every byte cautiously.
 - **Performance** - Measure with rigorous tools like [Tachometer](https://github.com/google/tachometer), benchmarking every changeset against the prior version and its cohort.
 - **Web Standards** - Use the best parts of the platform as they ship, help people adopt the parts that are difficult to notice for their value and make them easier to use.
-- **Agent Collaboration** - Keep clear, public processes for adjudicating design decisions that both humans and agents can participate in.
+- **Agent Collaboration** - Clear, public processes for [adjudicating design decisions](ai/contributing/decisions.md) that both humans and agents can participate in.
 - **Legibility** - Let code explain itself simply, so reading it feels obvious and unadorned, so that it disappears so you can think about intent.
 
 ## License
