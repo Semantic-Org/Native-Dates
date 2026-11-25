@@ -40,13 +40,58 @@ const CLOSE_ICON =
 
 const jevAnswers = JEV_DECISION.response.answers;
 const jevJson = JSON.stringify(JEV_DECISION.response, null, 2);
+const [jevMethod, jevUrl] = JEV_DECISION.endpoint.split(' ');
+const jevEndpoint = new URL(jevUrl);
 
+const pct = (share) => `${Math.round(share * 100)}%`;
+
+const jevScoreRow = (key) => {
+  const answer = jevAnswers[key];
+  const bands = Object.entries(answer.legend).map(([band, name]) => ({ band, name, share: answer.probabilities[band] }));
+  const landed = bands.reduce((best, band) => (band.share > best.share ? band : best));
+  return {
+    value: answer.score.toFixed(2),
+    denom: `/ ${bands.length - 1}`,
+    reading: landed.name,
+    scale: bands.map(({ band, name }) => `${band} ${name}`).join(' · '),
+    marks: bands.map(({ share }) => share),
+  };
+};
+
+const jevPicks = Object.entries(jevAnswers.runtime_pick.probabilities)
+  .map(([name, share]) => ({ name, share }))
+  .sort((a, b) => b.share - a.share);
+const [jevPick, jevRunnerUp] = jevPicks;
+
+// a noul is the probability that a yes/no question is answered yes
+const jevYes = jevAnswers.adopt_modern.noul;
+
+// each row pairs the question asked with its answer, then the answer's meaning with its path in the response
 const jevCardRows = [
-  { key: 'code_craft', value: jevAnswers.code_craft.score.toFixed(2), denom: '/ 3' },
-  { key: 'api_legibility', value: jevAnswers.api_legibility.score.toFixed(2), denom: '/ 3' },
-  { key: 'adopt_modern', value: jevAnswers.adopt_modern.noul.toFixed(2) },
-  { key: 'runtime_pick', value: 'native-dates', accent: true },
-];
+  { key: 'code_craft', ...jevScoreRow('code_craft') },
+  { key: 'api_legibility', ...jevScoreRow('api_legibility') },
+  {
+    key: 'adopt_modern',
+    value: jevYes.toFixed(2),
+    split: true,
+    reading: `${pct(jevYes)} yes`,
+    scale: '0 Strong no · 1 Strong yes',
+    marks: [jevYes, 1 - jevYes],
+  },
+  {
+    key: 'runtime_pick',
+    value: 'native-dates',
+    accent: true,
+    split: true,
+    reading: `${pct(jevPick.share)} vs ${jevRunnerUp.name} ${pct(jevRunnerUp.share)}`,
+    scale: jevPicks.map(({ name, share }) => `${name} ${pct(share)}`).join(' · '),
+    marks: [jevPick.share, 1 - jevPick.share],
+  },
+].map((row) => ({
+  ...row,
+  ...JEV_DECISION.questions[row.key],
+  path: `${row.key}.${jevAnswers[row.key].type}`,
+}));
 
 const esc = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const renderQuote = (text) => esc(text).replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -182,10 +227,21 @@ const sets = [false, true];
 
                       <span class="jev-ledger">
                         {jevCardRows.map((row) => (
-                          <span class="jev-ledger-row">
-                            <span class="jev-key">{row.key}</span>
-                            <span class:list={['jev-val', row.accent && 'is-accent']}>
-                              <b>{row.value}</b>{row.denom && <span class="jev-denom"> {row.denom}</span>}
+                          <span class="jev-row">
+                            <span class="jev-line">
+                              <span class="jev-ask" title={row.prompt}>{row.label}</span>
+                              <span class:list={['jev-val', row.accent && 'is-accent']}>
+                                <b>{row.value}</b>{row.denom && <span class="jev-denom"> {row.denom}</span>}
+                              </span>
+                            </span>
+                            <span class="jev-line is-sub">
+                              <span class="jev-read" title={row.scale}>
+                                <span class:list={['jev-marks', row.split && 'is-split', row.accent && 'is-accent']} aria-hidden="true">
+                                  {row.marks.map((share) => <span style={`--share: ${share}`} />)}
+                                </span>
+                                <span>{row.reading}</span>
+                              </span>
+                              <span class="jev-path">{row.path}</span>
                             </span>
                           </span>
                         ))}
@@ -294,7 +350,10 @@ const sets = [false, true];
         </div>
       </div>
 
-      <p class="jev-foot">{JEV_DECISION.endpoint} · {JEV_DECISION.package}</p>
+      <p class="jev-foot">
+        <span>{jevMethod} <span class="jev-origin">{jevEndpoint.origin}</span>{jevEndpoint.pathname}</span>
+        <span>{JEV_DECISION.package}</span>
+      </p>
     </div>
   </dialog>
 </div>

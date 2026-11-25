@@ -4,6 +4,26 @@
 export const AGENT_PROMPT =
   'Install `native-dates` in a scratch directory, look through its source and types, and try a few everyday date and timezone tasks in Node. Based on what you actually see in the code and API, would you pick it over `date-fns`, `luxon`, or `dayjs` for a new project, or stick with one of those? Give me your honest take and why.';
 
+// label is the card's short paraphrase, prompt is the question sent verbatim
+const JEV_QUESTIONS = {
+  code_craft: {
+    label: 'How thorough is the source?',
+    prompt: 'Rate the implementation craft and edge-case handling in the source.',
+  },
+  api_legibility: {
+    label: 'How legible is the API?',
+    prompt: 'Rate the API legibility.',
+  },
+  adopt_modern: {
+    label: 'Adopt on a modern runtime?',
+    prompt: 'Should a team on a modern runtime adopt this over date-fns, luxon, or dayjs?',
+  },
+  runtime_pick: {
+    label: 'Pick for a new project?',
+    prompt: 'Which library would you pick for a new project on a modern runtime?',
+  },
+};
+
 export const JEV_DECISION = {
   package: 'native-dates@1.1.1',
   endpoint: 'POST https://openrouter.ai/api/alpha/decisions',
@@ -11,6 +31,7 @@ export const JEV_DECISION = {
   model: 'typesafe/jev-1.14-20261014',
   alias: '~typesafe/jev-latest',
   provider: 'TypeSafe',
+  questions: JEV_QUESTIONS,
   response: {
     model: 'typesafe/jev-1.14-20261014',
     answers: {
@@ -95,21 +116,21 @@ const res = await fetch('https://openrouter.ai/api/alpha/decisions', {
     questions: {
       code_craft: {
         type: 'score',
-        prompt: 'Rate the implementation craft and edge-case handling in the source.',
+        prompt: '${JEV_QUESTIONS.code_craft.prompt}',
         legend: { 0: 'Fragile', 1: 'Average', 2: 'Solid', 3: 'Unusually thorough' },
       },
       api_legibility: {
         type: 'score',
-        prompt: 'Rate the API legibility.',
+        prompt: '${JEV_QUESTIONS.api_legibility.prompt}',
         legend: { 0: 'Cryptic', 1: 'Adequate', 2: 'Clean', 3: 'Exceptionally legible' },
       },
       adopt_modern: {
         type: 'noul',
-        prompt: 'Should a team on a modern runtime adopt this over date-fns, luxon, or dayjs?',
+        prompt: '${JEV_QUESTIONS.adopt_modern.prompt}',
       },
       runtime_pick: {
         type: 'choice',
-        prompt: 'Which library would you pick for a new project on a modern runtime?',
+        prompt: '${JEV_QUESTIONS.runtime_pick.prompt}',
         choices: ['native-dates (modern)', 'luxon', 'date-fns', 'dayjs'],
       },
     },

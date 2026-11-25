@@ -877,24 +877,54 @@
 .jev-ledger {
   display: flex; flex-direction: column; width: 100%;
 }
-.jev-ledger-row {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+.jev-row {
+  display: flex; flex-direction: column; gap: 4px;
   width: 100%; padding: 11px 0;
 }
-.jev-ledger-row:first-child { padding-top: 0; }
-.jev-ledger-row:last-child { padding-bottom: 0; }
-.jev-ledger-row + .jev-ledger-row { border-top: 1px solid var(--line); }
+.jev-row:first-child { padding-top: 0; }
+.jev-row:last-child { padding-bottom: 0; }
+.jev-row + .jev-row { border-top: 1px solid var(--line); }
+.jev-line {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  min-width: 0;
+}
+.jev-line.is-sub { align-items: center; min-height: 16px; }
 
-.jev-key {
-  color: var(--text-3); font: 400 13.5px/20px var(--font-mono); white-space: nowrap;
+.jev-ask {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text); font-size: var(--fs-sm); line-height: 20px; letter-spacing: -0.01em;
 }
 .jev-val {
-  color: var(--text); font: 400 15.5px/20px var(--font-mono);
+  flex: none; color: var(--text); font: 400 15px/20px var(--font-mono);
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .jev-val b { font-weight: 500; }
 .jev-val.is-accent b { color: var(--accent-strong); }
-.jev-denom { color: var(--text-3); font-size: 13px; }
+.jev-denom { color: var(--text-3); }
+
+.jev-read {
+  display: inline-flex; align-items: center; gap: 8px; min-width: 0;
+  color: var(--text-2); font-size: var(--fs-2xs); line-height: 16px; white-space: nowrap;
+}
+.jev-path {
+  flex: none; margin-inline-start: auto;
+  color: var(--text-4); font: 400 var(--fs-3xs)/16px var(--font-mono); white-space: nowrap;
+  transition: color 0.18s var(--ease);
+}
+.read-card.is-jev:hover .jev-path,
+.read-card.is-jev:focus-visible .jev-path {
+  color: var(--text-2);
+}
+
+/* one cell per legend band, each as dark as the share of answers that landed on it */
+.jev-marks { display: inline-flex; flex: none; gap: 2px; width: 46px; }
+.jev-marks span {
+  flex: 1 0 0; height: 3px; border-radius: 1px;
+  background: color-mix(in oklab, var(--text) calc(var(--share) * 100%), var(--line-3));
+}
+.jev-marks.is-split span { flex-grow: calc(var(--share) * 100); background: var(--line-3); }
+.jev-marks.is-split span:first-child { background: var(--text); }
+.jev-marks.is-accent span:first-child { background: var(--accent); }
 
 dialog.jev-dialog {
   width: min(640px, calc(100vw - 24px)); max-width: none; max-height: calc(100dvh - 32px);
@@ -953,11 +983,12 @@ dialog.jev-dialog::backdrop {
 .jev-panels pre[hidden] { display: none; }
 
 .jev-foot {
-  flex: none; margin: 0; padding: 10px 20px;
+  flex: none; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 16px;
+  margin: 0; padding: 10px 20px;
   border-top: 1px solid var(--line); background: var(--surface-1);
   color: var(--text-4); font: 400 var(--fs-3xs)/16px var(--font-mono);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.jev-foot span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .reads-disclaimer, .bench-run p {
   margin: 12px 0 0; color: var(--text-3); opacity: 0.62;
@@ -980,18 +1011,27 @@ dialog.jev-dialog::backdrop {
   .reads-track, .reads-set { gap: 12px; }
   .read-card.is-tall { padding: 20px; }
   .read-card.is-short { padding: 16px; }
-  .read-card.is-jev { gap: 18px; }
-  .jev-ledger-row { padding: 10px 0; }
-  .jev-key { font-size: 12.5px; }
-  .jev-val { font-size: 14px; }
+  .read-card.is-jev { gap: 16px; }
+  .jev-row { padding: 9px 0; }
+  .jev-line { gap: 10px; }
+  .jev-ask { font-size: var(--fs-xs); }
+  .jev-val { font-size: 13.5px; }
+  .jev-path { display: none; }
+  /* a 320px viewport leaves the card too narrow for a question beside its answer at full size */
+  @container (max-width: 240px) {
+    .jev-line { gap: 6px; }
+    .jev-ask, .jev-val { font-size: 12px; }
+    .jev-ask { letter-spacing: -0.02em; }
+  }
   dialog.jev-dialog { width: calc(100vw - 20px); max-height: calc(100dvh - 20px); }
   .jev-panel { max-height: calc(100dvh - 20px); }
   .jev-head { padding: 12px 12px 12px 16px; }
   .jev-panels pre { max-height: min(400px, 60dvh); padding: 14px 16px; }
   .jev-foot { padding: 9px 16px; }
+  .jev-origin { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .reads-copy, .reads-inspect, .reads-inspect svg, .reads-step, .read-card, .jev-open-icon { transition: none; }
+  .reads-copy, .reads-inspect, .reads-inspect svg, .reads-step, .read-card, .jev-open-icon, .jev-path { transition: none; }
 }
 
 
