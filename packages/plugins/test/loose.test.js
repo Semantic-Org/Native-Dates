@@ -220,6 +220,18 @@ describe('datetime() with { loose: true }', () => {
     expect(datetime('16 Nov 2026 3pm -0500', { loose: true, zone: 'UTC' })?.toString()).toBe(
       '2026-11-16T20:00:00.000Z',
     );
+    expect(datetime('16 Nov 2026 3pm +02:00', { loose: true, zone: 'UTC' })?.toString()).toBe(
+      '2026-11-16T13:00:00.000Z',
+    );
+    expect(datetime('16 Nov 2026 3pm -05:00', { loose: true, zone: 'UTC' })?.toString()).toBe(
+      '2026-11-16T20:00:00.000Z',
+    );
+    expect(datetime('16 Nov 2026 3pm GMT+02:00', { loose: true, zone: 'UTC' })?.toString()).toBe(
+      '2026-11-16T13:00:00.000Z',
+    );
+    expect(datetime('16 Nov 2026 3pm UTC+5:30', { loose: true, zone: 'UTC' })?.toString()).toBe(
+      '2026-11-16T09:30:00.000Z',
+    );
     expect(time('16 Nov 2026 3pm', { loose: true })?.toString()).toBe('15:00:00');
     expect(time('3 p. m.', { loose: true })?.toString()).toBe('15:00:00');
     expect(date('16 Nov 2026 3pm', { loose: true })?.toString()).toBe('2026-11-16');
