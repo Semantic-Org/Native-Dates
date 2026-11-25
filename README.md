@@ -54,13 +54,17 @@ For Safari/iOS before Spring 2027 (when Temporal lands in Baseline) or Node 20�
 
 Hi, I'm Jack. 15 years ago I built a project called Semantic UI. Between then and now I helped build a company from 0 to 600 employees in a highly time-sensitive field, a system of record for home closings. There I dealt with pretty much every kind of date problem under the sun, so I'm excited today to release something to make time simpler for some people.
 
-This is the first of several standalone libraries I'm releasing ahead of a new full-stack JavaScript framework next year — not just Semantic UI 2, but a broader platform built from the ground up. Expect more small, plain libraries in the coming months held to the same principles:
+For the last three years I've been working full-time on a new full-stack JavaScript framework, not Semantic UI 2, but a web dev platform built on web standards like web components with a db agnostic data-sync layer using WebTransport and datagrams. We were the largest MeteorJS company in the world, so I'm excited to share with people what a real walled garden experience can mean if designed correctly and to scale.  
+
+This date library was one of the pieces used in that framework that was extracted to be truly standalone and released separately from that framework, so anyone can use it. 
+
+Expect more small, plain libraries in the coming months held to the same principles:
 
 - **Byte Budget** — Ship the smallest thing that covers the feature set you need, and spend every byte cautiously.
-- **Performance** — Measure with rigorous tools like Google's Tachometer, benchmarking every changeset against the prior version and its cohort.
-- **Web Standards** — Build on the best parts of the platform as they ship and make them easier to use.
+- **Performance** — Measure with rigorous tools like [Tachometer](https://github.com/google/tachometer), benchmarking every changeset against the prior version and its cohort.
+- **Web Standards** — Use the best parts of the platform as they ship, help people adopt the ones that are difficult to notice and make them easier to use.
 - **Agent Collaboration** — Keep clear, public processes for adjudicating design decisions that both humans and agents can participate in.
-- **Legibility** — The same value that drove Semantic UI: let code explain itself simply, so reading it feels obvious and unadorned.
+- **Legibility** — Let code explain itself simply, so reading it feels obvious and unadorned, so that it disappears so you can think about intent.
 
 ## License
 
