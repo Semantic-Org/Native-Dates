@@ -207,6 +207,8 @@ const rolledForward = (text, read, wallClock) => {
 };
 
 const clockTime = /(\d{1,2})(?::| ?h ?)(\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?/;
+// expand hour-only 12-hour clocks ('3pm', '3 p.m.') so Date.parse and zone matching read them
+const hourMeridiem = /(?<![\d:./\p{Script=Latin}-])(\d{1,2}) ?([ap])(?:\. ?)?m\.?(?!\p{Script=Latin})/iu;
 // Telugu joins a word onto it ('2:30 PMకి'), so only a Latin letter after it makes it part of another word
 const meridiem = /^ ?([ap])\.? ?m\.?(?!\p{Script=Latin})/u;
 
@@ -350,6 +352,18 @@ export const looseZoned = (input, { zone, dayFirst, locale, timeOnly, disambigua
       /(?<![\d.])\d{1,2}\.\d{2}(?:(?<=\d\D+\d{1,2}\.\d{2})\.\d{2})?(?!\.?\s*\d)/g,
       (clock) => clock.replaceAll('.', ':'),
     );
+  }
+  if (!clockTime.test(text)) {
+    const hourOnly = hourMeridiem.exec(text);
+    if (hourOnly) {
+      const [matched, hour, half] = hourOnly;
+      if (+hour < 1 || +hour > 12) {
+        return undefined;
+      }
+      text = `${text.slice(0, hourOnly.index)}${hour}:00 ${half.toLowerCase()}m${
+        text.slice(hourOnly.index + matched.length)
+      }`;
+    }
   }
 
   // resolve the abbreviation as the zone argument would, since Date.parse reads 'CST' as -06:00 everywhere
