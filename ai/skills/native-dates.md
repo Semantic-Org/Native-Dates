@@ -30,7 +30,7 @@ datetime('2026-03-08T04:30:00Z', 'UTC');
 datetime('2026-03-08T04:30:00Z', 'America/New_York').plus(1, 'day').toJSON(); // '2026-03-09T03:30:00.000Z'
 ```
 
-**2. `month` is `1`–`12`, `dayOfWeek` is ISO `1`–`7` (`7` = Sun), `isWeekend()`/`isWeekday()` follow the locale, and tokens use Moment casing (`YYYY-MM-DD`, not `yyyy-MM-dd`).** Weekends vary by locale (`ar-SA`/`ar-EG`/`he-IL` Fri–Sat, `fa-IR` Fri, `hi-IN` Sun). In `format()`, `'yyyy'` throws `unknownFormat` (absent noun token like `'HH'` on `CalendarDate` throws `unsupportedToken`), `'dd'` is 2-letter weekday (`'Mo'`), `'E'` is `'1'`–`'7'`, `'d'` is `'0'`–`'6'` (`0` = Sun), and literals glued to accented letters (`'às'`) or `h` after `H` (`'HHhmm'`) need `[brackets]`.
+**2. `month` is `1`–`12`, `dayOfWeek` is ISO `1`–`7` (`7` = Sun), `isWeekend()`/`isWeekday()` follow the locale (unless pinned via `configure({ weekend })`), and tokens use Moment casing (`YYYY-MM-DD`, not `yyyy-MM-dd`).** Weekends vary by locale (`ar-SA`/`ar-EG`/`he-IL` Fri–Sat, `fa-IR` Fri, `hi-IN` Sun). In `format()`, `'yyyy'` throws `unknownFormat` (absent noun token like `'HH'` on `CalendarDate` throws `unsupportedToken`), `'dd'` is 2-letter weekday (`'Mo'`), `'E'` is `'1'`–`'7'`, `'d'` is `'0'`–`'6'` (`0` = Sun), and literals glued to accented letters (`'às'`) or `h` after `H` (`'HHhmm'`) need `[brackets]`.
 
 ```js
 // ❌ date(2026, 0, 15) -> invalidDate; date('2026-11-16').format('yyyy-MM-dd') -> unknownFormat
@@ -223,6 +223,7 @@ configure({
   zone: 'America/New_York', // null resets
   locale: 'en-US', // null resets
   weekStart: 'monday', // 1..7 or name (null -> locale)
+  weekend: ['saturday', 'sunday'], // weekday array, [] for none (null -> locale)
   formats: { sql: 'YYYY-MM-DD HH:mm:ss' }, // null clears
   weekdayNames: { lv: { narrow: { fri: 'Pk', sun: 'Sv' } } },
   ordinals: { fr: (day) => (day === 1 ? '1er' : day) },
@@ -243,7 +244,7 @@ configure({
 | Error codes | Thrown when |
 |---|---|
 | `missingDateTime`, `missingDate`, `missingTime`, `missingMonthDay`, `missingYearMonth`, `missingDay`, `missingPoints`, `missingAnchor`, `missingPlugin`, `missingTemporal` | Nullish input, `date(2026, 11)`, unanchored `months(2).total('days')`, unloaded plugin option, or missing `globalThis.Temporal` in development (`RangeError`; production throws native `ReferenceError`) |
-| `invalidDateTime`, `invalidDate`, `invalidTime`, `invalidDuration`, `invalidMonthDay`, `invalidYearMonth`, `invalidRange`, `invalidStep`, `invalidNumber`, `invalidFraction`, `invalidYear`, `invalidDay`, `invalidPoint` | Malformed input, `Feb 30`, rejected DST gap/fold, non-positive step, or `end < start` |
+| `invalidDateTime`, `invalidDate`, `invalidTime`, `invalidDuration`, `invalidMonthDay`, `invalidYearMonth`, `invalidRange`, `invalidStep`, `invalidNumber`, `invalidFraction`, `invalidYear`, `invalidDay`, `invalidPoint`, `invalidWeekend` | Malformed input, `Feb 30`, rejected DST gap/fold, non-positive step, `end < start`, or non-array `configure({ weekend })` |
 | `cannotAdd`, `cannotSubtract`, `cannotSet`, `cannotRound`, `cannotBalance`, `cannotTotal` | Overflow, invalid `set()` field, or bad rounding increment (`round(7, 'minutes')`) |
 | `unknownZone`, `unknownLocale`, `unknownDisambiguation`, `unknownUnit`, `unknownDayOfWeek`, `unknownFormat`, `unknownKind`, `unknownSetting`, `unknownWidth` | Bad zone, BCP 47 tag, `disambiguation`, unit, weekday, token/preset (`'yyyy'`), `as()`/`count()` target, or `configure()` key |
 | `unsupportedUnit`, `unsupportedToken`, `unsupportedComparison`, `unsupportedZone`, `unsupportedCalendar`, `unsupportedIntersection` | Absent unit/token, `<`/`-` on non-`DateTime`, `timeRange.in()`, non-ISO partial, or double overnight overlap |

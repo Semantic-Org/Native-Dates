@@ -53,6 +53,9 @@ configure({ zone: null, locale: null, weekStart: null });
     - name: weekStart
       type: DayOfWeek | null
       description: اليوم الأول في الأسبوع لحدود الأسابيع و`weekdayNames()`، باسم يوم من أيام الأسبوع بالإنجليزية أو رقم من 1 ليوم الاثنين حتى 7 ليوم الأحد؛ ويتبع عدم ضبطه أو تمرير `null` الإعداد المحلي النشط.
+    - name: weekend
+      type: readonly DayOfWeek[] | null
+      description: "أيام عطلة نهاية الأسبوع المستخدمة في `isWeekend()` و`isWeekday()` و`DateRange.count('weekdays' | 'weekends')`. يتغلب ضبطها على `.locale()` لكل مثيل؛ مرر `[]` لعدم وجود عطلة أو `null` لاتباع الإعداد المحلي."
     - name: weekdayNames
       type: "Record<Locale, { narrow?, short?, long? }> | null"
       description: تسميات مخصّصة لأيام الأسبوع مفهرسة بوسم الإعداد المحلي وعرض التسمية (`narrow` أو `short` أو `long`) واسم اليوم بالإنجليزية؛ وتتراكب الوسوم الإقليمية فوق وسم لغتها الأساسي، بينما تستعيد القيمة الفارغة أسماء بيئة التشغيل.
@@ -73,7 +76,7 @@ configure({ zone: null, locale: null, weekStart: null });
 **القيمة المُرجَعة**
 
 ```returns
-type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
+type: "{ zone, locale, weekStart, weekend, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
 description: نسخة سطحية من الإعدادات النشطة بعد تطبيق التحديثات، مع القيمة `undefined` للمفاتيح غير المضبوطة.
 ```
 

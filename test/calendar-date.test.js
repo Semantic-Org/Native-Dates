@@ -1335,7 +1335,7 @@ describe('CalendarDate.isWeekend() and isWeekday() by locale', () => {
   );
 
   afterEach(() => {
-    configure({ locale: null });
+    configure({ locale: null, weekend: null });
   });
 
   it.each([
@@ -1359,5 +1359,30 @@ describe('CalendarDate.isWeekend() and isWeekday() by locale', () => {
   it('uses configure({ locale }) when the date has no locale', () => {
     configure({ locale: 'ar-EG' });
     expect([friday.isWeekend(), sunday.isWeekend()]).toEqual([true, false]);
+  });
+
+  it('prefers configure({ weekend }) over per-instance .locale() and configure({ locale })', () => {
+    configure({ locale: 'ar-EG', weekend: ['saturday', 'sunday'] });
+    for (const tag of ['ar-SA', 'hi-IN', 'fa-IR', 'en-US']) {
+      const days = [thursday, friday, saturday, sunday].map((day) => day.locale(tag));
+      expect(days.map((day) => day.isWeekend())).toEqual([false, false, true, true]);
+      expect(days.map((day) => day.isWeekday())).toEqual([true, true, false, false]);
+    }
+    expect([friday.isWeekend(), sunday.isWeekend()]).toEqual([false, true]);
+
+    configure({ weekend: ['friday', 'saturday'] });
+    expect([friday.locale('en-US').isWeekend(), sunday.locale('en-US').isWeekend()]).toEqual([true, false]);
+
+    configure({ weekend: [] });
+    expect([thursday, friday, saturday, sunday].map((day) => day.locale('en-US').isWeekend())).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ]);
+
+    configure({ weekend: null });
+    expect([friday.locale('ar-SA').isWeekend(), sunday.locale('ar-SA').isWeekend()]).toEqual([true, false]);
+    expect([friday.locale('hi-IN').isWeekend(), sunday.locale('hi-IN').isWeekend()]).toEqual([false, true]);
   });
 });

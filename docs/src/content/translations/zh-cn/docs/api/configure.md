@@ -53,6 +53,9 @@ configure({ zone: null, locale: null, weekStart: null });
     - name: weekStart
       type: DayOfWeek | null
       description: 周边界与 `weekdayNames()` 的每周起始日，从 1（周一）到 7（周日）。未设置或传入 `null` 时遵循当前区域。
+    - name: weekend
+      type: readonly DayOfWeek[] | null
+      description: "`isWeekend()`、`isWeekday()` 与 `DateRange.count('weekdays' | 'weekends')` 使用的周末日期。设置后优先于实例的 `.locale()`；传入 `[]` 表示无周末，传入 `null` 恢复遵循区域设置。"
     - name: weekdayNames
       type: "Record<Locale, { narrow?, short?, long? }> | null"
       description: "按语言、宽度（`narrow`、`short` 或 `long`）与英文星期名索引的自定义星期标签。地区标签会叠加在基础语言之上，传空值可恢复运行时默认名称。"
@@ -73,7 +76,7 @@ configure({ zone: null, locale: null, weekStart: null });
 **返回值**
 
 ```returns
-type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
+type: "{ zone, locale, weekStart, weekend, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
 description: 应用更新后当前生效配置的浅拷贝；未设置的键返回 `undefined`。
 ```
 

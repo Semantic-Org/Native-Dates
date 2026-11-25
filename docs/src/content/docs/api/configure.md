@@ -32,12 +32,13 @@ datetime('2026-11-16T17:30:00Z').zone; // 'Europe/Berlin'
 date('2026-11-18').startOf('week').toString(); // '2026-11-16'
 configure().weekStart; // undefined
 
-configure({ weekStart: 'sunday' });
+configure({ weekStart: 'sunday', weekend: ['saturday', 'sunday'] });
 date('2026-11-18').startOf('week').toString(); // '2026-11-15'
 configure().weekStart; // 7
+configure().weekend; // [6, 7]
 
-// reset back to the runtime zone, runtime locale, and locale week start
-configure({ zone: null, locale: null, weekStart: null });
+// reset back to the runtime zone, runtime locale, and locale week rules
+configure({ zone: null, locale: null, weekStart: null, weekend: null });
 ```
 
 **Parameters**
@@ -56,6 +57,9 @@ configure({ zone: null, locale: null, weekStart: null });
     - name: weekStart
       type: DayOfWeek | null
       description: First day of the week for week boundaries and `weekdayNames()`, from 1 for Monday through 7 for Sunday. Unset or `null` follows the active locale.
+    - name: weekend
+      type: readonly DayOfWeek[] | null
+      description: Weekend days used by `isWeekend()`, `isWeekday()`, and `DateRange.count('weekdays' | 'weekends')`. Overrides per-instance `.locale()` when set; pass `[]` for no weekend days, or `null` to follow the locale.
     - name: weekdayNames
       type: "Record<Locale, { narrow?, short?, long? }> | null"
       description: "Custom weekday labels keyed by language, width (`narrow`, `short`, or `long`), and day name. Regional tags layer over their base language, and an empty value restores runtime names."
@@ -76,7 +80,7 @@ configure({ zone: null, locale: null, weekStart: null });
 **Returns**
 
 ```returns
-type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
+type: "{ zone, locale, weekStart, weekend, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
 description: A shallow copy of the active settings after applying updates. Unset keys return `undefined`.
 ```
 

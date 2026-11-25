@@ -1664,10 +1664,31 @@ describe('datetime() from Temporal values and strings in another calendar', () =
 });
 
 describe('DateTime.isWeekend() and isWeekday() by locale', () => {
+  afterEach(() => {
+    configure({ locale: null, weekend: null });
+  });
+
   it('returns true on Friday and false on Sunday for ar-SA in the instance timezone', () => {
     const friday = datetime('2026-11-20T12:00', 'Asia/Riyadh').locale('ar-SA');
     expect([friday.isWeekend(), friday.isWeekday()]).toEqual([true, false]);
     expect(friday.plus(2, 'days').isWeekend()).toBe(false);
+    expect(friday.locale('en-US').isWeekend()).toBe(false);
+  });
+
+  it('prefers configure({ weekend }) over per-instance .locale() and reverts when set to null', () => {
+    const friday = datetime('2026-11-20T12:00', 'Asia/Riyadh').locale('ar-SA');
+    const sunday = friday.plus(2, 'days');
+    configure({ weekend: ['saturday', 'sunday'] });
+    expect([friday.isWeekend(), friday.isWeekday()]).toEqual([false, true]);
+    expect([sunday.isWeekend(), sunday.isWeekday()]).toEqual([true, false]);
+
+    configure({ weekend: ['friday', 'saturday'] });
+    expect(friday.locale('en-US').isWeekend()).toBe(true);
+    expect(sunday.locale('en-US').isWeekend()).toBe(false);
+
+    configure({ weekend: null });
+    expect(friday.isWeekend()).toBe(true);
+    expect(sunday.isWeekend()).toBe(false);
     expect(friday.locale('en-US').isWeekend()).toBe(false);
   });
 });

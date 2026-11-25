@@ -53,6 +53,9 @@ configure({ zone: null, locale: null, weekStart: null });
     - name: weekStart
       type: DayOfWeek | null
       description: "주 경계와 `weekdayNames()`에 사용할 주 시작 요일(영어 요일명 또는 월요일 `1`부터 일요일 `7`까지의 ISO 숫자). 미지정이거나 `null`이면 활성 로케일을 따릅니다."
+    - name: weekend
+      type: readonly DayOfWeek[] | null
+      description: "`isWeekend()`, `isWeekday()`, `DateRange.count('weekdays' | 'weekends')`에서 사용하는 주말 요일. 설정 시 인스턴스 `.locale()`보다 우선하며, `[]`은 주말 없음, `null`은 활성 로케일을 따릅니다."
     - name: weekdayNames
       type: "Record<Locale, { narrow?, short?, long? }> | null"
       description: "로케일 태그, 너비(`narrow`, `short`, `long`), 영어 요일명 순으로 키를 구성한 사용자 지정 요일 레이블. 지역 로케일 태그는 기본 언어 로케일 설정 위에 덧씌워지며, 빈 값이나 `null`을 전달하면 런타임 기본 이름으로 복원합니다."
@@ -73,7 +76,7 @@ configure({ zone: null, locale: null, weekStart: null });
 **반환값**
 
 ```returns
-type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
+type: "{ zone, locale, weekStart, weekend, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
 description: "갱신이 반영된 활성 설정의 얕은 복사본. 설정되지 않은 키는 `undefined`입니다."
 ```
 

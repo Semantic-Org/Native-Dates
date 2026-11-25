@@ -114,7 +114,7 @@ Reopen: external packages depend on `native-dates/helpers/*` directly and report
 
 Hardcoding Saturday and Sunday (`dayOfWeek >= 6`, as in Moment, Day.js, and date-fns) gets weekends wrong in Friday-Saturday (`ar-SA`, `he-IL`), Friday-only (`fa-IR`), and Sunday-only (`hi-IN`) locales even though `startOf('week')` already localizes via `Intl.Locale.prototype.getWeekInfo` (`D7`). The tradeoff is that `.locale()` changes `isWeekend()`, `isWeekday()`, and `DateRange.prototype.count('weekdays')`, so code needing fixed Saturday-Sunday rules has to check `dayOfWeek >= 6`.
 
-Reopen: bug reports show `.locale()` unexpectedly changing `isWeekend()`, `isWeekday()`, or `count('weekdays')`, or users ask for a `configure()` weekend override.
+Superseded by D27 (2026-11-25).
 
 ## D20: Loose parsing follows the locale while `monthDay()` and `dayMonth()` keep function-name order (2026-11-22)
 
@@ -157,3 +157,9 @@ Reopen: server apps passing per-request `Accept-Language` headers alongside `con
 Delegating partial or noisy strings to `Date.parse()` fabricated V8's default year `2001` and day `01` (`'Room 12'` -> `2001-12-01`, `'Nov 16'` -> `2001-11-16`, `'May 2026'` -> `2026-05-01`). Requiring all three date parts in `date()` and `datetime()` under `{ loose: true }` returns `null` instead of invented dates, while partial dates use dedicated factories (`monthDay('Nov 16', { loose: true })`, `yearMonth('May 2026', { loose: true })`).
 
 Reopen: callers report friction from human-typed current-year dates like `'Nov 16'` returning `null`.
+
+## D27: `isWeekend()` and `isWeekday()` follow the locale, but `configure({ weekend })` overrides instance locales (2026-11-25)
+
+Supersedes D19. Weekend checks and weekday range counts follow the active locale by default, while `configure({ weekend })` sets fixed weekend days for the whole process. Letting an instance locale win instead would silently change business-day rules whenever a server formats a date for a visitor. This follows the same priority as `weekStart` and keeps workweeks consistent across requests.
+
+Reopen: apps serving regions with different workweeks in one process ask for a per-call or per-instance weekend override.

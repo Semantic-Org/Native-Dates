@@ -1081,6 +1081,44 @@ describe('DateRange count()', () => {
     expect(dateRange('2026-05-01', '2026-05-03', { locale: 'en-IN' }).count('weekends')).toBe(1);
   });
 
+  describe('with configure({ weekend })', () => {
+    afterEach(() => {
+      configure({ locale: null, weekend: null });
+    });
+
+    it('overrides per-range locale weekend days and reverts on null', () => {
+      // 2026-05-01..2026-05-03 is Friday, Saturday, Sunday
+      const arabic = dateRange('2026-05-01', '2026-05-03', { locale: 'ar-SA' });
+      const indian = dateRange('2026-05-01', '2026-05-03', { locale: 'hi-IN' });
+      const american = dateRange('2026-05-01', '2026-05-03', { locale: 'en-US' });
+
+      configure({ weekend: ['saturday', 'sunday'] });
+      expect([arabic.count('weekends'), arabic.count('weekdays')]).toEqual([2, 1]);
+      expect([indian.count('weekends'), indian.count('weekdays')]).toEqual([2, 1]);
+      // 2026-05-01 (Fri) is a weekday under sat/sun even in ar-SA
+      expect(dateRange('2026-05-01', '2026-05-01', { locale: 'ar-SA' }).count('weekdays')).toBe(1);
+
+      configure({ weekend: ['friday', 'saturday'] });
+      expect([american.count('weekends'), american.count('weekdays')]).toEqual([2, 1]);
+      expect(dateRange('2026-05-03', '2026-05-03', { locale: 'en-US' }).count('weekdays')).toBe(1);
+
+      configure({ weekend: [] });
+      expect([american.count('weekends'), american.count('weekdays')]).toEqual([0, 3]);
+
+      configure({ weekend: null });
+      expect(dateRange('2026-05-01', '2026-05-01', { locale: 'ar-SA' }).count('weekends')).toBe(1);
+      expect([indian.count('weekends'), indian.count('weekdays')]).toEqual([1, 2]);
+      expect([american.count('weekends'), american.count('weekdays')]).toEqual([2, 1]);
+    });
+
+    it('does not double-count duplicate weekdays configured in weekend', () => {
+      configure({ weekend: ['sat', 6, 'sunday', 0] });
+      const span = dateRange('2026-05-01', '2 weeks', { locale: 'ar-SA' });
+      expect(span.count('weekends')).toBe(4);
+      expect(span.count('weekdays')).toBe(10);
+    });
+  });
+
   it('throws unknownKind for unrecognized or non-string count kinds', () => {
     const sprint = dateRange('2026-05-01', '2 weeks');
     expect(() => sprint.count('weeks')).toThrowError(

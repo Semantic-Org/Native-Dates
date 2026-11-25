@@ -4,12 +4,12 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 afterEach(() => {
-  configure({ zone: null, locale: null, weekStart: null });
+  configure({ zone: null, locale: null, weekStart: null, weekend: null });
 });
 
 describe('configure()', () => {
-  it('returns undefined for zone, locale, and weekStart before configuration', () => {
-    expect(configure()).toMatchObject({ zone: undefined, locale: undefined, weekStart: undefined });
+  it('returns undefined for zone, locale, weekStart, and weekend before configuration', () => {
+    expect(configure()).toMatchObject({ zone: undefined, locale: undefined, weekStart: undefined, weekend: undefined });
   });
 
   it('returns default plugin settings when no plugins are imported', () => {
@@ -220,6 +220,70 @@ describe('configure({ weekStart })', () => {
         expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: String(day) }),
       );
       expect(configure().weekStart).toBe(6);
+    },
+  );
+});
+
+describe('configure({ weekend })', () => {
+  it.each([
+    [['saturday', 'sunday'], [6, 7]],
+    [['Fri', 'Sat'], [5, 6]],
+    [[5, 6], [5, 6]],
+    [[6, 0], [6, 7]],
+    [['friday'], [5]],
+    [[], []],
+  ])('normalizes %j to ISO weekday numbers %j', (input, expected) => {
+    expect(configure({ weekend: input }).weekend).toEqual(expected);
+  });
+
+  it('deduplicates repeated weekdays written in different forms', () => {
+    expect(configure({ weekend: ['sat', 6, 'SUN', 0, 'saturday'] }).weekend).toEqual([6, 7]);
+  });
+
+  it('freezes the returned weekend array so callers cannot mutate active settings', () => {
+    const snapshot = configure({ weekend: ['saturday', 'sunday'] });
+    expect(Object.isFrozen(snapshot.weekend)).toBe(true);
+    expect(() => snapshot.weekend.push(5)).toThrow(TypeError);
+    expect(configure().weekend).toEqual([6, 7]);
+  });
+
+  it('preserves active weekend when omitted or passed undefined in later calls', () => {
+    configure({ weekend: ['friday', 'saturday'] });
+    expect(configure({ locale: 'en-US', weekend: undefined }).weekend).toEqual([5, 6]);
+  });
+
+  it('reverts to locale-derived weekend days when set to null', () => {
+    const friday = date('2026-11-20').locale('ar-SA');
+    configure({ weekend: ['saturday', 'sunday'] });
+    expect(friday.isWeekend()).toBe(false);
+    expect(configure({ weekend: null }).weekend).toBeUndefined();
+    expect(friday.isWeekend()).toBe(true);
+  });
+
+  it.each([['saturday'], [6], [{}], [true], ['']])(
+    'throws invalidWeekend RangeError for non-array value %j and preserves the previous weekend',
+    (bad) => {
+      configure({ weekend: ['friday', 'saturday'] });
+      expect(() => configure({ weekend: bad })).toThrowError(
+        expect.objectContaining({ name: 'RangeError', code: 'invalidWeekend', at: String(bad) }),
+      );
+      expect(configure().weekend).toEqual([5, 6]);
+    },
+  );
+
+  it.each([
+    [['saturday', 'funday'], 'funday'],
+    [[6, 8], '8'],
+    // eslint-disable-next-line no-sparse-arrays
+    [[, 'sunday'], 'undefined'],
+  ])(
+    'throws unknownDayOfWeek RangeError for invalid entry in %j and preserves the previous weekend',
+    (bad, expectedAt) => {
+      configure({ weekend: ['friday', 'saturday'] });
+      expect(() => configure({ weekend: bad })).toThrowError(
+        expect.objectContaining({ name: 'RangeError', code: 'unknownDayOfWeek', at: expectedAt }),
+      );
+      expect(configure().weekend).toEqual([5, 6]);
     },
   );
 });

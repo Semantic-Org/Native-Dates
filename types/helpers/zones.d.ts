@@ -83,6 +83,12 @@ export interface Settings {
   weekStart?: DayOfWeek | null;
 
   /**
+   * Weekend days used by `isWeekend()`, `isWeekday()`, and `DateRange.count('weekdays' | 'weekends')`.
+   * Overrides the active locale when set (pass `[]` for no weekend days, or `null` to follow the locale).
+   */
+  weekend?: readonly DayOfWeek[] | null;
+
+  /**
    * Custom weekday labels keyed by language tag, width (narrow, short, or long), and any weekday name or
    * three-or-more-letter prefix such as `'fri'` or `'friday'`.
    * Regional tags inherit from their base language, and `null` restores runtime labels.
@@ -138,6 +144,8 @@ export interface ActiveSettings {
   locale: Locale | undefined;
   /** Active ISO week-start number (1–7), or `undefined` when following the locale. */
   weekStart: number | undefined;
+  /** Active frozen ISO weekend day numbers (1–7), or `undefined` when following the locale. */
+  weekend: readonly number[] | undefined;
   /** Loose numeric date order set with `@native-dates/plugins/loose`, or `undefined` when following the locale. */
   dayFirst: boolean | undefined;
   /** Active custom zone alias map registered via `@native-dates/plugins/zones`. */
@@ -159,7 +167,7 @@ export interface ActiveSettings {
  *
  * @param settings - Process-wide defaults to update, leaving omitted keys unchanged
  * @returns A shallow copy of the active settings after applying any updates
- * @throws {RangeError} When an unrecognized setting key (`unknownSetting`), time zone (`unknownZone`), locale (`unknownLocale`), weekday (`unknownDayOfWeek`), width (`unknownWidth`), invalid alias map (`invalidZoneAliases`), or unimported plugin option (`missingPlugin`) is passed
+ * @throws {RangeError} When an unrecognized setting key (`unknownSetting`), time zone (`unknownZone`), locale (`unknownLocale`), weekday (`unknownDayOfWeek`), weekend list (`invalidWeekend`), width (`unknownWidth`), invalid alias map (`invalidZoneAliases`), or unimported plugin option (`missingPlugin`) is passed
  *
  * @example
  * ```ts

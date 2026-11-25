@@ -53,6 +53,9 @@ configure({ zone: null, locale: null, weekStart: null });
     - name: weekStart
       type: DayOfWeek | null
       description: Первый день недели для границ недели и `weekdayNames()` — английское название дня недели или число от 1 (понедельник) до 7 (воскресенье). Если значение не задано или равно `null`, используется правило активной локали.
+    - name: weekend
+      type: readonly DayOfWeek[] | null
+      description: "Выходные дни для `isWeekend()`, `isWeekday()` и `DateRange.count('weekdays' | 'weekends')`. При задании перекрывает `.locale()` экземпляра; передайте `[]`, чтобы убрать выходные, или `null`, чтобы следовать локали."
     - name: weekdayNames
       type: "Record<Locale, { narrow?, short?, long? }> | null"
       description: "Пользовательские подписи дней недели по тегу локали, ширине (`narrow`, `short` или `long`) и английскому названию дня недели. Региональные теги дополняют базовую локаль, а пустое значение восстанавливает системные названия."
@@ -73,7 +76,7 @@ configure({ zone: null, locale: null, weekStart: null });
 **Возвращает**
 
 ```returns
-type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
+type: "{ zone, locale, weekStart, weekend, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
 description: Поверхностная копия активных настроек после применения обновлений. Незаданные ключи содержат `undefined`.
 ```
 

@@ -53,6 +53,9 @@ configure({ zone: null, locale: null, weekStart: null });
     - name: weekStart
       type: DayOfWeek | null
       description: Primeiro dia da semana para limites semanais e `weekdayNames()`, como nome em inglês ou número de 1 (segunda-feira) a 7 (domingo), seguindo o locale ativo quando ausente ou `null`.
+    - name: weekend
+      type: readonly DayOfWeek[] | null
+      description: "Dias de fim de semana usados por `isWeekend()`, `isWeekday()` e `DateRange.count('weekdays' | 'weekends')`. Prevalece sobre `.locale()` de cada instância; passe `[]` para nenhum dia de fim de semana ou `null` para seguir o locale."
     - name: weekdayNames
       type: "Record<Locale, { narrow?, short?, long? }> | null"
       description: "Rótulos personalizados de dias da semana indexados por idioma, largura (`narrow`, `short` ou `long`) e nome do dia em inglês, com tags regionais sobrepondo o idioma base e valor vazio restaurando os nomes do runtime."
@@ -73,7 +76,7 @@ configure({ zone: null, locale: null, weekStart: null });
 **Retorno**
 
 ```returns
-type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
+type: "{ zone, locale, weekStart, weekend, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
 description: Cópia rasa das configurações ativas após aplicar as atualizações, com chaves não definidas retornando `undefined`.
 ```
 

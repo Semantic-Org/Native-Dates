@@ -53,6 +53,9 @@ configure({ zone: null, locale: null, weekStart: null });
     - name: weekStart
       type: DayOfWeek | null
       description: "週の境界と `weekdayNames()` の基準となる週の開始曜日（月曜を1、日曜を7とする数値、または英語の曜日名）。未設定または `null` の場合はアクティブなロケールを適用。"
+    - name: weekend
+      type: readonly DayOfWeek[] | null
+      description: "`isWeekend()`、`isWeekday()`、`DateRange.count('weekdays' | 'weekends')` で使う週末の曜日。設定時はインスタンスの `.locale()` より優先され、`[]` で週末なし、`null` でロケール準拠に戻ります。"
     - name: weekdayNames
       type: "Record<Locale, { narrow?, short?, long? }> | null"
       description: "言語、幅（`narrow`、`short`、`long`）、および英語の曜日名をキーとするカスタム曜日ラベル。地域付きタグは基本言語の設定に重ねて適用され、空の値を渡すと実行環境のラベルにリセット。"
@@ -73,7 +76,7 @@ configure({ zone: null, locale: null, weekStart: null });
 **戻り値**
 
 ```returns
-type: "{ zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
+type: "{ zone, locale, weekStart, weekend, dayFirst, zoneAliases, weekdayNames, ordinals, formats }"
 description: "更新適用後のアクティブな設定の浅いコピー。未設定のキーは `undefined`。"
 ```
 
