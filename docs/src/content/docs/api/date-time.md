@@ -646,7 +646,7 @@ Zero-argument checks evaluated in the instance's time zone:
 |---|---|---|
 | `isPast()`, `isFuture()` | `boolean` | Whether this instant is earlier or later than the current time. |
 | `isToday()`, `isTomorrow()`, `isYesterday()` | `boolean` | Whether the local calendar date matches today, tomorrow, or yesterday in this zone. |
-| `isWeekday()`, `isWeekend()` | `boolean` | Working day vs. weekend day in the active locale, such as Saturday and Sunday in `en-US` or Friday and Saturday in `ar-SA`. |
+| `isWeekday()`, `isWeekend()` | `boolean` | Working day vs. weekend day from [`configure({ weekend })`](/api/configure/) or the active locale, such as Saturday and Sunday in `en-US` or Friday and Saturday in `ar-SA`. |
 | `isLeapYear()` | `boolean` | Whether the local year is a leap year. |
 
 ## Measuring time

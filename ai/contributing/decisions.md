@@ -31,8 +31,8 @@ Active package decisions grouped by area, newest first.
 
 ### Arithmetic, Boundaries, and Weekdays
 
-- **D19:** `isWeekend()` and `isWeekday()` follow the locale (2026-11-22) [L113-L117](decisions/package.md#d19-isweekend-and-isweekday-follow-the-locale-2026-11-22)
-  - Reopen: bug reports show `.locale()` unexpectedly changing `isWeekend()`, `isWeekday()`, or `count('weekdays')`, or users ask for a `configure()` weekend override.
+- **D27:** `isWeekend()` and `isWeekday()` follow the locale by default, with `configure({ weekend })` overriding `.locale()` (2026-11-25) [L161-L165](decisions/package.md#d27-isweekend-and-isweekday-follow-the-locale-by-default-with-configure-weekend--overriding-locale-2026-11-25)
+  - Reopen: apps serving multiple regions with different business workweeks in one process ask for a per-call or per-instance weekend override.
 - **D17:** Adjacent unit boundaries use `startOfNext()` and `startOfPrevious()` instead of overloading `next()` and `previous()` (2026-11-19) [L101-L105](decisions/package.md#d17-adjacent-unit-boundaries-use-startofnext-and-startofprevious-instead-of-overloading-next-and-previous-2026-11-19)
   - Reopen: cold-reader studies or user issues show developers trying unit names in `next()` and `previous()`, or passing numeric weekdays to `startOfNext()`.
 - **D14:** Numeric day of the week is `dayOfWeek` (`1`-`7`) while token `d` keeps Moment's `0`-`6` (2026-11-17) [L83-L87](decisions/package.md#d14-numeric-day-of-the-week-is-dayofweek-1-7-while-token-d-keeps-moments-0-6-2026-11-17)
@@ -119,7 +119,7 @@ Every package decision (`D1`..`Dn`) in file order.
 - **D18:** `native-dates/helpers/*` stays open for official plugins without semver guarantees (2026-11-20) [L107-L111](decisions/package.md#d18-native-dateshelpers-stays-open-for-official-plugins-without-semver-guarantees-2026-11-20)
   - Reopen: external packages depend on `native-dates/helpers/*` directly and report breakage across minor releases.
 - **D19:** `isWeekend()` and `isWeekday()` follow the locale (2026-11-22) [L113-L117](decisions/package.md#d19-isweekend-and-isweekday-follow-the-locale-2026-11-22)
-  - Reopen: bug reports show `.locale()` unexpectedly changing `isWeekend()`, `isWeekday()`, or `count('weekdays')`, or users ask for a `configure()` weekend override.
+  - Superseded by D27 (2026-11-25)
 - **D20:** Loose parsing follows the locale while `monthDay()` and `dayMonth()` keep function-name order (2026-11-22) [L119-L123](decisions/package.md#d20-loose-parsing-follows-the-locale-while-monthday-and-daymonth-keep-function-name-order-2026-11-22)
   - Reopen: speakers report a locale's `Intl` short date order diverging from typed input, or unconfigured host locales cause inconsistent `{ loose: true }` results across environments.
 - **D21:** Time zone abbreviations inside `{ loose: true }` strings resolve like `{ zone }` rather than `Date.parse()` (2026-11-22) [L125-L129](decisions/package.md#d21-time-zone-abbreviations-inside--loose-true--strings-resolve-like--zone--rather-than-dateparse-2026-11-22)
@@ -134,3 +134,5 @@ Every package decision (`D1`..`Dn`) in file order.
   - Reopen: server apps passing per-request `Accept-Language` headers alongside `configure({ dayFirst: true })` report wanting the configured `dayFirst` setting to override per-call `locale`.
 - **D26:** Loose parsing returns `null` unless year, month, and day are all written (2026-11-23) [L155-L159](decisions/package.md#d26-loose-parsing-returns-null-unless-year-month-and-day-are-all-written-2026-11-23)
   - Reopen: callers report friction from human-typed current-year dates like `'Nov 16'` returning `null`.
+- **D27:** `isWeekend()` and `isWeekday()` follow the locale by default, with `configure({ weekend })` overriding `.locale()` (2026-11-25) [L161-L165](decisions/package.md#d27-isweekend-and-isweekday-follow-the-locale-by-default-with-configure-weekend--overriding-locale-2026-11-25)
+  - Reopen: apps serving multiple regions with different business workweeks in one process ask for a per-call or per-instance weekend override.

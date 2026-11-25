@@ -28,6 +28,7 @@ export type ErrorCode =
   | 'invalidYear'
   | 'invalidDay'
   | 'invalidPoint'
+  | 'invalidWeekend'
   | 'invalidZoneAliases'
   | 'cannotAdd'
   | 'cannotSubtract'

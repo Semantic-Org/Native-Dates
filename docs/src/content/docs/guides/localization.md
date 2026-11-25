@@ -181,6 +181,15 @@ friday.locale('en-US').isWeekend(); // false
 friday.locale('ar-SA').isWeekend(); // true
 ```
 
+Set `weekend` in [`configure()`](/api/configure/) when an app needs fixed business-day rules across every locale, even on values formatted with `.locale()` for a different region. Pass an array of weekday names or ISO numbers (or `[]` for a seven-day workweek), and pass `null` to follow the locale again:
+
+```js
+configure({ weekend: ['saturday', 'sunday'] });
+
+friday.locale('ar-SA').isWeekend(); // false
+configure({ weekend: null });
+```
+
 ## Custom weekday names and ordinals
 
 Month and weekday names come from the runtime, matching what the reader's device prints. Two format tokens have no standard platform field: two-letter weekdays with `dd`, and day ordinals with `Do`.

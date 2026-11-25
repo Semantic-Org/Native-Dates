@@ -19,6 +19,7 @@ export const settings = {
   zone: undefined,
   locale: undefined,
   weekStart: undefined,
+  weekend: undefined,
   dayFirst: undefined,
   zoneAliases: {},
   weekdayNames: undefined,
@@ -81,7 +82,7 @@ export const zoneId = (id, tag) => {
 };
 
 export const configure = (options) => {
-  const { zone, locale, weekStart, dayFirst, zoneAliases, weekdayNames, ordinals, formats } = options ??= {};
+  const { zone, locale, weekStart, weekend, dayFirst, zoneAliases, weekdayNames, ordinals, formats } = options ??= {};
   each(options, (value, name) => {
     if (!Object.hasOwn(settings, name)) {
       refuse('unknownSetting', name, {
@@ -126,6 +127,17 @@ export const configure = (options) => {
   }
   if (weekStart !== undefined) {
     settings.weekStart = weekStart === null ? undefined : dayOfWeek(weekStart);
+  }
+  if (weekend !== undefined) {
+    settings.weekend = weekend === null
+      ? undefined
+      : Array.isArray(weekend)
+      ? Object.freeze([...new Set(Array.from(weekend, dayOfWeek))])
+      : refuse('invalidWeekend', String(weekend), {
+        explanation: isDevelopment
+          ? "expected an array of weekday names or ISO numbers 1-7 such as `['saturday', 'sunday']`, or `null` to follow the locale"
+          : 0,
+      });
   }
   // validate widths and day keys eagerly in configure() rather than failing later on first format()
   each(weekdayNames, (widths) =>
@@ -249,6 +261,6 @@ const weekInfo = (tag) => {
 export const weekStart = (override, tag) =>
   override !== undefined ? dayOfWeek(override) : settings.weekStart ?? weekInfo(tag).firstDay;
 
-export const weekendDays = (tag) => weekInfo(tag).weekend;
+export const weekendDays = (tag) => settings.weekend ?? weekInfo(tag).weekend;
 
 export const isWeekend = (day, tag) => weekendDays(tag).includes(day);

@@ -32,12 +32,13 @@ datetime('2026-11-16T17:30:00Z').zone; // 'Europe/Berlin'
 date('2026-11-18').startOf('week').toString(); // '2026-11-16'
 configure().weekStart; // undefined
 
-configure({ weekStart: 'sunday' });
+configure({ weekStart: 'sunday', weekend: ['saturday', 'sunday'] });
 date('2026-11-18').startOf('week').toString(); // '2026-11-15'
 configure().weekStart; // 7
+configure().weekend; // [6, 7]
 
-// reset back to the runtime zone, runtime locale, and locale week start
-configure({ zone: null, locale: null, weekStart: null });
+// reset back to the runtime zone, runtime locale, and locale week rules
+configure({ zone: null, locale: null, weekStart: null, weekend: null });
 ```
 
 **Parameters**

@@ -141,9 +141,26 @@ export const heldSpan: DateRange = dateRange('TBD', 'TBD', held);
 
 // zones adds zoneAliases to settings and exports its abbreviation table
 timezones.IST = 'Asia/Jerusalem';
-const settings: Settings = { zoneAliases: { hq: 'Europe/Berlin' }, dayFirst: true, weekStart: 'monday' };
+const settings: Settings = {
+  zoneAliases: { hq: 'Europe/Berlin' },
+  dayFirst: true,
+  weekStart: 'monday',
+  weekend: ['saturday', 'sunday'],
+};
 const active: ActiveSettings = configure(settings);
 export const configured: Record<string, string> = active.zoneAliases;
+export const activeWeekend: readonly number[] | undefined = active.weekend;
+export const clearedWeekend: ActiveSettings = configure({ weekend: null });
+export const emptyWeekend: ActiveSettings = configure({ weekend: [] });
+export const numericWeekend: ActiveSettings = configure({ weekend: [5, 6] });
+export const invalidWeekendCode: ErrorCode = 'invalidWeekend';
+
+// @ts-expect-error weekend requires an array of weekdays or null
+configure({ weekend: 'saturday' });
+// @ts-expect-error weekend rejects unrecognized weekday names
+configure({ weekend: ['funday'] });
+// @ts-expect-error configured weekend snapshot is readonly
+active.weekend?.push(1);
 
 // locale accepts a tag, an Accept-Language header, or a tag list such as navigator.languages
 declare const languages: readonly string[];
