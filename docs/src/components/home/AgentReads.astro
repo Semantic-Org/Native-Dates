@@ -71,6 +71,7 @@ const jevCardRows = [
   {
     key: 'adopt_modern',
     value: jevYes.toFixed(2),
+    lead: true,
     accent: true,
     split: true,
     reading: `${pct(jevYes)} yes`,
@@ -227,18 +228,25 @@ const sets = [false, true];
 
                       <span class="jev-ledger">
                         {jevCardRows.map((row) => (
-                          <span class="jev-row">
+                          <span class:list={['jev-row', row.lead && 'is-lead']}>
                             <span class="jev-line">
                               <span class="jev-ask" title={row.prompt}>{row.label}</span>
                               <span class:list={['jev-val', row.accent && 'is-accent']}>
                                 <b>{row.value}</b>{row.denom && <span class="jev-denom"> {row.denom}</span>}
                               </span>
                             </span>
+                            {row.lead && (
+                              <span class:list={['jev-marks', 'is-split', 'is-wide', row.accent && 'is-accent']} aria-hidden="true">
+                                {row.marks.map((share) => <span style={`--share: ${share}`} />)}
+                              </span>
+                            )}
                             <span class="jev-line is-sub">
                               <span class="jev-read" title={row.scale}>
-                                <span class:list={['jev-marks', row.split && 'is-split', row.accent && 'is-accent']} aria-hidden="true">
-                                  {row.marks.map((share) => <span style={`--share: ${share}`} />)}
-                                </span>
+                                {!row.lead && (
+                                  <span class:list={['jev-marks', row.split && 'is-split', row.accent && 'is-accent']} aria-hidden="true">
+                                    {row.marks.map((share) => <span style={`--share: ${share}`} />)}
+                                  </span>
+                                )}
                                 <span>{row.reading}</span>
                               </span>
                               <span class="jev-path">{row.path}</span>
