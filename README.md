@@ -4,11 +4,11 @@
 
 [Documentation](https://nativedates.dev) · [Guides](https://nativedates.dev/guides/overview/) · [Plugins](https://nativedates.dev/plugins/) · [Examples](https://nativedates.dev/examples/)
 
-- **Obvious Time Types** — Makes Temporal's canon of irregular words a simple `DateTime`, `CalendarDate`, `Time`, and `Duration` so things read like English at callsites
-- **Callsite Legibility** — Plain-language APIs (`today().plus(2, 'days').at('9am')`, `'1h 30m'`) make human and agentic file diffs read like English sentences rather than a web specification treatise
-- **Browser-Native I18N** — Time zones, daylight transitions, and calendar math handled as the browser specifies, not the library
-- **Immutability** — Prevents JS pitfalls of accidental date mutations when working with copies
-- **Small Core** — Under 15kb brotli for everything you'd expect in a date library, with plugins for anything truly arbitrary or rare (day.js style)
+- **Obvious Time Types** - Makes Temporal's canon of irregular words a simple `DateTime`, `CalendarDate`, `Time`, and `Duration` so things read like English at callsites
+- **Callsite Legibility** - Plain-language APIs (`today().plus(2, 'days').at('9am')`, `'1h 30m'`) make human and agentic file diffs read like English sentences rather than web specification treatise
+- **Browser-Native I18N** - Time zones, daylight transitions, and calendar math handled as the browser specifies, not the library
+- **Immutability** - Prevents JS pitfalls of accidental date mutations when working with copies
+- **Small Core** - Under 15kb brotli for everything you'd expect in a date library, with plugins for anything truly arbitrary or rare (day.js style)
 
 ## Install
 
