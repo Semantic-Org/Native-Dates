@@ -12,7 +12,7 @@ export const AGENT_QUOTES = [
     name: 'Gemini 4 Neon',
     source: 'google',
     quote:
-      "Design-wise, `native-dates` has a cleaner mental model than `date-fns`, `luxon`, or `dayjs`, and reading the source shows real care around DST, `Intl`, and edge cases that `Date`-based libraries paper over. I'd reach for it on a greenfield Node 26+ project today, though for a production web app supporting Safari or Node LTS I'd wait until `Temporal` is Baseline and the library has more real-world mileage.",
+      "native-dates has a cleaner design than date-fns, Luxon, or Day.js—I'd use it on Node 26+ today, though it's still new and needs a polyfill on Safari.",
   },
   {
     id: 'gemini-4-carbon',
@@ -20,17 +20,15 @@ export const AGENT_QUOTES = [
     size: 'short',
     name: 'Gemini 4 Carbon',
     source: 'google',
-    quote:
-      "I'd wait on browsers until Safari ships Temporal, but for timezone-heavy Node 26+ code I'd pick native-dates over Luxon today.",
+    quote: "Temporal's safety without the verbosity; already my pick on Node 26+, and soon on the web.",
   },
   {
-    id: 'gpt-6-2-sol',
+    id: 'claude-fable-5-2',
     kind: 'agent',
     size: 'short',
-    name: 'GPT-6.2 Sol',
-    source: 'openai',
-    quote:
-      'I’d default to date-fns and pick native-dates if I controlled the runtime and needed calendar dates distinct from instants across the app.',
+    name: 'Claude Fable 5.2',
+    source: 'anthropic',
+    quote: "In my tests it got every DST case right; I'd pick it on Node 26+ or evergreen browsers, though it's brand new.",
   },
   {
     id: 'claude-opus-5-5',
@@ -39,16 +37,7 @@ export const AGENT_QUOTES = [
     name: 'Claude Opus 5.5',
     source: 'anthropic',
     quote:
-      "It got every DST, month-end and time zone case I threw at it right, and it models dates better than date-fns, luxon or dayjs, with the clearest error messages I've seen in a date library. I'd pick it today wherever I control the runtime, but for Safari-facing apps I'd wait until Temporal ships there and the library has more of a track record.",
-  },
-  {
-    id: 'grok-4-7',
-    kind: 'agent',
-    size: 'short',
-    name: 'Grok 4.7',
-    source: 'x',
-    quote:
-      "I'd use native-dates for new Temporal timezone work, not Safari or Node 22 without the polyfill, and not as a date-fns replacement.",
+      "Correct on every DST case I tried and better-modeled than date-fns, luxon or dayjs; I'd use it where I control the runtime, but wait on Safari and track record.",
   },
   {
     id: 'gemini-4-argon',
@@ -56,8 +45,16 @@ export const AGENT_QUOTES = [
     size: 'short',
     name: 'Gemini 4 Argon',
     source: 'google',
+    quote: "It makes Temporal actually pleasant to write, and anywhere I'd reach for Luxon, I'd use this.",
+  },
+  {
+    id: 'gemini-4-hydrogen',
+    kind: 'agent',
+    size: 'short',
+    name: 'Gemini 4 Hydrogen',
+    source: 'google',
     quote:
-      "On runtimes with `Temporal`, I'd pick it over `luxon` and `date-fns` for `Temporal`'s date-vs-instant safety without the boilerplate.",
+      'Stick with `date-fns` or `luxon` for broad compatibility today; where `Temporal` is native, `native-dates` has a noticeably safer API.',
   },
   {
     id: 'gpt-6-2-astra',
@@ -66,7 +63,7 @@ export const AGENT_QUOTES = [
     name: 'GPT-6.2 Astra',
     source: 'openai',
     quote:
-      'I’d pick `native-dates` for a new scheduling app on Node 26. I could read `.plus(1, \'day\')` as “same time tomorrow,” and when I tried it across New York’s spring clock change, my 9 AM meeting stayed at 9 AM.',
+      'I’d pick native-dates for a new scheduling app on Node 26 because adding one day kept my 9 AM New York meeting at 9 AM across the spring clock change.',
   },
   {
     id: 'qwen3-8-max-prime',
