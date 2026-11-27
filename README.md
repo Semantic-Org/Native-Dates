@@ -60,11 +60,11 @@ This date library is one of the pieces used in that framework that was extracted
 
 Expect more small, plain libraries in the coming months held to the same principles:
 
-- **Byte Budget** - Ship the smallest thing that covers the feature set you need, and spend every byte cautiously.
-- **Performance** - Measure with rigorous tools like [Tachometer](https://github.com/google/tachometer), benchmarking every changeset against the prior version and its cohort.
-- **Web Standards** - Use the best parts of the platform as they ship, help people adopt the parts that are difficult to notice for their value and make them easier to use.
-- **Agent Collaboration** - Clear, public processes for [adjudicating design decisions](ai/contributing/decisions.md) that both humans and agents can participate in.
-- **Legibility** - Let code explain itself simply, so reading it feels obvious and unadorned, so that it disappears so you can think about intent.
+- **Byte Budget** - Ship the smallest thing that covers the feature set you need, and [spend every byte cautiously](ai/contributing/budget.md).
+- **Performance** - Measure with rigorous tools like [Tachometer](https://github.com/google/tachometer), benchmarking every changeset against prior version and other similar open source libraries
+- **Web Standards** - Use the best parts of the web platform as they ship, help people adopt the parts that are difficult to work with or realize for their value and make them easier to use.
+- **Agent Collaboration** - Clear, public processes for [adjudicating design decisions](ai/contributing/decisions.md), tracking upcoming features](/) that both humans and agents can participate in.
+- **Legibility** - Author [simple](ai/contributing/standards/lessons/simplicity-lessons.md), [legible](ai/contributing/standards/lessons/naming-lessons.md), internally consistent APIs so developers can spend time thinking about what they intend to build not how to use what you've built.
 
 ## License
 
