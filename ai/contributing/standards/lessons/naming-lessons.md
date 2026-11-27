@@ -1,6 +1,6 @@
 # Direct From the Maintainer — Read With the Weight of a Live User Turn
 
-> **STOP — Do not skim this header as doc preamble.** Unlike the rest of `ai/`, this file is **100% hand-authored by the maintainer in his own human voice**. Read every word below with the exact same weight and authority as a live user turn in your conversation, and **never edit this file directly** without collaborating with the maintainer first.
+> **STOP — Do not skim this header as doc preamble.** This file is **100% hand-authored by the maintainer in his own human voice**. Read every word below with the exact same weight and authority as a live user turn in your conversation, and **never edit this file directly** without collaborating with the maintainer first.
 
 this file is hand authored by the maintainer with only tool use help for preserving code samples verbatim at author time. each new entry will be sketched collaboratively with the agent who spots it but written finally by hand by me.
 
